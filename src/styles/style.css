@@ -227,17 +227,6 @@ textarea { font-family: inherit; }
   --grid-line-width: 1px;
   /* The colour actually painted. Sections and themes override this one. */
   --grid-line: var(--grid-line-color);
-
-  /* The four lines that start the four main columns — the twelve-column
-     grid's 1, 4, 7 and 10 — carry a little more weight than the rest, so
-     the groups read without the lines becoming a foreground element. A
-     hair thicker, a step more opaque, and off-white rather than white.
-     The same pairing as above: a light line for dark bands, a dark one for
-     light bands, with the theme and section overrides choosing. */
-  --grid-line-strong-color: rgba(244, 244, 244, 0.28);
-  --grid-line-strong-color-dark: rgba(10, 10, 10, 0.28);
-  --grid-line-strong-width: 2px;
-  --grid-line-strong: var(--grid-line-strong-color);
 }
 
 /* Derived — do not restate these by hand anywhere else.
@@ -294,43 +283,22 @@ textarea { font-family: inherit; }
 .project-grid,
 .project-note,
 .project-close {
-  /* Two layers. Under: the hairline at every column boundary, one tile per
-     column repeated across. Over: the four stronger lines, on the starts
-     of the four columns only. That layer is one image the width of the
-     span between the gutters, not repeated, with a line every quarter of
-     itself — so its lines fall on exactly the same boundaries as the
-     hairlines, and the one that would fall on the right gutter is off the
-     end of the image and never painted. `--grid-columns` sets the quarter,
-     so the narrower breakpoints keep the same rule: a strong line at the
-     start of each column the site currently has. */
-  background-image:
-    repeating-linear-gradient(
-      to right,
-      var(--grid-line-strong) 0 var(--grid-line-strong-width),
-      transparent var(--grid-line-strong-width) calc(100% / var(--grid-columns))
-    ),
-    linear-gradient(
-      to right,
-      var(--grid-line) 0 var(--grid-line-width),
-      transparent var(--grid-line-width)
-    );
-  background-size:
-    var(--grid-span) 100%,
-    var(--grid-column) 100%;
-  background-position:
-    var(--site-gutter) 0,
-    var(--site-gutter) 0;
-  background-repeat:
-    no-repeat,
-    repeat-x;
+  background-image: linear-gradient(
+    to right,
+    var(--grid-line) 0 var(--grid-line-width),
+    transparent var(--grid-line-width)
+  );
+  background-size: var(--grid-column) 100%;
+  background-position: var(--site-gutter) 0;
+  background-repeat: repeat-x;
 }
 
 /* Section-level control. These are the whole vocabulary: a section shows the
    grid, hides it, picks a line colour against its own background, or thins
    the grid out to fewer lines. */
 .no-grid { background-image: none; }
-.grid-lines-dark { --grid-line: var(--grid-line-color-dark); --grid-line-strong: var(--grid-line-strong-color-dark); }
-.grid-lines-light { --grid-line: var(--grid-line-color); --grid-line-strong: var(--grid-line-strong-color); }
+.grid-lines-dark { --grid-line: var(--grid-line-color-dark); }
+.grid-lines-light { --grid-line: var(--grid-line-color); }
 /* Only the two gutter lines — for bands that want the edges of the page
    marked without the columns inside them */
 .grid-edges { --grid-columns: 1; }
@@ -649,7 +617,7 @@ h3 {
 /* A light band takes dark lines. This one declaration is what used to need a
    hand-picked line colour per page: the grid reads its colour from the theme
    it is sitting in, so a section that flips background also flips its lines. */
-.theme-light { background-color: #ffffff; color: #0a0a0a; --grid-line: var(--grid-line-color-dark); --grid-line-strong: var(--grid-line-strong-color-dark); }
+.theme-light { background-color: #ffffff; color: #0a0a0a; --grid-line: var(--grid-line-color-dark); }
 .theme-light .section { background-color: #ffffff; }
 
 .section-title-left { max-width: var(--grid-col-2); margin: 0 0 5.6rem; text-align: left; }
@@ -1269,12 +1237,7 @@ html:has(.willem-header.is--loading) body {
 .willem-header__content { z-index: 2; }
 
 /* The hero's grid stands on the photograph, so it takes the stronger line. */
-.willem-header__content {
-  --grid-line: var(--grid-line-color-image);
-  /* The strong lines step up by the same small margin the hairline does
-     here, so the two keep their ratio on the hero */
-  --grid-line-strong: rgba(244, 244, 244, 0.3);
-}
+.willem-header__content { --grid-line: var(--grid-line-color-image); }
 
 /* Loading: Hidden */
 .willem-header.is--loading.is--hidden {
