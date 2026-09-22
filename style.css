@@ -61,18 +61,22 @@ body::-webkit-scrollbar { width: 0; height: 0; display: none; }
 /* ------------------------- Typefaces -------------------------
    Two faces from the Adobe kit linked in the head (use.typekit.net/nqu1vih.css).
 
-   Inter Tight Variable sets everything: running text, navigation, headings,
-   buttons. It is the page's voice and nothing needs to ask for it — it is
-   inherited from `body`.
+   Inter Tight Variable is the page's voice: the headings and the running text
+   under them. Nothing needs to ask for it — it is inherited from `body`, and
+   the only type that leaves it is the type listed in the label rule below.
 
    It is the only text face in the kit now — Neue Haas has been dropped from
    it, so there is no longer a second cut-based family to fall back to and no
    reason to name one. One variable face, one weight scale.
 
-   Chivo Mono is the label face and only that: eyebrows, metadata, form
-   labels, counters, the small interface type. It is always set uppercase,
-   which is how every one of those already reads. Anything wearing it is
-   listed in one rule below, so the set stays a decision rather than a habit.
+   Chivo Mono is the accent face, and it takes everything small that supports
+   the page rather than being the page: navigation, button and CTA labels,
+   eyebrows, form labels, metadata, counters, tags, the rest of the small
+   interface type. It is always set uppercase — which is how most of those
+   already read, and the rule below restates it so the mono can never turn up
+   in mixed case. What it does not take is the two things that are the page:
+   headings and body copy, which stay on Inter Tight Variable. Anything wearing
+   it is listed in one rule below, so the set stays a decision, not a habit.
    The kit ships it in a single cut, 300, so whatever weight a rule asks for
    resolves to that one — no synthetic bolding to guard against. */
 :root {
@@ -113,6 +117,30 @@ body {
 .parallax-slider__item-meta,
 .results-card__foot,
 .scroll-next__sub,
+/* Eyebrows, under their own components' names rather than `.tagline`'s. */
+.footer-eyebrow,
+.sticky-tab__eyebrow,
+.slide-demo__eyebrow,
+/* Navigation — the type you read to move rather than to think. The bar at the
+   top of the page and the legal row at the foot of it. The footer's large
+   link column is deliberately not here: at 2.25em it is set at heading scale
+   and reads with the headings, which stay on the body face. */
+.willen-nav .willem-nav__link,
+.site-footer__legal,
+/* Buttons and calls to action. The label sits on the inner span, which is what
+   the button's hover split reads and rebuilds character by character, so the
+   face has to be named there rather than on the button around it. */
+.button-011__text,
+.btn,
+/* The small interface type and the metadata: card tags, the role under a
+   speaker's name, the word the page transition holds up while it runs. The
+   drawer's close button is deliberately not here — it is a 2.8rem multiplication
+   sign centred in a square, a glyph rather than a label, and it is the body
+   face's cut of it that is drawn on the centre of that square. */
+.results-card__index,
+.results-card__tag,
+.testimonial-chip__role,
+.transition__label,
 /* Counters and indices. Uppercase does nothing to a digit; these are here for
    the face, which is the one that lines its numbers up. */
 .panel-form-step .step-number,
@@ -1424,6 +1452,10 @@ html:has(.willem-header.is--loading) body {
   line-height: 1.2;
   text-decoration: none;
   position: relative;
+  /* Set in the mono and uppercase, per the label rule at the top of the file.
+     The size is left alone; only the tracking is opened, because uppercase
+     needs the room and the mono's own sidebearings are tight for it. */
+  letter-spacing: 0.08em;
 }
 
 /* The gap closed up horizontally, so the tap height comes from the link
@@ -1469,6 +1501,14 @@ html:has(.willem-header.is--loading) body {
     flex-flow: column;
     grid-column: span 2;
   }
+
+  /* Each half of the bar is two of four columns, so on a phone the links have
+     a little under half the screen to run in — and uppercase in a monospace
+     runs wider than the mixed-case proportional face they were set in before,
+     far enough that `Architecture` was being cut off by the bar's own
+     `overflow: hidden`. Stepped down to the size the site's other small labels
+     take, which is the register this type now reads in anyway. */
+  .willem-nav__link { font-size: 1.4rem; }
 }
 
 
@@ -1996,6 +2036,11 @@ main:has(.willem-header.is--loading) .site-nav,
 }
 
 .button-011__text {
+  /* The mono and the uppercase come from the label rule at the top of the
+     file; this is the tracking that goes with them. The split-char hover
+     measures the characters after this is applied, so opening it here moves
+     the animation with the type rather than against it. */
+  letter-spacing: 0.08em;
   padding-top: var(--button-011-padding-top);
   padding-left: var(--button-011-padding-left);
   padding-right: var(--button-011-padding-right);
@@ -5155,4 +5200,124 @@ body:has(.arch-page) {
 .willem__h1-end {
   position: relative;
   z-index: 91;
+}
+
+/* =============================================================
+   Animated grid overlay — temporary, development only
+   =============================================================
+
+   A twelve-column reference laid over the viewport, toggled with Shift + G.
+   It is a measuring aid and nothing else: it is not the site's layout, no
+   element is positioned from it, and removing the block of markup, this
+   block of CSS and grid-overlay.js takes it off the site completely.
+
+   The site's own grid — the permanent lines drawn as a background further up
+   this file — is a separate system and is untouched by any of this.
+
+   Two things make the overlay usable as a reference rather than decorative:
+
+   1. Its columns divide exactly the span the site's own columns divide. The
+      row sits between the two gutters, so the overlay's outer edges land on
+      the site's outer grid lines, and twelve columns across four site columns
+      means every third overlay boundary falls on a site line. At the tablet
+      breakpoint the site drops to two columns and the overlay to six, and at
+      mobile to one and four — the ratio holds at every width, so the thirds
+      keep landing on the lines.
+
+   2. It carries the same padding the site's content carries. Each column is
+      inset by `--grid-pad` and paints only inside that inset, so the visible
+      bar is exactly the width of a piece of content sitting in that column —
+      which is what you are actually aligning to. The gap you see between two
+      bars is `--grid-gap`, because it is two pads, from the same token.
+
+   The supplied component asked for a `.container` with its own max-width and
+   padding. This site already has a `.container`, doing a different job, so
+   the overlay's copy is scoped to the overlay rather than redefining it. */
+.animated-grid {
+  position: fixed;
+  inset: 0;
+  /* Above the grain (90) and the drawers (100). It never takes a click. */
+  z-index: 200;
+  pointer-events: none;
+  display: block;
+}
+
+.animated-grid .container {
+  width: 100%;
+  max-width: var(--size-container);
+  margin-inline: auto;
+  /* The site's gutter, not the component's 1.5em, so the row starts and ends
+     on the outermost of the site's own grid lines. */
+  padding-inline: var(--site-gutter);
+}
+
+.animated-grid .container.is--full-height {
+  height: 100%;
+}
+
+.animated-grid__row {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  /* No gap: the space between bars is the columns' own padding, so the
+     boundaries the columns divide stay exactly at the twelfths of the span
+     and keep landing on the site's lines. */
+  gap: 0;
+  width: 100%;
+  height: 100%;
+  overflow: clip;
+  counter-reset: animated-grid-col;
+}
+
+.animated-grid__col {
+  width: 100%;
+  height: 100%;
+  min-height: 100%;
+  padding-inline: var(--grid-pad);
+  /* Paint the inset area only — the bar is the width of content in that
+     column, not the width of the column's boundaries. */
+  /* A mid grey rather than the component's near-white. The overlay is fixed
+     to the viewport and the page scrolls under it, so the same bar crosses
+     the site's black bands and its light ones — the footer is white on every
+     page. A light bar disappears against that; a mid grey lightens the black
+     and darkens the white, and stays readable across both. */
+  background-color: rgba(128, 128, 128, 0.22);
+  background-clip: content-box;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+}
+
+/* The column numbers. Counters rather than markup, so the supplied HTML keeps
+   its twelve empty columns — and because a counter skips a column that is not
+   rendered, the two rules below that drop columns at the narrower breakpoints
+   also renumber what is left, with no second list to keep in step.
+
+   Cleared below the fixed bar so a number never sits on a nav link, and set in
+   the label face at the size of the site's other small figures. */
+.animated-grid__col::before {
+  counter-increment: animated-grid-col;
+  content: counter(animated-grid-col);
+  margin-top: calc(var(--nav-height) + 1.6rem);
+  font-family: var(--font-label);
+  font-size: 1.1rem;
+  line-height: 1;
+  letter-spacing: 0.08em;
+  /* Mid grey for the same reason as the bar it labels. */
+  color: rgba(150, 150, 150, 0.95);
+}
+
+/* Tablet: the site is on two columns, the overlay on six. */
+@media screen and (max-width: 991px) {
+  .animated-grid__row {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+  }
+  .animated-grid__col:nth-child(n + 7) { display: none; }
+}
+
+/* Mobile: the site is on one column, the overlay on four. */
+@media screen and (max-width: 767px) {
+  .animated-grid__row {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+  .animated-grid__col:nth-child(n + 5) { display: none; }
 }

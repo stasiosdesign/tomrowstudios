@@ -32,6 +32,27 @@
 <!-- Film grain overlay (outside the Barba container so it persists) -->
 <div class="grain" data-grain-animate="true"></div>
 
+<!-- Temporary 12-column design grid overlay (Shift + G). Outside the Barba
+     container so it survives a navigation, like the grain above it. -->
+<div data-animated-grid class="animated-grid">
+  <div class="container is--full-height">
+    <div class="animated-grid__row">
+      <div data-animated-grid-col class="animated-grid__col"></div>
+      <div data-animated-grid-col class="animated-grid__col"></div>
+      <div data-animated-grid-col class="animated-grid__col"></div>
+      <div data-animated-grid-col class="animated-grid__col"></div>
+      <div data-animated-grid-col class="animated-grid__col"></div>
+      <div data-animated-grid-col class="animated-grid__col"></div>
+      <div data-animated-grid-col class="animated-grid__col"></div>
+      <div data-animated-grid-col class="animated-grid__col"></div>
+      <div data-animated-grid-col class="animated-grid__col"></div>
+      <div data-animated-grid-col class="animated-grid__col"></div>
+      <div data-animated-grid-col class="animated-grid__col"></div>
+      <div data-animated-grid-col class="animated-grid__col"></div>
+    </div>
+  </div>
+</div>
+
 <!-- Click-to-zoom target (outside the Barba container so it persists) -->
 <div data-click-zoom-lightbox class="click-zoom__lightbox"></div>
 
@@ -367,6 +388,8 @@
 <script src="scrollnext.js"></script>
 <script src="transitions.js"></script>
 <script src="lightbox.js"></script>
+<!-- Temporary development grid overlay -->
+<script src="grid-overlay.js"></script>
 
 </body>
 </html>
