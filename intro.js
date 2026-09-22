@@ -9,6 +9,45 @@
 
 gsap.registerPlugin(SplitText);
 
+/* Two eases carry the whole sequence. Anything that arrives — the wordmark,
+   the hero copy, the nav — uses the same one, so every piece of type on screen
+   decelerates at the same rate and the reveal reads as one movement. Anything
+   that swells — the gap opening, the photograph growing to full bleed — uses
+   the other, which eases into and out of the change rather than snapping
+   through the middle of it. Mixing more than these two is what makes a
+   sequence read as a list of separate steps. */
+const WILLEM_EASE_ARRIVE = "expo.out";
+const WILLEM_EASE_SWELL = "power3.inOut";
+
+/* How long the moves in each phase run, and when each phase starts, in seconds
+   from the top of the intro. Retiming the sequence means editing these two
+   maps and nothing else.
+
+   The phases overlap by design — each is under way before the one before it
+   has settled, which is what keeps the intro continuous — with one exception.
+   The growth is the same two elements the opening was widening, so it takes
+   over at the exact moment the opening lets go: any overlap there would leave
+   two tweens writing the same width on the same frame. */
+const WILLEM_DURATION = {
+  wordmark: 1.1,
+  open: 1.15,
+  crossfade: 0.55,
+  grow: 1.8,
+  title: 1.2,
+  intro: 1,
+  actions: 1.1,
+  nav: 0.9
+};
+
+const WILLEM_PHASE = {
+  wordmark: 0,
+  open: 0.95
+};
+
+WILLEM_PHASE.grow = WILLEM_PHASE.open + WILLEM_DURATION.open;
+// The copy starts arriving a second before the photograph lands
+WILLEM_PHASE.reveal = WILLEM_PHASE.grow + 1;
+
 /* Show the hero without the loading animation. Used when the home page is
    reached through a Barba navigation: the section is the page's hero either
    way, only the intro is restricted to a first load. `is--settled` puts the
@@ -54,6 +93,9 @@ async function initWillemLoadingAnimation() {
      yielding means the browser never gets a frame in between. */
   container.classList.remove("is--hidden");
 
+  const find = (selector, scope) =>
+    gsap.utils.toArray((scope || container).querySelectorAll(selector));
+
   const splits = [];
 
   /* Masked pieces: SplitText wraps each word or character in its own clipping
@@ -82,26 +124,21 @@ async function initWillemLoadingAnimation() {
     return type === "words" ? instance.words : instance.chars;
   }
 
-  const loadingLetter = container.querySelectorAll(".willem__letter");
-  const box = container.querySelectorAll(".willem-loader__box");
-  const growingImage = container.querySelectorAll(".willem__growing-image");
-  const headingStart = container.querySelectorAll(".willem__h1-start");
-  const headingEnd = container.querySelectorAll(".willem__h1-end");
-  const coverImageExtra = container.querySelectorAll(".willem__cover-image-extra");
+  const letters = find(".willem__letter");
+  const box = find(".willem-loader__box");
+  const image = find(".willem__growing-image");
+  const wordmarkStart = find(".willem__h1-start");
+  const wordmarkEnd = find(".willem__h1-end");
+  const photos = find(".willem__cover-image-extra");
   // The hero copy: headline and standfirst rise a word at a time
   const titleWords = split(container.querySelector(".willem-hero__title"), "words");
   const introWords = split(container.querySelector(".willem-hero__intro"), "words");
-  // The buttons are not text, so they keep the plain block reveal
-  const actions = container.querySelectorAll(".actions.willem__reveal");
-  // The nav is now the fixed site bar, outside the hero section
-  const navLinks = document.querySelectorAll(".site-nav a");
+  // The buttons are not type, so they rise as one block rather than splitting
+  const actions = find(".actions.willem__reveal");
+  // The nav is the fixed site bar, which sits outside the hero section
+  const navLinks = find(".site-nav a", document);
 
-
-  /* GSAP Timeline */
   const tl = gsap.timeline({
-    defaults: {
-      ease: "expo.inOut",
-    },
     onStart: () => {
       // Hold the page at the top for the length of the intro
       window.scrollTo(0, 0);
@@ -109,8 +146,8 @@ async function initWillemLoadingAnimation() {
     },
     onComplete: () => {
       // Release the height lock so the rest of the page can scroll
-      container.classList.remove('is--loading');
-      container.classList.add('is--settled');
+      container.classList.remove("is--loading");
+      container.classList.add("is--settled");
       // Put the split copy back to plain text now that it has landed
       splits.forEach((instance) => instance.revert());
       if (window.lenis) {
@@ -120,144 +157,125 @@ async function initWillemLoadingAnimation() {
     }
   });
 
-  /* Start of Timeline */
-  if (loadingLetter) {
-    tl.from(loadingLetter, {
-      yPercent: 100,
-      stagger: 0.025,
-      duration: 1.25
-    });
-  }
+  /* Both helpers skip a step whose target is not on the page, and both take an
+     absolute time on the timeline rather than an offset from whatever was
+     added last. A block the page happens to be missing therefore leaves the
+     rest of the sequence exactly where it was, instead of dragging everything
+     after it forward into the gap. */
+  const swell = (targets, vars, at) => {
+    if (!targets.length) return;
+    tl.to(targets, Object.assign({ ease: WILLEM_EASE_SWELL }, vars), at);
+  };
 
-  if (box.length) {
-    tl.fromTo(box, {
-      width: "0em",
-    },{
-      width: "1em",
-      duration: 1.25
-    }, "< 1.25");
-  }
+  const arrive = (targets, vars, at) => {
+    if (!targets.length) return;
+    tl.from(targets, Object.assign({ yPercent: 110, ease: WILLEM_EASE_ARRIVE }, vars), at);
+  };
 
-  if (box.length) {
-    tl.fromTo(growingImage, {
-      width: "0%",
-    },{
-      width: "100%",
-      duration: 1.25
-    }, "<");
-  }
+  /* 1. The wordmark sets itself, letter by letter. */
+  arrive(letters, {
+    duration: WILLEM_DURATION.wordmark,
+    stagger: 0.03
+  }, WILLEM_PHASE.wordmark);
 
-  if (headingStart.length) {
-    tl.fromTo(headingStart, {
-      x: "0em",
-    },{
-      x: "-0.05em",
-      duration: 1.25
-    }, "<");
-  }
+  /* 2. A gap opens in the middle of the word and a photograph fills it. The
+     two halves drift apart by the width of the gap as it appears, so the
+     wordmark reads as being pushed open rather than cut.
 
-  if (headingEnd.length) {
-    tl.fromTo(headingEnd, {
-      x: "0em",
-    },{
-      x: "0.05em",
-      duration: 1.25
-    }, "<");
-  }
+     The CSS parks the box and the image at zero width, so these are plain
+     `to`s — the start of the move lives in the stylesheet, in one place,
+     rather than being restated here and drifting out of step with it. */
+  swell(box, {
+    width: "1em",
+    duration: WILLEM_DURATION.open
+  }, WILLEM_PHASE.open);
 
-  if (coverImageExtra.length) {
-    tl.fromTo(coverImageExtra, {
-      opacity: 1,
-    },{
-      opacity: 0,
-      duration: 0.05,
-      ease: "none",
-      stagger: 0.5
-    }, "-=0.05");
-  }
+  swell(image, {
+    width: "100%",
+    duration: WILLEM_DURATION.open
+  }, WILLEM_PHASE.open);
 
-  if (growingImage.length) {
-    tl.to(growingImage, {
-      width: "100vw",
-      height: "100dvh",
-      /* The image is centred on the box it grows out of, and that box sits
-         between two unequal halves of the wordmark, so its centre is a few
-         pixels off the viewport's. Left alone it lands with a hairline of the
-         loader's pale backdrop showing down one edge. Drifting it back over
-         the same two seconds is invisible and makes it land flush. */
-      x: () => {
-        const el = growingImage[0];
-        const box = el.getBoundingClientRect();
-        const current = parseFloat(gsap.getProperty(el, "x")) || 0;
-        return current + window.innerWidth / 2 - (box.left + box.width / 2);
-      },
-      duration: 2,
-      /* The full-bleed image and the settled background are the same asset, so
-         hand over the moment the growth lands. Waiting for the whole timeline
-         would leave the loader — and its backdrop — on screen for another
-         second while the hero copy reveals. */
-      onComplete: () => {
-        container.classList.add("is--settled");
-      }
-    }, "< 1.25");
-  }
+  swell(wordmarkStart, {
+    x: "-0.05em",
+    duration: WILLEM_DURATION.open
+  }, WILLEM_PHASE.open);
 
-  if (box.length) {
-    tl.to(box, {
-      width: "110vw",
-      duration: 2
-    }, "<");
-  }
+  swell(wordmarkEnd, {
+    x: "0.05em",
+    duration: WILLEM_DURATION.open
+  }, WILLEM_PHASE.open);
 
-  /* The reveal. Every piece of copy comes up out of its own mask, a line or a
-     character at a time, so the hero reads as one wave rather than three
-     blocks appearing at once. The headline leads, the standfirst follows a
-     beat behind it, and the buttons and the nav close it off. */
-  const REVEAL_START = "< 1.2";
+  /* 3. The photograph in the gap changes while the gap is still opening. The
+     three extras are stacked over the image the hero settles on, so fading
+     them out in turn runs down through the pile to it. Linear, and each fade
+     as long as the gap between them: anything quicker is a cut, and a cut in
+     the middle of a move that is easing is the one thing the eye catches. */
+  swell(photos, {
+    opacity: 0,
+    duration: WILLEM_DURATION.crossfade,
+    stagger: WILLEM_DURATION.crossfade,
+    ease: "none"
+  }, WILLEM_PHASE.open + 0.25);
 
-  if (titleWords.length) {
-    tl.from(titleWords, {
-      yPercent: 110,
-      duration: 1.3,
-      ease: "expo.out",
-      stagger: 0.035
-    }, REVEAL_START);
-  }
+  /* 4. The gap becomes the page: the photograph grows out of the wordmark to
+     full bleed, and the box carrying it widens past the edge of the screen so
+     nothing of the loader is left showing behind it. */
+  swell(image, {
+    width: "100vw",
+    height: "100dvh",
+    /* The image is centred on the box it grows out of, and that box sits
+       between two unequal halves of the wordmark, so its centre is a few
+       pixels off the viewport's. Left alone it lands with a hairline of the
+       loader's pale backdrop showing down one edge. Drifting it back over the
+       length of the growth is invisible and makes it land flush. */
+    x: () => {
+      const el = image[0];
+      const rect = el.getBoundingClientRect();
+      const current = parseFloat(gsap.getProperty(el, "x")) || 0;
+      return current + window.innerWidth / 2 - (rect.left + rect.width / 2);
+    },
+    duration: WILLEM_DURATION.grow,
+    /* The full-bleed image and the settled background are the same asset, so
+       hand over the moment the growth lands. Waiting for the whole timeline
+       would leave the loader — and its pale backdrop — on screen for another
+       second while the hero copy is still revealing. */
+    onComplete: () => container.classList.add("is--settled")
+  }, WILLEM_PHASE.grow);
 
-  /* The standfirst is small type and many more words, so it runs finer and
-     faster than the headline — the same gesture, not a second headline. */
-  if (introWords.length) {
-    tl.from(introWords, {
-      yPercent: 110,
-      duration: 1,
-      ease: "expo.out",
-      stagger: 0.012
-    }, titleWords.length ? "< 0.25" : REVEAL_START);
-  }
+  swell(box, {
+    width: "110vw",
+    duration: WILLEM_DURATION.grow
+  }, WILLEM_PHASE.grow);
 
-  if (actions.length) {
-    tl.from(actions, {
-      yPercent: 100,
-      duration: 1.1,
-      ease: "expo.out",
-      stagger: 0.08
-    }, titleWords.length || introWords.length ? "< 0.35" : REVEAL_START);
-  }
+  /* 5. The hero reveals over the last second of the growth, so the copy is
+     already arriving as the photograph lands rather than waiting for it. The
+     headline leads; everything after it starts a beat later and runs at a
+     finer grain, which keeps one wave moving across the screen instead of
+     three blocks turning up in order. */
+  arrive(titleWords, {
+    duration: WILLEM_DURATION.title,
+    stagger: 0.035
+  }, WILLEM_PHASE.reveal);
 
-  /* The nav is one short line per link, so it takes the finer grain: each
-     link's characters run in sequence, and the links themselves are offset
-     from one another rather than all starting together. */
-  if (navLinks.length) {
-    navLinks.forEach((link, index) => {
-      const chars = split(link, "chars");
-      if (!chars.length) return;
+  // Small type and many more words, so it runs finer: the same gesture as the
+  // headline, not a second headline
+  arrive(introWords, {
+    duration: WILLEM_DURATION.intro,
+    stagger: 0.012
+  }, WILLEM_PHASE.reveal + 0.2);
 
-      tl.from(chars, {
-        yPercent: 100,
-        duration: 0.9,
-        ease: "expo.out",
-        stagger: 0.018
-      }, (index === 0 ? REVEAL_START : "< 0.06"));
-    });
-  }
+  arrive(actions, {
+    duration: WILLEM_DURATION.actions,
+    stagger: 0.08
+  }, WILLEM_PHASE.reveal + 0.35);
+
+  /* The nav is a few short words rather than a paragraph, so it takes the
+     finest grain of all: each link's characters run in sequence, and the links
+     are offset from one another so the bar fills across. */
+  navLinks.forEach((link, index) => {
+    arrive(split(link, "chars"), {
+      duration: WILLEM_DURATION.nav,
+      stagger: 0.018
+    }, WILLEM_PHASE.reveal + 0.35 + index * 0.06);
+  });
 }
