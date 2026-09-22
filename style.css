@@ -65,13 +65,9 @@ body::-webkit-scrollbar { width: 0; height: 0; display: none; }
    buttons. It is the page's voice and nothing needs to ask for it — it is
    inherited from `body`.
 
-   ►► Inter Tight Variable is not in kit nqu1vih yet. The kit publishes
-      neue-haas-grotesk-display and chivo-mono and nothing else, so until
-      "Inter Tight Variable" is added to that kit in Adobe Fonts the browser
-      will skip past it in the stack below. Neue Haas is kept behind it for
-      exactly that reason: the site goes on rendering in the face it has
-      today, and changes over on its own the moment the kit carries Inter
-      Tight. Nothing else needs editing when that happens.
+   It is the only text face in the kit now — Neue Haas has been dropped from
+   it, so there is no longer a second cut-based family to fall back to and no
+   reason to name one. One variable face, one weight scale.
 
    Chivo Mono is the label face and only that: eyebrows, metadata, form
    labels, counters, the small interface type. It is always set uppercase,
@@ -80,7 +76,7 @@ body::-webkit-scrollbar { width: 0; height: 0; display: none; }
    The kit ships it in a single cut, 300, so whatever weight a rule asks for
    resolves to that one — no synthetic bolding to guard against. */
 :root {
-  --font-body: "inter-tight-variable", "neue-haas-grotesk-display", Helvetica, Arial, sans-serif;
+  --font-body: "inter-tight-variable", sans-serif;
   --font-label: "chivo-mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
 }
 
@@ -92,7 +88,7 @@ body {
   font-size: 1.6rem;
   /* Stated rather than left to the browser default, which would land on 400
      by coincidence rather than intent. See the weight steps at the top. */
-  font-weight: var(--weight-body); --wght: var(--wght-body);
+  font-weight: var(--weight-body); --wght: var(--weight-body);
   letter-spacing: var(--track-body);
   line-height: 1.4;
 }
@@ -290,51 +286,34 @@ textarea { font-family: inherit; }
 :root { --radius: 0.2rem; }
 
 /* ------------------------- Weight steps -------------------------
-   Inter Tight is a variable face, so these are points on its weight axis
-   rather than a pick from a handful of cuts — which is why they are not the
-   round hundreds. 516 is the setting the Adobe specimen shows the face at and
-   it is what the running text takes; the other two are stepped off it far
-   enough to be read as different, near enough to stay one family.
+   Points on Inter Tight's weight axis. 500 is the ceiling — nothing on the
+   site is set heavier than that, headings included — and the steps below it
+   carry the hierarchy: running text sits at the axis default, the interface
+   a little above it, headings at the cap. Three steps inside 100 units is
+   narrow, but at these sizes it is enough to tell them apart, and it keeps
+   the page even rather than emphatic.
 
-   Every rule that sets a weight reads one of these, so a step is a single
-   edit rather than thirty-six.
-
-   Two scales, because the stack holds two kinds of face. Inter Tight has a
-   continuous axis and takes the exact numbers. Neue Haas behind it has five
-   fixed cuts and rounds to the nearest one — and above 500 it rounds upward,
-   so a single shared scale would have handed the fallback 700 for headings,
-   which is the weight this site already decided was too heavy. Each face gets
-   the value that is right for it. */
+   One scale now. The kit holds a single text face and it is variable, so
+   `font-weight` and the axis can carry the same number — there is no second
+   family with fixed cuts to round it off to. Every rule that sets a weight
+   reads one of these, so a step is a single edit rather than thirty-six. */
 :root {
-  /* Inter Tight, on the axis */
-  --wght-body: 516;
-  --wght-label: 400;
-  --wght-ui: 560;
-  --wght-strong: 640;
-
-  /* The fallback's nearest cuts, which are what the site renders until the
-     kit carries Inter Tight. These are the weights it has today. */
-  --weight-body: 400;
+  --weight-body: 400;   /* running text */
   --weight-label: 400;  /* in Chivo Mono this resolves to its only cut, 300 */
-  --weight-ui: 600;
-  --weight-strong: 600;
+  --weight-ui: 450;     /* navigation, buttons, small interface text */
+  --weight-strong: 500; /* headings and emphasis — the ceiling */
 }
 
-/* The axis itself.
-
-   `font-weight` alone would drive `wght` on a variable face, but it cannot
-   carry a value the fallback face should not have: Neue Haas has no 516, and
-   asking it for one gets 500. Naming the axis explicitly keeps the two apart
-   — the variable face is set on the axis, the fallback rounds to its nearest
-   cut through `font-weight`, and neither is guessing.
+/* The axis, stated rather than left to `font-weight` to imply — so the cap
+   the site is set to is the number written down.
 
    It has to be the universal selector. `font-variation-settings` inherits its
-   *resolved* value, so declaring it once on `body` would freeze every heading
-   at the body weight no matter what its own rule asked for — the classic way
-   this goes wrong. Applied per element, each one resolves `--wght` against
-   the weight in force where it stands. The rules that set a weight set
-   `--wght` beside it; Chivo Mono is not variable and ignores the whole thing. */
-* { font-variation-settings: "wght" var(--wght, 516); }
+   resolved value, so declaring it once on `body` would freeze every heading at
+   the body weight no matter what its own rule asked for — the classic way this
+   goes wrong. Applied per element, each one resolves `--wght` against the
+   weight in force where it stands. The rules that set a weight set `--wght`
+   beside it; Chivo Mono is not variable and ignores the whole thing. */
+* { font-variation-settings: "wght" var(--wght, 400); }
 
 /* ------------------------- Heading metrics -------------------------
    Neue Haas Grotesk is drawn for text, and at display sizes its default
@@ -361,9 +340,9 @@ textarea { font-family: inherit; }
    its default fitting is still set for text at text sizes, and the site sets
    light type on black, which opens spacing optically. */
 :root {
-  --track-display: -0.035em; /* headings, 3.2rem and up */
-  --track-title: -0.02em;    /* the small headings, 2 to 2.4rem */
-  --track-body: -0.005em;    /* running text */
+  --track-display: -0.042em; /* headings, 3.2rem and up */
+  --track-title: -0.026em;   /* the small headings, 2 to 2.4rem */
+  --track-body: -0.011em;    /* running text */
 
   --leading-display: 1.02;   /* 5.6rem and up */
   --leading-heading: 1.06;   /* 3.2 to 4.8rem */
@@ -488,7 +467,7 @@ main:not(:has(.willem-header)) .site-nav + *:not(.project-hero):not(.page-header
   font-size: 5.6rem;
   line-height: var(--leading-display);
   letter-spacing: var(--track-display);
-  font-weight: var(--weight-strong); --wght: var(--wght-strong);
+  font-weight: var(--weight-strong); --wght: var(--weight-strong);
 }
 .hero-col-two p { margin: 0; font-size: 1.8rem; }
 
@@ -503,14 +482,14 @@ h2 {
   font-size: 4.8rem;
   line-height: var(--leading-heading);
   letter-spacing: var(--track-display);
-  font-weight: var(--weight-strong); --wght: var(--wght-strong);
+  font-weight: var(--weight-strong); --wght: var(--weight-strong);
 }
 h3 {
   margin: 0 0 1.6rem;
   font-size: 3.2rem;
   line-height: var(--leading-heading);
   letter-spacing: var(--track-display);
-  font-weight: var(--weight-strong); --wght: var(--wght-strong);
+  font-weight: var(--weight-strong); --wght: var(--weight-strong);
 }
 .lead { font-size: 1.8rem; margin: 0 0 2.4rem; }
 
@@ -576,7 +555,7 @@ h3 {
 .timeline-marker { display: flex; flex-direction: column; align-items: center; gap: 1.6rem; }
 .timeline-marker img { width: 4.8rem; height: 4.8rem; }
 .timeline-line { flex: 1; min-height: 6.4rem; width: 0.2rem; background: rgba(255, 255, 255, 0.2); }
-.timeline h4 { margin: 0 0 1.6rem; font-size: 2rem; line-height: var(--leading-title); letter-spacing: var(--track-title); font-weight: var(--weight-strong); --wght: var(--wght-strong); }
+.timeline h4 { margin: 0 0 1.6rem; font-size: 2rem; line-height: var(--leading-title); letter-spacing: var(--track-title); font-weight: var(--weight-strong); --wght: var(--weight-strong); }
 .timeline p { margin: 0 0 1.6rem; }
 
 /* ---------- Light theme sections ---------- */
@@ -589,7 +568,7 @@ h3 {
 .section-title-left { max-width: var(--grid-col-2); margin: 0 0 5.6rem; text-align: left; }
 .section-title-left h2 { margin-bottom: 2.4rem; }
 
-.strong { font-weight: var(--weight-strong); --wght: var(--wght-strong); }
+.strong { font-weight: var(--weight-strong); --wght: var(--weight-strong); }
 .quote { margin: 0; font-size: 1.8rem; }
 
 /* ---------- Logo strip ---------- */
@@ -607,7 +586,7 @@ h3 {
 .logo-strip__note {
   margin: 2.4rem 0 0;
   font-size: 1.3rem;
-  font-weight: var(--weight-label); --wght: var(--wght-label);
+  font-weight: var(--weight-label); --wght: var(--weight-label);
   letter-spacing: 0.12em;
   text-transform: uppercase;
   color: rgba(10, 10, 10, 0.45);
@@ -822,7 +801,7 @@ h3 {
   font-size: 4rem;
   line-height: 1.05;
   letter-spacing: -0.03em;
-  font-weight: var(--weight-strong); --wght: var(--wght-strong);
+  font-weight: var(--weight-strong); --wght: var(--weight-strong);
 }
 .panel-form { padding: 3.2rem; }
 .panel-form-step {
@@ -831,8 +810,8 @@ h3 {
   justify-content: space-between;
   gap: 2.4rem;
 }
-.panel-form-step h3 { margin: 0; font-size: 1.8rem; font-weight: var(--weight-strong); --wght: var(--wght-strong); }
-.panel-form-step .step-number { font-size: 1.8rem; font-weight: var(--weight-label); --wght: var(--wght-label); }
+.panel-form-step h3 { margin: 0; font-size: 1.8rem; font-weight: var(--weight-strong); --wght: var(--weight-strong); }
+.panel-form-step .step-number { font-size: 1.8rem; font-weight: var(--weight-label); --wght: var(--weight-label); }
 .panel-form-note { margin: 0.4rem 0 2.4rem; }
 .panel-form .form { gap: 1.6rem; }
 .panel-form .form-row { gap: 1.6rem; }
@@ -845,7 +824,7 @@ h3 {
 .tag {
   padding: 0.4rem 1rem;
   font-size: 1.4rem;
-  font-weight: var(--weight-ui); --wght: var(--wght-ui);
+  font-weight: var(--weight-ui); --wght: var(--weight-ui);
   color: #0a0a0a;
   background: rgba(255, 255, 255, 0.85);
   border-radius: var(--radius);
@@ -884,9 +863,9 @@ h3 {
 .product-img { width: 100%; height: auto; aspect-ratio: 405 / 270; object-fit: cover; }
 .product-body { display: flex; flex-direction: column; gap: 1.6rem; padding: 2.4rem; flex: 1; }
 .product-info { display: flex; gap: 1.6rem; align-items: center; }
-.product-meta { font-size: 1.4rem; font-weight: var(--weight-ui); --wght: var(--wght-ui); }
+.product-meta { font-size: 1.4rem; font-weight: var(--weight-ui); --wght: var(--weight-ui); }
 .tag-dark { background: rgba(255, 255, 255, 0.1); color: #ffffff; }
-.product-card h5 { margin: 0; font-size: 2.4rem; line-height: var(--leading-title); letter-spacing: var(--track-title); font-weight: var(--weight-strong); --wght: var(--wght-strong); }
+.product-card h5 { margin: 0; font-size: 2.4rem; line-height: var(--leading-title); letter-spacing: var(--track-title); font-weight: var(--weight-strong); --wght: var(--weight-strong); }
 .product-card p { margin: 0; }
 .product-card .btn-link { margin-top: auto; align-self: flex-start; }
 .actions-end { justify-content: flex-end; margin-top: 5.6rem; }
@@ -898,7 +877,7 @@ h3 {
 .faq summary {
   padding: 2rem 0;
   font-size: 1.8rem;
-  font-weight: var(--weight-ui); --wght: var(--wght-ui);
+  font-weight: var(--weight-ui); --wght: var(--weight-ui);
   cursor: pointer;
   list-style: none;
 }
@@ -941,7 +920,7 @@ h3 {
   font-size: 5.6rem;
   line-height: var(--leading-display);
   letter-spacing: var(--track-display);
-  font-weight: var(--weight-strong); --wght: var(--wght-strong);
+  font-weight: var(--weight-strong); --wght: var(--weight-strong);
 }
 .page-header .lead { margin-bottom: 2.4rem; }
 
@@ -992,7 +971,7 @@ h3 {
   height: 6.4rem;
   margin-bottom: 3.2rem;
   font-size: 1.8rem;
-  font-weight: var(--weight-ui); --wght: var(--wght-ui);
+  font-weight: var(--weight-ui); --wght: var(--weight-ui);
 }
 .feature-split-center { align-items: center; gap: 5.6rem; }
 .feature-split-center > a { flex: 1; min-width: 0; }
@@ -1027,7 +1006,7 @@ h3 {
 .footer-logo { width: 8.4rem; height: 3.6rem; object-fit: contain; margin-bottom: 0.8rem; }
 .footer-block { font-size: 1.4rem; }
 .footer-block p { margin: 0 0 0.4rem; }
-.footer-block .strong { font-weight: var(--weight-strong); --wght: var(--wght-strong); }
+.footer-block .strong { font-weight: var(--weight-strong); --wght: var(--weight-strong); }
 .footer-block a { text-decoration: underline; }
 
 .social { display: flex; gap: 1.2rem; margin-top: 0.8rem; }
@@ -1035,7 +1014,7 @@ h3 {
 
 .footer-links { display: grid; grid-template-columns: repeat(2, 1fr); gap: 2.4rem; }
 .footer-links ul { flex: 1; list-style: none; margin: 0; padding: 0; }
-.footer-links li { padding: 0.8rem 0; font-size: 1.4rem; font-weight: var(--weight-ui); --wght: var(--wght-ui); }
+.footer-links li { padding: 0.8rem 0; font-size: 1.4rem; font-weight: var(--weight-ui); --wght: var(--weight-ui); }
 .footer-links a { text-decoration: none; }
 
 .footer-bottom {
@@ -1095,8 +1074,17 @@ h3 {
 
 
 /* ---------- Film grain overlay ---------- */
-/* Above the page and nav, below the drawers (100) and the page transition
-   (200) so those read cleanly */
+/* Over the page's backgrounds and its photography, under everything anyone
+   has to read. It sat over the type as well, which cost every letter on the
+   site half a stop of contrast and a speckled edge.
+
+   It cannot simply go behind the page: every band on the site is painted an
+   opaque black or white, so a grain layer underneath them is a grain layer
+   nobody sees. It stays where it is, and the copy is lifted over it instead —
+   see `.grain` + content, below.
+
+   Below the drawers (100) and the page transition (200) so those read
+   cleanly. */
 .grain {
   position: fixed;
   inset: 0%;
@@ -1126,6 +1114,7 @@ h3 {
 @media (prefers-reduced-motion: reduce) {
   .grain[data-grain-animate="true"] { animation: none; }
 }
+
 
 /* ---------- Home intro (first load / refresh only) ---------- */
 
@@ -1215,7 +1204,7 @@ html:has(.willem-header.is--loading) body {
   white-space: nowrap;
   justify-content: center;
   font-size: 6em;
-  font-weight: var(--weight-strong); --wght: var(--wght-strong);
+  font-weight: var(--weight-strong); --wght: var(--weight-strong);
   line-height: .75;
   display: flex;
   position: relative;
@@ -1431,7 +1420,7 @@ html:has(.willem-header.is--loading) body {
 .willem-nav__link {
   color: inherit;
   font-size: 1em;
-  font-weight: var(--weight-ui); --wght: var(--wght-ui);
+  font-weight: var(--weight-ui); --wght: var(--weight-ui);
   line-height: 1.2;
   text-decoration: none;
   position: relative;
@@ -1517,7 +1506,7 @@ html:has(.willem-header.is--loading) body {
   font-size: 5.6rem;
   line-height: var(--leading-display);
   letter-spacing: var(--track-display);
-  font-weight: var(--weight-strong); --wght: var(--wght-strong);
+  font-weight: var(--weight-strong); --wght: var(--weight-strong);
 }
 
 .willem-hero__intro { margin: 0; font-size: 1.8rem; }
@@ -1668,7 +1657,7 @@ html:has(.willem-header.is--loading) body {
   padding: 2.5em var(--site-inset);
   /* Slightly more weight through the whole footer: the links and the small
      labels were reading as the lightest thing on the page */
-  font-weight: var(--weight-ui); --wght: var(--wght-ui);
+  font-weight: var(--weight-ui); --wght: var(--weight-ui);
   display: flex;
   position: relative;
 }
@@ -1680,7 +1669,7 @@ html:has(.willem-header.is--loading) body {
   margin-top: 0;
   margin-bottom: 0;
   font-size: 1.125em;
-  font-weight: var(--weight-ui); --wght: var(--wght-ui);
+  font-weight: var(--weight-ui); --wght: var(--weight-ui);
 }
 
 .site-footer__links-row {
@@ -1725,7 +1714,7 @@ html:has(.willem-header.is--loading) body {
   font-size: 6.5em;
   line-height: .85;
   letter-spacing: -.03em;
-  font-weight: var(--weight-strong); --wght: var(--wght-strong);
+  font-weight: var(--weight-strong); --wght: var(--weight-strong);
 }
 
 .site-footer__legal {
@@ -1904,14 +1893,14 @@ main:has(.willem-header.is--loading) .site-nav,
   margin: 0;
   font-size: 3.2rem;
   letter-spacing: var(--track-display);
-  font-weight: var(--weight-strong); --wght: var(--wght-strong);
+  font-weight: var(--weight-strong); --wght: var(--weight-strong);
   line-height: 1;
 }
 
 .sticky-tab__eyebrow {
   margin: 0;
   font-size: 1.6rem;
-  font-weight: var(--weight-label); --wght: var(--wght-label);
+  font-weight: var(--weight-label); --wght: var(--weight-label);
   white-space: nowrap;
 }
 
@@ -1962,7 +1951,7 @@ main:has(.willem-header.is--loading) .site-nav,
   background-color: #0000;
   outline-style: none;
   padding: 0;
-  font-weight: var(--weight-ui); --wght: var(--wght-ui);
+  font-weight: var(--weight-ui); --wght: var(--weight-ui);
   line-height: 1;
   text-decoration: none;
   display: inline-grid;
@@ -2464,7 +2453,7 @@ body{
   font-size: 16rem;
   line-height: 1;
   letter-spacing: -0.08em;
-  font-weight: var(--weight-strong); --wght: var(--wght-strong);
+  font-weight: var(--weight-strong); --wght: var(--weight-strong);
 }
 .figure-lead__label {
   /* Two of the four columns, so the caption sits under the first half */
@@ -2495,7 +2484,7 @@ body{
 .insights-row__index {
   margin: 0;
   font-size: 1.4rem;
-  font-weight: var(--weight-label); --wght: var(--wght-label);
+  font-weight: var(--weight-label); --wght: var(--weight-label);
   color: rgba(255, 255, 255, 0.5);
 }
 .insights-row__body { min-width: 0; }
@@ -2515,7 +2504,7 @@ body{
   font-size: 6.4rem;
   line-height: 1;
   letter-spacing: -0.04em;
-  font-weight: var(--weight-strong); --wght: var(--wght-strong);
+  font-weight: var(--weight-strong); --wght: var(--weight-strong);
   justify-self: end;
 }
 /* Entries with no figure of their own carry a short phrase at the same
@@ -2641,7 +2630,7 @@ body{
   font-size: 2rem;
   line-height: var(--leading-title);
   letter-spacing: var(--track-title);
-  font-weight: var(--weight-strong); --wght: var(--wght-strong);
+  font-weight: var(--weight-strong); --wght: var(--weight-strong);
 }
 .step-timeline__p { margin: 0; }
 
@@ -2701,7 +2690,7 @@ body{
 .social-proof__body { display: flex; flex-direction: column; gap: 0.4rem; }
 .social-proof__stars { width: 8rem; height: auto; }
 .social-proof__label { margin: 0; font-size: 1.6rem; color: rgba(255, 255, 255, 0.7); }
-.social-proof__label strong { color: #ffffff; font-weight: var(--weight-strong); --wght: var(--wght-strong); }
+.social-proof__label strong { color: #ffffff; font-weight: var(--weight-strong); --wght: var(--weight-strong); }
 
 /* ---------- Centered looping slider ---------- */
 .centered-slider-row {
@@ -2927,7 +2916,7 @@ main section + section,
 .tagline {
   margin: 0 0 1.6rem;
   font-size: 1.3rem;
-  font-weight: var(--weight-label); --wght: var(--wght-label);
+  font-weight: var(--weight-label); --wght: var(--weight-label);
   text-transform: uppercase;
   letter-spacing: 0.12em;
   color: rgba(255, 255, 255, 0.55);
@@ -2963,7 +2952,7 @@ main section + section,
   font-size: 6.4rem;
   line-height: 1.05;
   letter-spacing: -0.03em;
-  font-weight: var(--weight-strong); --wght: var(--wght-strong);
+  font-weight: var(--weight-strong); --wght: var(--weight-strong);
 }
 .shop-hero .lead { max-width: 48rem; margin-bottom: 0; }
 .shop-hero .social-proof { margin-top: 4rem; }
@@ -3008,7 +2997,7 @@ main section + section,
 .product-card::before {
   content: counter(product, decimal-leading-zero);
   font-size: 1.3rem;
-  font-weight: var(--weight-label); --wght: var(--wght-label);
+  font-weight: var(--weight-label); --wght: var(--weight-label);
   letter-spacing: 0.12em;
   color: rgba(10, 10, 10, 0.4);
 }
@@ -3126,7 +3115,7 @@ main section + section,
   width: 100%;
   margin-bottom: 0;
   font-size: 1.3rem;
-  font-weight: var(--weight-label); --wght: var(--wght-label);
+  font-weight: var(--weight-label); --wght: var(--weight-label);
   line-height: 1;
   text-transform: uppercase;
   letter-spacing: 0.12em;
@@ -3251,7 +3240,7 @@ main section + section,
   margin: 0;
   color: inherit;
   font-size: 1.6rem;
-  font-weight: var(--weight-ui); --wght: var(--wght-ui);
+  font-weight: var(--weight-ui); --wght: var(--weight-ui);
 }
 
 /* Field: Error */
@@ -3323,7 +3312,7 @@ main section + section,
   font-size: 8rem;
   line-height: 1;
   letter-spacing: -0.04em;
-  font-weight: var(--weight-strong); --wght: var(--wght-strong);
+  font-weight: var(--weight-strong); --wght: var(--weight-strong);
 }
 .final-cta__lead {
   max-width: var(--grid-col-2);
@@ -3392,7 +3381,7 @@ main section + section,
   font-size: 5.6rem;
   line-height: 1.05;
   letter-spacing: -0.03em;
-  font-weight: var(--weight-strong); --wght: var(--wght-strong);
+  font-weight: var(--weight-strong); --wght: var(--weight-strong);
 }
 
 .case-intro__body p { margin: 0 0 2.4rem; }
@@ -3427,7 +3416,7 @@ main section + section,
 .case-facts > div:last-child:nth-child(odd) { grid-column: 1 / -1; }
 .case-facts dt {
   font-size: 1.3rem;
-  font-weight: var(--weight-label); --wght: var(--wght-label);
+  font-weight: var(--weight-label); --wght: var(--weight-label);
   text-transform: uppercase;
   letter-spacing: 0.12em;
   color: var(--form-muted);
@@ -3509,7 +3498,7 @@ h2 { margin-bottom: 3.2rem; }
 .panel-meta dt {
   margin-bottom: 0.6rem;
   font-size: 1.3rem;
-  font-weight: var(--weight-label); --wght: var(--wght-label);
+  font-weight: var(--weight-label); --wght: var(--weight-label);
   line-height: 1;
   letter-spacing: 0.12em;
   text-transform: uppercase;
@@ -3524,7 +3513,7 @@ h2 { margin-bottom: 3.2rem; }
 
 /* Inline emphasis sits on the same 700 the headings use, so elements the
    browser renders at its own bold match the rest of the page. */
-strong, b, th { font-weight: var(--weight-strong); --wght: var(--wght-strong); }
+strong, b, th { font-weight: var(--weight-strong); --wght: var(--weight-strong); }
 
 /* =============================================================
    Services list, testimonial feature, map head, prefooter
@@ -3585,7 +3574,7 @@ strong, b, th { font-weight: var(--weight-strong); --wght: var(--wght-strong); }
   font-size: 4.8rem;
   line-height: 1.22;
   letter-spacing: -0.03em;
-  font-weight: var(--weight-strong); --wght: var(--wght-strong);
+  font-weight: var(--weight-strong); --wght: var(--weight-strong);
   color: rgba(255, 255, 255, 0.25);
   transition: color 0.35s cubic-bezier(0.65, 0.05, 0, 1);
 }
@@ -3666,7 +3655,7 @@ strong, b, th { font-weight: var(--weight-strong); --wght: var(--wght-strong); }
   font-size: 4rem;
   line-height: 1.2;
   letter-spacing: -0.03em;
-  font-weight: var(--weight-strong); --wght: var(--wght-strong);
+  font-weight: var(--weight-strong); --wght: var(--weight-strong);
 }
 .testimonial-slide__who {
   margin: 0;
@@ -3887,7 +3876,7 @@ strong, b, th { font-weight: var(--weight-strong); --wght: var(--wght-strong); }
   font-size: 8.8rem;
   line-height: 0.98;
   letter-spacing: -0.035em;
-  font-weight: var(--weight-strong); --wght: var(--wght-strong);
+  font-weight: var(--weight-strong); --wght: var(--weight-strong);
 }
 
 .project-hero__meta {
@@ -3930,7 +3919,7 @@ strong, b, th { font-weight: var(--weight-strong); --wght: var(--wght-strong); }
   border: 1px solid var(--rule);
   border-radius: var(--radius);
   font-size: 1.3rem;
-  font-weight: var(--weight-label); --wght: var(--wght-label);
+  font-weight: var(--weight-label); --wght: var(--weight-label);
   line-height: 1;
   letter-spacing: 0.04em;
   color: rgba(255, 255, 255, 0.72);
@@ -4233,7 +4222,7 @@ body:has(.arch-page) {
 .arch-stage__count {
   margin: 0;
   font-size: 1.3rem;
-  font-weight: var(--weight-label); --wght: var(--wght-label);
+  font-weight: var(--weight-label); --wght: var(--weight-label);
   letter-spacing: 0.12em;
   text-transform: uppercase;
   color: rgba(255, 255, 255, 0.55);
@@ -4263,7 +4252,7 @@ body:has(.arch-page) {
   font-size: 6.4rem;
   line-height: 0.92;
   letter-spacing: -0.03em;
-  font-weight: var(--weight-strong); --wght: var(--wght-strong);
+  font-weight: var(--weight-strong); --wght: var(--weight-strong);
 }
 
 .arch-arrows { display: flex; gap: 1.2rem; }
@@ -4398,7 +4387,7 @@ body:has(.arch-page) {
 .parallax-slider__item-meta {
   margin: 0.4rem 0 0;
   font-size: 1.3rem;
-  font-weight: var(--weight-label); --wght: var(--wght-label);
+  font-weight: var(--weight-label); --wght: var(--weight-label);
   letter-spacing: 0.12em;
   text-transform: uppercase;
   color: rgba(255, 255, 255, 0.5);
@@ -4518,7 +4507,7 @@ body:has(.arch-page) {
   padding: 0.4rem 0.8rem;
   border-radius: var(--radius);
   font-size: 1.1rem;
-  font-weight: var(--weight-ui); --wght: var(--wght-ui);
+  font-weight: var(--weight-ui); --wght: var(--weight-ui);
   line-height: 1;
   letter-spacing: 0.06em;
   white-space: nowrap;
@@ -4540,7 +4529,7 @@ body:has(.arch-page) {
   font-size: 6.4rem;
   line-height: 0.9;
   letter-spacing: -0.05em;
-  font-weight: var(--weight-strong); --wght: var(--wght-strong);
+  font-weight: var(--weight-strong); --wght: var(--weight-strong);
   color: #0a0a0a;
 }
 .results-card__label {
@@ -4557,7 +4546,7 @@ body:has(.arch-page) {
   padding-top: 1.6rem;
   border-top: 1px solid rgba(10, 10, 10, 0.12);
   font-size: 1.2rem;
-  font-weight: var(--weight-label); --wght: var(--wght-label);
+  font-weight: var(--weight-label); --wght: var(--weight-label);
   letter-spacing: 0.1em;
   text-transform: uppercase;
   color: rgba(10, 10, 10, 0.45);
@@ -4671,13 +4660,13 @@ body:has(.arch-page) {
   font-size: 1.4rem;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  font-weight: var(--weight-ui); --wght: var(--wght-ui);
+  font-weight: var(--weight-ui); --wght: var(--weight-ui);
   margin-bottom: 1.6rem;
 }
 .scroll-next__h {
   font-size: 8.8rem;
   letter-spacing: -0.035em;
-  font-weight: var(--weight-strong); --wght: var(--wght-strong);
+  font-weight: var(--weight-strong); --wght: var(--weight-strong);
   text-align: center;
   max-width: 18ch;
 }
@@ -4734,7 +4723,7 @@ body:has(.arch-page) {
   font-size: 9.6rem;
   line-height: 0.96;
   letter-spacing: -0.04em;
-  font-weight: var(--weight-strong); --wght: var(--wght-strong);
+  font-weight: var(--weight-strong); --wght: var(--weight-strong);
 }
 /* One accent, the red the transition panels already use, set on the baseline
    the way a full stop would be */
@@ -4830,7 +4819,7 @@ body:has(.arch-page) {
   font-size: 9.6rem;
   line-height: 0.94;
   letter-spacing: -0.04em;
-  font-weight: var(--weight-strong); --wght: var(--wght-strong);
+  font-weight: var(--weight-strong); --wght: var(--weight-strong);
 }
 .final-cta__portrait {
   grid-column: 4 / span 1;
@@ -5085,7 +5074,7 @@ body:has(.arch-page) {
   z-index: 1;
   color: #ffffff;
   font-size: 1.8rem;
-  font-weight: var(--weight-ui); --wght: var(--wght-ui);
+  font-weight: var(--weight-ui); --wght: var(--weight-ui);
   line-height: 1.2;
   letter-spacing: -0.01em;
 }
@@ -5098,7 +5087,7 @@ body:has(.arch-page) {
   z-index: 1;
   color: rgba(255, 255, 255, 0.65);
   font-size: 1.2rem;
-  font-weight: var(--weight-label); --wght: var(--wght-label);
+  font-weight: var(--weight-label); --wght: var(--weight-label);
   letter-spacing: 0.14em;
   line-height: 1;
 }
@@ -5106,4 +5095,64 @@ body:has(.arch-page) {
 @media screen and (max-width: 767px) {
   .slide-card__name { font-size: 1.6rem; left: 1.2rem; right: 1.2rem; bottom: 1.2rem; }
   .slide-card__index { top: 1.2rem; right: 1.2rem; }
+}
+
+
+/* =============================================================
+   Text above the grain
+   =============================================================
+   Last in the file on purpose. This is a layering rule, and the components
+   below set z-indexes of their own for their own internal stacking — the
+   testimonial slide puts its quote on 1 to sit over its backdrop, and so on.
+   Those are all lower than the grain, so a rule placed earlier would simply
+   be overruled by them one component at a time. Coming last, it wins, and the
+   relative order inside each component is unchanged because everything it
+   lifts moves by the same amount.
+
+
+   These are the content wrappers — the boxes that hold type — and not the
+   bands around them. That distinction is the whole point: a band's background
+   and its photograph stay under the grain, which is where the texture is worth
+   having, while the words sit clear of it. On every band that carries a
+   picture the picture is a sibling of the wrapper named here, not inside it,
+   so lifting one does not lift the other.
+
+   One number above the grain's 90, and below the drawers at 100. */
+.container,
+.site-nav,
+.willem-header__content,
+.page-header-body,
+.shop-hero__body,
+.logo-strip__head,
+.logo-strip__note,
+.arch-stage__head,
+.arch-stage__foot,
+.map-spread__head,
+.map-spread__footer,
+.book-feature,
+.testimonial-slide__body,
+.testimonial-slide__who,
+.project-hero,
+.project-note,
+.project-close,
+.scroll-next__inner,
+.scroll-next__center,
+.site-footer,
+/* Captions that stand on a picture rather than beside one. The picture keeps
+   the grain; the words on top of it do not. */
+.slide-card__index,
+.slide-card__name,
+.testimonial-chips,
+/* The whole card, not its caption. These are parallaxed, and a transform makes
+   a stacking context — anything lifted inside one is lifted only within it and
+   still comes out under a layer fixed to the page. The card rises as a unit,
+   so its picture loses the grain along with its caption. */
+.parallax-slider__item,
+/* The intro's wordmark is type too. The two halves of it only — the box
+   between them carries the photograph that grows out of the word, and that
+   wants the grain like every other picture on the site. */
+.willem__h1-start,
+.willem__h1-end {
+  position: relative;
+  z-index: 91;
 }
