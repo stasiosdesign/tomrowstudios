@@ -282,20 +282,23 @@ textarea { font-family: inherit; }
 :root { --radius: 0.2rem; }
 
 /* ------------------------- Weight steps -------------------------
-   Neue Haas Grotesk now comes out of the kit in five cuts — 300, 400, 500,
-   600 and 700, plus a 300 italic. The 55 Roman (500) and 65 Medium (600)
-   that were missing when these steps were first set are published, so the
-   two middle steps the page was written around are available whenever they
-   are wanted; the values below stay where they are so the hierarchy reads
-   as it does today, and moving --weight-body to 500 and --weight-ui to 600
-   is a deliberate change of how the site is set, not a correction.
+   Neue Haas Grotesk comes out of the kit in five cuts — 300, 400, 500, 600
+   and 700, plus a 300 italic. The 55 Roman (500) and 65 Medium (600) that
+   were missing when these steps were first set are published now, which is
+   what makes the step below possible.
 
-   Headings take the heaviest cut the family has. */
+   Headings sit on 65 Medium rather than 75 Bold. Bold is the heaviest cut
+   published and it was what the site used, but at the sizes the headings run
+   to it sets too solid — the counters close up and the page reads as shouted.
+   One step down keeps the presence and lets the letterforms open.
+
+   Every rule that was bold now reads its weight from one of these two, so the
+   step is a single edit rather than thirty-six. */
 :root {
   --weight-body: 400;   /* running text — 45 Light */
   --weight-label: 400;  /* small labels; in Chivo Mono this resolves to its 300 */
-  --weight-ui: 700;     /* navigation and buttons */
-  --weight-strong: 700; /* headings — 75 Bold, the heaviest cut published */
+  --weight-ui: 600;     /* navigation, buttons, small interface text */
+  --weight-strong: 600; /* headings and emphasis — 65 Medium */
 }
 
 /* ------------------------- Heading metrics -------------------------
@@ -441,7 +444,7 @@ main:not(:has(.willem-header)) .site-nav + *:not(.project-hero):not(.page-header
   font-size: 5.6rem;
   line-height: var(--leading-display);
   letter-spacing: var(--track-display);
-  font-weight: 700;
+  font-weight: var(--weight-strong);
 }
 .hero-col-two p { margin: 0; font-size: 1.8rem; }
 
@@ -456,14 +459,14 @@ h2 {
   font-size: 4.8rem;
   line-height: var(--leading-heading);
   letter-spacing: var(--track-display);
-  font-weight: 700;
+  font-weight: var(--weight-strong);
 }
 h3 {
   margin: 0 0 1.6rem;
   font-size: 3.2rem;
   line-height: var(--leading-heading);
   letter-spacing: var(--track-display);
-  font-weight: 700;
+  font-weight: var(--weight-strong);
 }
 .lead { font-size: 1.8rem; margin: 0 0 2.4rem; }
 
@@ -529,7 +532,7 @@ h3 {
 .timeline-marker { display: flex; flex-direction: column; align-items: center; gap: 1.6rem; }
 .timeline-marker img { width: 4.8rem; height: 4.8rem; }
 .timeline-line { flex: 1; min-height: 6.4rem; width: 0.2rem; background: rgba(255, 255, 255, 0.2); }
-.timeline h4 { margin: 0 0 1.6rem; font-size: 2rem; line-height: var(--leading-title); letter-spacing: var(--track-title); font-weight: 700; }
+.timeline h4 { margin: 0 0 1.6rem; font-size: 2rem; line-height: var(--leading-title); letter-spacing: var(--track-title); font-weight: var(--weight-strong); }
 .timeline p { margin: 0 0 1.6rem; }
 
 /* ---------- Light theme sections ---------- */
@@ -542,7 +545,7 @@ h3 {
 .section-title-left { max-width: var(--grid-col-2); margin: 0 0 5.6rem; text-align: left; }
 .section-title-left h2 { margin-bottom: 2.4rem; }
 
-.strong { font-weight: 700; }
+.strong { font-weight: var(--weight-strong); }
 .quote { margin: 0; font-size: 1.8rem; }
 
 /* ---------- Logo strip ---------- */
@@ -775,7 +778,7 @@ h3 {
   font-size: 4rem;
   line-height: 1.05;
   letter-spacing: -0.03em;
-  font-weight: 700;
+  font-weight: var(--weight-strong);
 }
 .panel-form { padding: 3.2rem; }
 .panel-form-step {
@@ -784,7 +787,7 @@ h3 {
   justify-content: space-between;
   gap: 2.4rem;
 }
-.panel-form-step h3 { margin: 0; font-size: 1.8rem; font-weight: 700; }
+.panel-form-step h3 { margin: 0; font-size: 1.8rem; font-weight: var(--weight-strong); }
 .panel-form-step .step-number { font-size: 1.8rem; font-weight: var(--weight-label); }
 .panel-form-note { margin: 0.4rem 0 2.4rem; }
 .panel-form .form { gap: 1.6rem; }
@@ -798,7 +801,7 @@ h3 {
 .tag {
   padding: 0.4rem 1rem;
   font-size: 1.4rem;
-  font-weight: 700;
+  font-weight: var(--weight-ui);
   color: #0a0a0a;
   background: rgba(255, 255, 255, 0.85);
   border-radius: var(--radius);
@@ -837,9 +840,9 @@ h3 {
 .product-img { width: 100%; height: auto; aspect-ratio: 405 / 270; object-fit: cover; }
 .product-body { display: flex; flex-direction: column; gap: 1.6rem; padding: 2.4rem; flex: 1; }
 .product-info { display: flex; gap: 1.6rem; align-items: center; }
-.product-meta { font-size: 1.4rem; font-weight: 700; }
+.product-meta { font-size: 1.4rem; font-weight: var(--weight-ui); }
 .tag-dark { background: rgba(255, 255, 255, 0.1); color: #ffffff; }
-.product-card h5 { margin: 0; font-size: 2.4rem; line-height: var(--leading-title); letter-spacing: var(--track-title); font-weight: 700; }
+.product-card h5 { margin: 0; font-size: 2.4rem; line-height: var(--leading-title); letter-spacing: var(--track-title); font-weight: var(--weight-strong); }
 .product-card p { margin: 0; }
 .product-card .btn-link { margin-top: auto; align-self: flex-start; }
 .actions-end { justify-content: flex-end; margin-top: 5.6rem; }
@@ -851,7 +854,7 @@ h3 {
 .faq summary {
   padding: 2rem 0;
   font-size: 1.8rem;
-  font-weight: 700;
+  font-weight: var(--weight-ui);
   cursor: pointer;
   list-style: none;
 }
@@ -894,7 +897,7 @@ h3 {
   font-size: 5.6rem;
   line-height: var(--leading-display);
   letter-spacing: var(--track-display);
-  font-weight: 700;
+  font-weight: var(--weight-strong);
 }
 .page-header .lead { margin-bottom: 2.4rem; }
 
@@ -945,7 +948,7 @@ h3 {
   height: 6.4rem;
   margin-bottom: 3.2rem;
   font-size: 1.8rem;
-  font-weight: 700;
+  font-weight: var(--weight-ui);
 }
 .feature-split-center { align-items: center; gap: 5.6rem; }
 .feature-split-center > a { flex: 1; min-width: 0; }
@@ -980,7 +983,7 @@ h3 {
 .footer-logo { width: 8.4rem; height: 3.6rem; object-fit: contain; margin-bottom: 0.8rem; }
 .footer-block { font-size: 1.4rem; }
 .footer-block p { margin: 0 0 0.4rem; }
-.footer-block .strong { font-weight: 700; }
+.footer-block .strong { font-weight: var(--weight-strong); }
 .footer-block a { text-decoration: underline; }
 
 .social { display: flex; gap: 1.2rem; margin-top: 0.8rem; }
@@ -988,7 +991,7 @@ h3 {
 
 .footer-links { display: grid; grid-template-columns: repeat(2, 1fr); gap: 2.4rem; }
 .footer-links ul { flex: 1; list-style: none; margin: 0; padding: 0; }
-.footer-links li { padding: 0.8rem 0; font-size: 1.4rem; font-weight: 700; }
+.footer-links li { padding: 0.8rem 0; font-size: 1.4rem; font-weight: var(--weight-ui); }
 .footer-links a { text-decoration: none; }
 
 .footer-bottom {
@@ -1168,7 +1171,7 @@ html:has(.willem-header.is--loading) body {
   white-space: nowrap;
   justify-content: center;
   font-size: 6em;
-  font-weight: 700;
+  font-weight: var(--weight-strong);
   line-height: .75;
   display: flex;
   position: relative;
@@ -1470,7 +1473,7 @@ html:has(.willem-header.is--loading) body {
   font-size: 5.6rem;
   line-height: var(--leading-display);
   letter-spacing: var(--track-display);
-  font-weight: 700;
+  font-weight: var(--weight-strong);
 }
 
 .willem-hero__intro { margin: 0; font-size: 1.8rem; }
@@ -1678,7 +1681,7 @@ html:has(.willem-header.is--loading) body {
   font-size: 6.5em;
   line-height: .85;
   letter-spacing: -.03em;
-  font-weight: 700;
+  font-weight: var(--weight-strong);
 }
 
 .site-footer__legal {
@@ -1857,7 +1860,7 @@ main:has(.willem-header.is--loading) .site-nav,
   margin: 0;
   font-size: 3.2rem;
   letter-spacing: var(--track-display);
-  font-weight: 700;
+  font-weight: var(--weight-strong);
   line-height: 1;
 }
 
@@ -2417,7 +2420,7 @@ body{
   font-size: 16rem;
   line-height: 1;
   letter-spacing: -0.08em;
-  font-weight: 700;
+  font-weight: var(--weight-strong);
 }
 .figure-lead__label {
   /* Two of the four columns, so the caption sits under the first half */
@@ -2468,7 +2471,7 @@ body{
   font-size: 6.4rem;
   line-height: 1;
   letter-spacing: -0.04em;
-  font-weight: 700;
+  font-weight: var(--weight-strong);
   justify-self: end;
 }
 /* Entries with no figure of their own carry a short phrase at the same
@@ -2594,7 +2597,7 @@ body{
   font-size: 2rem;
   line-height: var(--leading-title);
   letter-spacing: var(--track-title);
-  font-weight: 700;
+  font-weight: var(--weight-strong);
 }
 .step-timeline__p { margin: 0; }
 
@@ -2654,7 +2657,7 @@ body{
 .social-proof__body { display: flex; flex-direction: column; gap: 0.4rem; }
 .social-proof__stars { width: 8rem; height: auto; }
 .social-proof__label { margin: 0; font-size: 1.6rem; color: rgba(255, 255, 255, 0.7); }
-.social-proof__label strong { color: #ffffff; font-weight: 700; }
+.social-proof__label strong { color: #ffffff; font-weight: var(--weight-strong); }
 
 /* ---------- Centered looping slider ---------- */
 .centered-slider-row {
@@ -2916,7 +2919,7 @@ main section + section,
   font-size: 6.4rem;
   line-height: 1.05;
   letter-spacing: -0.03em;
-  font-weight: 700;
+  font-weight: var(--weight-strong);
 }
 .shop-hero .lead { max-width: 48rem; margin-bottom: 0; }
 .shop-hero .social-proof { margin-top: 4rem; }
@@ -3204,7 +3207,7 @@ main section + section,
   margin: 0;
   color: inherit;
   font-size: 1.6rem;
-  font-weight: 700;
+  font-weight: var(--weight-ui);
 }
 
 /* Field: Error */
@@ -3276,7 +3279,7 @@ main section + section,
   font-size: 8rem;
   line-height: 1;
   letter-spacing: -0.04em;
-  font-weight: 700;
+  font-weight: var(--weight-strong);
 }
 .final-cta__lead {
   max-width: var(--grid-col-2);
@@ -3345,7 +3348,7 @@ main section + section,
   font-size: 5.6rem;
   line-height: 1.05;
   letter-spacing: -0.03em;
-  font-weight: 700;
+  font-weight: var(--weight-strong);
 }
 
 .case-intro__body p { margin: 0 0 2.4rem; }
@@ -3477,7 +3480,7 @@ h2 { margin-bottom: 3.2rem; }
 
 /* Inline emphasis sits on the same 700 the headings use, so elements the
    browser renders at its own bold match the rest of the page. */
-strong, b, th { font-weight: 700; }
+strong, b, th { font-weight: var(--weight-strong); }
 
 /* =============================================================
    Services list, testimonial feature, map head, prefooter
@@ -3538,7 +3541,7 @@ strong, b, th { font-weight: 700; }
   font-size: 4.8rem;
   line-height: 1.22;
   letter-spacing: -0.03em;
-  font-weight: 700;
+  font-weight: var(--weight-strong);
   color: rgba(255, 255, 255, 0.25);
   transition: color 0.35s cubic-bezier(0.65, 0.05, 0, 1);
 }
@@ -3619,7 +3622,7 @@ strong, b, th { font-weight: 700; }
   font-size: 4rem;
   line-height: 1.2;
   letter-spacing: -0.03em;
-  font-weight: 700;
+  font-weight: var(--weight-strong);
 }
 .testimonial-slide__who {
   margin: 0;
@@ -3840,7 +3843,7 @@ strong, b, th { font-weight: 700; }
   font-size: 8.8rem;
   line-height: 0.98;
   letter-spacing: -0.035em;
-  font-weight: 700;
+  font-weight: var(--weight-strong);
 }
 
 .project-hero__meta {
@@ -4216,7 +4219,7 @@ body:has(.arch-page) {
   font-size: 6.4rem;
   line-height: 0.92;
   letter-spacing: -0.03em;
-  font-weight: 700;
+  font-weight: var(--weight-strong);
 }
 
 .arch-arrows { display: flex; gap: 1.2rem; }
@@ -4493,7 +4496,7 @@ body:has(.arch-page) {
   font-size: 6.4rem;
   line-height: 0.9;
   letter-spacing: -0.05em;
-  font-weight: 700;
+  font-weight: var(--weight-strong);
   color: #0a0a0a;
 }
 .results-card__label {
@@ -4630,7 +4633,7 @@ body:has(.arch-page) {
 .scroll-next__h {
   font-size: 8.8rem;
   letter-spacing: -0.035em;
-  font-weight: 700;
+  font-weight: var(--weight-strong);
   text-align: center;
   max-width: 18ch;
 }
@@ -4687,7 +4690,7 @@ body:has(.arch-page) {
   font-size: 9.6rem;
   line-height: 0.96;
   letter-spacing: -0.04em;
-  font-weight: 700;
+  font-weight: var(--weight-strong);
 }
 /* One accent, the red the transition panels already use, set on the baseline
    the way a full stop would be */
@@ -4783,7 +4786,7 @@ body:has(.arch-page) {
   font-size: 9.6rem;
   line-height: 0.94;
   letter-spacing: -0.04em;
-  font-weight: 700;
+  font-weight: var(--weight-strong);
 }
 .final-cta__portrait {
   grid-column: 4 / span 1;
