@@ -113,6 +113,38 @@
       colour = styles.getPropertyValue("--runner-color").trim() || colour;
     }
 
+    // The hero's column grid, as painted. The lines come from the repeating
+    // background on the hero content (the runner's own containing block, so
+    // its left edge is the canvas's left edge): a 1px line at the
+    // background's x-position — the site gutter — repeated every
+    // `--grid-column`, which the stylesheet defines as the span inside the
+    // two gutters divided by `--grid-columns`. Computed style resolves the
+    // gutter to pixels for the current width; the column is rebuilt from
+    // that gutter, the element's width and the column count, the same three
+    // terms the stylesheet builds it from. (Its background-size cannot be
+    // read back resolved: a percentage-based size stays a percentage in
+    // computed style.)
+    //
+    // Falls back to the authored stroke pitch from the left edge if the
+    // background is ever not there to read — the runner still draws, just
+    // not tied to a grid that is not being painted.
+    const gridSource = root.closest(".willem-header__content") || root.parentElement;
+
+    function readGrid(width) {
+      const fallback = { origin: 0, column: config.spacing };
+      if (!gridSource) return fallback;
+
+      const styles = getComputedStyle(gridSource);
+      const origin = parseFloat(styles.backgroundPositionX);
+      const columns = parseInt(styles.getPropertyValue("--grid-columns"), 10);
+      if (!Number.isFinite(origin) || !(columns > 0)) return fallback;
+
+      const column = (width - origin * 2) / columns;
+      if (!(column > 0)) return fallback;
+
+      return { origin, column };
+    }
+
     // Layout state
     let width = 0;
     let height = 0;
@@ -160,15 +192,24 @@
 
       axisY = height / 2;
 
-      // Distribute the strokes so the first and last sit exactly on the two
-      // edges, whatever the width: the count comes from the authored spacing,
-      // then the spacing is nudged so that count fills the width precisely.
-      // No gap at the right edge, nothing drawn past it.
-      const count = Math.max(2, Math.round(width / config.spacing) + 1);
+      // Distribute the strokes on the hero's own column grid. The grid lines
+      // are painted by the hero content's repeating background: one line at
+      // its background-position, then one every background-size. Reading
+      // those resolved values gives the exact origin and pitch of the lines
+      // at this width — the same geometry the lines are drawn from, so the
+      // two systems cannot drift. The authored spacing is then rounded to
+      // the nearest whole division of a column, and the strokes are laid
+      // out from the origin in both directions until the canvas is full.
+      // One stroke therefore lands on every grid line, and the pitch is
+      // still as close to the authored 6px as the column allows.
+      const grid = readGrid(width);
+      const step = grid.column / Math.max(1, Math.round(grid.column / config.spacing));
       // Half a stroke in from each edge, so the outermost hairlines are not
       // clipped by the canvas bounds
       const inset = config.strokeWidth / 2;
-      const step = (width - inset * 2) / (count - 1);
+      const first = Math.ceil((inset - grid.origin) / step);
+      const last = Math.floor((width - inset - grid.origin) / step);
+      const count = Math.max(2, last - first + 1);
 
       if (count !== strokes.count) {
         const current = new Float32Array(count);
@@ -184,8 +225,9 @@
       }
 
       for (let i = 0; i < count; i++) {
-        // Snapped to the device grid for a crisp 1px line
-        const x = inset + i * step;
+        // Snapped to the device grid for a crisp 1px line — the same way
+        // the browser snaps the 1px grid line, so the two coincide
+        const x = grid.origin + (first + i) * step;
         strokes.x[i] = Math.floor(x * dpr) / dpr;
       }
 
