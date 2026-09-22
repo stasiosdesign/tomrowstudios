@@ -1,0 +1,120 @@
+---
+/* Site-wide page shell.
+
+   Everything outside <main> survives a Barba navigation — the transition
+   overlay, the grain, the grid overlay, the lightbox target and the scripts —
+   so it lives here once. Each page fills the Barba container.
+
+   The scripts are the site's original files, served from public/js as
+   classic scripts (is:inline). They share one global scope by design:
+   transitions.js calls the other files' init functions by name on every
+   navigation, so they must not be bundled into modules. */
+import '../styles/style.css';
+
+interface Props {
+  title: string;
+  /** Barba namespace for the page (data-barba-namespace). */
+  namespace: string;
+  /** Label shown on the transition overlay while heading to this page. */
+  pageName: string;
+  /** Optional extra class on the <main> container. */
+  mainClass?: string;
+}
+
+const { title, namespace, pageName, mainClass } = Astro.props;
+---
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{title}</title>
+<!-- Lenis smooth scroll -->
+<link rel="stylesheet" href="https://unpkg.com/lenis@1.3.17/dist/lenis.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@12/swiper-bundle.min.css"/>
+<link rel="stylesheet" href="https://use.typekit.net/nqu1vih.css">
+</head>
+<body data-barba="wrapper">
+
+<!-- Page transition overlay (outside the Barba container so it survives a navigation) -->
+<div data-transition-wrap class="transition">
+  <div class="transition__panels">
+    <div data-transition-column class="transition__panel is--gutter"></div>
+    <div data-transition-column class="transition__panel"></div>
+    <div data-transition-column class="transition__panel"></div>
+    <div data-transition-column class="transition__panel"></div>
+    <div data-transition-column class="transition__panel"></div>
+    <div data-transition-column class="transition__panel is--gutter"></div>
+  </div>
+  <span data-transition-label class="transition__label">
+    <span>[&nbsp;</span>
+    <span data-transition-label-text>Welcome</span>
+    <span>&nbsp;]</span>
+  </span>
+</div>
+
+<!-- Film grain overlay (outside the Barba container so it persists) -->
+<div class="grain" data-grain-animate="true"></div>
+
+<!-- Temporary 12-column design grid overlay (Shift + G). Outside the Barba
+     container so it survives a navigation, like the grain above it. -->
+<div data-animated-grid class="animated-grid">
+  <div class="container is--full-height">
+    <div class="animated-grid__row">
+      <div data-animated-grid-col class="animated-grid__col"></div>
+      <div data-animated-grid-col class="animated-grid__col"></div>
+      <div data-animated-grid-col class="animated-grid__col"></div>
+      <div data-animated-grid-col class="animated-grid__col"></div>
+      <div data-animated-grid-col class="animated-grid__col"></div>
+      <div data-animated-grid-col class="animated-grid__col"></div>
+      <div data-animated-grid-col class="animated-grid__col"></div>
+      <div data-animated-grid-col class="animated-grid__col"></div>
+      <div data-animated-grid-col class="animated-grid__col"></div>
+      <div data-animated-grid-col class="animated-grid__col"></div>
+      <div data-animated-grid-col class="animated-grid__col"></div>
+      <div data-animated-grid-col class="animated-grid__col"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Click-to-zoom target (outside the Barba container so it persists) -->
+<div data-click-zoom-lightbox class="click-zoom__lightbox"></div>
+
+<main data-barba="container" data-barba-namespace={namespace} data-page-name={pageName} class={mainClass}>
+<slot />
+</main>
+
+
+<script is:inline src="https://cdn.jsdelivr.net/npm/@barba/core@2.10.3/dist/barba.umd.min.js"></script>
+<script is:inline src="https://cdn.jsdelivr.net/npm/lenis@1.3.17/dist/lenis.min.js"></script>
+<script is:inline src="https://cdn.jsdelivr.net/npm/swiper@12/swiper-bundle.min.js"></script>
+<script is:inline src="https://cdn.jsdelivr.net/npm/gsap@3.15/dist/gsap.min.js"></script>
+<script is:inline src="https://cdn.jsdelivr.net/npm/gsap@3.15/dist/CustomEase.min.js"></script>
+<script is:inline src="https://cdn.jsdelivr.net/npm/gsap@3.15/dist/ScrollTrigger.min.js"></script>
+<script is:inline src="https://cdn.jsdelivr.net/npm/gsap@3.15/dist/Observer.min.js"></script>
+<script is:inline src="https://cdn.jsdelivr.net/npm/gsap@3.15/dist/SplitText.min.js"></script>
+<script is:inline src="https://cdn.jsdelivr.net/npm/gsap@3.15/dist/Draggable.min.js"></script>
+<script is:inline src="https://cdn.jsdelivr.net/npm/gsap@3.15/dist/InertiaPlugin.min.js"></script>
+<script is:inline src="https://unpkg.com/smooothy@0.0.35"></script>
+<script is:inline src="/js/intro.js"></script>
+<script is:inline src="/js/sidepanel.js"></script>
+<script is:inline src="/js/swiper.js"></script>
+<script is:inline src="/js/footer.js"></script>
+<script is:inline src="/js/button.js"></script>
+<script is:inline src="/js/marquee.js"></script>
+<script is:inline src="/js/gallery.js"></script>
+<script is:inline src="/js/odometer.js"></script>
+<script is:inline src="/js/steptimeline.js"></script>
+<script is:inline src="/js/centeredslider.js"></script>
+<script is:inline src="/js/partners.js"></script>
+<script is:inline src="/js/formvalidation.js"></script>
+<script is:inline src="/js/archslider.js"></script>
+<script is:inline src="/js/masonry.js"></script>
+<script is:inline src="/js/scrollnext.js"></script>
+<script is:inline src="/js/transitions.js"></script>
+<script is:inline src="/js/lightbox.js"></script>
+<!-- Temporary development grid overlay -->
+<script is:inline src="/js/grid-overlay.js"></script>
+
+</body>
+</html>

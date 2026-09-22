@@ -1,0 +1,12 @@
+---
+/* The site's one button style. Every instance shares the same inner markup —
+   button.js splits the label into characters for the hover — so only the
+   label, the link attributes and the secondary variant vary. */
+interface Props extends astroHTML.JSX.AnchorHTMLAttributes {
+  label: string;
+  secondary?: boolean;
+}
+
+const { label, secondary = false, class: className, ...rest } = Astro.props;
+---
+<a data-button-011 {...rest} class:list={["button-011", className, { "is--secondary": secondary }]}><span class="button-011__bg"></span><span class="button-011__inner"><span data-button-011-text class="button-011__text">{label}</span><span class="button-011__icon"><span class="button-011__icon-element"></span></span></span></a>

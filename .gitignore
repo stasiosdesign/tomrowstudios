@@ -1,2 +1,8 @@
-# Source photo drop — optimised copies live in assets/photos/
+# Source photo drop — optimised copies live in public/assets/photos/
 NEW PHOTOS/
+
+# Astro / Node
+node_modules/
+dist/
+.astro/
+npm-debug.log*

@@ -477,7 +477,7 @@ main:not(:has(.willem-header)) .site-nav + *:not(.project-hero):not(.page-header
   display: flex;
   align-items: center;
   justify-content: center;
-  background-image: linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)), url("assets/photos/talks/talk-01.jpg");
+  background-image: linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)), url("/assets/photos/talks/talk-01.jpg");
   background-size: cover;
   background-position: center;
 }

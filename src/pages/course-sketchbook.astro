@@ -1,0 +1,142 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import SiteNav from '../components/SiteNav.astro';
+import SiteFooter from '../components/SiteFooter.astro';
+import ContactPanel from '../components/ContactPanel.astro';
+import Button from '../components/Button.astro';
+---
+<BaseLayout title="An Architect's Digital Sketchbook — Tomrow Studios" namespace="course-sketchbook" pageName="Digital Sketchbook">
+<SiteNav />
+
+
+<!-- Header -->
+<header class="page-header">
+  <img class="page-header-img" src="assets/photos/products/sketchbook.jpg" width="1600" height="1600" alt="">
+  <div class="page-header-body">
+    <div class="page-header-main">
+      <h1>An Architect&rsquo;s Digital Sketchbook</h1>
+      <p class="lead">Sketch, layer and compose on an iPad in Morpholio Trace, ready for the portfolio</p>
+      <div class="tags">
+        <span class="tag">Free</span>
+        <span class="tag">PDF guide</span>
+        <span class="tag">iPad</span>
+      </div>
+    </div>
+    <dl class="panel-meta">
+      <div><dt>With</dt><dd>Thomas Rowntree and Hamza Shaikh</dd></div>
+      <div><dt>Format</dt><dd>PDF download</dd></div>
+      <div><dt>Price</dt><dd>Free</dd></div>
+      <div><dt>Get it</dt><dd><a href="https://www.tomrowstudios.com/product-page/morpholio-trace-digital-sketchbook" target="_blank" rel="noopener">Download the PDF</a></dd></div>
+    </dl>
+  </div>
+</header>
+
+<!-- Overview -->
+<section class="section section-alt">
+  <div class="container">
+    <div class="rich-split">
+      <h3>Six tips for sketching digitally</h3>
+      <div class="rich-text">
+        <p>A step-by-step tutorial on creating digital sketches quickly and easily. The PDF covers how to layer your sketches and compose them as photomontage, ready to include in your portfolios.</p>
+        <p>Digital sketching is usually taught as a software problem, which is why so much of it looks like software. This guide treats it as a drawing problem that happens to use a tablet: what you trace, what you leave out, and how much of the underlay should still be visible when you are finished.</p>
+        <p>Made with Hamza Shaikh, it works through six tips in order, each one building on the file you already have open. No project setup, no long preamble, nothing you cannot try on the sketch in front of you this afternoon.</p>
+      </div>
+    </div>
+    <img data-click-zoom class="panel-wide-img" src="assets/photos/lifestyle/lifestyle-04.jpg" width="1200" height="1500" loading="lazy" decoding="async" alt="Sketching over a drawing in the studio">
+  </div>
+</section>
+
+<!-- What it covers -->
+<section class="section section-alt">
+  <div class="container">
+    <div class="rich-split">
+      <h3>What it covers</h3>
+      <div class="rich-text">
+        <p>The guide runs from a blank Trace file to a finished photomontage. It assumes you can hold a stylus and nothing else, and it stops short of anything you would not actually use on a live project.</p>
+        <p>Layering is the part most people skip and then regret. Keeping the underlay, the line work and the tone on separate layers is what lets you throw away a bad pass without redrawing the good one, and it is what makes the sketch usable at portfolio scale later.</p>
+        <p>Photomontage closes the guide. Dropping a sketch back over a site photograph is the fastest way to test whether a proposal reads at all, and it produces the image that ends up on the page.</p>
+
+        <ul class="module-list">
+          <li><span class="module-name">One</span><span>Setting up the sheet</span></li>
+          <li><span class="module-name">Two</span><span>Line weight and layering</span></li>
+          <li><span class="module-name">Three</span><span>Tone and shadow</span></li>
+          <li><span class="module-name">Four</span><span>Photomontage for the portfolio</span></li>
+        </ul>
+      </div>
+    </div>
+    <img data-click-zoom class="panel-wide-img" src="assets/photos/lifestyle/lifestyle-09.jpg" width="1200" height="1500" loading="lazy" decoding="async" alt="A drawing pinned up in the studio">
+  </div>
+</section>
+
+<!-- Related courses — the other three, on the Shop's own card -->
+<section class="section section-alt">
+  <div class="container">
+    <div class="related-courses">
+      <div class="related-courses__head">
+        <p class="tagline">Also in the shop</p>
+        <h2>Related</h2>
+        <p>Three more ways to sharpen how the work is drawn, written and shown.</p>
+      </div>
+      <div class="product-grid">
+        <article class="product-card">
+          <img class="product-img" src="assets/photos/thumbnails/thumb-08.jpg" width="1200" height="675" loading="lazy" decoding="async" alt="Architectural presentation masterclass">
+          <div class="product-body">
+            <div class="product-info">
+              <span class="tag tag-dark">Course</span>
+              <span class="product-meta">Self-paced</span>
+            </div>
+            <h5>Architectural presentation masterclass</h5>
+            <p>A direct method for producing drawings and presentations that communicate clearly</p>
+            <Button href="product.html" label="View Course" />
+          </div>
+        </article>
+        <article class="product-card">
+          <img class="product-img" src="assets/photos/thumbnails/thumb-09.jpg" width="1200" height="675" loading="lazy" decoding="async" alt="Architecture communication package">
+          <div class="product-body">
+            <div class="product-info">
+              <span class="tag tag-dark">Package</span>
+              <span class="product-meta">Digital download</span>
+            </div>
+            <h5>Architecture communication package</h5>
+            <p>Templates, guides and frameworks for writing about and presenting architectural work</p>
+            <Button href="course-communication.html" label="View Course" />
+          </div>
+        </article>
+        <article class="product-card">
+          <img class="product-img" src="assets/photos/lifestyle/lifestyle-10.jpg" width="1200" height="1500" loading="lazy" decoding="async" alt="Architectural Influence">
+          <div class="product-body">
+            <div class="product-info">
+              <span class="tag tag-dark">Book</span>
+              <span class="product-meta">Hardcover</span>
+            </div>
+            <h5>Architectural Influence</h5>
+            <p>A precedent analysis of the 21 creators shaping how architecture is seen, shared and understood online</p>
+            <Button href="book.html" label="Buy the Book" />
+          </div>
+        </article>
+      </div>
+    </div>
+  </div>
+</section>
+<!-- Closing CTA -->
+<section class="section final-cta">
+  <div class="container">
+    <div class="final-cta__inner">
+      <p class="tagline final-cta__eyebrow">Get in touch</p>
+      <h2 class="final-cta__title">Talk to Tom</h2>
+      <span class="final-cta__portrait"><img src="assets/photos/portraits/portrait-01.jpg" width="1200" height="1200" loading="lazy" decoding="async" alt="Tom Rowntree"></span>
+      <div class="final-cta__foot">
+        <p class="lead final-cta__lead">Speaking, partnerships, teaching or a project you are still working out — start the conversation and Tom will come back to you himself.</p>
+        <div class="actions">
+          <Button href="#contact" data-panel-open="contact" data-barba-prevent="self" label="Contact Tom" />
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<SiteFooter />
+
+<ContactPanel />
+</BaseLayout>

@@ -1,0 +1,258 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import SiteNav from '../components/SiteNav.astro';
+import SiteFooter from '../components/SiteFooter.astro';
+import ContactPanel from '../components/ContactPanel.astro';
+import Button from '../components/Button.astro';
+---
+<BaseLayout title="Tomrow Studios" namespace="index" pageName="Home">
+<!-- Home intro (plays only on a first load / refresh of the home page) -->
+<section class="willem-header is--loading is--hidden">
+  <img class="willem-header__bg" src="assets/photos/talks/talk-01.jpg" alt="">
+  <div class="willem-loader">
+    <div class="willem__h1">
+      <div class="willem__h1-start">
+        <span class="willem__letter">t</span>
+        <span class="willem__letter">o</span>
+        <span class="willem__letter">m</span>
+        <span class="willem__letter">r</span>
+        <span class="willem__letter">o</span>
+        <span class="willem__letter">w</span>
+      </div>
+      <div class="willem-loader__box">
+        <div class="willem-loader__box-inner">
+          <div class="willem__growing-image">
+            <div class="willem__growing-image-wrap">
+              <img class="willem__cover-image-extra is--1" src="assets/photos/events/event-01.jpg" loading="lazy" alt="">
+              <img class="willem__cover-image-extra is--2" src="assets/photos/studio/studio-01.jpg" loading="lazy" alt="">
+              <img class="willem__cover-image-extra is--3" src="assets/photos/lifestyle/lifestyle-01.jpg" loading="lazy" alt="">
+              <img class="willem__cover-image" src="assets/photos/talks/talk-01.jpg" loading="lazy" alt=""></div>
+          </div>
+        </div>
+      </div>
+      <div class="willem__h1-end">
+        <span class="willem__letter">s</span>
+        <span class="willem__letter">t</span>
+        <span class="willem__letter">u</span>
+        <span class="willem__letter">d</span>
+        <span class="willem__letter">i</span>
+        <span class="willem__letter">o</span>
+        <span class="willem__letter">s</span></div>
+    </div>
+  </div>
+  <div class="willem-header__content">
+    <!-- The nav lives in the fixed .site-nav below, which sits in this slot -->
+    <div class="willem-header__top"></div>
+    <div class="willem-header__bottom">
+      <div class="willem-hero__content">
+        <div class="willem-hero__col">
+          <div class="willem__reveal-mask">
+            <h1 class="willem-hero__title willem__reveal">Architecture, content and education for a global audience.</h1>
+          </div>
+          <div class="willem__reveal-mask">
+            <div class="actions willem__reveal">
+              <Button href="#contact" data-panel-open="contact" data-barba-prevent="self" label="Collaborate" />
+              <Button href="influence.html" label="About" secondary />
+            </div>
+          </div>
+        </div>
+        <div class="willem-hero__col is--end">
+          <div class="willem__reveal-mask">
+            <p class="willem-hero__intro willem__reveal">Tom Rowntree is an architect, author and content creator. Through Tomrow Studios, he produces architectural content, education and collaborations for a global audience.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<SiteNav />
+
+<!-- Logo marquee -->
+<section class="logo-marquee">
+  <div data-marquee-duplicate="2" data-marquee-scroll-direction-target data-marquee-direction="right" data-marquee-status="normal" data-marquee-speed="15" data-marquee-scroll-speed="10" class="marquee-advanced">
+    <div data-marquee-scroll-target class="marquee-advanced__scroll">
+      <div data-marquee-collection-target class="marquee-advanced__collection">
+        <!-- Placeholder strip: the two supplied marks alternating. An even
+             count so the pair still alternates across the loop seam. Swap these
+             rows for the real set when the rest of the logos arrive. -->
+        <div class="marquee-advanced__item-width"><img src="assets/logos/finch-logo.png" loading="lazy" alt="Finch"></div>
+        <div class="marquee-advanced__item-width"><img src="assets/logos/Gendo-Logo-White.png" loading="lazy" alt="Gendo"></div>
+        <div class="marquee-advanced__item-width"><img src="assets/logos/finch-logo.png" loading="lazy" alt="Finch"></div>
+        <div class="marquee-advanced__item-width"><img src="assets/logos/Gendo-Logo-White.png" loading="lazy" alt="Gendo"></div>
+        <div class="marquee-advanced__item-width"><img src="assets/logos/finch-logo.png" loading="lazy" alt="Finch"></div>
+        <div class="marquee-advanced__item-width"><img src="assets/logos/Gendo-Logo-White.png" loading="lazy" alt="Gendo"></div>
+        <div class="marquee-advanced__item-width"><img src="assets/logos/finch-logo.png" loading="lazy" alt="Finch"></div>
+        <div class="marquee-advanced__item-width"><img src="assets/logos/Gendo-Logo-White.png" loading="lazy" alt="Gendo"></div>
+        <div class="marquee-advanced__item-width"><img src="assets/logos/finch-logo.png" loading="lazy" alt="Finch"></div>
+        <div class="marquee-advanced__item-width"><img src="assets/logos/Gendo-Logo-White.png" loading="lazy" alt="Gendo"></div>
+        <div class="marquee-advanced__item-width"><img src="assets/logos/finch-logo.png" loading="lazy" alt="Finch"></div>
+        <div class="marquee-advanced__item-width"><img src="assets/logos/Gendo-Logo-White.png" loading="lazy" alt="Gendo"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Practice -->
+<section class="section">
+  <div class="container container-narrow">
+    <p class="tagline">Practice</p>
+    <h2>Tom Rowntree is an architectural designer, author and content strategist. His work translates the discipline for a wider world, shaping conversations and connecting ideas with clarity.</h2>
+  </div>
+</section>
+
+<!-- Parallax image gallery -->
+<section class="section">
+  <div class="container">
+    <div data-slideshow="wrap" class="img-slider">
+      <div class="img-slider__list">
+        <div data-slideshow="slide" class="img-slide is--current"><img data-slideshow="parallax" alt="" src="assets/photos/thumbnails/thumb-04.jpg" draggable="false" class="img-slide__inner"></div>
+        <div data-slideshow="slide" class="img-slide"><img data-slideshow="parallax" alt="" src="assets/photos/thumbnails/thumb-05.jpg" draggable="false" class="img-slide__inner"></div>
+        <div data-slideshow="slide" class="img-slide"><img data-slideshow="parallax" alt="" src="assets/photos/thumbnails/thumb-06.jpg" draggable="false" class="img-slide__inner"></div>
+        <div data-slideshow="slide" class="img-slide"><img data-slideshow="parallax" alt="" src="assets/photos/thumbnails/thumb-07.jpg" draggable="false" class="img-slide__inner"></div>
+      </div>
+      <div class="img-slider__nav">
+        <div data-slideshow="thumb" class="img-slider__thumb is--current"><img src="assets/photos/thumbnails/thumb-04.jpg" class="slider-thumb__img"></div>
+        <div data-slideshow="thumb" class="img-slider__thumb"><img src="assets/photos/thumbnails/thumb-05.jpg" class="slider-thumb__img"></div>
+        <div data-slideshow="thumb" class="img-slider__thumb"><img src="assets/photos/thumbnails/thumb-06.jpg" class="slider-thumb__img"></div>
+        <div data-slideshow="thumb" class="img-slider__thumb"><img src="assets/photos/thumbnails/thumb-07.jpg" class="slider-thumb__img"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Recognition -->
+<section class="section">
+  <div class="container">
+    <div class="two-col">
+      <div>
+        <p class="tagline">Recognition</p>
+        <h2>Awards, recognition and achievements</h2>
+      </div>
+      <div class="two-col-offset">
+        <p class="lead">Shortlisted by RIBA and the AJ. Published by RIBA Publishing and selected for the Dezeen School Shows. An audience of over 180,000 follows the conversation across platforms.</p>
+        <div class="actions">
+          <Button href="influence.html" label="About" />
+        </div>
+      </div>
+    </div>
+
+    <div class="cards">
+      <div class="card">
+        <img class="card-img" src="assets/photos/thumbnails/thumb-01.jpg" alt="">
+        <h3>Awards and nominations</h3>
+        <p>RIBA and AJ recognition for projects that value clarity over spectacle.</p>
+      </div>
+      <div class="card card-offset-1">
+        <img class="card-img" src="assets/photos/thumbnails/thumb-02.jpg" alt="">
+        <h3>Publishing and exhibitions</h3>
+        <p>A book with RIBA Publishing and selection for the Dezeen School Shows.</p>
+      </div>
+      <div class="card card-offset-2">
+        <img class="card-img" src="assets/photos/thumbnails/thumb-03.jpg" alt="">
+        <h3>Speaking and collaboration</h3>
+        <p>Talks and partnerships with leading architecture, design, and technology organisations.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Gallery: Architectural Influence -->
+<section class="section">
+  <div class="container">
+    <div class="section-title">
+      <h2>Architectural Influence</h2>
+      <p class="lead">Architecture travels further when it is shared with clarity.</p>
+    </div>
+    <div class="gallery">
+      <img src="assets/photos/events/event-01.jpg" alt="">
+      <img src="assets/photos/events/event-02.jpg" alt="">
+      <img src="assets/photos/events/event-03.jpg" alt="">
+      <img src="assets/photos/events/event-04.jpg" alt="">
+    </div>
+    <div class="actions actions-end">
+      <Button href="influence.html" label="Explore Influence" />
+    </div>
+  </div>
+</section>
+
+<!-- Gallery: Selected partners -->
+<section class="section">
+  <div class="container">
+    <div class="section-title">
+      <h2>Selected partners</h2>
+      <p class="lead">Strategic work with organisations that shape the built environment.</p>
+    </div>
+    <div class="gallery">
+      <img src="assets/photos/studio/studio-01.jpg" alt="">
+      <img src="assets/photos/studio/studio-02.jpg" alt="">
+      <img src="assets/photos/studio/studio-03.jpg" alt="">
+      <img src="assets/photos/studio/studio-04.jpg" alt="">
+    </div>
+    <div class="actions actions-end">
+      <Button href="partner.html" label="View Partners" />
+    </div>
+  </div>
+</section>
+
+<!-- Gallery: Architectural Projects -->
+<section class="section">
+  <div class="container">
+    <div class="section-title">
+      <h2>Architectural Projects</h2>
+      <p class="lead">Drawings, models, and spaces that earned their place in the conversation.</p>
+    </div>
+    <div class="gallery">
+      <img src="assets/photos/lifestyle/lifestyle-01.jpg" alt="">
+      <img src="assets/photos/lifestyle/lifestyle-02.jpg" alt="">
+      <img src="assets/photos/lifestyle/lifestyle-03.jpg" alt="">
+      <img src="assets/photos/lifestyle/lifestyle-04.jpg" alt="">
+    </div>
+    <div class="actions actions-end">
+      <Button href="architecture.html" label="View Architecture" />
+    </div>
+  </div>
+</section>
+
+<!-- Gallery: Courses & Resources -->
+<section class="section">
+  <div class="container">
+    <div class="section-title">
+      <h2>Courses &amp; Resources</h2>
+      <p class="lead">A visual index of work, influence, and the spaces between.</p>
+    </div>
+    <div class="gallery">
+      <img src="assets/photos/talks/talk-03.jpg" alt="">
+      <img src="assets/photos/talks/talk-04.jpg" alt="">
+      <img src="assets/photos/talks/talk-05.jpg" alt="">
+      <img src="assets/photos/talks/talk-06.jpg" alt="">
+    </div>
+    <div class="actions actions-end">
+      <Button href="shop.html" label="Visit the Shop" />
+    </div>
+  </div>
+</section>
+
+<!-- Closing CTA -->
+<section class="section final-cta">
+  <div class="container">
+    <div class="final-cta__inner">
+      <p class="tagline final-cta__eyebrow">Get in touch</p>
+      <h2 class="final-cta__title">Talk to Tom</h2>
+      <span class="final-cta__portrait"><img src="assets/photos/portraits/portrait-01.jpg" width="1200" height="1200" loading="lazy" decoding="async" alt="Tom Rowntree"></span>
+      <div class="final-cta__foot">
+        <p class="lead final-cta__lead">Speaking, partnerships, teaching or a project you are still working out — start the conversation and Tom will come back to you himself.</p>
+        <div class="actions">
+          <Button href="#contact" data-panel-open="contact" data-barba-prevent="self" label="Contact Tom" />
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<SiteFooter />
+
+<ContactPanel />
+</BaseLayout>

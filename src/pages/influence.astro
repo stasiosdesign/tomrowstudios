@@ -1,0 +1,211 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import SiteNav from '../components/SiteNav.astro';
+import SiteFooter from '../components/SiteFooter.astro';
+import ContactPanel from '../components/ContactPanel.astro';
+import Button from '../components/Button.astro';
+---
+<BaseLayout title="Influence — Tomrow Studios" namespace="influence" pageName="Influence">
+<SiteNav />
+
+<!-- Intro + lightbox -->
+<section class="section-alt">
+  <div class="section">
+    <div class="container">
+      <div class="influence-hero">
+        <p class="tagline">Influence</p>
+        <h2 class="page-hero-title">Architectural influence</h2>
+        <p class="lead influence-hero__lead">Tom Rowntree builds visibility, authority and opportunity for architects through deliberate content and a clear personal brand.</p>
+      </div>
+    </div>
+  </div>
+  <div class="lightbox">
+    <img class="lightbox-img" src="assets/photos/talks/talk-02.jpg" alt="">
+    <img class="lightbox-play" src="assets/ui/play.svg" alt="Play">
+  </div>
+</section>
+
+<!-- Total followers — one headline figure -->
+<section class="section">
+  <div class="container">
+    <div data-odometer-group class="figure-lead">
+      <p class="tagline">Reach</p>
+      <p data-odometer-element data-odometer-duration="2.4" class="figure-lead__number">180,700</p>
+      <p class="figure-lead__label">Total followers across Instagram, TikTok, YouTube and LinkedIn.</p>
+    </div>
+  </div>
+</section>
+
+<!-- Approach -->
+<section class="section">
+  <div class="container container-narrow">
+    <p class="tagline">Approach</p>
+    <h2>A more entrepreneurial approach to architecture. Architectural influence is about using content, social media and personal brand to build visibility, authority and opportunity within architecture.</h2>
+  </div>
+</section>
+
+<!-- Origins / timeline -->
+<section class="section section-alt">
+  <div class="container">
+    <div class="two-col two-col-flat">
+      <div>
+        <p class="tagline">Origins</p>
+        <h2>From architecture to influence</h2>
+      </div>
+      <div>
+        <div data-step-timeline-init data-step-timeline-activation="0.5" class="step-timeline">
+          <div class="step-timeline__wrapper">
+            <div data-step-timeline-line class="step-timeline__line">
+              <div data-step-timeline-fill class="step-timeline__fill"></div>
+            </div>
+            <div class="step-timeline__list">
+              <div data-step-timeline-item class="step-timeline__item">
+                <div data-step-timeline-marker class="step-timeline__marker"><span>1</span></div>
+                <div class="step-timeline__content">
+                  <h4 class="step-timeline__content-h">Foundation</h4>
+                  <p class="step-timeline__p">The work began in practice. Drawing, making and understanding space formed the bedrock everything else would stand on.</p>
+                </div>
+              </div>
+              <div data-step-timeline-item class="step-timeline__item">
+                <div data-step-timeline-marker class="step-timeline__marker"><span>2</span></div>
+                <div class="step-timeline__content">
+                  <h4 class="step-timeline__content-h">Growth</h4>
+                  <p class="step-timeline__p">Content sharpened the thinking. An audience gathered. Courses and workshops turned a personal pursuit into a shared education.</p>
+                </div>
+              </div>
+              <div data-step-timeline-item class="step-timeline__item">
+                <div data-step-timeline-marker class="step-timeline__marker"><span>3</span></div>
+                <div class="step-timeline__content">
+                  <h4 class="step-timeline__content-h">Publication</h4>
+                  <p class="step-timeline__p">The book mapped how 21 creators built visibility. It studied deliberate methods, not accidents. The findings changed the conversation.</p>
+                </div>
+              </div>
+              <div data-step-timeline-item class="step-timeline__item">
+                <div data-step-timeline-marker class="step-timeline__marker"><span>4</span></div>
+                <div class="step-timeline__content">
+                  <h4 class="step-timeline__content-h">Expansion</h4>
+                  <p class="step-timeline__p">The work now moves through stages, keynotes and industry partnerships. The platform connects education, publishing and strategic collaboration.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Insights / analytics -->
+<section class="section">
+  <div class="container">
+    <div class="two-col two-col-flat">
+      <div>
+        <p class="tagline">Insights</p>
+        <h2>The numbers behind the platform</h2>
+      </div>
+      <div>
+        <p class="lead">Audience, reach and recognition measured channel by channel — the full record of what the platform has built and what it has produced.</p>
+      </div>
+    </div>
+
+    <ul data-odometer-group data-odometer-stagger="0.08" class="insights-list">
+      <li class="insights-row">
+        <p class="insights-row__index">01</p>
+        <div class="insights-row__body">
+          <p class="insights-row__label">Instagram</p>
+          <p class="insights-row__note">Followers — the core audience, built over seven years</p>
+        </div>
+        <p data-odometer-element data-odometer-duration="1.6" class="insights-row__value">96,400</p>
+      </li>
+      <li class="insights-row">
+        <p class="insights-row__index">02</p>
+        <div class="insights-row__body">
+          <p class="insights-row__label">YouTube</p>
+          <p class="insights-row__note">Subscribers — long-form explainers, walkthroughs and interviews</p>
+        </div>
+        <p data-odometer-element data-odometer-duration="1.6" class="insights-row__value">24,800</p>
+      </li>
+      <li class="insights-row">
+        <p class="insights-row__index">03</p>
+        <div class="insights-row__body">
+          <p class="insights-row__label">Combined audience</p>
+          <p class="insights-row__note">A voice built across every platform over seven years</p>
+        </div>
+        <p data-odometer-element data-odometer-duration="1.6" class="insights-row__value">180,000+</p>
+      </li>
+      <li class="insights-row">
+        <p class="insights-row__index">04</p>
+        <div class="insights-row__body">
+          <p class="insights-row__label">Publication</p>
+          <p class="insights-row__note">Architectural Influence, published by RIBA Publishing — 21 creators across 13 countries</p>
+        </div>
+        <div class="insights-row__value-group">
+          <p class="insights-row__value is--words">Published Book</p>
+          <a href="book.html" class="insights-row__link">See the book<span aria-hidden="true">&#8202;&#8594;</span></a>
+        </div>
+      </li>
+      <li class="insights-row">
+        <p class="insights-row__index">05</p>
+        <div class="insights-row__body">
+          <p class="insights-row__label">Recognition</p>
+          <p class="insights-row__note">The RIBA West London Architects Group Prize, for a new kind of architectural practice</p>
+        </div>
+        <p class="insights-row__value is--words">Prize Winner</p>
+      </li>
+      <li class="insights-row">
+        <p class="insights-row__index">06</p>
+        <div class="insights-row__body">
+          <p class="insights-row__label">Collaboration</p>
+          <p class="insights-row__note">RIBA, Meta, Archi-Tech Network and Rayon Design — partnerships beyond the drawing board</p>
+        </div>
+        <p class="insights-row__value is--words">Industry Partners</p>
+      </li>
+    </ul>
+  </div>
+</section>
+
+<!-- Atlas — the map, then the book it came from -->
+<section class="map-spread theme-light">
+  <div class="map-spread__head">
+    <p class="tagline">Global reach</p>
+    <h2>Twenty-one creators, thirteen countries</h2>
+  </div>
+  <div class="map-spread__media">
+    <img class="map-spread__img" src="assets/graphics/atlas-map.png" loading="lazy" decoding="async" alt="World map plotting the twenty-one architecture creators studied in Architectural Influence">
+  </div>
+  <div class="book-feature">
+    <div class="book-feature__intro">
+      <p class="tagline">The book</p>
+      <h2>Architectural&nbsp;Influence</h2>
+    </div>
+    <div class="book-feature__body">
+      <p class="lead">A precedent analysis of the top 21 social media creators in the architecture profession, mapped across the globe — read for method rather than metrics, and published by RIBA Publishing.</p>
+      <div class="actions">
+        <Button href="book.html" label="Read the book" />
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Closing CTA -->
+<section class="section final-cta">
+  <div class="container">
+    <div class="final-cta__inner">
+      <p class="tagline final-cta__eyebrow">Get in touch</p>
+      <h2 class="final-cta__title">Talk to Tom</h2>
+      <span class="final-cta__portrait"><img src="assets/photos/portraits/portrait-01.jpg" width="1200" height="1200" loading="lazy" decoding="async" alt="Tom Rowntree"></span>
+      <div class="final-cta__foot">
+        <p class="lead final-cta__lead">Speaking, partnerships, teaching or a project you are still working out — start the conversation and Tom will come back to you himself.</p>
+        <div class="actions">
+          <Button href="#contact" data-panel-open="contact" data-barba-prevent="self" label="Contact Tom" />
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<SiteFooter />
+
+<ContactPanel />
+</BaseLayout>

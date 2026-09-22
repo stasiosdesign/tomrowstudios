@@ -1,0 +1,132 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import SiteNav from '../components/SiteNav.astro';
+import ContactPanel from '../components/ContactPanel.astro';
+---
+<BaseLayout title="Architecture — Tomrow Studios" namespace="architecture" pageName="Architecture" mainClass="arch-page">
+<SiteNav />
+
+<!-- One screen, moving sideways. The projects run off the right-hand edge and
+     are reached by dragging, by the arrows, or by scrolling up and down —
+     which the slider reads as left and right. -->
+<section class="arch-stage">
+
+  <div data-parallax-init class="parallax-slider__group arch-stage__group">
+
+    <div class="arch-stage__head">
+      <p class="tagline">Architecture</p>
+      <p class="arch-stage__count"><strong data-parallax-counter>01</strong> / 05</p>
+    </div>
+
+    <div class="arch-stage__slider">
+      <div class="parallax-slider__collection">
+        <div data-parallax-slider data-parallax-infinite="false" data-parallax-snap="false" data-parallax-amount="10" data-parallax-lerp="0.2" class="parallax-slider__list">
+
+          <div class="parallax-slider__item">
+            <a href="project-transport.html" class="parallax-slider__item-link">
+              <div class="parallax-slider__item-inner">
+                <div data-parallax-inner class="parallax-slider__item-visual">
+                  <img src="assets/projects/transport/01.jpg" width="1600" height="902" draggable="false" alt="Trans[port]: Logistics Market" class="parallax-slider__item-img">
+                </div>
+              </div>
+              <div class="parallax-slider__item-label">
+                <div>
+                  <p class="parallax-slider__item-name">Trans[port]: Logistics Market</p>
+                  <p class="parallax-slider__item-meta">01 — MArch 2 — 2023</p>
+                </div>
+                <span class="parallax-slider__item-cta" aria-hidden="true"></span>
+              </div>
+            </a>
+          </div>
+
+          <div class="parallax-slider__item">
+            <a href="project-sets-in-motion.html" class="parallax-slider__item-link">
+              <div class="parallax-slider__item-inner">
+                <div data-parallax-inner class="parallax-slider__item-visual">
+                  <img src="assets/projects/sets-in-motion/01.jpg" width="1600" height="902" draggable="false" alt="Sets in Motion" class="parallax-slider__item-img">
+                </div>
+              </div>
+              <div class="parallax-slider__item-label">
+                <div>
+                  <p class="parallax-slider__item-name">Sets in Motion</p>
+                  <p class="parallax-slider__item-meta">02 — MArch 1 — 2022</p>
+                </div>
+                <span class="parallax-slider__item-cta" aria-hidden="true"></span>
+              </div>
+            </a>
+          </div>
+
+          <div class="parallax-slider__item">
+            <a href="project-irrational-matrix.html" class="parallax-slider__item-link">
+              <div class="parallax-slider__item-inner">
+                <div data-parallax-inner class="parallax-slider__item-visual">
+                  <img src="assets/projects/irrational-matrix/01.jpg" width="1600" height="1600" draggable="false" alt="Irrational Matrix" class="parallax-slider__item-img">
+                </div>
+              </div>
+              <div class="parallax-slider__item-label">
+                <div>
+                  <p class="parallax-slider__item-name">Irrational Matrix</p>
+                  <p class="parallax-slider__item-meta">03 — Dissertation</p>
+                </div>
+                <span class="parallax-slider__item-cta" aria-hidden="true"></span>
+              </div>
+            </a>
+          </div>
+
+          <div class="parallax-slider__item">
+            <a href="project-the-sequel.html" class="parallax-slider__item-link">
+              <div class="parallax-slider__item-inner">
+                <div data-parallax-inner class="parallax-slider__item-visual">
+                  <img src="assets/projects/the-sequel/01.jpg" width="1600" height="451" draggable="false" alt="The Sequel" class="parallax-slider__item-img">
+                </div>
+              </div>
+              <div class="parallax-slider__item-label">
+                <div>
+                  <p class="parallax-slider__item-name">The Sequel</p>
+                  <p class="parallax-slider__item-meta">04 — Digbeth — 2020</p>
+                </div>
+                <span class="parallax-slider__item-cta" aria-hidden="true"></span>
+              </div>
+            </a>
+          </div>
+
+          <div class="parallax-slider__item">
+            <a href="project-the-sequel-post.html" class="parallax-slider__item-link">
+              <div class="parallax-slider__item-inner">
+                <div data-parallax-inner class="parallax-slider__item-visual">
+                  <img src="assets/projects/the-sequel-post/01.jpg" width="1600" height="450" draggable="false" alt="The Sequel: Post-production" class="parallax-slider__item-img">
+                </div>
+              </div>
+              <div class="parallax-slider__item-label">
+                <div>
+                  <p class="parallax-slider__item-name">The Sequel: Post-production</p>
+                  <p class="parallax-slider__item-meta">05 — Digbeth — 2020</p>
+                </div>
+                <span class="parallax-slider__item-cta" aria-hidden="true"></span>
+              </div>
+            </a>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <div class="arch-stage__foot">
+      <h1 class="arch-stage__title">Architecture</h1>
+      <div class="arch-arrows">
+        <button type="button" data-parallax-prev class="arch-arrow is--prev is--disabled" aria-label="Previous project"></button>
+        <button type="button" data-parallax-next class="arch-arrow is--next" aria-label="Next project"></button>
+      </div>
+    </div>
+
+    <!-- Progress through the horizontal run, pinned to the bottom edge -->
+    <div data-parallax-progress-wrap class="progress-bar-wrap">
+      <div data-parallax-progress class="progress-bar"></div>
+    </div>
+
+  </div>
+
+</section>
+
+<ContactPanel />
+</BaseLayout>
