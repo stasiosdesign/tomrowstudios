@@ -1457,6 +1457,12 @@ html:has(.willem-header.is--loading) body {
      background rule, but kept well short of the white of the type so it
      sits behind the headline in weight. */
   --runner-color: rgba(244, 244, 244, 0.38);
+  /* The four strokes that sit on the starts of the four main columns — the
+     grid's 1, 4, 7 and 10 — are a hair thicker and a step brighter than
+     the rest, in the same off-white, so the runner marks the column groups
+     it is laid out on. Subtle: still well under the type in weight. */
+  --runner-stroke-strong: 2px;
+  --runner-color-strong: rgba(244, 244, 244, 0.62);
 
   position: absolute;
   left: 0;

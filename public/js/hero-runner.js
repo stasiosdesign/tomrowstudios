@@ -124,6 +124,7 @@
     // Geometry and colour, from the stylesheet
     const config = Object.assign({}, DEFAULTS);
     let colour = "rgba(244, 244, 244, 0.6)";
+    let strongColour = colour;
 
     function readStyles() {
       const styles = getComputedStyle(root);
@@ -135,6 +136,8 @@
       config.reachAbove = readNumber(styles, "--runner-reach", DEFAULTS.reachAbove);
       config.reachFade = readNumber(styles, "--runner-reach-fade", DEFAULTS.reachFade);
       colour = styles.getPropertyValue("--runner-color").trim() || colour;
+      config.strongWidth = readNumber(styles, "--runner-stroke-strong", config.strokeWidth);
+      strongColour = styles.getPropertyValue("--runner-color-strong").trim() || colour;
     }
 
     // The hero's column grid, as painted. The lines come from the repeating
@@ -185,7 +188,10 @@
       // Each stroke's fixed multiplier on its lift, a few percent either
       // side of one: the micro-imperfection that keeps the bell from being
       // a ruled curve. Set once per layout, never while the pointer moves.
-      grain: new Float32Array(0)
+      grain: new Float32Array(0),
+      // 1 for a stroke that sits on the start of one of the main columns —
+      // the four strong grid lines — drawn thicker and brighter
+      strong: new Uint8Array(0)
     };
 
     // The interaction. `x`/`y` are the pointer relative to the canvas; `centre`
@@ -266,16 +272,27 @@
         strokes.current = current;
         strokes.target = new Float32Array(count);
         strokes.grain = new Float32Array(count);
+        strokes.strong = new Uint8Array(count);
       }
 
+      // Which strokes sit on a column start: every `divisions`th stroke
+      // from the origin, for as many columns as the grid has — so the four
+      // column-start lines at desktop, never the right gutter
+      const divisions = Math.max(1, Math.round(grid.column / step));
+      const columns = Math.max(1, Math.round((width - grid.origin * 2) / grid.column));
+
       for (let i = 0; i < count; i++) {
+        const index = first + i;
         // Snapped to the device grid for a crisp 1px line — the same way
         // the browser snaps the 1px grid line, so the two coincide
-        const x = grid.origin + (first + i) * step;
+        const x = grid.origin + index * step;
         strokes.x[i] = Math.floor(x * dpr) / dpr;
         // Seeded from the stroke's index on the grid, not its pixel, so a
         // resize keeps each stroke's own grain rather than reshuffling it
-        strokes.grain[i] = 1 + GRAIN_AMOUNT * hash(first + i);
+        strokes.grain[i] = 1 + GRAIN_AMOUNT * hash(index);
+        const onLine = index % divisions === 0;
+        const column = index / divisions;
+        strokes.strong[i] = onLine && column >= 0 && column < columns ? 1 : 0;
       }
 
       computeTargets();
@@ -333,23 +350,35 @@
 
     function draw() {
       ctx.clearRect(0, 0, width, height);
-      ctx.lineWidth = config.strokeWidth;
-      ctx.strokeStyle = colour;
-      ctx.beginPath();
 
-      const { count, x, current } = strokes;
+      const { count, x, current, strong } = strokes;
       // A hairline on the device grid: offset by half a device pixel so a
       // 1px stroke fills exactly one column rather than two half-alpha ones
       const snap = 0.5 / dpr;
 
-      for (let i = 0; i < count; i++) {
-        const half = current[i] / 2;
-        const px = x[i] + snap;
-        ctx.moveTo(px, axisY - half);
-        ctx.lineTo(px, axisY + half);
-      }
+      // Two passes, one path each: the ordinary strokes, then the strong
+      // ones over them in their own width and colour. Still one stroke
+      // call per group per frame.
+      for (let pass = 0; pass < 2; pass++) {
+        const wantStrong = pass === 1;
+        ctx.lineWidth = wantStrong ? config.strongWidth : config.strokeWidth;
+        ctx.strokeStyle = wantStrong ? strongColour : colour;
+        // A thicker line is centred on its x, so a 2px strong stroke sits
+        // half a pixel either side of the grid line's own left edge and
+        // straddles it the way a heavier rule would
+        const offset = wantStrong ? ctx.lineWidth / 2 : snap;
+        ctx.beginPath();
 
-      ctx.stroke();
+        for (let i = 0; i < count; i++) {
+          if ((strong[i] === 1) !== wantStrong) continue;
+          const half = current[i] / 2;
+          const px = x[i] + offset;
+          ctx.moveTo(px, axisY - half);
+          ctx.lineTo(px, axisY + half);
+        }
+
+        ctx.stroke();
+      }
     }
 
     // One frame: ease the centre and every height toward their targets, draw,
