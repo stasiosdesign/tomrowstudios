@@ -1,7 +1,10 @@
 ---
-/* The site's one button style. Every instance shares the same inner markup —
-   button.js splits the label into characters for the hover — so only the
-   label, the link attributes and the secondary variant vary. */
+/* The site's one call to action. Three independent hairlines — top, left and
+   bottom, the right side left open — and a content layer holding the label and
+   the arrow, kept apart so button.js can move the frame without moving the
+   type. Every instance shares this markup; only the label, the link attributes
+   and the secondary variant vary. The geometry, colours and grid sizing live in
+   the CTA block of style.css. */
 interface Props extends astroHTML.JSX.AnchorHTMLAttributes {
   label: string;
   secondary?: boolean;
@@ -9,4 +12,4 @@ interface Props extends astroHTML.JSX.AnchorHTMLAttributes {
 
 const { label, secondary = false, class: className, ...rest } = Astro.props;
 ---
-<a data-button-011 {...rest} class:list={["button-011", className, { "is--secondary": secondary }]}><span class="button-011__bg"></span><span class="button-011__inner"><span data-button-011-text class="button-011__text">{label}</span><span class="button-011__icon"><span class="button-011__icon-element"></span></span></span></a>
+<a data-cta {...rest} class:list={["cta", className, { "is--secondary": secondary }]}><span class="cta__line is--top" aria-hidden="true"></span><span class="cta__line is--left" aria-hidden="true"></span><span class="cta__line is--bottom" aria-hidden="true"></span><span class="cta__content"><span data-cta-label class="cta__label">{label}</span><svg class="cta__icon" viewBox="0 0 12 12" fill="none" aria-hidden="true"><path d="M4 1.5 8.5 6 4 10.5" stroke="currentColor" stroke-width="1.25" stroke-linecap="square"/></svg></span></a>

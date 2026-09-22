@@ -48,7 +48,7 @@ function initAfterEnterFunctions(next) {
   if (typeof initSidePanels === "function") initSidePanels();
   if (typeof initSwiperSlider === "function") initSwiperSlider();
   if (typeof initFooterParallax === "function") initFooterParallax();
-  if (typeof initButton011 === "function") initButton011();
+  if (typeof initCta === "function") initCta();
   if (typeof initMarqueeScrollDirection === "function") initMarqueeScrollDirection();
   if (typeof initParallaxImageGalleryThumbnails === "function") initParallaxImageGalleryThumbnails();
   if (typeof initNumberOdometer === "function") initNumberOdometer();

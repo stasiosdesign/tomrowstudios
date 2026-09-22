@@ -142,7 +142,7 @@ body {
 /* Buttons and calls to action. The label sits on the inner span, which is what
    the button's hover split reads and rebuilds character by character, so the
    face has to be named there rather than on the button around it. */
-.button-011__text,
+.cta__label,
 .btn,
 /* The small interface type and the metadata: card tags, the role under a
    speaker's name, the word the page transition holds up while it runs. The
@@ -464,7 +464,7 @@ textarea { font-family: inherit; }
 .btn-link   { background: none; padding: 1rem 0; color: #ffffff; }
 .btn-link img { width: 2.4rem; height: 2.4rem; }
 
-.actions { display: flex; gap: 1.2rem; align-items: center; flex-wrap: wrap; }
+.actions { display: flex; align-items: center; flex-wrap: wrap; }
 
 /* ---------- Site nav (fixed) ---------- */
 .site-nav {
@@ -1969,165 +1969,184 @@ main:has(.willem-header.is--loading) .site-nav,
   .sticky-tab__body { padding-top: 3.2rem; padding-bottom: 3.2rem; }
 }
 
-/* ---------- Button 011 ---------- */
+/* ---------- CTA ----------
+
+   The site's one call to action. Not a bordered box: three independent
+   hairlines — top, left and bottom — with the right side left open, and the
+   label and the arrow on a separate content layer, so button.js can redraw the
+   frame without the type moving with it.
+
+   It is sized to the page grid rather than to its word. One column wide, line
+   to line, with the content inset by the same column pad as everything else —
+   so a CTA that sits in an `.actions` row is pulled out by that pad, its left
+   line lands on the column line and its label starts exactly where the copy
+   above it starts. The open right side is closed by the next grid line, where
+   the section draws one. Two CTAs in a row tile column to column with no gap
+   between them: the second's left line is the first's missing right edge.
+
+   Colours are the CSS states here — rest, hover, focus, press. The motion is
+   in button.js and is only added on a fine pointer with motion allowed, so on
+   touch and under reduced motion this is the whole component. */
 :root {
-  --button-011-color: #121212;
-  --button-011-color-background: #fff;
-  --button-011-color-focus: #000;
-  --button-011-border-radius: var(--radius);
-  --button-011-padding-top: 0.75em;
-  --button-011-padding-right: 1em;
-  --button-011-padding-bottom: 0.75em;
-  --button-011-padding-left: 1.5em;
-  --button-011-icon-size: 0.325em;
-  --button-011-icon-padding-left: 0.6875em;
-  --button-011-icon-border-radius: 0.0675em;
-  --button-011-icon-rotate: 45deg;
-  --button-011-focus-inset: -0.125em;
-  --button-011-click-scale: 0.955 0.925;
-  --button-011-ease-hover-snappy: linear(0, 0.0084, 0.0311, 0.0651, 0.1077, 0.1564, 0.2094, 0.2649, 0.3215, 0.3782, 0.434, 0.4881, 0.5401, 0.5894, 0.6359, 0.6793, 0.7194, 0.7564, 0.7901, 0.8208, 0.8484, 0.8731, 0.8951, 0.9146, 0.9316, 0.9465, 0.9594, 0.9704, 0.9798, 0.9877, 0.9943, 0.9997, 1.0041, 1.0075, 1.0102, 1.0122, 1.0136, 1.0145, 1.015, 1.0152, 1.0151, 1.0147, 1.0142, 1.0136, 1.0128, 1.012, 1.0112, 1.0103, 1.0095, 1.0086, 1.0078, 1.007, 1.0063, 1.0056, 1.0049, 1.0043, 1.0037, 1.0032, 1.0027, 1.0023, 1.0019, 1.0016, 1.0013, 1.0011, 1.0008, 1.0006, 1.0005, 1.0003, 1.0002, 1.0001, 1, 0.9999, 0.9999, 0.9998, 0.9998, 0.9998, 0.9998, 0.9998, 0.9998, 0.9998, 0.9998, 0.9998, 0.9998, 0.9998, 0.9998, 0.9998, 0.9998, 0.9999, 0.9999, 0.9999, 0.9999, 0.9999, 0.9999, 0.9999, 0.9999, 0.9999, 1, 1, 1, 1, 1);
-  --button-011-ease-hover-smooth: cubic-bezier(0.32, 0.72, 0, 1);
-  --button-011-ease-click: cubic-bezier(0.4, 0, 0.2, 1);
-  --button-011-ease-focus: cubic-bezier(0.32, 0.72, 0, 1);
+  --cta-accent: #f20505;
+  --cta-line: rgba(255, 255, 255, 0.28);
+  --cta-line-active: rgba(255, 255, 255, 0.8);
+  --cta-height: 5.6rem;
+  /* One grid column, line to line. Written against the viewport rather than
+     as a percentage so it means the same width inside any box. The scrollbar
+     is hidden site-wide, so 100vw is the page. */
+  --cta-width: calc((100vw - var(--site-gutter) * 2) / var(--grid-columns));
+  --cta-ease: cubic-bezier(0.32, 0.72, 0, 1);
 }
 
-.button-011 {
-  color: var(--button-011-color);
+.cta {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  flex: none;
+  width: var(--cta-width);
+  max-width: 100%;
+  /* The visible frame is slim; the floor keeps a real touch target on the
+     narrow breakpoints, where the rem scale runs small. */
+  min-height: max(var(--cta-height), 48px);
+  padding: 0 var(--grid-pad);
+  color: inherit;
+  text-decoration: none;
+  outline: none;
+  cursor: pointer;
   -webkit-user-select: none;
   user-select: none;
-  background-color: #0000;
-  outline-style: none;
-  padding: 0;
-  font-weight: var(--weight-ui); --wght: var(--weight-ui);
-  line-height: 1;
-  text-decoration: none;
-  display: inline-grid;
-  position: relative;
   -webkit-tap-highlight-color: transparent;
-  transition: scale 0.15s var(--button-011-ease-click);
 }
 
-.button-011::after {
-  content: '';
-  display: block;
+.cta__line {
   position: absolute;
-  inset: var(--button-011-focus-inset);
-  border-radius: var(--button-011-border-radius);
-  transition: box-shadow 0.3s var(--button-011-ease-focus);
+  background-color: var(--cta-line);
   pointer-events: none;
-  z-index: 1;
+  transition: background-color 0.3s var(--cta-ease);
 }
-
-.button-011:is(:focus-visible)::after {
-  box-shadow: 0 0 0 0.125em var(--button-011-color-focus);
-}
-
-.button-011:active {
-  scale: var(--button-011-click-scale);
-}
-
-.button-011__bg {
-  pointer-events: none;
-  background-color: var(--button-011-color-background);
-  border-radius: var(--button-011-border-radius);
-  grid-area: 1 / 1;
+.cta__line.is--top {
+  top: 0;
+  left: 0;
   width: 100%;
-  height: 100%;
-  padding: 0;
+  height: 1px;
+  transform-origin: left center;
 }
-
-.button-011__inner {
-  pointer-events: none;
-  grid-area: 1 / 1;
-  display: grid;
-}
-
-.button-011__text {
-  /* The mono, the uppercase, the size and the tracking all come from the
-     label rule at the top of the file. The split-char hover measures the
-     characters after that tracking is applied, so it moves with the type
-     rather than against it. */
-  padding-top: var(--button-011-padding-top);
-  padding-left: var(--button-011-padding-left);
-  padding-right: var(--button-011-padding-right);
-  padding-bottom: var(--button-011-padding-bottom);
-  grid-area: 1 / 1;
-}
-
-.button-011__split-char {
-  transition: translate 0.5s var(--button-011-ease-hover-snappy);
-}
-
-.button-011__icon {
+.cta__line.is--bottom {
+  bottom: 0;
+  left: 0;
   width: 100%;
+  height: 1px;
+  transform-origin: left center;
+}
+/* The one accent: the left line carries the red, at rest, so the treatment
+   reads on a phone as well as under a pointer. */
+.cta__line.is--left {
+  top: 0;
+  left: 0;
+  width: 1px;
   height: 100%;
-  padding-left: var(--button-011-icon-padding-left);
+  background-color: var(--cta-accent);
+  transform-origin: top center;
+}
+
+.cta__content {
+  position: relative;
   z-index: 1;
-  grid-area: 1 / 1;
-  justify-content: flex-start;
-  align-items: center;
   display: flex;
-  transition: translate 0.5s var(--button-011-ease-hover-snappy);
+  align-items: center;
+  justify-content: space-between;
+  gap: 2.4rem;
+  width: 100%;
+  line-height: 1;
+  font-weight: var(--weight-ui); --wght: var(--weight-ui);
+  transition: translate 0.15s var(--cta-ease);
 }
-
-.button-011__icon-element {
-  border-radius: var(--button-011-icon-border-radius);
-  rotate: var(--button-011-icon-rotate);
-  width: var(--button-011-icon-size);
-  height: var(--button-011-icon-size);
-  background-color: currentColor;
-  padding: 0;
+/* The mono, the uppercase, the size and the tracking come from the label rule
+   at the top of the file. The scramble rewrites this span's text, and the
+   face is monospaced, so the width holds while it runs. */
+.cta__label {
   display: block;
+  white-space: nowrap;
+}
+.cta__icon {
+  flex: none;
+  display: block;
+  width: 1.2rem;
+  height: 1.2rem;
 }
 
-@media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
-  .button-011:is(:hover, :focus-visible) .button-011__split-char,
-  [data-hover]:is(:hover, :focus-visible) .button-011 .button-011__split-char {
-    translate: calc(var(--button-011-padding-left) * -1 + var(--button-011-padding-right)) 0 0;
-    transition: translate 0.66s calc((var(--char) - 1) * 0.016s + 0.05s) var(--button-011-ease-hover-snappy);
+/* States. Hover is only asked for where there is a pointer to hover with;
+   focus-visible is always there. Top and bottom brighten; the left line
+   stays red. */
+@media (hover: hover) and (pointer: fine) {
+  .cta:hover .cta__line { background-color: var(--cta-line-active); }
+  .cta:hover .cta__line.is--left { background-color: var(--cta-accent); }
+}
+.cta:focus-visible .cta__line { background-color: var(--cta-line-active); }
+.cta:focus-visible .cta__line.is--left { background-color: var(--cta-accent); }
+/* A press nudges the content a hair to the right, the way a switch moves */
+.cta:active .cta__content { translate: 0.1rem 0; }
+
+/* Two variants, one component. Primary carries the red and the arrow;
+   secondary is the same frame in the neutral line colour with the arrow taken
+   away, and picks up the red only while it is hovered or focused. */
+.cta.is--secondary .cta__icon { display: none; }
+.cta.is--secondary .cta__line.is--left { background-color: var(--cta-line); }
+@media (hover: hover) and (pointer: fine) {
+  .cta.is--secondary:hover .cta__line.is--left { background-color: var(--cta-accent); }
+}
+.cta.is--secondary:focus-visible .cta__line.is--left { background-color: var(--cta-accent); }
+
+/* On light surfaces the lines flip to dark; the red stays. */
+.theme-light .cta,
+.panel .cta,
+.site-footer .cta,
+.product-card .cta {
+  --cta-line: rgba(10, 10, 10, 0.22);
+  --cta-line-active: rgba(10, 10, 10, 0.85);
+}
+
+/* ---------- On the grid ----------
+   A CTA in an `.actions` row is pulled out by the column pad at the ends of
+   the row, so the first one's left line lands on the column line and the last
+   one's open edge meets the next. The max-width grows by the same amount so a
+   cell exactly one column wide still gets a line-to-line frame. */
+.actions {
+  column-gap: 0;
+  row-gap: 2.4rem;
+}
+.actions > .cta:first-child { margin-left: calc(-1 * var(--grid-pad)); }
+.actions > .cta:last-child { margin-right: calc(-1 * var(--grid-pad)); }
+.actions > .cta:first-child:not(:last-child),
+.actions > .cta:last-child:not(:first-child) { max-width: calc(100% + var(--grid-pad)); }
+.actions > .cta:first-child:last-child { max-width: calc(100% + var(--grid-pad) * 2); }
+
+/* The home hero clips each revealed block to its own mask. Widen the one
+   holding the CTAs by a pad each side so the pull-out is not clipped. */
+.willem__reveal-mask.is--actions {
+  width: calc(100% + var(--grid-pad) * 2);
+  margin-left: calc(-1 * var(--grid-pad));
+  padding: 0 var(--grid-pad);
+}
+
+/* One column on the phone: every CTA is the full content width and they
+   stack, so each one is pulled out on both sides. */
+@media screen and (max-width: 767px) {
+  .actions > .cta,
+  .actions > .cta:first-child:not(:last-child),
+  .actions > .cta:last-child:not(:first-child) {
+    margin-left: calc(-1 * var(--grid-pad));
+    margin-right: calc(-1 * var(--grid-pad));
+    max-width: calc(100% + var(--grid-pad) * 2);
   }
-
-  .button-011:is(:hover, :focus-visible) .button-011__icon,
-  [data-hover]:is(:hover, :focus-visible) .button-011 .button-011__icon {
-    translate: calc(100% - (var(--button-011-icon-padding-left) * 2 + var(--button-011-icon-size))) 0 0;
-    transition: translate 0.66s 0.05s var(--button-011-ease-hover-snappy);
-  }
 }
 
-/* On light surfaces the default white pill would vanish, so flip it */
-.theme-light .button-011,
-.panel .button-011,
-.site-footer .button-011 {
-  --button-011-color: #ffffff;
-  --button-011-color-background: #121212;
-  --button-011-color-focus: #ffffff;
+@media (prefers-reduced-motion: reduce) {
+  .cta__line,
+  .cta__content { transition: none; }
 }
 
-/* Paired buttons: the leading action keeps the white pill and its companion
-   steps back to grey, so two solid whites never sit side by side */
-.button-011.is--secondary {
-  --button-011-color: #ffffff;
-  --button-011-color-background: rgba(255, 255, 255, 0.16);
-  --button-011-color-focus: #ffffff;
-}
-
-.theme-light .button-011.is--secondary,
-.panel .button-011.is--secondary,
-.site-footer .button-011.is--secondary {
-  --button-011-color: #121212;
-  --button-011-color-background: rgba(10, 10, 10, 0.08);
-  --button-011-color-focus: #121212;
-}
-
-/* Two variants, one button. Primary is text plus the arrow in its box;
-   secondary is the same component, the same type and the same hover — the
-   arrow and the room kept for it are simply taken away, so the text no
-   longer has anywhere to slide and just sits still. */
-.button-011.is--secondary .button-011__icon { display: none; }
-.button-011.is--secondary {
-  --button-011-padding-left: 1.25em;
-  --button-011-padding-right: 1.25em;
-}
 
 /* ---------- Logo marquee (advanced, scroll direction) ---------- */
 .logo-marquee {
@@ -3049,7 +3068,7 @@ main section + section,
 .product-img { border-radius: calc(var(--radius) - 1px); }
 .product-body { padding: 0; gap: 1.2rem; }
 /* Descriptions run to different lengths, so drop the CTAs to a common line */
-.product-body .button-011 { margin-top: auto; align-self: flex-start; }
+.product-body .cta { margin-top: auto; align-self: flex-start; }
 
 /* On white, the dark tag and the meta line have to flip out of the
    white-on-dark defaults they inherit from the rest of the page */
@@ -3060,13 +3079,6 @@ main section + section,
 .product-card .product-meta { color: rgba(10, 10, 10, 0.55); }
 .product-card p { color: rgba(10, 10, 10, 0.68); font-size: 1.5rem; line-height: 1.45; }
 .product-card h5 { font-size: 2rem; }
-/* The button component is white-on-dark by default; inside a white card it
-   has to be the other way round */
-.product-card .button-011 {
-  --button-011-color: #ffffff;
-  --button-011-color-background: #0a0a0a;
-  --button-011-color-focus: #0a0a0a;
-}
 
 @media screen and (max-width: 1199px) {
   /* Four columns of card at this width leaves no room for the copy */
@@ -3871,9 +3883,6 @@ strong, b, th { font-weight: var(--weight-strong); --wght: var(--weight-strong);
 }
 
 /* ---------- CTA spacing ---------- */
-/* Paired buttons read as one control group, so they sit close together */
-.actions { gap: 1.2rem; }
-
 /* Give the buttons room from the copy they follow */
 .section-title .actions,
 .section-title-left .actions { margin-top: 3.2rem; }
