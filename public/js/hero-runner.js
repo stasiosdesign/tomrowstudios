@@ -52,9 +52,9 @@
   const DEFAULTS = {
     spacing: 6,        // distance between stroke centres
     strokeWidth: 1,    // one hairline, like the grid
-    restHeight: 6,     // total height of a stroke at rest
-    maxHeight: 128,    // total height of the stroke under the pointer
-    radius: 150,       // horizontal reach of the field, centre to edge
+    restHeight: 9,     // total height of a stroke at rest
+    maxHeight: 72,     // total height of the stroke under the pointer
+    radius: 90,        // horizontal reach of the field, centre to edge
     reachAbove: 200,   // how far above / below the axis the pointer still counts
     reachFade: 120     // width of the band over which that influence fades out
   };
@@ -72,6 +72,13 @@
   const GROW_RATE = 12;     // a stroke rising toward a taller sample
   const SETTLE_RATE = 7;    // a stroke falling back toward a shorter one
   const SETTLE_EPSILON = 0.05; // px — below this the runner counts as still
+
+  // The profile's shape. A steepening power on the raised cosine, and the
+  // number of height levels it is quantised into. With a 90px radius and
+  // 6px pitch there are fifteen strokes a side, so seven levels puts a step
+  // roughly every other stroke — a clearly terraced spike, still symmetrical.
+  const PROFILE_POWER = 1.6;
+  const PROFILE_STEPS = 7;
 
   function readNumber(styles, name, fallback) {
     const value = parseFloat(styles.getPropertyValue(name));
@@ -113,44 +120,13 @@
     let axisY = 0;
 
     // The strokes. `x` is fixed per layout; `current` and `target` are total
-    // heights. `grain` and `bias` are each stroke's share of the organic
-    // variation, fixed per layout and derived from its position, so the
-    // shape the field takes at a given spot is always the same shape: nothing
-    // moves while the pointer is still, and neighbouring strokes vary
-    // coherently rather than at random.
-    //   grain — a multiplier on the stroke's lift, a little over or under one
-    //   bias  — how the lift is shared above and below the axis: 0 is even,
-    //           positive leans the growth upward, negative downward
+    // heights (the stroke is drawn half above and half below the axis).
     const strokes = {
       count: 0,
       x: new Float32Array(0),
       current: new Float32Array(0),
-      target: new Float32Array(0),
-      grain: new Float32Array(0),
-      bias: new Float32Array(0)
+      target: new Float32Array(0)
     };
-
-    // The organic variation. The wave keeps its raised-cosine body, but:
-    //   - the falloff is longer on one side of the centre than the other
-    //   - each stroke's lift is scaled by a slow undulation along the runner
-    //     with a finer ripple laid over it, so no two neighbours land on
-    //     exactly the same curve and the two flanks never mirror
-    //   - each stroke leans its growth a little above or below the axis, by
-    //     an undulation of its own, so the top and bottom edges of the wave
-    //     are two different lines
-    // All of it is a function of position only. Amplitudes are kept small:
-    // the eye should read one coherent waveform with a hand-drawn edge, not
-    // noise.
-    const SKEW = 0.16;         // the long flank's radius is (1 + SKEW) × radius,
-                               // the short flank's (1 − SKEW) × radius
-    const GRAIN_AMOUNT = 0.14; // ± share of the lift the undulation can add
-    const BIAS_AMOUNT = 0.28;  // ± share of a stroke's height moved across the axis
-
-    // A stable, position-seeded ripple in [−1, 1]: two incommensurate sines,
-    // so it never visibly repeats along the runner.
-    function undulate(x, scale, phase) {
-      return 0.62 * Math.sin(x / scale + phase) + 0.38 * Math.sin(x / (scale * 0.37) + phase * 1.7);
-    }
 
     // The interaction. `x`/`y` are the pointer relative to the canvas; `centre`
     // is the eased field centre the renderer actually uses; `strength` is how
@@ -205,19 +181,12 @@
         strokes.x = new Float32Array(count);
         strokes.current = current;
         strokes.target = new Float32Array(count);
-        strokes.grain = new Float32Array(count);
-        strokes.bias = new Float32Array(count);
       }
 
       for (let i = 0; i < count; i++) {
         // Snapped to the device grid for a crisp 1px line
         const x = inset + i * step;
         strokes.x[i] = Math.floor(x * dpr) / dpr;
-        // Seeded from the position in CSS pixels, so a resize re-samples the
-        // same landscape rather than reshuffling it. The two use different
-        // scales and phases so the lean is not simply the lift's twin.
-        strokes.grain[i] = 1 + GRAIN_AMOUNT * undulate(x, 41, 0.9);
-        strokes.bias[i] = BIAS_AMOUNT * undulate(x, 67, 2.6);
       }
 
       computeTargets();
@@ -226,14 +195,11 @@
 
     // The field: every stroke's target height from the current centre
     function computeTargets() {
-      const { count, x, target, grain } = strokes;
+      const { count, x, target } = strokes;
       const rest = config.restHeight;
       const lift = (config.maxHeight - rest) * pointer.strength;
+      const radius = config.radius;
       const centre = pointer.centre;
-      // The two flanks fall off over different distances: the wave trails
-      // longer to the right of the pointer than it leads to the left
-      const radiusLeft = config.radius * (1 - SKEW);
-      const radiusRight = config.radius * (1 + SKEW);
 
       if (!pointer.active || lift <= 0) {
         target.fill(rest);
@@ -241,16 +207,21 @@
       }
 
       for (let i = 0; i < count; i++) {
-        const offset = x[i] - centre;
-        const d = Math.abs(offset);
-        const radius = offset < 0 ? radiusLeft : radiusRight;
+        const d = Math.abs(x[i] - centre);
         if (d >= radius) {
           target[i] = rest;
         } else {
-          // Raised cosine: flat summit, smooth sides, exactly rest at the
-          // edge — then each stroke's own grain laid over it
-          const envelope = 0.5 * (1 + Math.cos(Math.PI * d / radius));
-          target[i] = rest + lift * envelope * grain[i];
+          // Raised cosine, steepened, then quantised into a fixed number of
+          // levels. The cosine keeps the profile symmetrical and rest at the
+          // edge; the power pulls the shoulders in so the centre stands
+          // clear of its neighbours; the quantising turns the curve into
+          // terraces, so adjacent strokes step rather than blend. All of it
+          // is a function of distance alone — nothing random, nothing that
+          // moves while the pointer is still.
+          const smooth = 0.5 * (1 + Math.cos(Math.PI * d / radius));
+          const steep = Math.pow(smooth, PROFILE_POWER);
+          const envelope = Math.round(steep * PROFILE_STEPS) / PROFILE_STEPS;
+          target[i] = rest + lift * envelope;
         }
       }
     }
@@ -272,26 +243,16 @@
       ctx.strokeStyle = colour;
       ctx.beginPath();
 
-      const { count, x, current, bias } = strokes;
-      const rest = config.restHeight;
-      const range = Math.max(config.maxHeight - rest, 1);
+      const { count, x, current } = strokes;
       // A hairline on the device grid: offset by half a device pixel so a
       // 1px stroke fills exactly one column rather than two half-alpha ones
       const snap = 0.5 / dpr;
 
       for (let i = 0; i < count; i++) {
-        const h = current[i];
-        // The lean only applies to the lift, scaled by how far the stroke
-        // has risen, so the resting runner stays a clean centred band and
-        // the asymmetry arrives with the wave rather than being there all
-        // along
-        const risen = Math.min(Math.max((h - rest) / range, 0), 1);
-        const lean = bias[i] * risen;
-        const above = (h / 2) * (1 + lean);
-        const below = h - above;
+        const half = current[i] / 2;
         const px = x[i] + snap;
-        ctx.moveTo(px, axisY - above);
-        ctx.lineTo(px, axisY + below);
+        ctx.moveTo(px, axisY - half);
+        ctx.lineTo(px, axisY + half);
       }
 
       ctx.stroke();

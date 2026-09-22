@@ -1445,10 +1445,12 @@ html:has(.willem-header.is--loading) body {
   --runner-spacing: 6px;
   --runner-stroke: 1px;
   --runner-rest: 9px;
-  /* A modest swell, not a mountain: the fan rises to a little over a line
-     of the headline each way, and stays a detail of the hero. */
-  --runner-max: 48px;
-  --runner-radius: 150px;
+  /* A narrow, tall response: the field reaches about fifteen strokes each
+     side of the pointer — thirty or so moving at a time — and the strokes
+     under it rise to a clear peak, so the profile reads as a spike rather
+     than a wide, shallow swell. */
+  --runner-max: 72px;
+  --runner-radius: 90px;
   --runner-reach: 200px;
   --runner-reach-fade: 120px;
   /* Between the grid line and the copy: a visible instrument, not a
