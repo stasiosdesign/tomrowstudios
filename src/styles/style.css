@@ -478,6 +478,7 @@ textarea { font-family: inherit; }
   border-bottom: 1px solid rgba(255, 255, 255, 0.12);
   padding: 2.4rem var(--site-inset);
   color: #f4f4f4;
+  /* Lifted again, to 150, in the layering rules at the foot of the file. */
   z-index: 80;
 }
 
@@ -690,7 +691,8 @@ h3 {
 /* ---------- Page transition overlay ---------- */
 
 .transition {
-  z-index: 200;
+  /* Over everything, the fixed nav (150) included: the wipe covers the bar. */
+  z-index: 400;
   pointer-events: none;
   position: fixed;
   inset: 0;
@@ -759,7 +761,8 @@ h3 {
   display: none;
   position: fixed;
   inset: 0;
-  z-index: 100;
+  /* Over the fixed nav (150); under the page transition (400). */
+  z-index: 300;
   width: 100%;
   height: 100vh;
 }
@@ -1984,11 +1987,11 @@ main:has(.willem-header.is--loading) .site-nav,
    the section draws one. Two CTAs in a row tile column to column with no gap
    between them: the second's left line is the first's missing right edge.
 
-   Colours are the CSS states here — rest, hover, focus, press. The motion is
-   in button.js and is only added on a fine pointer with motion allowed, so on
-   touch and under reduced motion this is the whole component. */
+   The colour states and the vertical line are CSS — rest, hover, focus,
+   press. The horizontal redraw, the arrow and the scramble are in button.js
+   and are only added on a fine pointer with motion allowed, so on touch and
+   under reduced motion this is the whole component. */
 :root {
-  --cta-accent: #f20505;
   --cta-line: rgba(255, 255, 255, 0.28);
   --cta-line-active: rgba(255, 255, 255, 0.8);
   --cta-height: 5.6rem;
@@ -2039,15 +2042,21 @@ main:has(.willem-header.is--loading) .site-nav,
   height: 1px;
   transform-origin: left center;
 }
-/* The one accent: the left line carries the red, at rest, so the treatment
-   reads on a phone as well as under a pointer. */
+/* The vertical line is one of the page grid's own: the same width and the
+   same colour token, so it takes whichever line colour the section around it
+   uses. It is not there at rest — the CTA sits on a column line, and that
+   line is enough — and is drawn down from the top while the CTA is hovered or
+   focused, then lifted again when the pointer leaves. */
 .cta__line.is--left {
   top: 0;
   left: 0;
-  width: 1px;
+  width: var(--grid-line-width);
   height: 100%;
-  background-color: var(--cta-accent);
+  background-color: var(--grid-line);
+  opacity: 0;
+  transform: scaleY(0);
   transform-origin: top center;
+  transition: transform 0.35s var(--cta-ease), opacity 0.2s var(--cta-ease);
 }
 
 .cta__content {
@@ -2077,34 +2086,31 @@ main:has(.willem-header.is--loading) .site-nav,
 }
 
 /* States. Hover is only asked for where there is a pointer to hover with;
-   focus-visible is always there. Top and bottom brighten; the left line
-   stays red. */
+   focus-visible is always there. Top and bottom brighten; the vertical line
+   is drawn in, and keeps the grid colour rather than taking the bright one. */
 @media (hover: hover) and (pointer: fine) {
   .cta:hover .cta__line { background-color: var(--cta-line-active); }
-  .cta:hover .cta__line.is--left { background-color: var(--cta-accent); }
+  .cta:hover .cta__line.is--left { background-color: var(--grid-line); opacity: 1; transform: scaleY(1); }
 }
 .cta:focus-visible .cta__line { background-color: var(--cta-line-active); }
-.cta:focus-visible .cta__line.is--left { background-color: var(--cta-accent); }
+.cta:focus-visible .cta__line.is--left { background-color: var(--grid-line); opacity: 1; transform: scaleY(1); }
 /* A press nudges the content a hair to the right, the way a switch moves */
 .cta:active .cta__content { translate: 0.1rem 0; }
 
-/* Two variants, one component. Primary carries the red and the arrow;
-   secondary is the same frame in the neutral line colour with the arrow taken
-   away, and picks up the red only while it is hovered or focused. */
+/* Two variants, one component. Secondary is the same frame with the arrow
+   taken away. */
 .cta.is--secondary .cta__icon { display: none; }
-.cta.is--secondary .cta__line.is--left { background-color: var(--cta-line); }
-@media (hover: hover) and (pointer: fine) {
-  .cta.is--secondary:hover .cta__line.is--left { background-color: var(--cta-accent); }
-}
-.cta.is--secondary:focus-visible .cta__line.is--left { background-color: var(--cta-accent); }
 
-/* On light surfaces the lines flip to dark; the red stays. */
+/* On light surfaces the lines flip to dark. The theme swaps the grid token
+   itself; the drawer, the footer and the white cards sit inside dark sections
+   and take the dark line for the CTA alone. */
 .theme-light .cta,
 .panel .cta,
 .site-footer .cta,
 .product-card .cta {
   --cta-line: rgba(10, 10, 10, 0.22);
   --cta-line-active: rgba(10, 10, 10, 0.85);
+  --grid-line: var(--grid-line-color-dark);
 }
 
 /* ---------- On the grid ----------
@@ -4200,7 +4206,8 @@ img[data-click-zoom],
 }
 
 .click-zoom__lightbox {
-  z-index: 100;
+  /* Over the fixed nav (150), level with the drawers. */
+  z-index: 300;
   cursor: zoom-out;
   background-color: #000000e6;
   justify-content: center;
@@ -5204,7 +5211,6 @@ body:has(.arch-page) {
 
 /* Already positioned in their own rules — the lift only. Naming a `position`
    here would overwrite the one they are laid out by. */
-.site-nav,            /* fixed  — the bar at the top of every page */
 .scroll-next__inner,  /* sticky — the end-of-project panel */
 .willem-header__content,
 .page-header-body,
@@ -5224,6 +5230,13 @@ body:has(.arch-page) {
 .willem__h1-end {
   z-index: 91;
 }
+
+/* The fixed bar, above all of that. It shared 91 with the wrappers above,
+   and a wrapper later in the document painted over it as the page scrolled
+   under the bar. Well clear of the grain (90), the lifted type (91) and the
+   development grid (140); still under the drawers and the lightbox (300) and
+   the page transition (400), which are meant to cover it. */
+.site-nav { z-index: 150; }
 
 /* =============================================================
    Animated grid overlay — temporary, development only
@@ -5259,8 +5272,9 @@ body:has(.arch-page) {
 .animated-grid {
   position: fixed;
   inset: 0;
-  /* Above the grain (90) and the drawers (100). It never takes a click. */
-  z-index: 200;
+  /* Above the grain (90) and the lifted type (91), under the fixed nav
+     (150) so it can never sit over the bar. It never takes a click. */
+  z-index: 140;
   pointer-events: none;
   display: block;
 }

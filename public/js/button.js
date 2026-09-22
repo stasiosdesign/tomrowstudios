@@ -3,12 +3,19 @@
 // -----------------------------------------
 //
 // The CTA is complete without this file: its colours change on :hover and
-// :focus-visible in CSS, and it links, scrolls or opens whatever its markup
-// says. What this adds, on a fine pointer with motion allowed, is the
-// geometry — the three lines redraw, the arrow steps forward a few pixels and
-// the label scrambles once and settles — one coordinated GSAP timeline per
-// button, played on enter and let run out. Touch devices and reduced motion
-// get the CSS states only.
+// :focus-visible in CSS, the vertical line is drawn in and out by CSS, and it
+// links, scrolls or opens whatever its markup says. What this adds, on a fine
+// pointer with motion allowed, is the rest of the geometry — the two
+// horizontal lines redraw, the arrow steps forward a few pixels and the label
+// scrambles once and settles — one GSAP timeline per button, played on enter
+// and let run out.
+//
+// Let run out is the point. The redraw swaps a line's transform origin at
+// the moment it is fully retracted, which is invisible then and a jump at any
+// other time — so a hover that arrives while the last one is still playing
+// joins it rather than restarting it, and the same goes for the scramble.
+// Only the arrow, which is a plain tween between two positions, reverses on
+// the spot. Touch devices and reduced motion get the CSS states only.
 
 if (typeof ScrambleTextPlugin !== 'undefined') {
   gsap.registerPlugin(ScrambleTextPlugin);
@@ -33,15 +40,13 @@ function initCta() {
     const icon = button.querySelector('.cta__icon');
     const top = button.querySelector('.cta__line.is--top');
     const bottom = button.querySelector('.cta__line.is--bottom');
-    const left = button.querySelector('.cta__line.is--left');
-    if (!label || !top || !bottom || !left) return;
+    if (!label || !top || !bottom) return;
 
     const text = label.textContent.trim();
 
     // The frame redraws: each horizontal line retracts to the right and is
-    // drawn back in from the left, the bottom a beat behind the top, while the
-    // left line retracts upward and redraws down. It always ends where it
-    // started, so leaving mid-way needs nothing undone.
+    // drawn back in from the left, the bottom a beat behind the top. It always
+    // ends where it started, so leaving mid-way needs nothing undone.
     const redraw = gsap.timeline({ paused: true });
     redraw
       .set([top, bottom], { transformOrigin: 'right center' }, 0)
@@ -50,17 +55,14 @@ function initCta() {
       .to(top, { scaleX: 1, duration: 0.36, ease: 'power3.out' }, 0.18)
       .to(bottom, { scaleX: 0, duration: 0.18, ease: 'power2.in' }, 0.06)
       .set(bottom, { transformOrigin: 'left center' }, 0.24)
-      .to(bottom, { scaleX: 1, duration: 0.36, ease: 'power3.out' }, 0.24)
-      .set(left, { transformOrigin: 'top center' }, 0)
-      .to(left, { scaleY: 0, duration: 0.15, ease: 'power2.in' }, 0)
-      .to(left, { scaleY: 1, duration: 0.3, ease: 'power3.out' }, 0.15);
+      .to(bottom, { scaleX: 1, duration: 0.36, ease: 'power3.out' }, 0.24);
 
     const enter = () => {
-      redraw.restart();
+      if (!redraw.isActive()) redraw.restart();
       if (icon) {
         gsap.to(icon, { x: 3, duration: 0.3, ease: 'power2.out', overwrite: 'auto' });
       }
-      if (canScramble) {
+      if (canScramble && !gsap.isTweening(label)) {
         gsap.to(label, {
           duration: 0.45,
           ease: 'none',
