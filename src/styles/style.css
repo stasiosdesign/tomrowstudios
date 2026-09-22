@@ -82,6 +82,13 @@ body::-webkit-scrollbar { width: 0; height: 0; display: none; }
 :root {
   --font-body: "inter-tight-variable", sans-serif;
   --font-label: "chivo-mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  /* The label scale: small enough to read as secondary UI rather than
+     competing with the headings and body copy beside it, and tracked tight —
+     the opposite of the open, spaced-out treatment small caps usually get —
+     so the uppercase reads as one word rather than a row of separated
+     letters. */
+  --size-label: 1.2rem;
+  --track-label: 0.01em;
 }
 
 body {
@@ -97,14 +104,19 @@ body {
   line-height: 1.4;
 }
 
-/* The label face, applied in one place. Every selector here already carried
-   the small size, the tracking and the muted colour that make it a label; all
-   that is added is the face it is set in, and the uppercase it already had —
-   restated so the mono can never turn up in mixed case. Sizes, spacing and
-   colours are left exactly as they were.
+/* The label face, applied in one place. The size and the tracking are
+   consolidated here too, in `--size-label` / `--track-label` above, rather
+   than each selector stating its own — most of these used to carry a
+   font-size somewhere between 1.3rem and 2.2rem and a letter-spacing between
+   0.08em and 0.14em, restated with small variations at every call site. One
+   scale now: small enough to read as secondary UI, tracked close rather than
+   thrown open. A selector below only keeps its own font-size where it is
+   genuinely a different case — set in step with a sibling heading it has to
+   align with, for instance — and colours are left exactly as they were.
 
-   `font-family` is the only property in contention, and nothing else on the
-   site sets it on these, so this rule can sit here with the rest of the
+   `font-family`, `font-size` and `letter-spacing` are the only properties in
+   contention, and nothing else on the site sets them on these except where
+   noted at the call site, so this rule can sit here with the rest of the
    typography rather than having to come last to win. */
 .tagline,
 .logo-strip__note,
@@ -149,6 +161,8 @@ body {
 .product-card::before {
   font-family: var(--font-label);
   text-transform: uppercase;
+  font-size: var(--size-label);
+  letter-spacing: var(--track-label);
 }
 
 img { display: block; max-width: 100%; }
@@ -327,7 +341,11 @@ textarea { font-family: inherit; }
    reads one of these, so a step is a single edit rather than thirty-six. */
 :root {
   --weight-body: 400;   /* running text */
-  --weight-label: 400;  /* in Chivo Mono this resolves to its only cut, 300 */
+  --weight-label: 500;  /* the mono ships one static cut, 300 — asking for
+                            more than the body's 400 nudges the browser to add
+                            a touch of synthetic weight on top of it, which is
+                            the point: a slightly heavier label against the
+                            lighter running text beside it. */
   --weight-ui: 450;     /* navigation, buttons, small interface text */
   --weight-strong: 500; /* headings and emphasis — the ceiling */
 }
@@ -436,7 +454,7 @@ textarea { font-family: inherit; }
   padding: 1rem 2.4rem;
   border: 1px solid transparent;
   border-radius: var(--radius);
-  font-weight: 400;
+  font-weight: var(--weight-label); --wght: var(--weight-label);
   text-decoration: none;
 }
 .btn-white  { background: #ffffff; border-color: #ffffff; color: #0a0a0a; padding: 0.8rem 2rem; }
@@ -613,9 +631,7 @@ h3 {
    the site uses for asides. Sits right on top of the marquee. */
 .logo-strip__note {
   margin: 2.4rem 0 0;
-  font-size: 1.3rem;
   font-weight: var(--weight-label); --wght: var(--weight-label);
-  letter-spacing: 0.12em;
   text-transform: uppercase;
   color: rgba(10, 10, 10, 0.45);
 }
@@ -712,9 +728,11 @@ h3 {
   gap: 0.2rem;
   white-space: nowrap;
   color: #ffffff;
-  font-size: 2.2rem;
+  /* Bigger than the rest of the label scale — this is the name of the page
+     being transitioned to, the one thing on screen during the sweep, not a
+     supporting caption — but still cut down from where it stood before. */
+  font-size: 1.8rem;
   line-height: 1;
-  letter-spacing: 0.02em;
 }
 
 /* The sweep is cut on the page grid: a narrow panel over each margin and one
@@ -1060,7 +1078,7 @@ h3 {
 @media (max-width: 991px) {
   /* The gutter and column count for this breakpoint live with the rest of the
      grid system, at the top of the file. */
-  .transition__label { font-size: 1.6rem; }
+  .transition__label { font-size: 1.4rem; }
   .site-nav { padding: 1.8rem var(--site-inset); }
   .form-row { flex-direction: column; }
   /* every grid collapses to a single column */
@@ -1452,15 +1470,13 @@ html:has(.willem-header.is--loading) body {
 
 .willem-nav__link {
   color: inherit;
-  font-size: 1em;
   font-weight: var(--weight-ui); --wght: var(--weight-ui);
   line-height: 1.2;
   text-decoration: none;
   position: relative;
-  /* Set in the mono and uppercase, per the label rule at the top of the file.
-     The size is left alone; only the tracking is opened, because uppercase
-     needs the room and the mono's own sidebearings are tight for it. */
-  letter-spacing: 0.08em;
+  /* Mono, uppercase, size and tracking all come from the label rule at the
+     top of the file — `.willen-nav .willem-nav__link` there outranks this
+     single-class selector, so they win here rather than needing restating. */
 }
 
 /* The gap closed up horizontally, so the tap height comes from the link
@@ -1507,13 +1523,6 @@ html:has(.willem-header.is--loading) body {
     grid-column: span 2;
   }
 
-  /* Each half of the bar is two of four columns, so on a phone the links have
-     a little under half the screen to run in — and uppercase in a monospace
-     runs wider than the mixed-case proportional face they were set in before,
-     far enough that `Architecture` was being cut off by the bar's own
-     `overflow: hidden`. Stepped down to the size the site's other small labels
-     take, which is the register this type now reads in anyway. */
-  .willem-nav__link { font-size: 1.4rem; }
 }
 
 
@@ -1713,7 +1722,6 @@ html:has(.willem-header.is--loading) body {
   opacity: .65;
   margin-top: 0;
   margin-bottom: 0;
-  font-size: 1.125em;
   font-weight: var(--weight-ui); --wght: var(--weight-ui);
 }
 
@@ -1804,10 +1812,6 @@ html:has(.willem-header.is--loading) body {
 }
 
 @media screen and (max-width: 767px) {
-  .footer-eyebrow {
-    font-size: 1em;
-  }
-
   .site-footer {
     padding-left: var(--site-inset);
     padding-right: var(--site-inset);
@@ -1944,7 +1948,6 @@ main:has(.willem-header.is--loading) .site-nav,
 
 .sticky-tab__eyebrow {
   margin: 0;
-  font-size: 1.6rem;
   font-weight: var(--weight-label); --wght: var(--weight-label);
   white-space: nowrap;
 }
@@ -1963,7 +1966,6 @@ main:has(.willem-header.is--loading) .site-nav,
 
 @media screen and (max-width: 767px) {
   .sticky-tab__title { font-size: 2.4rem; }
-  .sticky-tab__eyebrow { font-size: 1.4rem; }
   .sticky-tab__body { padding-top: 3.2rem; padding-bottom: 3.2rem; }
 }
 
@@ -2041,11 +2043,10 @@ main:has(.willem-header.is--loading) .site-nav,
 }
 
 .button-011__text {
-  /* The mono and the uppercase come from the label rule at the top of the
-     file; this is the tracking that goes with them. The split-char hover
-     measures the characters after this is applied, so opening it here moves
-     the animation with the type rather than against it. */
-  letter-spacing: 0.08em;
+  /* The mono, the uppercase, the size and the tracking all come from the
+     label rule at the top of the file. The split-char hover measures the
+     characters after that tracking is applied, so it moves with the type
+     rather than against it. */
   padding-top: var(--button-011-padding-top);
   padding-left: var(--button-011-padding-left);
   padding-right: var(--button-011-padding-right);
@@ -2533,7 +2534,6 @@ body{
 }
 .insights-row__index {
   margin: 0;
-  font-size: 1.4rem;
   font-weight: var(--weight-label); --wght: var(--weight-label);
   color: rgba(255, 255, 255, 0.5);
 }
@@ -2843,7 +2843,6 @@ body{
 }
 
 .slide-demo__eyebrow {
-  font-size: 1.5rem;
   line-height: 1.1;
 }
 
@@ -2965,10 +2964,8 @@ main section + section,
 /* Eyebrows read as small ruled captions rather than bold running text */
 .tagline {
   margin: 0 0 1.6rem;
-  font-size: 1.3rem;
   font-weight: var(--weight-label); --wght: var(--weight-label);
   text-transform: uppercase;
-  letter-spacing: 0.12em;
   color: rgba(255, 255, 255, 0.55);
 }
 .theme-light .tagline { color: rgba(10, 10, 10, 0.55); }
@@ -3046,9 +3043,7 @@ main section + section,
 }
 .product-card::before {
   content: counter(product, decimal-leading-zero);
-  font-size: 1.3rem;
   font-weight: var(--weight-label); --wght: var(--weight-label);
-  letter-spacing: 0.12em;
   color: rgba(10, 10, 10, 0.4);
 }
 .product-img { border-radius: calc(var(--radius) - 1px); }
@@ -3164,11 +3159,9 @@ main section + section,
 .form-label {
   width: 100%;
   margin-bottom: 0;
-  font-size: 1.3rem;
   font-weight: var(--weight-label); --wght: var(--weight-label);
   line-height: 1;
   text-transform: uppercase;
-  letter-spacing: 0.12em;
   color: var(--form-muted);
 }
 
@@ -3465,10 +3458,8 @@ main section + section,
 /* The odd one out spans both columns so the band closes flush */
 .case-facts > div:last-child:nth-child(odd) { grid-column: 1 / -1; }
 .case-facts dt {
-  font-size: 1.3rem;
   font-weight: var(--weight-label); --wght: var(--weight-label);
   text-transform: uppercase;
-  letter-spacing: 0.12em;
   color: var(--form-muted);
 }
 .case-facts dd {
@@ -3547,10 +3538,8 @@ h2 { margin-bottom: 3.2rem; }
 .panel-meta { gap: 2.4rem 4rem; }
 .panel-meta dt {
   margin-bottom: 0.6rem;
-  font-size: 1.3rem;
   font-weight: var(--weight-label); --wght: var(--weight-label);
   line-height: 1;
-  letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--form-muted);
 }
@@ -3752,7 +3741,7 @@ strong, b, th { font-weight: var(--weight-strong); --wght: var(--weight-strong);
 .testimonial-chip img { width: 4rem; height: 4rem; border-radius: 100em; object-fit: cover; flex: none; }
 .testimonial-chip__text { display: flex; flex-direction: column; gap: 0.2rem; min-width: 0; }
 .testimonial-chip__name { font-size: 1.5rem; color: inherit; }
-.testimonial-chip__role { font-size: 1.3rem; opacity: 0.7; }
+.testimonial-chip__role { opacity: 0.7; }
 
 /* ---------- Map head ---------- */
 .map-spread__head {
@@ -3776,9 +3765,7 @@ strong, b, th { font-weight: var(--weight-strong); --wght: var(--weight-strong);
   justify-self: end;
 }
 .insights-row__link {
-  font-size: 1.3rem;
   text-transform: uppercase;
-  letter-spacing: 0.12em;
   color: var(--form-muted);
   text-decoration: none;
   border-bottom: 1px solid var(--rule);
@@ -3976,9 +3963,7 @@ strong, b, th { font-weight: var(--weight-strong); --wght: var(--weight-strong);
 }
 .award-label__name { color: #ffffff; }
 .award-label__note {
-  font-size: 1.15rem;
   text-transform: uppercase;
-  letter-spacing: 0.12em;
   color: rgba(255, 255, 255, 0.45);
 }
 /* A win is worth more than a nomination, so let it sit brighter */
@@ -4282,9 +4267,7 @@ body:has(.arch-page) {
 .arch-stage__head .tagline { margin: 0; }
 .arch-stage__count {
   margin: 0;
-  font-size: 1.3rem;
   font-weight: var(--weight-label); --wght: var(--weight-label);
-  letter-spacing: 0.12em;
   text-transform: uppercase;
   color: rgba(255, 255, 255, 0.55);
 }
@@ -4453,9 +4436,7 @@ body:has(.arch-page) {
 }
 .parallax-slider__item-meta {
   margin: 0.4rem 0 0;
-  font-size: 1.3rem;
   font-weight: var(--weight-label); --wght: var(--weight-label);
-  letter-spacing: 0.12em;
   text-transform: uppercase;
   color: rgba(255, 255, 255, 0.5);
 }
@@ -4573,10 +4554,8 @@ body:has(.arch-page) {
   align-items: center;
   padding: 0.4rem 0.8rem;
   border-radius: var(--radius);
-  font-size: 1.1rem;
   font-weight: var(--weight-ui); --wght: var(--weight-ui);
   line-height: 1;
-  letter-spacing: 0.06em;
   white-space: nowrap;
 }
 .results-card__index {
@@ -4612,9 +4591,7 @@ body:has(.arch-page) {
   margin-top: auto;
   padding-top: 1.6rem;
   border-top: 1px solid rgba(10, 10, 10, 0.12);
-  font-size: 1.2rem;
   font-weight: var(--weight-label); --wght: var(--weight-label);
-  letter-spacing: 0.1em;
   text-transform: uppercase;
   color: rgba(10, 10, 10, 0.45);
 }
@@ -4689,8 +4666,6 @@ body:has(.arch-page) {
 
 .scroll-next__sub {
   opacity: .6;
-  letter-spacing: -.05em;
-  font-size: 1.5em;
   font-weight: 400;
   line-height: 1;
 }
@@ -4724,8 +4699,6 @@ body:has(.arch-page) {
    has one already. Weight and scale come off the page's headings so the
    panel reads as the end of the project rather than as a borrowed block. */
 .scroll-next__sub {
-  font-size: 1.4rem;
-  letter-spacing: 0.12em;
   text-transform: uppercase;
   font-weight: var(--weight-ui); --wght: var(--weight-ui);
   margin-bottom: 1.6rem;
@@ -4746,7 +4719,6 @@ body:has(.arch-page) {
 @media screen and (max-width: 767px) {
   .scroll-next__h { font-size: 4rem; }
   .scroll-next__progres { width: 20rem; }
-  .scroll-next__sub { font-size: 1.3rem; }
 }
 
 
@@ -5153,9 +5125,7 @@ body:has(.arch-page) {
   right: 1.6rem;
   z-index: 1;
   color: rgba(255, 255, 255, 0.65);
-  font-size: 1.2rem;
   font-weight: var(--weight-label); --wght: var(--weight-label);
-  letter-spacing: 0.14em;
   line-height: 1;
 }
 
