@@ -1994,7 +1994,6 @@ main:has(.willem-header.is--loading) .site-nav,
    a fine pointer with motion allowed, so on touch and under reduced motion
    this is the whole component. */
 :root {
-  --cta-line-active: rgba(255, 255, 255, 0.8);
   /* The one persistent mark on the CTA at rest — everything else is drawn in
      on hover. Deliberately not a grid-line colour: it is a fixed accent, not
      part of the frame. */
@@ -2027,17 +2026,19 @@ main:has(.willem-header.is--loading) .site-nav,
   -webkit-tap-highlight-color: transparent;
 }
 
-/* The one mark the CTA carries at rest — a short red bar on the same left
-   edge the hover frame's own left line sits on, so the frame simply arrives
-   around it rather than beside it. CSS-only (a pseudo-element, not a fourth
-   `.cta__line`) so it needs no markup change anywhere the component is used. */
+/* The one mark the CTA carries at rest — a full-height red bar on the same
+   left edge the hover frame's own left line sits on, so the frame simply
+   arrives around it rather than beside it. Same height as that line (and so
+   as the frame that draws in around it on hover), not a shorter inset mark.
+   CSS-only (a pseudo-element, not a fourth `.cta__line`) so it needs no
+   markup change anywhere the component is used. */
 .cta::before {
   content: "";
   position: absolute;
-  top: 22%;
-  bottom: 22%;
+  top: 0;
   left: 0;
   width: 2px;
+  height: 100%;
   background-color: var(--cta-accent-color);
   pointer-events: none;
 }
@@ -2050,7 +2051,13 @@ main:has(.willem-header.is--loading) .site-nav,
    reverses from wherever the line is. */
 .cta__line {
   position: absolute;
-  background-color: var(--cta-line-active);
+  /* The same colour and opacity as the page grid's own lines behind it — not
+     a separate, bolder white — so the frame reads as more of the grid
+     arriving rather than a highlight drawn on top of it. Referenced directly
+     (not through another custom property) so each CTA picks up whatever
+     --grid-line its own section has set, rather than a value resolved once
+     where a wrapping custom property was declared. */
+  background-color: var(--grid-line);
   opacity: 0;
   pointer-events: none;
   transition: transform 0.35s var(--cta-ease), opacity 0.2s var(--cta-ease);
@@ -2124,12 +2131,15 @@ main:has(.willem-header.is--loading) .site-nav,
    taken away. */
 .cta.is--secondary .cta__icon { display: none; }
 
-/* On light surfaces the lines flip to dark. */
+/* On light surfaces the lines flip to dark — the grid's own dark-on-light
+   hairline, not a separate bold colour, for the same reason as above. These
+   four surfaces don't carry the page grid themselves, so this names the
+   colour directly rather than relying on an inherited --grid-line. */
 .theme-light .cta,
 .panel .cta,
 .site-footer .cta,
 .product-card .cta {
-  --cta-line-active: rgba(10, 10, 10, 0.85);
+  --grid-line: var(--grid-line-color-dark);
 }
 
 /* ---------- On the grid ----------
