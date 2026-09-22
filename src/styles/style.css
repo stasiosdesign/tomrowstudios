@@ -1190,7 +1190,8 @@ html:has(.willem-header.is--loading) body {
 }
 
 .willem-header {
-  background-color: #e9e9e9;
+  /* Temporary placeholder for the hero photograph — plain black. */
+  background-color: #000;
   color: #f4f4f4;
   position: relative;
   overflow: hidden;
@@ -1503,7 +1504,8 @@ html:has(.willem-header.is--loading) body {
   object-fit: cover;
   opacity: 0;
 }
-.willem-header.is--settled .willem-header__bg { opacity: 1; }
+/* Temporary placeholder: the settled hero stays on its plain black
+   background-color instead of revealing the photograph. */
 .willem-header.is--settled .willem-loader { display: none; }
 
 @media screen and (max-width: 991px) {
@@ -5318,6 +5320,25 @@ body:has(.arch-page) {
   display: flex;
   justify-content: center;
   align-items: flex-start;
+}
+
+/* At the full twelve columns, group the boundaries into four sets of three —
+   1–3, 4–6, 7–9, 10–12 — by tightening only the padding *inside* each group.
+   The padding at a group boundary (and at the two outer edges) stays
+   `--grid-pad`, the same gap the overlay has always had, so the wider
+   divisions keep landing exactly where they do today. `--grid-pad-tight` is
+   just over half that, so the bars inside a group read as a cluster of three
+   against the wider space that separates the clusters. Scoped to the
+   twelve-column layout only — the six- and four-column breakpoints below
+   keep the original even spacing, since a group of three doesn't map onto
+   either of those. */
+@media screen and (min-width: 992px) {
+  .animated-grid__row {
+    --grid-pad-tight: calc(var(--grid-pad) * 0.55);
+  }
+  .animated-grid__col:nth-child(3n + 1) { padding-inline-end: var(--grid-pad-tight); }
+  .animated-grid__col:nth-child(3n + 2) { padding-inline: var(--grid-pad-tight); }
+  .animated-grid__col:nth-child(3n) { padding-inline-start: var(--grid-pad-tight); }
 }
 
 /* The column numbers. Counters rather than markup, so the supplied HTML keeps
