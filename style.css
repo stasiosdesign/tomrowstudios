@@ -59,12 +59,19 @@ html::-webkit-scrollbar,
 body::-webkit-scrollbar { width: 0; height: 0; display: none; }
 
 /* ------------------------- Typefaces -------------------------
-   Two faces, both from the one Adobe kit already linked in the head
-   (use.typekit.net/nqu1vih.css). The names are the ones the kit publishes.
+   Two faces from the Adobe kit linked in the head (use.typekit.net/nqu1vih.css).
 
-   Neue Haas Grotesk sets everything: running text, navigation, headings,
+   Inter Tight Variable sets everything: running text, navigation, headings,
    buttons. It is the page's voice and nothing needs to ask for it — it is
    inherited from `body`.
+
+   ►► Inter Tight Variable is not in kit nqu1vih yet. The kit publishes
+      neue-haas-grotesk-display and chivo-mono and nothing else, so until
+      "Inter Tight Variable" is added to that kit in Adobe Fonts the browser
+      will skip past it in the stack below. Neue Haas is kept behind it for
+      exactly that reason: the site goes on rendering in the face it has
+      today, and changes over on its own the moment the kit carries Inter
+      Tight. Nothing else needs editing when that happens.
 
    Chivo Mono is the label face and only that: eyebrows, metadata, form
    labels, counters, the small interface type. It is always set uppercase,
@@ -73,7 +80,7 @@ body::-webkit-scrollbar { width: 0; height: 0; display: none; }
    The kit ships it in a single cut, 300, so whatever weight a rule asks for
    resolves to that one — no synthetic bolding to guard against. */
 :root {
-  --font-body: "neue-haas-grotesk-display", Helvetica, Arial, sans-serif;
+  --font-body: "inter-tight-variable", "neue-haas-grotesk-display", Helvetica, Arial, sans-serif;
   --font-label: "chivo-mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
 }
 
@@ -85,7 +92,8 @@ body {
   font-size: 1.6rem;
   /* Stated rather than left to the browser default, which would land on 400
      by coincidence rather than intent. See the weight steps at the top. */
-  font-weight: var(--weight-body);
+  font-weight: var(--weight-body); --wght: var(--wght-body);
+  letter-spacing: var(--track-body);
   line-height: 1.4;
 }
 
@@ -282,24 +290,51 @@ textarea { font-family: inherit; }
 :root { --radius: 0.2rem; }
 
 /* ------------------------- Weight steps -------------------------
-   Neue Haas Grotesk comes out of the kit in five cuts — 300, 400, 500, 600
-   and 700, plus a 300 italic. The 55 Roman (500) and 65 Medium (600) that
-   were missing when these steps were first set are published now, which is
-   what makes the step below possible.
+   Inter Tight is a variable face, so these are points on its weight axis
+   rather than a pick from a handful of cuts — which is why they are not the
+   round hundreds. 516 is the setting the Adobe specimen shows the face at and
+   it is what the running text takes; the other two are stepped off it far
+   enough to be read as different, near enough to stay one family.
 
-   Headings sit on 65 Medium rather than 75 Bold. Bold is the heaviest cut
-   published and it was what the site used, but at the sizes the headings run
-   to it sets too solid — the counters close up and the page reads as shouted.
-   One step down keeps the presence and lets the letterforms open.
+   Every rule that sets a weight reads one of these, so a step is a single
+   edit rather than thirty-six.
 
-   Every rule that was bold now reads its weight from one of these two, so the
-   step is a single edit rather than thirty-six. */
+   Two scales, because the stack holds two kinds of face. Inter Tight has a
+   continuous axis and takes the exact numbers. Neue Haas behind it has five
+   fixed cuts and rounds to the nearest one — and above 500 it rounds upward,
+   so a single shared scale would have handed the fallback 700 for headings,
+   which is the weight this site already decided was too heavy. Each face gets
+   the value that is right for it. */
 :root {
-  --weight-body: 400;   /* running text — 45 Light */
-  --weight-label: 400;  /* small labels; in Chivo Mono this resolves to its 300 */
-  --weight-ui: 600;     /* navigation, buttons, small interface text */
-  --weight-strong: 600; /* headings and emphasis — 65 Medium */
+  /* Inter Tight, on the axis */
+  --wght-body: 516;
+  --wght-label: 400;
+  --wght-ui: 560;
+  --wght-strong: 640;
+
+  /* The fallback's nearest cuts, which are what the site renders until the
+     kit carries Inter Tight. These are the weights it has today. */
+  --weight-body: 400;
+  --weight-label: 400;  /* in Chivo Mono this resolves to its only cut, 300 */
+  --weight-ui: 600;
+  --weight-strong: 600;
 }
+
+/* The axis itself.
+
+   `font-weight` alone would drive `wght` on a variable face, but it cannot
+   carry a value the fallback face should not have: Neue Haas has no 516, and
+   asking it for one gets 500. Naming the axis explicitly keeps the two apart
+   — the variable face is set on the axis, the fallback rounds to its nearest
+   cut through `font-weight`, and neither is guessing.
+
+   It has to be the universal selector. `font-variation-settings` inherits its
+   *resolved* value, so declaring it once on `body` would freeze every heading
+   at the body weight no matter what its own rule asked for — the classic way
+   this goes wrong. Applied per element, each one resolves `--wght` against
+   the weight in force where it stands. The rules that set a weight set
+   `--wght` beside it; Chivo Mono is not variable and ignores the whole thing. */
+* { font-variation-settings: "wght" var(--wght, 516); }
 
 /* ------------------------- Heading metrics -------------------------
    Neue Haas Grotesk is drawn for text, and at display sizes its default
@@ -312,14 +347,23 @@ textarea { font-family: inherit; }
    and a line of 32px type still needs room under it for its descenders.
    Hence three steps rather than one number.
 
-   The display step is measured off the reference setting: at 88px, Bold, its
-   line runs about 640px and its baselines fall about 88px apart — which is
-   this tracking and this leading. The site's own larger components already
-   sit at -0.03 to -0.05em and are left as they are; it was the base scale,
-   uniformly at -0.01em, that stood apart from them. */
+   Retuned for Inter Tight, which is the wider face of the two: set against
+   Neue Haas at a matched weight it runs about 4% longer, so carrying the old
+   tracking over would have pushed every heading toward its measure and
+   started wrapping lines that used to fit. Closing it does two jobs at once —
+   it is what the face wants at these sizes, and it buys back the width.
+
+   Measured rather than picked: one heading line that ran 1557px in Neue Haas
+   at its old setting runs 1522px in Inter Tight at these, so the headings
+   come in slightly shorter than they were rather than longer.
+
+   Running text gets a touch of negative too. Inter Tight is drawn tight but
+   its default fitting is still set for text at text sizes, and the site sets
+   light type on black, which opens spacing optically. */
 :root {
-  --track-display: -0.02em;  /* headings, 3.2rem and up */
-  --track-title: -0.015em;   /* the small headings, 2 to 2.4rem */
+  --track-display: -0.035em; /* headings, 3.2rem and up */
+  --track-title: -0.02em;    /* the small headings, 2 to 2.4rem */
+  --track-body: -0.005em;    /* running text */
 
   --leading-display: 1.02;   /* 5.6rem and up */
   --leading-heading: 1.06;   /* 3.2 to 4.8rem */
@@ -444,7 +488,7 @@ main:not(:has(.willem-header)) .site-nav + *:not(.project-hero):not(.page-header
   font-size: 5.6rem;
   line-height: var(--leading-display);
   letter-spacing: var(--track-display);
-  font-weight: var(--weight-strong);
+  font-weight: var(--weight-strong); --wght: var(--wght-strong);
 }
 .hero-col-two p { margin: 0; font-size: 1.8rem; }
 
@@ -459,14 +503,14 @@ h2 {
   font-size: 4.8rem;
   line-height: var(--leading-heading);
   letter-spacing: var(--track-display);
-  font-weight: var(--weight-strong);
+  font-weight: var(--weight-strong); --wght: var(--wght-strong);
 }
 h3 {
   margin: 0 0 1.6rem;
   font-size: 3.2rem;
   line-height: var(--leading-heading);
   letter-spacing: var(--track-display);
-  font-weight: var(--weight-strong);
+  font-weight: var(--weight-strong); --wght: var(--wght-strong);
 }
 .lead { font-size: 1.8rem; margin: 0 0 2.4rem; }
 
@@ -532,7 +576,7 @@ h3 {
 .timeline-marker { display: flex; flex-direction: column; align-items: center; gap: 1.6rem; }
 .timeline-marker img { width: 4.8rem; height: 4.8rem; }
 .timeline-line { flex: 1; min-height: 6.4rem; width: 0.2rem; background: rgba(255, 255, 255, 0.2); }
-.timeline h4 { margin: 0 0 1.6rem; font-size: 2rem; line-height: var(--leading-title); letter-spacing: var(--track-title); font-weight: var(--weight-strong); }
+.timeline h4 { margin: 0 0 1.6rem; font-size: 2rem; line-height: var(--leading-title); letter-spacing: var(--track-title); font-weight: var(--weight-strong); --wght: var(--wght-strong); }
 .timeline p { margin: 0 0 1.6rem; }
 
 /* ---------- Light theme sections ---------- */
@@ -545,7 +589,7 @@ h3 {
 .section-title-left { max-width: var(--grid-col-2); margin: 0 0 5.6rem; text-align: left; }
 .section-title-left h2 { margin-bottom: 2.4rem; }
 
-.strong { font-weight: var(--weight-strong); }
+.strong { font-weight: var(--weight-strong); --wght: var(--wght-strong); }
 .quote { margin: 0; font-size: 1.8rem; }
 
 /* ---------- Logo strip ---------- */
@@ -563,7 +607,7 @@ h3 {
 .logo-strip__note {
   margin: 2.4rem 0 0;
   font-size: 1.3rem;
-  font-weight: var(--weight-label);
+  font-weight: var(--weight-label); --wght: var(--wght-label);
   letter-spacing: 0.12em;
   text-transform: uppercase;
   color: rgba(10, 10, 10, 0.45);
@@ -778,7 +822,7 @@ h3 {
   font-size: 4rem;
   line-height: 1.05;
   letter-spacing: -0.03em;
-  font-weight: var(--weight-strong);
+  font-weight: var(--weight-strong); --wght: var(--wght-strong);
 }
 .panel-form { padding: 3.2rem; }
 .panel-form-step {
@@ -787,8 +831,8 @@ h3 {
   justify-content: space-between;
   gap: 2.4rem;
 }
-.panel-form-step h3 { margin: 0; font-size: 1.8rem; font-weight: var(--weight-strong); }
-.panel-form-step .step-number { font-size: 1.8rem; font-weight: var(--weight-label); }
+.panel-form-step h3 { margin: 0; font-size: 1.8rem; font-weight: var(--weight-strong); --wght: var(--wght-strong); }
+.panel-form-step .step-number { font-size: 1.8rem; font-weight: var(--weight-label); --wght: var(--wght-label); }
 .panel-form-note { margin: 0.4rem 0 2.4rem; }
 .panel-form .form { gap: 1.6rem; }
 .panel-form .form-row { gap: 1.6rem; }
@@ -801,7 +845,7 @@ h3 {
 .tag {
   padding: 0.4rem 1rem;
   font-size: 1.4rem;
-  font-weight: var(--weight-ui);
+  font-weight: var(--weight-ui); --wght: var(--wght-ui);
   color: #0a0a0a;
   background: rgba(255, 255, 255, 0.85);
   border-radius: var(--radius);
@@ -840,9 +884,9 @@ h3 {
 .product-img { width: 100%; height: auto; aspect-ratio: 405 / 270; object-fit: cover; }
 .product-body { display: flex; flex-direction: column; gap: 1.6rem; padding: 2.4rem; flex: 1; }
 .product-info { display: flex; gap: 1.6rem; align-items: center; }
-.product-meta { font-size: 1.4rem; font-weight: var(--weight-ui); }
+.product-meta { font-size: 1.4rem; font-weight: var(--weight-ui); --wght: var(--wght-ui); }
 .tag-dark { background: rgba(255, 255, 255, 0.1); color: #ffffff; }
-.product-card h5 { margin: 0; font-size: 2.4rem; line-height: var(--leading-title); letter-spacing: var(--track-title); font-weight: var(--weight-strong); }
+.product-card h5 { margin: 0; font-size: 2.4rem; line-height: var(--leading-title); letter-spacing: var(--track-title); font-weight: var(--weight-strong); --wght: var(--wght-strong); }
 .product-card p { margin: 0; }
 .product-card .btn-link { margin-top: auto; align-self: flex-start; }
 .actions-end { justify-content: flex-end; margin-top: 5.6rem; }
@@ -854,7 +898,7 @@ h3 {
 .faq summary {
   padding: 2rem 0;
   font-size: 1.8rem;
-  font-weight: var(--weight-ui);
+  font-weight: var(--weight-ui); --wght: var(--wght-ui);
   cursor: pointer;
   list-style: none;
 }
@@ -897,7 +941,7 @@ h3 {
   font-size: 5.6rem;
   line-height: var(--leading-display);
   letter-spacing: var(--track-display);
-  font-weight: var(--weight-strong);
+  font-weight: var(--weight-strong); --wght: var(--wght-strong);
 }
 .page-header .lead { margin-bottom: 2.4rem; }
 
@@ -948,7 +992,7 @@ h3 {
   height: 6.4rem;
   margin-bottom: 3.2rem;
   font-size: 1.8rem;
-  font-weight: var(--weight-ui);
+  font-weight: var(--weight-ui); --wght: var(--wght-ui);
 }
 .feature-split-center { align-items: center; gap: 5.6rem; }
 .feature-split-center > a { flex: 1; min-width: 0; }
@@ -983,7 +1027,7 @@ h3 {
 .footer-logo { width: 8.4rem; height: 3.6rem; object-fit: contain; margin-bottom: 0.8rem; }
 .footer-block { font-size: 1.4rem; }
 .footer-block p { margin: 0 0 0.4rem; }
-.footer-block .strong { font-weight: var(--weight-strong); }
+.footer-block .strong { font-weight: var(--weight-strong); --wght: var(--wght-strong); }
 .footer-block a { text-decoration: underline; }
 
 .social { display: flex; gap: 1.2rem; margin-top: 0.8rem; }
@@ -991,7 +1035,7 @@ h3 {
 
 .footer-links { display: grid; grid-template-columns: repeat(2, 1fr); gap: 2.4rem; }
 .footer-links ul { flex: 1; list-style: none; margin: 0; padding: 0; }
-.footer-links li { padding: 0.8rem 0; font-size: 1.4rem; font-weight: var(--weight-ui); }
+.footer-links li { padding: 0.8rem 0; font-size: 1.4rem; font-weight: var(--weight-ui); --wght: var(--wght-ui); }
 .footer-links a { text-decoration: none; }
 
 .footer-bottom {
@@ -1171,7 +1215,7 @@ html:has(.willem-header.is--loading) body {
   white-space: nowrap;
   justify-content: center;
   font-size: 6em;
-  font-weight: var(--weight-strong);
+  font-weight: var(--weight-strong); --wght: var(--wght-strong);
   line-height: .75;
   display: flex;
   position: relative;
@@ -1387,7 +1431,7 @@ html:has(.willem-header.is--loading) body {
 .willem-nav__link {
   color: inherit;
   font-size: 1em;
-  font-weight: var(--weight-ui);
+  font-weight: var(--weight-ui); --wght: var(--wght-ui);
   line-height: 1.2;
   text-decoration: none;
   position: relative;
@@ -1473,7 +1517,7 @@ html:has(.willem-header.is--loading) body {
   font-size: 5.6rem;
   line-height: var(--leading-display);
   letter-spacing: var(--track-display);
-  font-weight: var(--weight-strong);
+  font-weight: var(--weight-strong); --wght: var(--wght-strong);
 }
 
 .willem-hero__intro { margin: 0; font-size: 1.8rem; }
@@ -1624,7 +1668,7 @@ html:has(.willem-header.is--loading) body {
   padding: 2.5em var(--site-inset);
   /* Slightly more weight through the whole footer: the links and the small
      labels were reading as the lightest thing on the page */
-  font-weight: var(--weight-ui);
+  font-weight: var(--weight-ui); --wght: var(--wght-ui);
   display: flex;
   position: relative;
 }
@@ -1636,7 +1680,7 @@ html:has(.willem-header.is--loading) body {
   margin-top: 0;
   margin-bottom: 0;
   font-size: 1.125em;
-  font-weight: var(--weight-ui);
+  font-weight: var(--weight-ui); --wght: var(--wght-ui);
 }
 
 .site-footer__links-row {
@@ -1681,7 +1725,7 @@ html:has(.willem-header.is--loading) body {
   font-size: 6.5em;
   line-height: .85;
   letter-spacing: -.03em;
-  font-weight: var(--weight-strong);
+  font-weight: var(--weight-strong); --wght: var(--wght-strong);
 }
 
 .site-footer__legal {
@@ -1860,14 +1904,14 @@ main:has(.willem-header.is--loading) .site-nav,
   margin: 0;
   font-size: 3.2rem;
   letter-spacing: var(--track-display);
-  font-weight: var(--weight-strong);
+  font-weight: var(--weight-strong); --wght: var(--wght-strong);
   line-height: 1;
 }
 
 .sticky-tab__eyebrow {
   margin: 0;
   font-size: 1.6rem;
-  font-weight: var(--weight-label);
+  font-weight: var(--weight-label); --wght: var(--wght-label);
   white-space: nowrap;
 }
 
@@ -1918,7 +1962,7 @@ main:has(.willem-header.is--loading) .site-nav,
   background-color: #0000;
   outline-style: none;
   padding: 0;
-  font-weight: var(--weight-ui);
+  font-weight: var(--weight-ui); --wght: var(--wght-ui);
   line-height: 1;
   text-decoration: none;
   display: inline-grid;
@@ -2420,7 +2464,7 @@ body{
   font-size: 16rem;
   line-height: 1;
   letter-spacing: -0.08em;
-  font-weight: var(--weight-strong);
+  font-weight: var(--weight-strong); --wght: var(--wght-strong);
 }
 .figure-lead__label {
   /* Two of the four columns, so the caption sits under the first half */
@@ -2451,7 +2495,7 @@ body{
 .insights-row__index {
   margin: 0;
   font-size: 1.4rem;
-  font-weight: var(--weight-label);
+  font-weight: var(--weight-label); --wght: var(--wght-label);
   color: rgba(255, 255, 255, 0.5);
 }
 .insights-row__body { min-width: 0; }
@@ -2471,7 +2515,7 @@ body{
   font-size: 6.4rem;
   line-height: 1;
   letter-spacing: -0.04em;
-  font-weight: var(--weight-strong);
+  font-weight: var(--weight-strong); --wght: var(--wght-strong);
   justify-self: end;
 }
 /* Entries with no figure of their own carry a short phrase at the same
@@ -2597,7 +2641,7 @@ body{
   font-size: 2rem;
   line-height: var(--leading-title);
   letter-spacing: var(--track-title);
-  font-weight: var(--weight-strong);
+  font-weight: var(--weight-strong); --wght: var(--wght-strong);
 }
 .step-timeline__p { margin: 0; }
 
@@ -2657,7 +2701,7 @@ body{
 .social-proof__body { display: flex; flex-direction: column; gap: 0.4rem; }
 .social-proof__stars { width: 8rem; height: auto; }
 .social-proof__label { margin: 0; font-size: 1.6rem; color: rgba(255, 255, 255, 0.7); }
-.social-proof__label strong { color: #ffffff; font-weight: var(--weight-strong); }
+.social-proof__label strong { color: #ffffff; font-weight: var(--weight-strong); --wght: var(--wght-strong); }
 
 /* ---------- Centered looping slider ---------- */
 .centered-slider-row {
@@ -2883,7 +2927,7 @@ main section + section,
 .tagline {
   margin: 0 0 1.6rem;
   font-size: 1.3rem;
-  font-weight: var(--weight-label);
+  font-weight: var(--weight-label); --wght: var(--wght-label);
   text-transform: uppercase;
   letter-spacing: 0.12em;
   color: rgba(255, 255, 255, 0.55);
@@ -2919,7 +2963,7 @@ main section + section,
   font-size: 6.4rem;
   line-height: 1.05;
   letter-spacing: -0.03em;
-  font-weight: var(--weight-strong);
+  font-weight: var(--weight-strong); --wght: var(--wght-strong);
 }
 .shop-hero .lead { max-width: 48rem; margin-bottom: 0; }
 .shop-hero .social-proof { margin-top: 4rem; }
@@ -2964,7 +3008,7 @@ main section + section,
 .product-card::before {
   content: counter(product, decimal-leading-zero);
   font-size: 1.3rem;
-  font-weight: var(--weight-label);
+  font-weight: var(--weight-label); --wght: var(--wght-label);
   letter-spacing: 0.12em;
   color: rgba(10, 10, 10, 0.4);
 }
@@ -3082,7 +3126,7 @@ main section + section,
   width: 100%;
   margin-bottom: 0;
   font-size: 1.3rem;
-  font-weight: var(--weight-label);
+  font-weight: var(--weight-label); --wght: var(--wght-label);
   line-height: 1;
   text-transform: uppercase;
   letter-spacing: 0.12em;
@@ -3207,7 +3251,7 @@ main section + section,
   margin: 0;
   color: inherit;
   font-size: 1.6rem;
-  font-weight: var(--weight-ui);
+  font-weight: var(--weight-ui); --wght: var(--wght-ui);
 }
 
 /* Field: Error */
@@ -3279,7 +3323,7 @@ main section + section,
   font-size: 8rem;
   line-height: 1;
   letter-spacing: -0.04em;
-  font-weight: var(--weight-strong);
+  font-weight: var(--weight-strong); --wght: var(--wght-strong);
 }
 .final-cta__lead {
   max-width: var(--grid-col-2);
@@ -3348,7 +3392,7 @@ main section + section,
   font-size: 5.6rem;
   line-height: 1.05;
   letter-spacing: -0.03em;
-  font-weight: var(--weight-strong);
+  font-weight: var(--weight-strong); --wght: var(--wght-strong);
 }
 
 .case-intro__body p { margin: 0 0 2.4rem; }
@@ -3383,7 +3427,7 @@ main section + section,
 .case-facts > div:last-child:nth-child(odd) { grid-column: 1 / -1; }
 .case-facts dt {
   font-size: 1.3rem;
-  font-weight: var(--weight-label);
+  font-weight: var(--weight-label); --wght: var(--wght-label);
   text-transform: uppercase;
   letter-spacing: 0.12em;
   color: var(--form-muted);
@@ -3465,7 +3509,7 @@ h2 { margin-bottom: 3.2rem; }
 .panel-meta dt {
   margin-bottom: 0.6rem;
   font-size: 1.3rem;
-  font-weight: var(--weight-label);
+  font-weight: var(--weight-label); --wght: var(--wght-label);
   line-height: 1;
   letter-spacing: 0.12em;
   text-transform: uppercase;
@@ -3480,7 +3524,7 @@ h2 { margin-bottom: 3.2rem; }
 
 /* Inline emphasis sits on the same 700 the headings use, so elements the
    browser renders at its own bold match the rest of the page. */
-strong, b, th { font-weight: var(--weight-strong); }
+strong, b, th { font-weight: var(--weight-strong); --wght: var(--wght-strong); }
 
 /* =============================================================
    Services list, testimonial feature, map head, prefooter
@@ -3541,7 +3585,7 @@ strong, b, th { font-weight: var(--weight-strong); }
   font-size: 4.8rem;
   line-height: 1.22;
   letter-spacing: -0.03em;
-  font-weight: var(--weight-strong);
+  font-weight: var(--weight-strong); --wght: var(--wght-strong);
   color: rgba(255, 255, 255, 0.25);
   transition: color 0.35s cubic-bezier(0.65, 0.05, 0, 1);
 }
@@ -3622,7 +3666,7 @@ strong, b, th { font-weight: var(--weight-strong); }
   font-size: 4rem;
   line-height: 1.2;
   letter-spacing: -0.03em;
-  font-weight: var(--weight-strong);
+  font-weight: var(--weight-strong); --wght: var(--wght-strong);
 }
 .testimonial-slide__who {
   margin: 0;
@@ -3843,7 +3887,7 @@ strong, b, th { font-weight: var(--weight-strong); }
   font-size: 8.8rem;
   line-height: 0.98;
   letter-spacing: -0.035em;
-  font-weight: var(--weight-strong);
+  font-weight: var(--weight-strong); --wght: var(--wght-strong);
 }
 
 .project-hero__meta {
@@ -3886,7 +3930,7 @@ strong, b, th { font-weight: var(--weight-strong); }
   border: 1px solid var(--rule);
   border-radius: var(--radius);
   font-size: 1.3rem;
-  font-weight: var(--weight-label);
+  font-weight: var(--weight-label); --wght: var(--wght-label);
   line-height: 1;
   letter-spacing: 0.04em;
   color: rgba(255, 255, 255, 0.72);
@@ -4189,7 +4233,7 @@ body:has(.arch-page) {
 .arch-stage__count {
   margin: 0;
   font-size: 1.3rem;
-  font-weight: var(--weight-label);
+  font-weight: var(--weight-label); --wght: var(--wght-label);
   letter-spacing: 0.12em;
   text-transform: uppercase;
   color: rgba(255, 255, 255, 0.55);
@@ -4219,7 +4263,7 @@ body:has(.arch-page) {
   font-size: 6.4rem;
   line-height: 0.92;
   letter-spacing: -0.03em;
-  font-weight: var(--weight-strong);
+  font-weight: var(--weight-strong); --wght: var(--wght-strong);
 }
 
 .arch-arrows { display: flex; gap: 1.2rem; }
@@ -4354,7 +4398,7 @@ body:has(.arch-page) {
 .parallax-slider__item-meta {
   margin: 0.4rem 0 0;
   font-size: 1.3rem;
-  font-weight: var(--weight-label);
+  font-weight: var(--weight-label); --wght: var(--wght-label);
   letter-spacing: 0.12em;
   text-transform: uppercase;
   color: rgba(255, 255, 255, 0.5);
@@ -4474,7 +4518,7 @@ body:has(.arch-page) {
   padding: 0.4rem 0.8rem;
   border-radius: var(--radius);
   font-size: 1.1rem;
-  font-weight: var(--weight-ui);
+  font-weight: var(--weight-ui); --wght: var(--wght-ui);
   line-height: 1;
   letter-spacing: 0.06em;
   white-space: nowrap;
@@ -4496,7 +4540,7 @@ body:has(.arch-page) {
   font-size: 6.4rem;
   line-height: 0.9;
   letter-spacing: -0.05em;
-  font-weight: var(--weight-strong);
+  font-weight: var(--weight-strong); --wght: var(--wght-strong);
   color: #0a0a0a;
 }
 .results-card__label {
@@ -4513,7 +4557,7 @@ body:has(.arch-page) {
   padding-top: 1.6rem;
   border-top: 1px solid rgba(10, 10, 10, 0.12);
   font-size: 1.2rem;
-  font-weight: var(--weight-label);
+  font-weight: var(--weight-label); --wght: var(--wght-label);
   letter-spacing: 0.1em;
   text-transform: uppercase;
   color: rgba(10, 10, 10, 0.45);
@@ -4627,13 +4671,13 @@ body:has(.arch-page) {
   font-size: 1.4rem;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  font-weight: var(--weight-ui);
+  font-weight: var(--weight-ui); --wght: var(--wght-ui);
   margin-bottom: 1.6rem;
 }
 .scroll-next__h {
   font-size: 8.8rem;
   letter-spacing: -0.035em;
-  font-weight: var(--weight-strong);
+  font-weight: var(--weight-strong); --wght: var(--wght-strong);
   text-align: center;
   max-width: 18ch;
 }
@@ -4690,7 +4734,7 @@ body:has(.arch-page) {
   font-size: 9.6rem;
   line-height: 0.96;
   letter-spacing: -0.04em;
-  font-weight: var(--weight-strong);
+  font-weight: var(--weight-strong); --wght: var(--wght-strong);
 }
 /* One accent, the red the transition panels already use, set on the baseline
    the way a full stop would be */
@@ -4786,7 +4830,7 @@ body:has(.arch-page) {
   font-size: 9.6rem;
   line-height: 0.94;
   letter-spacing: -0.04em;
-  font-weight: var(--weight-strong);
+  font-weight: var(--weight-strong); --wght: var(--wght-strong);
 }
 .final-cta__portrait {
   grid-column: 4 / span 1;
@@ -5041,7 +5085,7 @@ body:has(.arch-page) {
   z-index: 1;
   color: #ffffff;
   font-size: 1.8rem;
-  font-weight: var(--weight-ui);
+  font-weight: var(--weight-ui); --wght: var(--wght-ui);
   line-height: 1.2;
   letter-spacing: -0.01em;
 }
@@ -5054,7 +5098,7 @@ body:has(.arch-page) {
   z-index: 1;
   color: rgba(255, 255, 255, 0.65);
   font-size: 1.2rem;
-  font-weight: var(--weight-label);
+  font-weight: var(--weight-label); --wght: var(--wght-label);
   letter-spacing: 0.14em;
   line-height: 1;
 }
