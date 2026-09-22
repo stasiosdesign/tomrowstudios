@@ -212,14 +212,18 @@ textarea { font-family: inherit; }
   --grid-gap: 4.8rem;
 
   /* Line colours. A section takes whichever one suits its background; the
-     light theme swaps them wholesale further down. */
-  --grid-line-color: rgba(255, 255, 255, 0.1);
-  --grid-line-color-dark: rgba(10, 10, 10, 0.1);
-  /* For a band standing on a photograph. A tenth of white is enough over the
-     flat near-blacks the rest of the site is built on, but a picture has its
-     own bright passages and a line that reads on one part of it vanishes on
-     the next — so the line over an image is stronger. */
-  --grid-line-color-image: rgba(255, 255, 255, 0.25);
+     light theme swaps them wholesale further down. Nudged up slightly from
+     a tenth so the grid reads a touch more as a deliberate part of the page
+     rather than nearly vanishing against it — still background, not a
+     foreground line. */
+  --grid-line-color: rgba(255, 255, 255, 0.14);
+  --grid-line-color-dark: rgba(10, 10, 10, 0.14);
+  /* For a band standing on a photograph. Stronger than the flat default so
+     it survives a picture's own bright passages, but only a little above
+     it now — the home hero's background is a flat black these days, not a
+     photograph, so the old, much stronger value read as a different, denser
+     grid rather than the same system continuing over a darker band. */
+  --grid-line-color-image: rgba(255, 255, 255, 0.16);
   --grid-line-width: 1px;
   /* The colour actually painted. Sections and themes override this one. */
   --grid-line: var(--grid-line-color);
@@ -476,7 +480,11 @@ textarea { font-family: inherit; }
      lines run through the bar rather than stopping under it. */
   background-color: #000000;
   border-bottom: 1px solid rgba(255, 255, 255, 0.12);
-  padding: 2.4rem var(--site-inset);
+  /* A touch more top padding than bottom — the links sit slightly clear of
+     the viewport's own top edge rather than flush against it. --nav-height
+     (below) carries the same extra amount, so pages clearing the fixed bar
+     still clear it exactly. */
+  padding: 3.2rem var(--site-inset) 2.4rem;
   color: #f4f4f4;
   /* Lifted again, to 150, in the layering rules at the foot of the file. */
   z-index: 80;
@@ -1082,7 +1090,7 @@ h3 {
   /* The gutter and column count for this breakpoint live with the rest of the
      grid system, at the top of the file. */
   .transition__label { font-size: 1.4rem; }
-  .site-nav { padding: 1.8rem var(--site-inset); }
+  .site-nav { padding: 2.4rem var(--site-inset) 1.8rem; }
   .form-row { flex-direction: column; }
   /* every grid collapses to a single column */
   .hero-inner, .two-col, .cards, .gallery, .footer-top, 
@@ -1884,16 +1892,17 @@ main:has(.willem-header.is--loading) .site-nav,
 }
 
 /* ---------- Sticky section tabs ---------- */
-/* Height of the fixed bar: 2.4rem padding top and bottom plus the link's line
-   box. Every sticky offset below is derived from it. */
-:root { --nav-height: 7rem; }
+/* Height of the fixed bar: 3.2rem top padding, 2.4rem bottom, plus the
+   link's line box. Every sticky offset below is derived from it. */
+:root { --nav-height: 7.8rem; }
 
 /* The bar is fixed, and below 992px its links stack, so it grows to roughly
    a third of a phone screen. The token has to grow with it — measured at 11.3
-   and 15.7rem — or every inner page starts its first block underneath the
+   and 15.7rem before the bar's own top padding grew by 0.6rem at this
+   breakpoint — or every inner page starts its first block underneath the
    bar. On a phone that was hiding the project eyebrow entirely. */
-@media screen and (max-width: 991px) { :root { --nav-height: 11.5rem; } }
-@media screen and (max-width: 767px) { :root { --nav-height: 16rem; } }
+@media screen and (max-width: 991px) { :root { --nav-height: 12.1rem; } }
+@media screen and (max-width: 767px) { :root { --nav-height: 16.6rem; } }
 
 .sticky-tab-group {
   overflow: clip;
@@ -2036,7 +2045,12 @@ main:has(.willem-header.is--loading) .site-nav,
   content: "";
   position: absolute;
   top: 0;
-  left: 0;
+  /* 1px in, not flush on 0. A CTA pulled out to the edge of its row (the
+     first one in `.actions`, see below) lands exactly on its reveal mask's
+     own clip edge — flush there, this bar was landing sub-pixel outside it
+     on some renders and getting clipped away entirely. A hair of inset costs
+     nothing visible and keeps it clear of that edge everywhere. */
+  left: 1px;
   width: 2px;
   height: 100%;
   background-color: var(--cta-accent-color);
