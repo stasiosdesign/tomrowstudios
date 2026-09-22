@@ -1421,6 +1421,69 @@ html:has(.willem-header.is--loading) body {
   overflow: hidden;
 }
 
+/* ---------- Home hero runner ---------- */
+
+/* A fine horizontal rule through the middle of the hero, made of very short
+   vertical strokes at a fixed pitch rather than drawn as one line, so it
+   belongs to the same family of hairlines as the grid while reading as a
+   distinct instrument. The pointer bends it: hero-runner.js draws the
+   strokes on a transparent canvas inside this box and raises the ones near
+   the pointer, symmetrically above and below the axis.
+
+   The box is the drawing area — the runner's axis is its vertical centre —
+   so its height is the room the fan has to grow into, and has to be at least
+   `--runner-max`. It ignores the content inset on purpose: like the grid
+   lines, it runs edge to edge of the viewport.
+
+   The custom properties below are the whole vocabulary the script reads.
+   Geometry is in CSS pixels. `--runner-reach` is how far above or below the
+   axis the pointer still bends the runner at full strength, and
+   `--runner-reach-fade` the band beyond that over which the influence
+   fades to nothing — so approaching the runner raises it gradually rather
+   than switching it on at an edge. */
+.hero-runner {
+  --runner-spacing: 6px;
+  --runner-stroke: 1px;
+  --runner-rest: 6px;
+  --runner-max: 128px;
+  --runner-radius: 150px;
+  --runner-reach: 200px;
+  --runner-reach-fade: 120px;
+  /* Between the grid line and the copy: a visible instrument, not a
+     background rule, but still well short of the white of the type */
+  --runner-color: rgba(244, 244, 244, 0.55);
+
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: var(--runner-max);
+  transform: translateY(-50%);
+  /* The hero itself is the listening surface, so the pointer is never
+     caught by this box or the canvas */
+  pointer-events: none;
+  /* On with the settled hero, so it is not seen over the intro's loader.
+     Present from the first paint when the page is reached through a
+     navigation, since that arrives already settled. */
+  opacity: 0;
+  transition: opacity 0.9s ease-out;
+}
+
+.willem-header.is--settled .hero-runner { opacity: 1; }
+
+.hero-runner__canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/* Reduced motion: the runner is still there as the resting rule — the script
+   draws it once and never binds the pointer — and it simply appears with the
+   settled hero rather than fading in. */
+@media (prefers-reduced-motion: reduce) {
+  .hero-runner { transition: none; }
+}
+
 .willem__letter-white {
   display: block;
   position: relative;

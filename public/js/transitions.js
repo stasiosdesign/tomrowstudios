@@ -66,6 +66,10 @@ function initAfterEnterFunctions(next) {
      page's triggers. Rebinding here restores it when we arrive on home, and
      clears the state when we arrive anywhere else. */
   if (typeof initHeroNav === "function") initHeroNav();
+  /* Same story for the hero runner: its canvas and pointer listeners go with
+     the outgoing container, so it is rebuilt when we land on home and torn
+     down when we land anywhere else. */
+  if (typeof initHeroRunner === "function") initHeroRunner();
   // Click-to-zoom binds one delegated listener on the document, so images
   // arriving with a new container are already covered — nothing to rebind.
 
