@@ -73,12 +73,18 @@
   const SETTLE_RATE = 7;    // a stroke falling back toward a shorter one
   const SETTLE_EPSILON = 0.05; // px — below this the runner counts as still
 
-  // The profile's shape. A steepening power on the raised cosine, and the
-  // number of height levels it is quantised into. With a 90px radius and
-  // 6px pitch there are fifteen strokes a side, so seven levels puts a step
-  // roughly every other stroke — a clearly terraced spike, still symmetrical.
-  const PROFILE_POWER = 1.6;
-  const PROFILE_STEPS = 7;
+  // The profile's shape: a bell curve. `PROFILE_SIGMA` is the Gaussian's
+  // standard deviation as a share of the radius — the bell is nearly flat
+  // across the few strokes under the pointer, rolls off gently through the
+  // shoulders and runs out to nothing at the edge. `PROFILE_STEPS` is the
+  // number of height levels it is quantised into: with a 90px radius and a
+  // 6px pitch there are fifteen strokes a side, so nine levels keeps a
+  // visible step between neighbours without turning the bell into a spike.
+  const PROFILE_SIGMA = 0.36;
+  const PROFILE_STEPS = 9;
+  // The bell's value at the edge of the radius, subtracted out so the
+  // profile lands exactly on rest there
+  const BELL_EDGE = Math.exp(-1 / (2 * PROFILE_SIGMA * PROFILE_SIGMA));
 
   function readNumber(styles, name, fallback) {
     const value = parseFloat(styles.getPropertyValue(name));
@@ -253,16 +259,19 @@
         if (d >= radius) {
           target[i] = rest;
         } else {
-          // Raised cosine, steepened, then quantised into a fixed number of
-          // levels. The cosine keeps the profile symmetrical and rest at the
-          // edge; the power pulls the shoulders in so the centre stands
-          // clear of its neighbours; the quantising turns the curve into
-          // terraces, so adjacent strokes step rather than blend. All of it
-          // is a function of distance alone — nothing random, nothing that
-          // moves while the pointer is still.
-          const smooth = 0.5 * (1 + Math.cos(Math.PI * d / radius));
-          const steep = Math.pow(smooth, PROFILE_POWER);
-          const envelope = Math.round(steep * PROFILE_STEPS) / PROFILE_STEPS;
+          // A Gaussian bell in distance, quantised into a fixed number of
+          // levels. The Gaussian gives the normal-distribution profile: a
+          // rounded summit, a gentle roll-off close to the centre and a
+          // faster fall through the shoulders. Its tail is lifted off so it
+          // reaches exactly rest at the edge rather than hanging a little
+          // above it; the quantising turns the curve into terraces, so
+          // adjacent strokes step rather than blend. All of it is a
+          // function of distance alone — nothing random, nothing that moves
+          // while the pointer is still.
+          const t = d / radius;
+          const bell = Math.exp(-(t * t) / (2 * PROFILE_SIGMA * PROFILE_SIGMA));
+          const normalised = (bell - BELL_EDGE) / (1 - BELL_EDGE);
+          const envelope = Math.round(normalised * PROFILE_STEPS) / PROFILE_STEPS;
           target[i] = rest + lift * envelope;
         }
       }
