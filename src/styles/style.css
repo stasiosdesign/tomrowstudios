@@ -1987,12 +1987,11 @@ main:has(.willem-header.is--loading) .site-nav,
    the section draws one. Two CTAs in a row tile column to column with no gap
    between them: the second's left line is the first's missing right edge.
 
-   The colour states and the vertical line are CSS — rest, hover, focus,
-   press. The horizontal redraw, the arrow and the scramble are in button.js
-   and are only added on a fine pointer with motion allowed, so on touch and
-   under reduced motion this is the whole component. */
+   The frame — drawn in on hover and focus, drawn out again — and the press
+   are CSS. The arrow and the scramble are in button.js and are only added on
+   a fine pointer with motion allowed, so on touch and under reduced motion
+   this is the whole component. */
 :root {
-  --cta-line: rgba(255, 255, 255, 0.28);
   --cta-line-active: rgba(255, 255, 255, 0.8);
   --cta-height: 5.6rem;
   /* One grid column, line to line. Written against the viewport rather than
@@ -2022,17 +2021,25 @@ main:has(.willem-header.is--loading) .site-nav,
   -webkit-tap-highlight-color: transparent;
 }
 
+/* The frame is not there at rest. All three lines sit at zero scale and zero
+   opacity, and are drawn in while the CTA is hovered or focused — the top
+   and bottom from the left, the bottom a beat behind the top, the vertical
+   line down from the top — then drawn out again when the pointer leaves. A
+   CSS transition each way, so hovering in and out at any speed simply
+   reverses from wherever the line is. */
 .cta__line {
   position: absolute;
-  background-color: var(--cta-line);
+  background-color: var(--cta-line-active);
+  opacity: 0;
   pointer-events: none;
-  transition: background-color 0.3s var(--cta-ease);
+  transition: transform 0.35s var(--cta-ease), opacity 0.2s var(--cta-ease);
 }
 .cta__line.is--top {
   top: 0;
   left: 0;
   width: 100%;
   height: 1px;
+  transform: scaleX(0);
   transform-origin: left center;
 }
 .cta__line.is--bottom {
@@ -2040,23 +2047,19 @@ main:has(.willem-header.is--loading) .site-nav,
   left: 0;
   width: 100%;
   height: 1px;
+  transform: scaleX(0);
   transform-origin: left center;
+  transition-delay: 0.06s;
 }
-/* The vertical line is one of the page grid's own: the same width and the
-   same colour token, so it takes whichever line colour the section around it
-   uses. It is not there at rest — the CTA sits on a column line, and that
-   line is enough — and is drawn down from the top while the CTA is hovered or
-   focused, then lifted again when the pointer leaves. */
+/* The vertical line takes the page grid's own width, so it reads as one of
+   the grid's lines arriving rather than a border. */
 .cta__line.is--left {
   top: 0;
   left: 0;
   width: var(--grid-line-width);
   height: 100%;
-  background-color: var(--grid-line);
-  opacity: 0;
   transform: scaleY(0);
   transform-origin: top center;
-  transition: transform 0.35s var(--cta-ease), opacity 0.2s var(--cta-ease);
 }
 
 .cta__content {
@@ -2086,14 +2089,11 @@ main:has(.willem-header.is--loading) .site-nav,
 }
 
 /* States. Hover is only asked for where there is a pointer to hover with;
-   focus-visible is always there. Top and bottom brighten; the vertical line
-   is drawn in, and keeps the grid colour rather than taking the bright one. */
+   focus-visible is always there. */
 @media (hover: hover) and (pointer: fine) {
-  .cta:hover .cta__line { background-color: var(--cta-line-active); }
-  .cta:hover .cta__line.is--left { background-color: var(--grid-line); opacity: 1; transform: scaleY(1); }
+  .cta:hover .cta__line { opacity: 1; transform: scale(1); }
 }
-.cta:focus-visible .cta__line { background-color: var(--cta-line-active); }
-.cta:focus-visible .cta__line.is--left { background-color: var(--grid-line); opacity: 1; transform: scaleY(1); }
+.cta:focus-visible .cta__line { opacity: 1; transform: scale(1); }
 /* A press nudges the content a hair to the right, the way a switch moves */
 .cta:active .cta__content { translate: 0.1rem 0; }
 
@@ -2101,16 +2101,12 @@ main:has(.willem-header.is--loading) .site-nav,
    taken away. */
 .cta.is--secondary .cta__icon { display: none; }
 
-/* On light surfaces the lines flip to dark. The theme swaps the grid token
-   itself; the drawer, the footer and the white cards sit inside dark sections
-   and take the dark line for the CTA alone. */
+/* On light surfaces the lines flip to dark. */
 .theme-light .cta,
 .panel .cta,
 .site-footer .cta,
 .product-card .cta {
-  --cta-line: rgba(10, 10, 10, 0.22);
   --cta-line-active: rgba(10, 10, 10, 0.85);
-  --grid-line: var(--grid-line-color-dark);
 }
 
 /* ---------- On the grid ----------
