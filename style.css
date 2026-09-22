@@ -58,23 +58,78 @@ html { scrollbar-width: none; -ms-overflow-style: none; }
 html::-webkit-scrollbar,
 body::-webkit-scrollbar { width: 0; height: 0; display: none; }
 
+/* ------------------------- Typefaces -------------------------
+   Two faces, both from the one Adobe kit already linked in the head
+   (use.typekit.net/nqu1vih.css). The names are the ones the kit publishes.
+
+   Neue Haas Grotesk sets everything: running text, navigation, headings,
+   buttons. It is the page's voice and nothing needs to ask for it — it is
+   inherited from `body`.
+
+   Chivo Mono is the label face and only that: eyebrows, metadata, form
+   labels, counters, the small interface type. It is always set uppercase,
+   which is how every one of those already reads. Anything wearing it is
+   listed in one rule below, so the set stays a decision rather than a habit.
+   The kit ships it in a single cut, 300, so whatever weight a rule asks for
+   resolves to that one — no synthetic bolding to guard against. */
+:root {
+  --font-body: "neue-haas-grotesk-display", Helvetica, Arial, sans-serif;
+  --font-label: "chivo-mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+
 body {
   margin: 0;
   background: #000000;
   color: #ffffff;
-  font-family: "neue-haas-grotesk-display", Helvetica, Arial, sans-serif;
+  font-family: var(--font-body);
   font-size: 1.6rem;
-  /* Three steps: 700 for headings and emphasis, 400 for running text, 300
-     for the small uppercase labels. The kit has no 500 or 600, so 700 is the
-     only cut above the "45 Light" 400 — headings take it. Body is stated
-     rather than left to the browser default, which would land on 400 by
-     coincidence rather than intent. See the weight steps at the top. */
+  /* Stated rather than left to the browser default, which would land on 400
+     by coincidence rather than intent. See the weight steps at the top. */
   font-weight: var(--weight-body);
   line-height: 1.4;
 }
 
+/* The label face, applied in one place. Every selector here already carried
+   the small size, the tracking and the muted colour that make it a label; all
+   that is added is the face it is set in, and the uppercase it already had —
+   restated so the mono can never turn up in mixed case. Sizes, spacing and
+   colours are left exactly as they were.
+
+   `font-family` is the only property in contention, and nothing else on the
+   site sets it on these, so this rule can sit here with the rest of the
+   typography rather than having to come last to win. */
+.tagline,
+.logo-strip__note,
+.form-label,
+.case-facts dt,
+.panel-meta dt,
+.insights-row__link,
+.award-label__note,
+.arch-stage__count,
+.parallax-slider__item-meta,
+.results-card__foot,
+.scroll-next__sub,
+/* Counters and indices. Uppercase does nothing to a digit; these are here for
+   the face, which is the one that lines its numbers up. */
+.panel-form-step .step-number,
+.insights-row__index,
+.slide-card__index,
+.product-card::before {
+  font-family: var(--font-label);
+  text-transform: uppercase;
+}
+
 img { display: block; max-width: 100%; }
 a { color: inherit; }
+
+/* Controls do not inherit the page's face — the browser hands them its own,
+   which is how the side panel's close button was being set in Arial. Only the
+   family is taken, never the whole `font` shorthand, so no control's size,
+   weight or line-height moves. */
+button,
+input,
+select,
+textarea { font-family: inherit; }
 
 /* =============================================================
    The page grid
@@ -214,20 +269,20 @@ a { color: inherit; }
 :root { --radius: 0.2rem; }
 
 /* ------------------------- Weight steps -------------------------
-   The Typekit kit ships 100 / 200 / 300 / 400 and 700 only. Its 400 is
-   Neue Haas "45 Light" and its 700 is "75 Bold" — there is no 55 Roman
-   (500) or 65 Medium (600) published, which is why the page reads thin:
-   the running weight IS a light cut. CSS cannot invent the missing cuts,
-   so the two honest steps available are 400 and 700.
+   Neue Haas Grotesk now comes out of the kit in five cuts — 300, 400, 500,
+   600 and 700, plus a 300 italic. The 55 Roman (500) and 65 Medium (600)
+   that were missing when these steps were first set are published, so the
+   two middle steps the page was written around are available whenever they
+   are wanted; the values below stay where they are so the hierarchy reads
+   as it does today, and moving --weight-body to 500 and --weight-ui to 600
+   is a deliberate change of how the site is set, not a correction.
 
-   Adding 55 Roman and 65 Medium to the Adobe Fonts kit is the one change
-   that fixes this properly, and it needs no code beyond raising the two
-   values below to 500 and 600. */
+   Headings take the heaviest cut the family has. */
 :root {
-  --weight-body: 400;   /* running text — 500 once 55 Roman is in the kit */
-  --weight-label: 400;  /* small uppercase labels, lifted off the 300 cut */
-  --weight-ui: 700;     /* navigation and buttons — 600 once 65 Medium is in */
-  --weight-strong: 700; /* headings */
+  --weight-body: 400;   /* running text — 45 Light */
+  --weight-label: 400;  /* small labels; in Chivo Mono this resolves to its 300 */
+  --weight-ui: 700;     /* navigation and buttons */
+  --weight-strong: 700; /* headings — 75 Bold, the heaviest cut published */
 }
 
 /* Widths of one, two and three columns, for a block that starts at the content
@@ -353,7 +408,11 @@ main:not(:has(.willem-header)) .site-nav + *:not(.project-hero):not(.page-header
 .hero-col-two p { margin: 0; font-size: 1.8rem; }
 
 /* ---------- Typography ---------- */
-.tagline { margin: 0 0 1.6rem; font-weight: var(--weight-label); font-size: 1.6rem; }
+/* .tagline is the site's eyebrow, and it is set further down with the rest of
+   the label treatment — size, tracking, case and colour together. An earlier
+   partial definition here was overridden by that one in every property it
+   declared, so it only read as a second, disagreeing source for the same
+   class. */
 h2 {
   margin: 0 0 2.4rem;
   font-size: 4.8rem;
