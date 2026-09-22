@@ -5,14 +5,11 @@
 // The CTA is complete without this file: its frame is drawn in and out by
 // CSS on :hover and :focus-visible, and it links, scrolls or opens whatever
 // its markup says. What this adds, on a fine pointer with motion allowed, is
-// the arrow stepping forward a few pixels and the label scrambling once and
-// settling. A hover that arrives while a scramble is still running joins it
-// rather than restarting it, so hovering in and out quickly stays clean.
-// Touch devices and reduced motion get the CSS states only.
-
-if (typeof ScrambleTextPlugin !== 'undefined') {
-  gsap.registerPlugin(ScrambleTextPlugin);
-}
+// the arrow stepping forward a few pixels. The label's scramble is not
+// implemented here — it is bound to the same `data-scramble-hover` markup
+// and the same shared engine (scramble.js) as every other link on the site,
+// so there is one scramble implementation, not one per component. Touch
+// devices and reduced motion get the CSS states only.
 
 function initCta() {
   const finePointer = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
@@ -22,8 +19,6 @@ function initCta() {
   const buttons = document.querySelectorAll('[data-cta]');
   if (buttons.length === 0) return;
 
-  const canScramble = typeof ScrambleTextPlugin !== 'undefined';
-
   buttons.forEach((button) => {
     // Barba re-runs this on every navigation; never bind the same button twice
     if (button.__cta) return;
@@ -32,20 +27,14 @@ function initCta() {
     const label = button.querySelector('[data-cta-label]');
     const icon = button.querySelector('.cta__icon');
     if (!label) return;
-    const text = label.textContent.trim();
 
+    if (typeof bindScrambleHover === 'function') {
+      bindScrambleHover(button, label);
+    }
 
     const enter = () => {
       if (icon) {
         gsap.to(icon, { x: 3, duration: 0.3, ease: 'power2.out', overwrite: 'auto' });
-      }
-      if (canScramble && !gsap.isTweening(label)) {
-        gsap.to(label, {
-          duration: 0.45,
-          ease: 'none',
-          overwrite: 'auto',
-          scrambleText: { text, chars: 'upperCase', speed: 0.5 },
-        });
       }
     };
 

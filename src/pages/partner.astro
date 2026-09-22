@@ -342,8 +342,8 @@ import Button from '../components/Button.astro';
         <h2>Send your enquiry</h2>
         <p class="lead">Tell Tom about your organisation, what you are planning and the support you need.</p>
         <ul class="contact-details">
-          <li><img src="assets/ui/mail.svg" alt=""><a href="mailto:tom@tomrowstudios.com">tom@tomrowstudios.com</a></li>
-          <li><img src="assets/ui/call.svg" alt=""><a href="tel:+61280000000">+61 2 8000 0000</a></li>
+          <li><img src="assets/ui/mail.svg" alt=""><a href="mailto:tom@tomrowstudios.com" data-scramble-hover="link">tom@tomrowstudios.com</a></li>
+          <li><img src="assets/ui/call.svg" alt=""><a href="tel:+61280000000" data-scramble-hover="link">+61 2 8000 0000</a></li>
         </ul>
       </div>
 
@@ -428,7 +428,7 @@ import Button from '../components/Button.astro';
 
           <div class="form-field-group">
             <div class="form-field">
-              <div data-submit tabindex="0" role="button" data-cta class="cta form-submit-btn"><span class="cta__line is--top" aria-hidden="true"></span><span class="cta__line is--left" aria-hidden="true"></span><span class="cta__line is--bottom" aria-hidden="true"></span><span class="cta__content"><span data-cta-label class="cta__label">Send enquiry</span><svg class="cta__icon" viewBox="0 0 12 12" fill="none" aria-hidden="true"><path d="M4 1.5 8.5 6 4 10.5" stroke="currentColor" stroke-width="1.25" stroke-linecap="square"/></svg></span><input type="submit" data-wait="Please wait..." class="form-submit" value="Send enquiry"></div>
+              <div data-submit tabindex="0" role="button" data-cta data-scramble-hover="link" class="cta form-submit-btn"><span class="cta__line is--top" aria-hidden="true"></span><span class="cta__line is--left" aria-hidden="true"></span><span class="cta__line is--bottom" aria-hidden="true"></span><span class="cta__content"><span data-cta-label data-scramble-hover="target" class="cta__label">Send enquiry</span><svg class="cta__icon" viewBox="0 0 12 12" fill="none" aria-hidden="true"><path d="M4 1.5 8.5 6 4 10.5" stroke="currentColor" stroke-width="1.25" stroke-linecap="square"/></svg></span><input type="submit" data-wait="Please wait..." class="form-submit" value="Send enquiry"></div>
             </div>
           </div>
         </form>
@@ -493,7 +493,7 @@ import Button from '../components/Button.astro';
             <div><dt>Date</dt><dd>October 2024</dd></div>
             <div><dt>Services</dt><dd>Planning, direction, production, edit</dd></div>
             <div><dt>Output</dt><dd>Six tutorial films</dd></div>
-            <div><dt>Website</dt><dd><a href="https://www.rayon.design" target="_blank" rel="noopener">rayon.design</a></dd></div>
+            <div><dt>Website</dt><dd><a href="https://www.rayon.design" target="_blank" rel="noopener" data-scramble-hover="link">rayon.design</a></dd></div>
           </dl>
 
           <div class="case-intro__body">
