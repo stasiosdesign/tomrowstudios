@@ -1227,11 +1227,16 @@ html:has(.willem-header.is--loading) body {
   overflow: hidden;
 }
 
-/* Resource sizing, scaled for a 13-letter word rather than 6 */
+/* Resource sizing, scaled for a 13-letter word rather than 6. Stepped down
+   from 6em: "tomrow studios" set at that size ran nearly the full width of a
+   desktop screen, so the gap opening in the middle of it had nowhere to go
+   and the photograph growing out of the gap started at almost full bleed. The
+   three sizes move together — the ratio between the breakpoints is unchanged,
+   the whole wordmark is simply smaller. */
 .willem__h1 {
   white-space: nowrap;
   justify-content: center;
-  font-size: 6em;
+  font-size: 4.2em;
   font-weight: var(--weight-strong); --wght: var(--weight-strong);
   line-height: .75;
   display: flex;
@@ -1393,13 +1398,13 @@ html:has(.willem-header.is--loading) body {
 
 @media screen and (max-width: 991px) {
   .willem__h1 {
-    font-size: 4.5em;
+    font-size: 3.15em;
   }
 }
 
 @media screen and (max-width: 767px) {
   .willem__h1 {
-    font-size: 3em;
+    font-size: 2.1em;
   }
 }
 
@@ -4233,12 +4238,21 @@ body:has(.arch-page) {
   overflow: hidden;
 }
 
+/* The height of the progress bar along the bottom edge. Declared here because
+   two things need it and they must not drift: the bar sets its own height from
+   it, and the stage reserves exactly that much at its foot so the bar has a
+   strip of its own to sit in rather than lying over the end of the layout. */
+:root { --arch-progress-height: 0.8rem; }
+
 .arch-stage {
   display: flex;
   flex-direction: column;
   height: 100vh;
   height: 100dvh;
-  padding: var(--nav-height) 0 0;
+  /* One screen, less the fixed bar at the top and the progress bar at the
+     bottom. Everything inside is laid out in what is actually left, so the
+     foot does not have to guess at either of them with padding. */
+  padding: var(--nav-height) 0 var(--arch-progress-height);
 }
 
 /* The slider's own group sits between the stage and the three rows, so the
@@ -4259,9 +4273,11 @@ body:has(.arch-page) {
   align-items: baseline;
   justify-content: space-between;
   gap: 2.4rem;
-  /* The label sat two pixels under the fixed bar and the first card sat two
-     pixels under the label. Both ends of this strip get room now. */
-  padding: 5.6rem var(--site-inset) 4rem;
+  /* The strip clears the fixed bar above it and stands off the cards below.
+     Paired with the foot's matching values: the two end strips are the same
+     shape, so the band the slider centres its cards in sits square in what is
+     left of the screen rather than being pushed up or down by them. */
+  padding: 4rem var(--site-inset) 3.2rem;
 }
 .arch-stage__head .tagline { margin: 0; }
 .arch-stage__count {
@@ -4289,8 +4305,12 @@ body:has(.arch-page) {
   align-items: flex-end;
   justify-content: space-between;
   gap: 2.4rem;
-  /* Clears the progress bar along the bottom edge as well as sitting off it */
-  padding: 4.8rem var(--site-inset) 6.4rem;
+  /* The stage now reserves the progress bar's strip, so this no longer has to
+     hold 6.4rem of empty space at the bottom to stay clear of it. Matching the
+     head's 4rem / 3.2rem: the title and the arrows stand off the cards above
+     them by the same measure the label stands off them, and off the bar below
+     by the same measure again. */
+  padding: 3.2rem var(--site-inset) 3.2rem;
 }
 .arch-stage__title {
   margin: 0;
@@ -4334,7 +4354,9 @@ body:has(.arch-page) {
   z-index: 10;
   cursor: pointer;
   width: 100%;
-  height: 1.5rem;
+  /* Halved. It reports a position; at 1.5rem it was reading as a band along
+     the foot of the page rather than as a measure of one. */
+  height: var(--arch-progress-height);
   transition: background-color 0.2s;
   position: fixed;
   inset: auto 0 0;
@@ -4475,7 +4497,7 @@ body:has(.arch-page) {
 
 @media screen and (max-width: 991px) {
   .arch-stage__head { padding: 4rem var(--site-inset) 3.2rem; }
-  .arch-stage__foot { padding: 4rem var(--site-inset) 5.6rem; }
+  .arch-stage__foot { padding: 3.2rem var(--site-inset) 3.2rem; }
   .arch-stage__title { font-size: 4.8rem; }
   .parallax-slider__item-inner { width: 62vw; }
 }
@@ -4485,7 +4507,7 @@ body:has(.arch-page) {
     flex-direction: column;
     align-items: flex-start;
     gap: 2rem;
-    padding: 3.2rem var(--site-inset) 4.8rem;
+    padding: 2.8rem var(--site-inset) 2.8rem;
   }
   .arch-stage__title { font-size: 3.6rem; }
   .parallax-slider__item { padding-left: 0.5em; padding-right: 0.5em; }
@@ -5162,11 +5184,25 @@ body:has(.arch-page) {
    picture the picture is a sibling of the wrapper named here, not inside it,
    so lifting one does not lift the other.
 
-   One number above the grain's 90, and below the drawers at 100. */
+   One number above the grain's 90, and below the drawers at 100.
+
+   Two rules, not one, and the split is load-bearing. `z-index` only takes on a
+   positioned element, so a wrapper that is laid out statically needs a
+   `position` before it can be lifted at all. Handing that `position` to
+   everything on the list is what broke: written here, at the foot of the
+   stylesheet, `position: relative` lands after — and therefore beats — the
+   `fixed`, `sticky` and `absolute` each of these elements was given in its own
+   rule hundreds of lines above. The fixed nav dropped into the flow and came
+   to rest under the home hero, a screen down the page; the sticky panel, the
+   slide captions and the testimonial chips all fell out of place the same way.
+
+   So: the statics below take a position and the lift, and the elements that
+   already carry a position of their own take the lift alone. Anything added to
+   the second list must already be positioned; anything added to the first must
+   not be. */
+
+/* Laid out statically — these need the `relative` to be liftable at all. */
 .container,
-.site-nav,
-.willem-header__content,
-.page-header-body,
 .shop-hero__body,
 .logo-strip__head,
 .logo-strip__note,
@@ -5175,16 +5211,29 @@ body:has(.arch-page) {
 .map-spread__head,
 .map-spread__footer,
 .book-feature,
-.testimonial-slide__body,
 .testimonial-slide__who,
 .project-hero,
 .project-note,
 .project-close,
-.scroll-next__inner,
+/* The intro's wordmark is type too. The two halves of it only — the box
+   between them carries the photograph that grows out of the word, and that
+   wants the grain like every other picture on the site. */
+.willem__h1-start {
+  position: relative;
+  z-index: 91;
+}
+
+/* Already positioned in their own rules — the lift only. Naming a `position`
+   here would overwrite the one they are laid out by. */
+.site-nav,            /* fixed  — the bar at the top of every page */
+.scroll-next__inner,  /* sticky — the end-of-project panel */
+.willem-header__content,
+.page-header-body,
+.testimonial-slide__body,
 .scroll-next__center,
 .site-footer,
-/* Captions that stand on a picture rather than beside one. The picture keeps
-   the grain; the words on top of it do not. */
+/* Captions that stand on a picture rather than beside one, absolutely placed
+   in their card. The picture keeps the grain; the words on top of it do not. */
 .slide-card__index,
 .slide-card__name,
 .testimonial-chips,
@@ -5193,12 +5242,7 @@ body:has(.arch-page) {
    still comes out under a layer fixed to the page. The card rises as a unit,
    so its picture loses the grain along with its caption. */
 .parallax-slider__item,
-/* The intro's wordmark is type too. The two halves of it only — the box
-   between them carries the photograph that grows out of the word, and that
-   wants the grain like every other picture on the site. */
-.willem__h1-start,
 .willem__h1-end {
-  position: relative;
   z-index: 91;
 }
 
