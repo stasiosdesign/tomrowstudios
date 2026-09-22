@@ -1449,7 +1449,7 @@ html:has(.willem-header.is--loading) body {
      side of the pointer — thirty or so moving at a time — and the strokes
      under it rise to a clear peak, so the profile reads as a spike rather
      than a wide, shallow swell. */
-  --runner-max: 72px;
+  --runner-max: 46px;
   --runner-radius: 90px;
   --runner-reach: 200px;
   --runner-reach-fade: 120px;
@@ -2078,11 +2078,31 @@ main:has(.willem-header.is--loading) .site-nav,
      part of the frame. */
   --cta-accent-color: #e6402a;
   --cta-height: 5.6rem;
+  /* Selected text, site-wide (below). The same accent, so the one red on
+     the site is the one red on the site. */
+  --selection-color: var(--cta-accent-color);
+  --selection-text-color: #ffffff;
   /* One grid column, line to line. Written against the viewport rather than
      as a percentage so it means the same width inside any box. The scrollbar
      is hidden site-wide, so 100vw is the page. */
   --cta-width: calc((100vw - var(--site-gutter) * 2) / var(--grid-columns));
   --cta-ease: cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+/* Text selection in the accent red, with white type over it — readable
+   on the black bands and the white ones alike. The two rules are the same
+   declaration twice: Firefox still only honours the prefixed one, and a
+   selector list containing an unknown pseudo-element would be dropped
+   whole, so they cannot share a line. */
+::selection {
+  background-color: var(--selection-color);
+  color: var(--selection-text-color);
+  text-shadow: none;
+}
+::-moz-selection {
+  background-color: var(--selection-color);
+  color: var(--selection-text-color);
+  text-shadow: none;
 }
 
 .cta {

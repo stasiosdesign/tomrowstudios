@@ -53,7 +53,7 @@
     spacing: 6,        // distance between stroke centres
     strokeWidth: 1,    // one hairline, like the grid
     restHeight: 9,     // total height of a stroke at rest
-    maxHeight: 72,     // total height of the stroke under the pointer
+    maxHeight: 46,     // total height of the stroke under the pointer
     radius: 90,        // horizontal reach of the field, centre to edge
     reachAbove: 200,   // how far above / below the axis the pointer still counts
     reachFade: 120     // width of the band over which that influence fades out
@@ -85,6 +85,24 @@
   // The bell's value at the edge of the radius, subtracted out so the
   // profile lands exactly on rest there
   const BELL_EDGE = Math.exp(-1 / (2 * PROFILE_SIGMA * PROFILE_SIGMA));
+
+  // The micro-imperfection: how far, as a share of its lift, a stroke may
+  // sit over or under the curve. Small enough that the silhouette is still
+  // plainly the bell; enough that no two neighbours land on exactly the
+  // same terrace edge. The value each stroke gets is a fixed function of
+  // its index, so nothing changes while the pointer is still, and the
+  // pattern is the same on both sides of any centre the pointer picks —
+  // it is the strokes that carry it, not the field.
+  const GRAIN_AMOUNT = 0.07;
+
+  // A stable integer hash to [−1, 1], so the grain is deterministic and
+  // shows no run or period along the runner
+  function hash(n) {
+    let h = (n * 374761393 + 668265263) | 0;
+    h = Math.imul(h ^ (h >>> 13), 1274126177);
+    h = (h ^ (h >>> 16)) >>> 0;
+    return (h / 4294967295) * 2 - 1;
+  }
 
   function readNumber(styles, name, fallback) {
     const value = parseFloat(styles.getPropertyValue(name));
@@ -163,7 +181,11 @@
       count: 0,
       x: new Float32Array(0),
       current: new Float32Array(0),
-      target: new Float32Array(0)
+      target: new Float32Array(0),
+      // Each stroke's fixed multiplier on its lift, a few percent either
+      // side of one: the micro-imperfection that keeps the bell from being
+      // a ruled curve. Set once per layout, never while the pointer moves.
+      grain: new Float32Array(0)
     };
 
     // The interaction. `x`/`y` are the pointer relative to the canvas; `centre`
@@ -228,6 +250,7 @@
         strokes.x = new Float32Array(count);
         strokes.current = current;
         strokes.target = new Float32Array(count);
+        strokes.grain = new Float32Array(count);
       }
 
       for (let i = 0; i < count; i++) {
@@ -235,6 +258,9 @@
         // the browser snaps the 1px grid line, so the two coincide
         const x = grid.origin + (first + i) * step;
         strokes.x[i] = Math.floor(x * dpr) / dpr;
+        // Seeded from the stroke's index on the grid, not its pixel, so a
+        // resize keeps each stroke's own grain rather than reshuffling it
+        strokes.grain[i] = 1 + GRAIN_AMOUNT * hash(first + i);
       }
 
       computeTargets();
@@ -243,7 +269,7 @@
 
     // The field: every stroke's target height from the current centre
     function computeTargets() {
-      const { count, x, target } = strokes;
+      const { count, x, target, grain } = strokes;
       const rest = config.restHeight;
       const lift = (config.maxHeight - rest) * pointer.strength;
       const radius = config.radius;
@@ -272,7 +298,9 @@
           const bell = Math.exp(-(t * t) / (2 * PROFILE_SIGMA * PROFILE_SIGMA));
           const normalised = (bell - BELL_EDGE) / (1 - BELL_EDGE);
           const envelope = Math.round(normalised * PROFILE_STEPS) / PROFILE_STEPS;
-          target[i] = rest + lift * envelope;
+          // Then each stroke's own grain: a fixed few percent over or under
+          // the curve, so the terraces are not ruled lines
+          target[i] = rest + lift * envelope * grain[i];
         }
       }
     }
