@@ -1444,7 +1444,7 @@ html:has(.willem-header.is--loading) body {
 .hero-runner {
   --runner-spacing: 6px;
   --runner-stroke: 1px;
-  --runner-rest: 6px;
+  --runner-rest: 9px;
   /* A modest swell, not a mountain: the fan rises to a little over a line
      of the headline each way, and stays a detail of the hero. */
   --runner-max: 48px;
