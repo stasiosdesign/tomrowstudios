@@ -1464,7 +1464,11 @@ html:has(.willem-header.is--loading) body {
   /* A little above the middle of the hero, so it sits in the open field
      above the copy rather than crowding the headline's cap height. */
   top: 42%;
-  height: var(--runner-max);
+  /* Taller than the tallest stroke: the peak carries a few percent of
+     grain over `--runner-max`, and a stroke must never reach the edge of
+     the bitmap — a stroke ending on the edge row is what a partial repaint
+     of that row leaves behind as a trail. */
+  height: calc(var(--runner-max) * 1.1 + 8px);
   transform: translateY(-50%);
   /* The hero itself is the listening surface, so the pointer is never
      caught by this box or the canvas */
@@ -1478,10 +1482,16 @@ html:has(.willem-header.is--loading) body {
 
 .willem-header.is--settled .hero-runner { opacity: 1; }
 
+/* The box above lands at a fractional pixel — 42% of the hero less half its
+   own height — and a canvas straddling a pixel boundary is repainted by the
+   compositor a row short on some frames, which is how strokes that reached
+   the edge were leaving their tips on screen after they had gone. The
+   script measures that fraction and translates the canvas back onto a
+   whole pixel; `will-change` gives the canvas a layer of its own, so every
+   frame it draws is composited in full rather than by damaged region. */
 .hero-runner__canvas {
   display: block;
-  width: 100%;
-  height: 100%;
+  will-change: transform;
 }
 
 /* Reduced motion: the runner is still there as the resting rule — the script

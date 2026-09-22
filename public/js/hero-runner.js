@@ -205,17 +205,32 @@
 
     function layout() {
       const rect = root.getBoundingClientRect();
-      width = rect.width;
-      height = rect.height;
-      if (!width || !height) return;
+      if (!rect.width || !rect.height) return;
 
       readStyles();
+
+      // The box the stylesheet places is at a fractional position: 42% of
+      // the hero less half its own height. The canvas is sized in whole
+      // CSS pixels and translated so its top-left sits on a whole pixel of
+      // its containing block, never straddling a pixel row — a canvas edge
+      // on a fraction is what the compositor repaints unreliably, and a
+      // stroke ending on that edge row is what was being left on screen.
+      // Measured against the containing block, not the viewport, so scroll
+      // cannot change the answer.
+      const block = gridSource ? gridSource.getBoundingClientRect() : { left: 0, top: 0 };
+      const offsetX = rect.left - block.left;
+      const offsetY = rect.top - block.top;
+      const snapX = Math.round(offsetX) - offsetX;
+      const snapY = Math.round(offsetY) - offsetY;
+      width = Math.round(rect.width);
+      height = Math.round(rect.height);
 
       dpr = Math.min(window.devicePixelRatio || 1, 3);
       canvas.width = Math.round(width * dpr);
       canvas.height = Math.round(height * dpr);
       canvas.style.width = width + "px";
       canvas.style.height = height + "px";
+      canvas.style.transform = "translate(" + snapX.toFixed(3) + "px, " + snapY.toFixed(3) + "px)";
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
       axisY = height / 2;
