@@ -53,6 +53,12 @@ import Button from '../components/Button.astro';
           <div class="willem__reveal-mask">
             <h1 class="willem-hero__title willem__reveal">Architecture, content Education for a global audience.</h1>
           </div>
+        </div>
+        <!-- The CTAs take the right-hand half of the grid: one site column
+             each, so Collaborate sits on dev columns 7–9 and About on 10–12.
+             The `.actions` rules pull the first out to the column line and
+             the last out to the gutter line. -->
+        <div class="willem-hero__col is--end">
           <div class="willem__reveal-mask is--actions">
             <div class="actions willem__reveal">
               <Button href="#contact" data-panel-open="contact" data-barba-prevent="self" label="Collaborate" />

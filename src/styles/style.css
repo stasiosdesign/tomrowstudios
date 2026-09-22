@@ -1445,18 +1445,23 @@ html:has(.willem-header.is--loading) body {
   --runner-spacing: 6px;
   --runner-stroke: 1px;
   --runner-rest: 6px;
-  --runner-max: 128px;
+  /* A modest swell, not a mountain: the fan rises to a little over a line
+     of the headline each way, and stays a detail of the hero. */
+  --runner-max: 48px;
   --runner-radius: 150px;
   --runner-reach: 200px;
   --runner-reach-fade: 120px;
   /* Between the grid line and the copy: a visible instrument, not a
-     background rule, but still well short of the white of the type */
-  --runner-color: rgba(244, 244, 244, 0.55);
+     background rule, but kept well short of the white of the type so it
+     sits behind the headline in weight. */
+  --runner-color: rgba(244, 244, 244, 0.38);
 
   position: absolute;
   left: 0;
   right: 0;
-  top: 50%;
+  /* A little above the middle of the hero, so it sits in the open field
+     above the copy rather than crowding the headline's cap height. */
+  top: 42%;
   height: var(--runner-max);
   transform: translateY(-50%);
   /* The hero itself is the listening surface, so the pointer is never
@@ -5398,13 +5403,20 @@ body:has(.arch-page) {
   height: 100%;
 }
 
+/* The spacing is on the row, not the columns. The row is inset by one pad
+   at each end, so the outer bars sit a pad in from the outermost site lines
+   — exactly where content sits in the first and last column — and the space
+   between bars is the row's own column gap. Every bar is then a plain
+   equal-width track: no per-column padding, so nothing can make one bar
+   wider than its neighbour.
+
+   `--grid-gap` between bars is two pads, the same gap the site's own columns
+   keep, so the bars' boundaries stay centred on the site's lines. */
 .animated-grid__row {
   display: grid;
   grid-template-columns: repeat(12, minmax(0, 1fr));
-  /* No gap: the space between bars is the columns' own padding, so the
-     boundaries the columns divide stay exactly at the twelfths of the span
-     and keep landing on the site's lines. */
-  gap: 0;
+  column-gap: var(--grid-gap);
+  padding-inline: var(--grid-pad);
   width: 100%;
   height: 100%;
   overflow: clip;
@@ -5415,38 +5427,57 @@ body:has(.arch-page) {
   width: 100%;
   height: 100%;
   min-height: 100%;
-  padding-inline: var(--grid-pad);
-  /* Paint the inset area only — the bar is the width of content in that
-     column, not the width of the column's boundaries. */
   /* A mid grey rather than the component's near-white. The overlay is fixed
      to the viewport and the page scrolls under it, so the same bar crosses
      the site's black bands and its light ones — the footer is white on every
      page. A light bar disappears against that; a mid grey lightens the black
      and darkens the white, and stays readable across both. */
   background-color: rgba(128, 128, 128, 0.22);
-  background-clip: content-box;
   display: flex;
   justify-content: center;
   align-items: flex-start;
 }
 
-/* At the full twelve columns, group the boundaries into four sets of three —
-   1–3, 4–6, 7–9, 10–12 — by tightening only the padding *inside* each group.
-   The padding at a group boundary (and at the two outer edges) stays
-   `--grid-pad`, the same gap the overlay has always had, so the wider
-   divisions keep landing exactly where they do today. `--grid-pad-tight` is
-   just over half that, so the bars inside a group read as a cluster of three
-   against the wider space that separates the clusters. Scoped to the
-   twelve-column layout only — the six- and four-column breakpoints below
-   keep the original even spacing, since a group of three doesn't map onto
-   either of those. */
+/* At the full twelve columns, the bars read as four clusters of three —
+   1–3, 4–6, 7–9, 10–12 — with a tighter gap inside a cluster and the full
+   `--grid-gap` between clusters.
+
+   Every division is its own fixed track, and every bar is a `1fr` track, so
+   the twelve bars are exactly the same width whatever the viewport and the
+   two kinds of gap are simply two sizes of spacer: the tight one inside a
+   cluster, and `--grid-gap` between clusters — the same wide division as
+   before, still centred on the site's own column lines. No column gap at
+   all, so nothing is added to a spacer on the quiet.
+
+   The columns are placed onto their bar tracks by hand: bars sit on the
+   odd tracks, spacers on the even ones. Scoped to the twelve-column layout
+   only — the six- and four-column breakpoints below keep the even spacing,
+   since a cluster of three doesn't map onto either of those. */
 @media screen and (min-width: 992px) {
   .animated-grid__row {
-    --grid-pad-tight: calc(var(--grid-pad) * 0.55);
+    --grid-gap-tight: calc(var(--grid-gap) * 0.55);
+    --bar: minmax(0, 1fr);
+    --tight: var(--grid-gap-tight);
+    --wide: var(--grid-gap);
+    grid-template-columns:
+      var(--bar) var(--tight) var(--bar) var(--tight) var(--bar) var(--wide)
+      var(--bar) var(--tight) var(--bar) var(--tight) var(--bar) var(--wide)
+      var(--bar) var(--tight) var(--bar) var(--tight) var(--bar) var(--wide)
+      var(--bar) var(--tight) var(--bar) var(--tight) var(--bar);
+    column-gap: 0;
   }
-  .animated-grid__col:nth-child(3n + 1) { padding-inline-end: var(--grid-pad-tight); }
-  .animated-grid__col:nth-child(3n + 2) { padding-inline: var(--grid-pad-tight); }
-  .animated-grid__col:nth-child(3n) { padding-inline-start: var(--grid-pad-tight); }
+  .animated-grid__col:nth-child(1) { grid-column: 1; }
+  .animated-grid__col:nth-child(2) { grid-column: 3; }
+  .animated-grid__col:nth-child(3) { grid-column: 5; }
+  .animated-grid__col:nth-child(4) { grid-column: 7; }
+  .animated-grid__col:nth-child(5) { grid-column: 9; }
+  .animated-grid__col:nth-child(6) { grid-column: 11; }
+  .animated-grid__col:nth-child(7) { grid-column: 13; }
+  .animated-grid__col:nth-child(8) { grid-column: 15; }
+  .animated-grid__col:nth-child(9) { grid-column: 17; }
+  .animated-grid__col:nth-child(10) { grid-column: 19; }
+  .animated-grid__col:nth-child(11) { grid-column: 21; }
+  .animated-grid__col:nth-child(12) { grid-column: 23; }
 }
 
 /* The column numbers. Counters rather than markup, so the supplied HTML keeps

@@ -61,8 +61,16 @@
 
   // Easing rates, per second. Higher is snappier. Expressed as rates rather
   // than per-frame factors so 60Hz and 120Hz screens feel the same.
-  const CENTRE_RATE = 22;   // the field's centre chasing the pointer
-  const HEIGHT_RATE = 18;   // a stroke chasing its sample
+  //
+  // Tuned for a little inertia: the field's centre trails the pointer by a
+  // beat, so a sweep drags the fan rather than teleporting it, and a stroke
+  // grows into its sample faster than it settles back out of it — the
+  // growth reads as a response, the settling as the runner coming to rest.
+  // Both are still well inside a quarter of a second, so it tracks the
+  // pointer rather than floating after it.
+  const CENTRE_RATE = 11;   // the field's centre chasing the pointer
+  const GROW_RATE = 12;     // a stroke rising toward a taller sample
+  const SETTLE_RATE = 7;    // a stroke falling back toward a shorter one
   const SETTLE_EPSILON = 0.05; // px — below this the runner counts as still
 
   function readNumber(styles, name, fallback) {
@@ -245,7 +253,8 @@
       lastTime = now;
 
       const centreEase = 1 - Math.exp(-CENTRE_RATE * dt);
-      const heightEase = 1 - Math.exp(-HEIGHT_RATE * dt);
+      const growEase = 1 - Math.exp(-GROW_RATE * dt);
+      const settleEase = 1 - Math.exp(-SETTLE_RATE * dt);
 
       let moving = false;
 
@@ -263,7 +272,7 @@
       for (let i = 0; i < count; i++) {
         const diff = target[i] - current[i];
         if (Math.abs(diff) > SETTLE_EPSILON) {
-          current[i] += diff * heightEase;
+          current[i] += diff * (diff > 0 ? growEase : settleEase);
           moving = true;
         } else {
           current[i] = target[i];
