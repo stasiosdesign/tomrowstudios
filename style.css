@@ -1193,9 +1193,21 @@ main:has(.willem-header.is--loading) {
 .willem-hero__intro { margin: 0; font-size: 1.8rem; }
 
 /* Each revealed block gets its own mask so the intro's rise reads cleanly */
-.willem__reveal-mask { overflow: hidden; }
+/* The right-hand column hugs its content (align-items: flex-end), so the mask
+   would shrink to fit once the intro splits the standfirst into block lines —
+   and a narrower box re-wraps the text a word at a time. Holding the mask to
+   the column's width keeps the line breaks the ones the reader would have got
+   anyway; the right alignment still comes from the column. */
+.willem__reveal-mask { overflow: hidden; width: 100%; }
 .willem__reveal { display: block; position: relative; }
 .actions.willem__reveal { display: flex; }
+
+/* SplitText pieces, created by the home intro and reverted once it finishes.
+   The plugin sets the clipping and the wrappers itself; these only pin down
+   what it assumes about the layout, so a line cannot sit inline beside its
+   neighbour and a character cannot collapse its transform. */
+.willem__split-word { display: inline-block; will-change: transform; }
+.willem__split-char { display: inline-block; will-change: transform; }
 
 @media screen and (max-width: 991px) {
   .willem-hero__content {
