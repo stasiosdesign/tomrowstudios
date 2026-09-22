@@ -60,6 +60,11 @@ function initAfterEnterFunctions(next) {
   if (typeof initParallaxImageSlider === "function") initParallaxImageSlider();
   if (typeof initMasonryGrid === "function") initMasonryGrid();
   if (typeof initScrollToNextPage === "function") initScrollToNextPage();
+  /* The nav is outside the container and survives the navigation, but the
+     trigger tying it to the home hero does not — `afterLeave` kills the
+     page's triggers. Rebinding here restores it when we arrive on home, and
+     clears the state when we arrive anywhere else. */
+  if (typeof initHeroNav === "function") initHeroNav();
   // Click-to-zoom binds one delegated listener on the document, so images
   // arriving with a new container are already covered — nothing to rebind.
 

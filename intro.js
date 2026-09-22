@@ -48,6 +48,43 @@ WILLEM_PHASE.grow = WILLEM_PHASE.open + WILLEM_DURATION.open;
 // The copy starts arriving a second before the photograph lands
 WILLEM_PHASE.reveal = WILLEM_PHASE.grow + 1;
 
+/* The nav over the home hero: links on the photograph, no band behind them,
+   until the hero has been scrolled past — then the black bar comes in under
+   them and stays for the rest of the page.
+
+   It is the same bar throughout, in the same place, carrying the same links;
+   only its background and rule change, and the stylesheet already transitions
+   both. The state is a class rather than a second nav.
+
+   Safe to call on any page and as often as the router likes: with no hero it
+   clears the state and leaves the bar solid, which is what every other page
+   wants, and Barba kills the page's triggers on the way out so the one made
+   here goes with them. */
+function initHeroNav() {
+  const nav = document.querySelector(".site-nav");
+  if (!nav) return;
+
+  const hero = document.querySelector(".willem-header");
+  if (!hero || !window.ScrollTrigger) {
+    nav.classList.remove("is--over-hero");
+    return;
+  }
+
+  /* Set from where the page actually is before the trigger takes over, so a
+     reload partway down the page, or a hero that is already behind us, starts
+     in the right state rather than flashing through the wrong one. */
+  nav.classList.toggle("is--over-hero", hero.getBoundingClientRect().bottom > 0);
+
+  ScrollTrigger.create({
+    trigger: hero,
+    /* The bottom edge of the hero reaching the top of the screen: the first
+       moment the bar is over something other than the hero. */
+    start: "bottom top",
+    onEnter: () => nav.classList.remove("is--over-hero"),
+    onLeaveBack: () => nav.classList.add("is--over-hero")
+  });
+}
+
 /* Show the hero without the loading animation. Used when the home page is
    reached through a Barba navigation: the section is the page's hero either
    way, only the intro is restricted to a first load. `is--settled` puts the
@@ -92,6 +129,11 @@ async function initWillemLoadingAnimation() {
      sitting there unanimated. Splitting and setting the start states without
      yielding means the browser never gets a frame in between. */
   container.classList.remove("is--hidden");
+
+  /* Bind the nav to the hero now the hero has a size to measure. It has to be
+     on before the timeline drops `is--loading`, or the band would come in for
+     the moment between that class going and the scroll state arriving. */
+  initHeroNav();
 
   const find = (selector, scope) =>
     gsap.utils.toArray((scope || container).querySelectorAll(selector));
@@ -138,23 +180,43 @@ async function initWillemLoadingAnimation() {
   // The nav is the fixed site bar, which sits outside the hero section
   const navLinks = find(".site-nav a", document);
 
+  /* Ending the intro, from one place. Dropping `is--loading` is what releases
+     the scroll lock — the stylesheet hangs the page's `overflow: hidden` off
+     that class — so every way the intro can end has to come through here, and
+     coming through here twice has to be harmless.
+
+     The page was held at its own height while the lock was on, so the triggers
+     bound during it measured a one-screen document. Refreshing once the real
+     height is back is what keeps the nav's own trigger, and the footer's,
+     pointing at the right scroll positions. */
+  let ended = false;
+
+  function endIntro() {
+    if (ended) return;
+    ended = true;
+
+    container.classList.remove("is--loading");
+    container.classList.add("is--settled");
+    // Put the split copy back to plain text now that it has landed
+    splits.forEach((instance) => instance.revert());
+
+    if (window.lenis) {
+      window.lenis.resize();
+      if (window.lenis.start) window.lenis.start();
+    }
+    if (window.ScrollTrigger) window.ScrollTrigger.refresh();
+  }
+
   const tl = gsap.timeline({
     onStart: () => {
       // Hold the page at the top for the length of the intro
       window.scrollTo(0, 0);
       if (window.lenis && window.lenis.stop) window.lenis.stop();
     },
-    onComplete: () => {
-      // Release the height lock so the rest of the page can scroll
-      container.classList.remove("is--loading");
-      container.classList.add("is--settled");
-      // Put the split copy back to plain text now that it has landed
-      splits.forEach((instance) => instance.revert());
-      if (window.lenis) {
-        window.lenis.resize();
-        if (window.lenis.start) window.lenis.start();
-      }
-    }
+    onComplete: endIntro,
+    /* A timeline killed or overwritten mid-flight would otherwise leave the
+       page locked with no one left to unlock it. */
+    onInterrupt: endIntro
   });
 
   /* Both helpers skip a step whose target is not on the page, and both take an
@@ -247,6 +309,17 @@ async function initWillemLoadingAnimation() {
     duration: WILLEM_DURATION.grow
   }, WILLEM_PHASE.grow);
 
+  /* The photograph puts its hero treatment on as it grows, so that it is
+     already wearing it at the moment it fills the screen and the settled hero
+     takes over — the two washes are the same gradient over the same box, so
+     the handover is not a change. Linear and over the whole growth: the wash
+     arriving is meant to be something you cannot catch happening. */
+  swell(image, {
+    "--wash-opacity": 1,
+    duration: WILLEM_DURATION.grow,
+    ease: "none"
+  }, WILLEM_PHASE.grow);
+
   /* 5. The hero reveals over the last second of the growth, so the copy is
      already arriving as the photograph lands rather than waiting for it. The
      headline leads; everything after it starts a beat later and runs at a
@@ -278,4 +351,24 @@ async function initWillemLoadingAnimation() {
       stagger: 0.018
     }, WILLEM_PHASE.reveal + 0.35 + index * 0.06);
   });
+
+  /* The page is locked for as long as `is--loading` is on the section, so
+     nothing may be left holding that class. `onComplete` is the way out on
+     every ordinary run; this is the way out of the ones that are not — a tween
+     that never resolves a value, a plugin that failed to load, a tab left in
+     the background long enough for the frame clock to stop, anything that
+     leaves the timeline short of its end. A plain timer rather than a GSAP
+     one on purpose: GSAP's clock is the animation frame, which is the thing
+     that may have stopped.
+
+     It finishes the timeline rather than stepping around it, so the hero ends
+     up in the state the intro was going to leave it in — every tween at its
+     end value — instead of frozen half-built with the page unlocked under it.
+     Landing there calls `endIntro` itself; the call below is for the case
+     where the timeline is already done and only the release was missed. */
+  setTimeout(() => {
+    if (ended) return;
+    tl.progress(1);
+    endIntro();
+  }, (tl.duration() + 2) * 1000);
 }
