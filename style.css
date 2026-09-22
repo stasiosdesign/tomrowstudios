@@ -169,6 +169,11 @@ textarea { font-family: inherit; }
      light theme swaps them wholesale further down. */
   --grid-line-color: rgba(255, 255, 255, 0.1);
   --grid-line-color-dark: rgba(10, 10, 10, 0.1);
+  /* For a band standing on a photograph. A tenth of white is enough over the
+     flat near-blacks the rest of the site is built on, but a picture has its
+     own bright passages and a line that reads on one part of it vanishes on
+     the next — so the line over an image is stronger. */
+  --grid-line-color-image: rgba(255, 255, 255, 0.25);
   --grid-line-width: 1px;
   /* The colour actually painted. Sections and themes override this one. */
   --grid-line: var(--grid-line-color);
@@ -216,6 +221,14 @@ textarea { font-family: inherit; }
 .testimonial-feature,
 .shop-hero,
 .arch-stage,
+/* The home hero draws its grid on the content layer rather than on the section
+   itself. The section's own background sits under the photograph, which covers
+   it — this layer is the one above the picture and below the copy, so the
+   lines land on the image where they can be seen. It is the full width of the
+   hero and carries the same inset as every other band, so the gutter and the
+   columns work out identically and the lines run on from the nav above it
+   without a break. */
+.willem-header__content,
 .project-hero,
 .project-grid,
 .project-note,
@@ -1101,6 +1114,9 @@ html:has(.willem-header.is--loading) body {
 
 /* Above the wash; the loader beneath it keeps its own lighter treatment */
 .willem-header__content { z-index: 2; }
+
+/* The hero's grid stands on the photograph, so it takes the stronger line. */
+.willem-header__content { --grid-line: var(--grid-line-color-image); }
 
 /* Loading: Hidden */
 .willem-header.is--loading.is--hidden {
