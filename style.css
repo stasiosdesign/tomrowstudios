@@ -51,10 +51,6 @@ html {
   font-size: var(--size-font);
 }
 
-.osmo-container {
-  max-width: var(--size-container);
-}
-
 * { box-sizing: border-box; }
 
 /* Hide the scrollbar (page still scrolls) */
@@ -80,16 +76,137 @@ body {
 img { display: block; max-width: 100%; }
 a { color: inherit; }
 
-/* The page grid: a narrow gutter, four equal columns, a narrow gutter — the
-   same structure the transition lines draw over the whole site. Content spans
-   gutter to gutter so groups line up with those columns. */
+/* =============================================================
+   The page grid
+   =============================================================
+
+   A narrow gutter, four equal columns, a narrow gutter. This is the site's
+   layout, and the lines you can see are drawn from it rather than laid over
+   it: every value below feeds both the padding that positions content and the
+   background that paints the lines, so the two cannot drift apart. Change a
+   number here and the content and its lines move together.
+
+     0    gutter                                         gutter   100%
+     │      │                                                │      │
+     │      ├──────────┬──────────┬──────────┬──────────┤      │
+     │      │  col 1   │  col 2   │  col 3   │  col 4   │      │
+     │      └──────────┴──────────┴──────────┴──────────┘      │
+     │      │←pad→                              ←pad→│         │
+     │      │      content, gutter to gutter         │         │
+
+   The five verticals are the lines you see. Content sits one pad inside the
+   outer two, and every column of a group sits one pad inside its own pair —
+   which is why a tile edge is always a line less a pad, at any width.
+
+   Authored values — the only numbers to edit: */
 :root {
-  --grid-gutter: 4rem;
-  /* Every column carries this much internal padding, so text and images sit
-     just inside the column lines rather than touching them. Group gaps are
-     twice it, which keeps each item inset by exactly this much on both sides. */
-  --grid-pad: 2.4rem;
-  --grid-gap: calc(var(--grid-pad) * 2);
+  --site-gutter: 4rem;
+  --grid-columns: 4;
+  /* The gap between columns of a group. Half of it is the padding every column
+     carries, which is what keeps text and images just inside the column lines
+     rather than touching them, and each item inset by the same amount on both
+     sides. Authored as the gap rather than as the padding because the gap is
+     the value the masonry component also reads, and it reads it as a string —
+     a `calc()` reaches it unresolved and parses to NaN. */
+  --grid-gap: 4.8rem;
+
+  /* Line colours. A section takes whichever one suits its background; the
+     light theme swaps them wholesale further down. */
+  --grid-line-color: rgba(255, 255, 255, 0.1);
+  --grid-line-color-dark: rgba(10, 10, 10, 0.1);
+  --grid-line-width: 1px;
+  /* The colour actually painted. Sections and themes override this one. */
+  --grid-line: var(--grid-line-color);
+}
+
+/* Derived — do not restate these by hand anywhere else.
+
+   `--grid-span` and `--grid-column` carry a percentage on purpose. A custom
+   property holding a percentage is not resolved where it is declared, but
+   where it is used, against whichever element uses it — so one definition
+   gives every section its own exact column width, with no JavaScript, no
+   measuring and nothing to keep in sync. */
+:root {
+  --grid-pad: calc(var(--grid-gap) / 2);
+  /* Gutter plus column padding: where content starts. */
+  --site-inset: calc(var(--site-gutter) + var(--grid-pad));
+  --grid-span: calc(100% - var(--site-gutter) * 2);
+  --grid-column: calc(var(--grid-span) / var(--grid-columns));
+}
+
+/* ---------- The visible grid ----------
+
+   One background layer, no elements. A 1px line at the start of a tile one
+   column wide, anchored at the gutter and repeated across: lines land on the
+   gutter and on every column boundary, the last of them on the far gutter.
+   Tiles that fall outside the element are clipped by its own box.
+
+   Being a background rather than an overlay settles three things by
+   construction: it can never intercept a click, it always paints behind the
+   element's content, and it is bounded by the section that owns it — so a
+   section shows the grid by carrying this, and ends it by not.
+
+   `.grid-lines` is the primitive. The bands listed under it are the ones that
+   carry the grid by default, so the ordinary page — a stack of `.section`s
+   between the nav and the footer — needs no extra markup at all; a band that
+   is not on this list does not draw the grid, and a one-off that wants it
+   takes the class. */
+.grid-lines,
+.section,
+.page-header,
+.footer,
+.site-nav,
+.logo-marquee,
+.map-spread,
+.testimonial-feature,
+.shop-hero,
+.arch-stage,
+.project-hero,
+.project-grid,
+.project-note,
+.project-close {
+  background-image: linear-gradient(
+    to right,
+    var(--grid-line) 0 var(--grid-line-width),
+    transparent var(--grid-line-width)
+  );
+  background-size: var(--grid-column) 100%;
+  background-position: var(--site-gutter) 0;
+  background-repeat: repeat-x;
+}
+
+/* Section-level control. These are the whole vocabulary: a section shows the
+   grid, hides it, picks a line colour against its own background, or thins
+   the grid out to fewer lines. */
+.no-grid { background-image: none; }
+.grid-lines-dark { --grid-line: var(--grid-line-color-dark); }
+.grid-lines-light { --grid-line: var(--grid-line-color); }
+/* Only the two gutter lines — for bands that want the edges of the page
+   marked without the columns inside them */
+.grid-edges { --grid-columns: 1; }
+
+/* A run of sections under one continuous grid: put this on a wrapper and the
+   sections inside it stop drawing their own, so the lines carry through the
+   boundaries between them instead of restarting at each one. */
+.grid-run > .section { background-image: none; }
+
+/* ---------- The grid across breakpoints ----------
+
+   Not the desktop grid scaled down. Below 992px every group on the site drops
+   to two columns and then to one, so the structure genuinely has fewer columns
+   to show — and because the count is one token, the lines, the column widths
+   and `.grid-row` all narrow together rather than the lines being left drawing
+   divisions the content stopped using. At the narrowest the grid is the two
+   page edges and nothing else. */
+@media screen and (max-width: 991px) {
+  :root {
+    --grid-columns: 2;
+    --site-gutter: 2rem;
+  }
+}
+
+@media screen and (max-width: 767px) {
+  :root { --grid-columns: 1; }
 }
 
 /* A small, consistent corner radius used everywhere. Slight, not soft: the
@@ -113,13 +230,26 @@ a { color: inherit; }
   --weight-strong: 700; /* headings */
 }
 
-/* Widths as a share of the container, which already spans the four columns */
+/* Widths of one, two and three columns, for a block that starts at the content
+   edge — a max-width in column terms rather than a percentage that lands near
+   a line without meeting it. These were 25/50/75% of the content box, which is
+   narrower than the grid span by a pad at each end, so none of the three
+   actually reached the line it was named after.
+
+   100% here is the width of the content container, so the span is recovered by
+   adding back the two pads it is inset by; a pad comes off the far end so the
+   block finishes just inside its line, level with every other column of
+   content. Use these on a child of `.container` — anywhere else the percentage
+   resolves against a different box and means something else. */
 :root {
-  --grid-col-1: 25%;
-  --grid-col-2: 50%;
-  --grid-col-3: 75%;
+  --grid-col-1: calc((100% + var(--grid-pad) * 2) / var(--grid-columns) - var(--grid-pad) * 2);
+  --grid-col-2: calc((100% + var(--grid-pad) * 2) * 2 / var(--grid-columns) - var(--grid-pad) * 2);
+  --grid-col-3: calc((100% + var(--grid-pad) * 2) * 3 / var(--grid-columns) - var(--grid-pad) * 2);
 }
 
+/* The content container. It spans gutter to gutter, inset by the column
+   padding, which is what puts its edges level with the first and last column
+   of any group inside it. */
 .container {
   width: 100%;
   max-width: none;
@@ -128,9 +258,26 @@ a { color: inherit; }
 /* Three of the four columns */
 .container-narrow { max-width: var(--grid-col-3); margin: 0 auto 0 0; }
 
+/* A group laid out on the page's own columns. Components that want to sit on
+   the grid use this rather than restating `repeat(4, 1fr)` and the gap: the
+   column count is the same token the lines are drawn from, so a child spanning
+   two columns spans two of the columns you can see. */
+.grid-row {
+  display: grid;
+  grid-template-columns: repeat(var(--grid-columns), minmax(0, 1fr));
+  gap: var(--grid-gap);
+}
+.col-span-1 { grid-column: span 1; }
+.col-span-2 { grid-column: span 2; }
+.col-span-3 { grid-column: span 3; }
+.col-span-4 { grid-column: span 4; }
+
 .section {
-  padding: 8rem calc(var(--grid-gutter) + var(--grid-pad));
-  background: #000000;
+  padding: 8rem var(--site-inset);
+  /* Colour only: the grid is a background *image* on this same element, and a
+     `background` shorthand here would wipe it. Every background on a section
+     that carries the grid is written as `background-color` for that reason. */
+  background-color: #000000;
 }
 
 /* ---------- Buttons ---------- */
@@ -160,11 +307,11 @@ a { color: inherit; }
   top: 0;
   left: 0;
   width: 100%;
-  /* Solid band. The transition line overlay sits above it (z-index 200), so
-     the column lines still run through the bar. */
-  background: #000000;
+  /* Solid band, and one of the bands that carries the grid, so the column
+     lines run through the bar rather than stopping under it. */
+  background-color: #000000;
   border-bottom: 1px solid rgba(255, 255, 255, 0.12);
-  padding: 2.4rem calc(var(--grid-gutter) + var(--grid-pad));
+  padding: 2.4rem var(--site-inset);
   color: #f4f4f4;
   z-index: 80;
 }
@@ -179,7 +326,7 @@ main:not(:has(.willem-header)) .site-nav + *:not(.project-hero):not(.page-header
 .hero {
   position: relative;
   min-height: 90rem;
-  padding: 8rem calc(var(--grid-gutter) + var(--grid-pad));
+  padding: 8rem var(--site-inset);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -250,7 +397,7 @@ h3 {
 .card p { margin: 0; }
 
 /* ---------- Galleries ---------- */
-.gallery { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--grid-gap); }
+.gallery { display: grid; grid-template-columns: repeat(var(--grid-columns), minmax(0, 1fr)); gap: var(--grid-gap); }
 .gallery img {
   min-width: 0;
   width: 100%;
@@ -260,7 +407,7 @@ h3 {
 }
 
 /* ---------- Alternate dark section ---------- */
-.section-alt { background: #0a0a0a; }
+.section-alt { background-color: #0a0a0a; }
 
 
 /* ---------- Lightbox / video still ---------- */
@@ -289,8 +436,11 @@ h3 {
 .timeline p { margin: 0 0 1.6rem; }
 
 /* ---------- Light theme sections ---------- */
-.theme-light { background: #ffffff; color: #0a0a0a; }
-.theme-light .section { background: #ffffff; }
+/* A light band takes dark lines. This one declaration is what used to need a
+   hand-picked line colour per page: the grid reads its colour from the theme
+   it is sitting in, so a section that flips background also flips its lines. */
+.theme-light { background-color: #ffffff; color: #0a0a0a; --grid-line: var(--grid-line-color-dark); }
+.theme-light .section { background-color: #ffffff; }
 
 .section-title-left { max-width: var(--grid-col-2); margin: 0 0 5.6rem; text-align: left; }
 .section-title-left h2 { margin-bottom: 2.4rem; }
@@ -360,7 +510,7 @@ h3 {
 /* ---------- Archive grid ---------- */
 .archive-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(var(--grid-columns), minmax(0, 1fr));
   gap: var(--grid-gap);
 }
 .archive-grid img {
@@ -370,7 +520,7 @@ h3 {
   border-radius: var(--radius);
 }
 
-/* ---------- Page transition overlay + persistent vertical lines ---------- */
+/* ---------- Page transition overlay ---------- */
 
 .transition {
   z-index: 200;
@@ -398,26 +548,6 @@ h3 {
   top: 100%;
 }
 
-/* The lines never animate — they stay over the whole site permanently */
-.transition__lines {
-  opacity: .1;
-  width: 100%;
-  height: 100%;
-  display: flex;
-  position: absolute;
-  top: 0;
-  left: 0;
-}
-
-.transition__line {
-  border-right: 1px solid #fff;
-  width: 100%;
-  height: 100%;
-}
-
-.transition__line.is--last {
-  border-right-style: none;
-}
 
 /* Name of the page being transitioned to, centred over the panels */
 .transition__label {
@@ -436,11 +566,12 @@ h3 {
   letter-spacing: 0.02em;
 }
 
-/* Narrow margin columns at either edge of the grid */
-.transition__panel.is--gutter,
-.transition__line.is--gutter {
-  flex: 0 0 var(--grid-gutter);
-  width: var(--grid-gutter);
+/* The sweep is cut on the page grid: a narrow panel over each margin and one
+   per column between them, off the same gutter the lines are drawn from, so
+   the panels leave on the divisions the page is built on. */
+.transition__panel.is--gutter {
+  flex: 0 0 var(--site-gutter);
+  width: var(--site-gutter);
 }
 
 .visually-hidden {
@@ -638,7 +769,7 @@ h3 {
   min-height: 90rem;
   display: flex;
   align-items: flex-end;
-  padding: 8rem calc(var(--grid-gutter) + var(--grid-pad));
+  padding: 8rem var(--site-inset);
   overflow: hidden;
 }
 .page-header-img {
@@ -705,7 +836,7 @@ h3 {
 
 /* ---------- Numbered feature rows ---------- */
 .feature-row {
-  padding: 0 calc(var(--grid-gutter) + var(--grid-pad)) 8rem;
+  padding: 0 var(--site-inset) 8rem;
   border-top: 1px solid rgba(255, 255, 255, 0.2);
 }
 .section-info {
@@ -744,7 +875,7 @@ h3 {
 }
 
 /* ---------- Footer ---------- */
-.footer { padding: 5.6rem calc(var(--grid-gutter) + var(--grid-pad)); background: #000000; }
+.footer { padding: 5.6rem var(--site-inset); background-color: #000000; }
 .footer-top { display: grid; grid-template-columns: repeat(2, 1fr); gap: var(--grid-gap); margin-bottom: 5.6rem; }
 .footer-brand { display: flex; flex-direction: column; gap: 2.4rem; }
 .footer-logo { width: 8.4rem; height: 3.6rem; object-fit: contain; margin-bottom: 0.8rem; }
@@ -774,11 +905,10 @@ h3 {
 
 /* ---------- Basic responsive fallback ---------- */
 @media (max-width: 991px) {
-  :root { --grid-gutter: 2rem; }
+  /* The gutter and column count for this breakpoint live with the rest of the
+     grid system, at the top of the file. */
   .transition__label { font-size: 1.6rem; }
-  .section, .footer { padding-left: calc(var(--grid-gutter) + var(--grid-pad)); padding-right: calc(var(--grid-gutter) + var(--grid-pad)); }
-  .site-nav { padding: 1.8rem calc(var(--grid-gutter) + var(--grid-pad)); }
-  .hero { padding: 8rem calc(var(--grid-gutter) + var(--grid-pad)); }
+  .site-nav { padding: 1.8rem var(--site-inset); }
   .form-row { flex-direction: column; }
   /* every grid collapses to a single column */
   .hero-inner, .two-col, .cards, .gallery, .footer-top, 
@@ -790,11 +920,11 @@ h3 {
   .archive-grid { grid-template-columns: 1fr 1fr; gap: var(--grid-gap); }
   .page-header { flex-direction: column; align-items: flex-start; }
   .page-header-body { align-items: flex-start; }
-  .page-header { padding: 5.6rem calc(var(--grid-gutter) + var(--grid-pad)); min-height: 0; }
+  .page-header { padding: 5.6rem var(--site-inset); min-height: 0; }
   .slider-row img { width: 70vw; }
   .page-header h1 { font-size: 4rem; }
   .module-list li { flex-direction: column; gap: 0.4rem; }
-  .feature-row { padding: 0 calc(var(--grid-gutter) + var(--grid-pad)) 6.4rem; }
+  .feature-row { padding: 0 var(--site-inset) 6.4rem; }
   .project-gallery-grid { grid-template-columns: 1fr 1fr; gap: var(--grid-gap); }
   .rich-split { align-items: flex-start; }
   .panel-meta { grid-template-columns: 1fr; gap: 2.4rem; }
@@ -1023,9 +1153,9 @@ main:has(.willem-header.is--loading) {
   align-items: center;
   width: 100%;
   min-height: 100dvh;
-  /* Horizontal padding matches the grid gutter so the nav and the wordmark
-     start on the same line the overlay draws */
-  padding: 3em calc(var(--grid-gutter) + var(--grid-pad));
+  /* The shared content inset, so the hero copy starts on the same line as
+     every other section's content */
+  padding: 3em var(--site-inset);
   display: flex;
   position: relative;
 }
@@ -1335,7 +1465,7 @@ main:has(.willem-header.is--loading) {
   flex-flow: column;
   justify-content: space-between;
   min-height: 100svh;
-  padding: 2.5em calc(var(--grid-gutter) + var(--grid-pad));
+  padding: 2.5em var(--site-inset);
   /* Slightly more weight through the whole footer: the links and the small
      labels were reading as the lightest thing on the page */
   font-weight: var(--weight-ui);
@@ -1445,8 +1575,8 @@ main:has(.willem-header.is--loading) {
   }
 
   .site-footer {
-    padding-left: calc(var(--grid-gutter) + var(--grid-pad));
-    padding-right: calc(var(--grid-gutter) + var(--grid-pad));
+    padding-left: var(--site-inset);
+    padding-right: var(--site-inset);
   }
 
   .site-footer__col {
@@ -1579,8 +1709,8 @@ main:has(.willem-header.is--loading) .site-nav {
 /* The tab sections are full bleed, so their own containers carry the page
    padding and stay on the column grid */
 .sticky-tab .container {
-  padding-left: calc(var(--grid-gutter) + var(--grid-pad));
-  padding-right: calc(var(--grid-gutter) + var(--grid-pad));
+  padding-left: var(--site-inset);
+  padding-right: var(--site-inset);
 }
 
 .sticky-tab__body {
@@ -1754,7 +1884,7 @@ main:has(.willem-header.is--loading) .site-nav {
 .logo-marquee {
   padding-top: 8rem;
   padding-bottom: 8rem;
-  background: #000000;
+  background-color: #000000;
   overflow: hidden;
 }
 
@@ -1937,7 +2067,7 @@ main:has(.willem-header.is--loading) .site-nav {
 /* Partners is a light page, so the marquee goes white there. The logo files are
    white artwork, so they are inverted to read on the pale tiles. */
 .theme-light .logo-marquee {
-  background: #ffffff;
+  background-color: #ffffff;
 }
 
 .theme-light .marquee-advanced__item-width {
@@ -2143,8 +2273,10 @@ body{
 }
 .insights-row {
   display: grid;
-  /* index in the first column, label in the second, the figure closing out
-     the last two — the same four columns the rest of the page is built on */
+  /* The index takes the page's first column exactly; the figure closes flush
+     on the last line. The label between them is the flexible track, so its
+     end is wherever the figure begins rather than a column boundary — the two
+     edges that read as structure are on the grid, the filler is not. */
   grid-template-columns: var(--grid-col-1) 1fr auto;
   gap: var(--grid-gap);
   align-items: baseline;
@@ -2187,7 +2319,7 @@ body{
 
 /* ---------- Map spread (full page width) ---------- */
 .map-spread {
-  background: #000000;
+  background-color: #000000;
   padding-bottom: 8rem;
 }
 .map-spread__img {
@@ -2204,7 +2336,7 @@ body{
   align-items: flex-end;
   justify-content: space-between;
   gap: var(--grid-gap);
-  padding: 3.2rem calc(var(--grid-gutter) + var(--grid-pad)) 0;
+  padding: 3.2rem var(--site-inset) 0;
 }
 .map-spread__caption {
   max-width: var(--grid-col-2);
@@ -2604,7 +2736,7 @@ main section + section,
      of running past the fold and following you into the catalogue. The top
      clearance comes from the site-wide nav rule, not from here. */
   min-height: 0;
-  padding: 8rem calc(var(--grid-gutter) + var(--grid-pad));
+  padding: 8rem var(--site-inset);
   background: #000000;
 }
 
@@ -2642,11 +2774,11 @@ main section + section,
 /* ---------- Product cards ---------- */
 /* Four products, one to each column of the page grid. The gap is the grid gap
    and the section already carries the gutter, so a card lands exactly inside
-   a column of the overlay rather than near it. White card, black text — the
+   a column of the grid its section draws rather than near it. White card, black text — the
    catalogue is the one place on the page that should read as printed stock. */
 .product-grid {
   counter-reset: product;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(var(--grid-columns), minmax(0, 1fr));
   gap: var(--grid-gap);
 }
 
@@ -2943,7 +3075,7 @@ main section + section,
 /* The cover overlaps the map's lower-right, where the plate is emptiest */
 .map-spread__cover {
   position: absolute;
-  right: calc(var(--grid-gutter) + var(--grid-pad));
+  right: var(--site-inset);
   bottom: -6.4rem;
   width: 26rem;
   margin: 0;
@@ -2963,7 +3095,7 @@ main section + section,
   grid-template-columns: repeat(2, 1fr);
   gap: var(--grid-gap);
   align-items: start;
-  padding: 8rem calc(var(--grid-gutter) + var(--grid-pad)) 0;
+  padding: 8rem var(--site-inset) 0;
 }
 .book-feature__intro { min-width: 0; }
 .book-feature__intro h2 { margin-bottom: 0; }
@@ -2974,7 +3106,7 @@ main section + section,
 /* ---------- Closing CTA ---------- */
 .final-cta {
   border-top: 1px solid var(--rule);
-  background: #0a0a0a;
+  background-color: #0a0a0a;
   text-align: center;
 }
 .final-cta__title {
@@ -2994,7 +3126,7 @@ main section + section,
   .map-spread__cover {
     position: static;
     width: 18rem;
-    margin: -6.4rem calc(var(--grid-gutter) + var(--grid-pad)) 0 auto;
+    margin: -6.4rem var(--site-inset) 0 auto;
   }
   .book-feature {
     grid-template-columns: 1fr;
@@ -3016,13 +3148,17 @@ main section + section,
    grid from it, so the two read as one block */
 .influence-hero { max-width: var(--grid-col-3); }
 .influence-hero h2 { margin-bottom: 2.4rem; }
-.influence-hero__lead { max-width: var(--grid-col-2); margin-bottom: 0; }
+/* A reading measure, not a column count. This sits inside the block above
+   rather than in the container, so a column token would resolve against the
+   block and cap it at a width that means nothing on the page grid — the same
+   48rem the other standfirsts use says what is actually intended. */
+.influence-hero__lead { max-width: 48rem; margin-bottom: 0; }
 
 /* ---------- The book plate, on white ---------- */
 /* The map is a dark plate, so setting the section white lets it sit on the
    page like a printed spread and pulls the whole band forward */
 .map-spread.theme-light {
-  background: #ffffff;
+  background-color: #ffffff;
   color: #0a0a0a;
   padding-bottom: 10rem;
 }
@@ -3190,7 +3326,7 @@ strong, b, th { font-weight: 700; }
    the same split as the reference, and still on the page's four columns */
 .service-list {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(var(--grid-columns), minmax(0, 1fr));
   gap: var(--grid-gap);
 }
 /* Three columns: the section title on the left, the deliverables through the
@@ -3270,7 +3406,7 @@ strong, b, th { font-weight: 700; }
    full-bleed frame sitting inside it — reset the colour and the tokens, or
    the quote renders near-black over the photograph */
 .testimonial-feature {
-  background: #0a0a0a;
+  background-color: #0a0a0a;
   color: #ffffff;
   --rule: rgba(255, 255, 255, 0.1);
   --form-muted: rgba(255, 255, 255, 0.5);
@@ -3314,7 +3450,7 @@ strong, b, th { font-weight: 700; }
   justify-content: center;
   height: 100%;
   max-width: var(--grid-col-2);
-  padding: 12rem calc(var(--grid-gutter) + var(--grid-pad)) 20rem;
+  padding: 12rem var(--site-inset) 20rem;
 }
 .testimonial-slide blockquote {
   margin: 0 0 3.2rem;
@@ -3334,8 +3470,8 @@ strong, b, th { font-weight: 700; }
 .testimonial-chips {
   position: absolute;
   z-index: 2;
-  left: calc(var(--grid-gutter) + var(--grid-pad));
-  right: calc(var(--grid-gutter) + var(--grid-pad));
+  left: var(--site-inset);
+  right: var(--site-inset);
   bottom: 4rem;
   display: flex;
   gap: var(--grid-gap);
@@ -3372,8 +3508,13 @@ strong, b, th { font-weight: 700; }
 
 /* ---------- Map head ---------- */
 .map-spread__head {
-  padding: 0 calc(var(--grid-gutter) + var(--grid-pad)) 4.8rem;
-  max-width: var(--grid-col-3);
+  padding: 0 var(--site-inset) 4.8rem;
+  /* Three columns, but measured on the band rather than inside a container:
+     this element carries the page inset itself, so its cap has to include the
+     two gutters it spans. `--grid-col-3` is for a child of `.container`, where
+     the percentage resolves against the content box; here it would resolve
+     against the whole section and land short. */
+  max-width: calc(var(--site-gutter) * 2 + var(--grid-column) * 3);
 }
 .map-spread__head h2 { margin-bottom: 0; }
 .map-spread.theme-light { padding-top: 8rem; }
@@ -3421,7 +3562,7 @@ strong, b, th { font-weight: 700; }
   .testimonial-stage { min-height: 0; }
   .testimonial-slide__body {
     max-width: none;
-    padding: 8rem calc(var(--grid-gutter) + var(--grid-pad)) 8rem;
+    padding: 8rem var(--site-inset) 8rem;
   }
   .testimonial-slide blockquote { font-size: 2.8rem; }
   .testimonial-slide::after {
@@ -3429,7 +3570,7 @@ strong, b, th { font-weight: 700; }
   }
   .testimonial-chips {
     position: static;
-    padding: 0 calc(var(--grid-gutter) + var(--grid-pad)) 4rem;
+    padding: 0 var(--site-inset) 4rem;
     gap: 1.6rem;
   }
   .map-spread__head { max-width: none; }
@@ -3517,7 +3658,7 @@ strong, b, th { font-weight: 700; }
    as a pile of unrelated sections. */
 :root {
   --project-rhythm: 12rem;
-  --project-inset: calc(var(--grid-gutter) + var(--grid-pad));
+  --project-inset: var(--site-inset);
 }
 
 /* ---------- Hero ----------
@@ -3542,7 +3683,7 @@ strong, b, th { font-weight: 700; }
 
 .project-hero__meta {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(var(--grid-columns), minmax(0, 1fr));
   gap: var(--grid-gap);
   align-items: start;
   margin-top: 8rem;
@@ -3762,32 +3903,25 @@ strong, b, th { font-weight: 700; }
 }
 .masonry-item__visual { border-radius: var(--radius); }
 
-/* Columns and gap are the component's own controls, and here they are set to
-   the page's own grid: four columns, and the gap that separates them is the
-   grid gap. Because the block is inset by gutter + pad, every tile then lands
-   exactly inside a column of the overlay drawn across the whole site — the
-   first tile spans 64 to 356 at 1440, which is the first column line at 40
-   plus its 24 of padding. Two columns means a tile spans two of them, one
-   means it spans all four; both stay on the lines. */
+/* Columns and gap are the component's own controls, and here they are handed
+   the page's own grid: the column count the lines are drawn from, and the gap
+   that separates them. Because the block is inset by gutter + pad, every tile
+   lands exactly inside a column of the grid the section is drawing — a tile
+   edge is a column line less its padding. Two columns means a tile spans two
+   of them, one means it spans all four; both stay on the lines. */
 .project-grid [data-masonry-list] {
-  --masonry-col: 4;
-  /* This is --grid-gap, written out. It has to stay in step with it by hand:
-     --grid-gap is a calc(), and the component reads this value with
-     getPropertyValue and parses the unit off the end of the string, so a
-     calc() reaches it as "calc(2.4rem * 2)" and parses to NaN. */
-  --masonry-gap: 4.8rem;
+  --masonry-col: var(--grid-columns);
+  --masonry-gap: var(--grid-gap);
 }
 
 /* Half as many, twice as wide — for spreads too wide to read at a quarter of
-   the page, and for the pair that closes a set */
+   the page, and for the pair that closes a set. Written out rather than
+   derived: the component reads this value as a string, so it has to arrive as
+   a plain number. The full-width grid needs no such override — it follows the
+   page's column count down through the breakpoints on its own. */
 .project-grid.is--pairs [data-masonry-list] { --masonry-col: 2; }
 
-@media screen and (max-width: 991px) {
-  .project-grid [data-masonry-list] { --masonry-col: 2; }
-}
-
 @media screen and (max-width: 767px) {
-  .project-grid [data-masonry-list],
   .project-grid.is--pairs [data-masonry-list] { --masonry-col: 1; }
 }
 
@@ -3884,7 +4018,7 @@ body:has(.arch-page) {
   gap: 2.4rem;
   /* The label sat two pixels under the fixed bar and the first card sat two
      pixels under the label. Both ends of this strip get room now. */
-  padding: 5.6rem calc(var(--grid-gutter) + var(--grid-pad)) 4rem;
+  padding: 5.6rem var(--site-inset) 4rem;
 }
 .arch-stage__head .tagline { margin: 0; }
 .arch-stage__count {
@@ -3913,7 +4047,7 @@ body:has(.arch-page) {
   justify-content: space-between;
   gap: 2.4rem;
   /* Clears the progress bar along the bottom edge as well as sitting off it */
-  padding: 4.8rem calc(var(--grid-gutter) + var(--grid-pad)) 6.4rem;
+  padding: 4.8rem var(--site-inset) 6.4rem;
 }
 .arch-stage__title {
   margin: 0;
@@ -3989,7 +4123,7 @@ body:has(.arch-page) {
      rather than hard against the viewport edge. The item's own 1em is part
      of that inset, so it comes off here; the slider's setOffset subtracts
      this padding again so the run still ends flush on the right. */
-  padding-left: calc(var(--grid-gutter) + var(--grid-pad) - 1em);
+  padding-left: calc(var(--site-inset) - 1em);
 }
 .parallax-slider__list:active { cursor: grabbing; }
 
@@ -4097,24 +4231,24 @@ body:has(.arch-page) {
 .parallax-slider__list.is--fallback .parallax-slider__item { scroll-snap-align: center; }
 
 @media screen and (max-width: 991px) {
-  .arch-stage__head { padding: 4rem calc(var(--grid-gutter) + var(--grid-pad)) 3.2rem; }
-  .arch-stage__foot { padding: 4rem calc(var(--grid-gutter) + var(--grid-pad)) 5.6rem; }
+  .arch-stage__head { padding: 4rem var(--site-inset) 3.2rem; }
+  .arch-stage__foot { padding: 4rem var(--site-inset) 5.6rem; }
   .arch-stage__title { font-size: 4.8rem; }
   .parallax-slider__item-inner { width: 62vw; }
 }
 @media screen and (max-width: 767px) {
-  .arch-stage__head { padding: 3.2rem calc(var(--grid-gutter) + var(--grid-pad)) 2.4rem; }
+  .arch-stage__head { padding: 3.2rem var(--site-inset) 2.4rem; }
   .arch-stage__foot {
     flex-direction: column;
     align-items: flex-start;
     gap: 2rem;
-    padding: 3.2rem calc(var(--grid-gutter) + var(--grid-pad)) 4.8rem;
+    padding: 3.2rem var(--site-inset) 4.8rem;
   }
   .arch-stage__title { font-size: 3.6rem; }
   .parallax-slider__item { padding-left: 0.5em; padding-right: 0.5em; }
   .parallax-slider__item-inner { width: 78vw; max-height: 38vh; }
   /* The item's own padding shrinks here, so the track inset follows it */
-  .parallax-slider__list { padding-left: calc(var(--grid-gutter) + var(--grid-pad) - 0.5em); }
+  .parallax-slider__list { padding-left: calc(var(--site-inset) - 0.5em); }
 }
 
 
@@ -4124,7 +4258,7 @@ body:has(.arch-page) {
 
 /* Four cards, one to each column of the page grid. The gap is the grid gap
    and the section carries the gutter, so a card lands exactly inside a
-   column of the overlay. Built on the same idea as the Shop card: a light
+   column of the grid its section draws. Built on the same idea as the Shop card: a light
    plate on the page, a small label strip at the top, the thing that matters
    in the middle, and a quiet footer under a rule. */
 .results-section .two-col { align-items: flex-end; }
@@ -4140,7 +4274,7 @@ body:has(.arch-page) {
 .results-grid {
   list-style: none;
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(var(--grid-columns), minmax(0, 1fr));
   gap: var(--grid-gap);
   margin: 8rem 0 0;
   padding: 0;
@@ -4407,7 +4541,7 @@ body:has(.arch-page) {
 
 .statement__row {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(var(--grid-columns), minmax(0, 1fr));
   gap: var(--grid-gap);
   align-items: end;
 }
@@ -4441,7 +4575,7 @@ body:has(.arch-page) {
 @media screen and (max-width: 991px) {
   .statement { padding-top: 8rem; padding-bottom: 8rem; }
   .statement__title { font-size: 5.6rem; margin-bottom: 5.6rem; max-width: none; }
-  .statement__row { grid-template-columns: repeat(2, 1fr); align-items: start; }
+  .statement__row { align-items: start; }
   .statement__media { grid-column: 1 / span 1; }
   .statement__body { grid-column: 2 / span 1; }
   .statement__lead { font-size: 1.8rem; }
@@ -4449,7 +4583,7 @@ body:has(.arch-page) {
 
 @media screen and (max-width: 767px) {
   .statement__title { font-size: 4rem; }
-  .statement__row { grid-template-columns: 1fr; gap: 3.2rem; }
+  .statement__row { gap: 3.2rem; }
   .statement__media,
   .statement__body { grid-column: 1 / span 1; }
   .statement__media { max-width: 24rem; }
@@ -4466,7 +4600,7 @@ body:has(.arch-page) {
    and the button on a ruled row beneath. */
 .final-cta {
   border-top: 1px solid var(--rule);
-  background: #0a0a0a;
+  background-color: #0a0a0a;
   text-align: left;
 }
 .final-cta__inner {
@@ -4601,8 +4735,8 @@ body:has(.arch-page) {
    Only this one qualifies: every other wide image on the site sits inside a
    text block or a card, where the gutter is doing its job. */
 .img-slider {
-  margin-left: calc((var(--grid-gutter) + var(--grid-pad)) * -1);
-  margin-right: calc((var(--grid-gutter) + var(--grid-pad)) * -1);
+  margin-left: calc(var(--site-inset) * -1);
+  margin-right: calc(var(--site-inset) * -1);
   /* auto, not 100% — a percentage would resolve against the container and
      the negative margins would only shift the box rather than widen it */
   width: auto;
@@ -4626,7 +4760,7 @@ body:has(.arch-page) {
    across the first two, the course facts in the last two. */
 .page-header {
   min-height: 78vh;
-  padding: calc(var(--nav-height) + 8rem) calc(var(--grid-gutter) + var(--grid-pad)) 8rem;
+  padding: calc(var(--nav-height) + 8rem) var(--site-inset) 8rem;
 }
 .page-header-body {
   grid-template-columns: repeat(4, 1fr);
