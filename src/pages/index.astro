@@ -68,8 +68,8 @@ import Button from '../components/Button.astro';
          circle hero-dial.js moves on to the next of its five states, whose
          photographs the hero and the dial's centre change to; the dot grows
          a little under the pointer, which also holds the clock. Any of the
-         five targets below selects that state. The caption is placeholder
-         copy. -->
+         five targets below selects that state. One caption per state, in
+         column order, swapped with the photographs; placeholder copy. -->
     <div class="hero-dial" data-hero-dial>
       <!-- The centre: a round frame with one photograph per column line,
            slid across it by hero-dial.js in step with the backgrounds. Before
@@ -93,7 +93,17 @@ import Button from '../components/Button.astro';
       </svg>
       <div class="hero-dial__note">
         <span class="hero-dial__note-dot"></span>
-        <p>Design for a global audience.</p>
+        <div class="hero-dial__captions">
+          {[
+            "Architecture drawn by hand.",
+            "Content made to be shared.",
+            "Education in the studio.",
+            "Design for a global audience.",
+            "Work that travels."
+          ].map((caption) => (
+            <p data-hero-dial-caption>{caption}</p>
+          ))}
+        </div>
       </div>
     </div>
     <!-- The five lines that stand for the dial's five states — the four

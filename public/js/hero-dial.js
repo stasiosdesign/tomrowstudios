@@ -27,6 +27,14 @@
 // The targets mark the current state with aria-current; the active
 // photographs carry [data-active], as the slider's do.
 //
+// Each state has its own caption under the note's dot. They change the
+// moment a move starts, with the photographs, using the intro's own masked
+// SplitText reveal (intro.js): the words of the outgoing caption rise out
+// through their masks while the incoming caption's rise in from below, a
+// word at a time. Each caption is split once, when the dial is built, and
+// reverted when it is torn down, so however many moves run, the markup never
+// grows and a move made mid-swap simply takes over from where it is.
+//
 // Lifecycle as the runner's: `initHeroDial()` tears down any instance and
 // builds one if the dial is on the page. transitions.js calls it on every
 // navigation; DOMContentLoaded covers the first load.
@@ -35,8 +43,16 @@
   const AUTOPLAY = 13;           // seconds between moves: one turn of the ring
   const TRANSITION_DURATION = 1.1;
   const COLUMNS = 5;
+  // The caption swap. The same ease, rise and small-type stagger as the
+  // intro's standfirst, run a little shorter so the caption lands inside the
+  // photographs' own move rather than after it
+  const CAPTION_IN = 0.9;
+  const CAPTION_OUT = 0.45;
+  const CAPTION_STAGGER = 0.012;
+  const CAPTION_EASE_IN = typeof WILLEM_EASE_ARRIVE !== "undefined" ? WILLEM_EASE_ARRIVE : "expo.out";
+  const CAPTION_EASE_OUT = typeof WILLEM_EASE_SWELL !== "undefined" ? WILLEM_EASE_SWELL : "power3.inOut";
 
-  function createHeroDial(dial, targets, face, backgrounds, maskFrame, maskItems, ticks) {
+  function createHeroDial(dial, targets, face, backgrounds, maskFrame, maskItems, ticks, captions) {
     const count = COLUMNS;
     const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
     const clamp = gsap.utils.clamp;
@@ -118,6 +134,61 @@
       if (hovering > 0) autoTween.pause();
     };
 
+    // The captions, split into masked words once, as intro.js splits the
+    // hero copy. Without SplitText they still swap, just without the rise.
+    const captionSplits = captions.map((caption) =>
+      typeof SplitText !== "undefined"
+        ? new SplitText(caption, { type: "words", mask: "words", wordsClass: "willem__split-word" })
+        : null
+    );
+    const captionWords = (i) => (captionSplits[i] ? captionSplits[i].words : []);
+    let captionIndex = -1;
+
+    const showCaption = (index, animate) => {
+      if (!captions[index] || index === captionIndex) return;
+      const previous = captionIndex;
+      captionIndex = index;
+
+      // Whatever was mid-swap stops where it is and is taken over from there
+      captions.forEach((caption, i) => {
+        gsap.killTweensOf(captionWords(i));
+        caption.removeAttribute("data-active");
+        caption.removeAttribute("data-leaving");
+        caption.setAttribute("aria-hidden", "true");
+        if (i !== index && i !== previous) gsap.set(captionWords(i), { yPercent: 110 });
+      });
+      captions[index].setAttribute("data-active", "");
+      captions[index].removeAttribute("aria-hidden");
+
+      if (!animate || reduced) {
+        gsap.set(captionWords(index), { yPercent: 0 });
+        if (previous >= 0) gsap.set(captionWords(previous), { yPercent: 110 });
+        return;
+      }
+
+      if (previous >= 0) {
+        const leaving = captions[previous];
+        leaving.setAttribute("data-leaving", "");
+        gsap.to(captionWords(previous), {
+          yPercent: -110,
+          duration: CAPTION_OUT,
+          stagger: CAPTION_STAGGER,
+          ease: CAPTION_EASE_OUT,
+          onComplete: () => {
+            leaving.removeAttribute("data-leaving");
+            gsap.set(captionWords(previous), { yPercent: 110 });
+          }
+        });
+      }
+      gsap.fromTo(captionWords(index), { yPercent: 110 }, {
+        yPercent: 0,
+        duration: CAPTION_IN,
+        stagger: CAPTION_STAGGER,
+        ease: CAPTION_EASE_IN,
+        delay: previous >= 0 ? CAPTION_OUT * 0.5 : 0
+      });
+    };
+
     // The first state is the dial's own line, whose photograph is the
     // intro's, so the handover from the intro is not a change
     let slideTween = null;
@@ -127,6 +198,7 @@
 
     function goTo(delta) {
       current += delta;
+      showCaption(((current % count) + count) % count, true);
       if (slideTween) slideTween.kill();
       slideTween = gsap.to(state, {
         progress: current,
@@ -184,6 +256,7 @@
 
     state.progress = current;
     render(current);
+    showCaption(current, false);
     startAutoplay();
 
     function destroy() {
@@ -194,6 +267,13 @@
       face.removeEventListener("click", onFaceClick);
       face.removeEventListener("pointerenter", onEnter);
       face.removeEventListener("pointerleave", onLeave);
+      captions.forEach((caption, i) => gsap.killTweensOf(captionWords(i)));
+      captionSplits.forEach((split) => split && split.revert());
+      captions.forEach((caption) => {
+        caption.removeAttribute("data-active");
+        caption.removeAttribute("data-leaving");
+        caption.removeAttribute("aria-hidden");
+      });
     }
 
     return { dial, targets, state, ring, goTo, goToIndex, destroy };
@@ -219,8 +299,9 @@
     const maskItems = Array.from(dial.querySelectorAll("[data-hero-dial-mask-item]"));
     const ticks = dial.querySelector(".hero-dial__ticks");
     if (!ticks) return;
+    const captions = Array.from(dial.querySelectorAll("[data-hero-dial-caption]"));
 
-    window.heroDial = createHeroDial(dial, targets, face, backgrounds, maskFrame, maskItems, ticks);
+    window.heroDial = createHeroDial(dial, targets, face, backgrounds, maskFrame, maskItems, ticks, captions);
   }
 
   window.initHeroDial = initHeroDial;
