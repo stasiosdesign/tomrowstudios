@@ -1459,14 +1459,15 @@ html:has(.willem-header.is--loading) body {
   --runner-spacing: 6px;
   --runner-stroke: 1px;
   --runner-rest: 9px;
-  /* A narrow, tall response: the field reaches about fifteen strokes each
-     side of the pointer — thirty or so moving at a time — and the strokes
-     under it rise to a clear peak, so the profile reads as a spike rather
-     than a wide, shallow swell. */
-  --runner-max: 46px;
-  --runner-radius: 90px;
-  --runner-reach: 200px;
-  --runner-reach-fade: 120px;
+  /* A quiet response: the field reaches about twelve strokes each side of
+     the pointer, and the strokes under it rise to barely twice their
+     resting height, so the runner is felt to notice the pointer rather
+     than reach for it. The pointer only counts within a narrower band
+     above and below the axis, too. */
+  --runner-max: 18px;
+  --runner-radius: 72px;
+  --runner-reach: 120px;
+  --runner-reach-fade: 90px;
   /* The four strokes that sit on the starts of the four main columns — the
      grid's 1, 4, 7 and 10 — and the far gutter are a hair thicker: see `--runner-color-strong`
      on the hero content for their colour. Subtle: still well under the
