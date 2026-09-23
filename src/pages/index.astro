@@ -6,8 +6,10 @@ import ContactPanel from '../components/ContactPanel.astro';
 import Button from '../components/Button.astro';
 ---
 <BaseLayout title="Tomrow Studios" namespace="index" pageName="Home">
-<!-- Home hero -->
-<section class="willem-header">
+<!-- Home hero, in the reveal-parallax wrapper: the section after it slides
+     up over it (footer.js) -->
+<div data-hero-parallax class="hero-wrap">
+<section data-hero-parallax-inner class="willem-header">
   <!-- The hero's backgrounds, one per line of the dial. hero-dial.js
        crossfades them as the dial moves — the layered-slider treatment, on
        the dial's own index. Two photographs, alternated across the five
@@ -103,6 +105,8 @@ import Button from '../components/Button.astro';
     </div>
   </div>
 </section>
+<div data-hero-parallax-dark class="hero-wrap__dark"></div>
+</div>
 
 <!-- Colour block under the hero: empty for now, to judge the colour at full height -->
 <section class="hero-follow"></section>

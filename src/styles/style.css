@@ -1279,6 +1279,21 @@ h3 {
   clip-path: inset(0 calc(-1 * var(--grid-pad)));
 }
 
+/* The hero's reveal-parallax wrapper: the footer's, run the other way (see
+   footer.js). The dark layer sits over the hero's lifted copy (91). */
+.hero-wrap {
+  position: relative;
+  overflow: hidden;
+}
+.hero-wrap__dark {
+  position: absolute;
+  inset: 0;
+  z-index: 92;
+  opacity: 0;
+  pointer-events: none;
+  background-color: #000000;
+}
+
 /* ---------- Colour block under the home hero ---------- */
 .hero-follow {
   height: 100vh;
