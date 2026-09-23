@@ -1610,7 +1610,7 @@ h3 {
   inset: 0;
   /* Over the photographs, which the script raises to a z-index of 100 */
   z-index: 200;
-  background-color: rgba(0, 0, 0, 0.28);
+  background-color: rgba(0, 0, 0, 0.5);
   pointer-events: none;
 }
 
