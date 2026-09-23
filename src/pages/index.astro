@@ -62,15 +62,14 @@ import Button from '../components/Button.astro';
          puts a canvas in it. -->
     <div class="hero-runner" data-hero-runner aria-hidden="true"></div>
     <!-- The dial: a ring of radial ticks, a framed photograph and a solid
-         centre dot, centred on the intersection of the runner and one of its
-         five strong lines. The ticks brighten in turn, clockwise, over
+         centre dot, fixed on the intersection of the runner and the fourth
+         of its five strong lines. The ticks light in turn, clockwise, over
          thirteen seconds — the autoplay's clock, drawn — and at the full
-         circle hero-dial.js walks the dial to the next line, left to right,
-         wrapping round off the right edge; the dot grows a little under the
-         pointer, which also holds the dial and its clock. Any of the five
-         targets below sends it straight to that line; the hero's photographs
-         and the one in the dial's centre change with it. The caption is
-         placeholder copy. -->
+         circle hero-dial.js moves on to the next of its five states, whose
+         photographs the hero and the dial's centre change to; the dot grows
+         a little under the pointer, which also holds the clock. Any of the
+         five targets below selects that state. The caption is placeholder
+         copy. -->
     <div class="hero-dial" data-hero-dial>
       <!-- The centre: a round frame with one photograph per column line,
            slid across it by hero-dial.js in step with the backgrounds. Before
@@ -98,10 +97,10 @@ import Button from '../components/Button.astro';
         <p>Design for a global audience.</p>
       </div>
     </div>
-    <!-- The five lines the dial visits — the four column starts and the far
-         gutter — each an unstyled click target. -->
+    <!-- The five lines that stand for the dial's five states — the four
+         column starts and the far gutter — each an unstyled click target. -->
     {[0, 1, 2, 3, 4].map((column) => (
-      <button class="hero-dial__target" type="button" data-hero-dial-target={column} style={`--target-column: ${column}`} aria-label={`Move the dial to line ${column + 1}`}></button>
+      <button class="hero-dial__target" type="button" data-hero-dial-target={column} style={`--target-column: ${column}`} aria-label={`Show state ${column + 1}`}></button>
     ))}
     <div class="willem-header__bottom">
       <div class="willem-hero__content">

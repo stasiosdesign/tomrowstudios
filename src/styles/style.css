@@ -1531,17 +1531,11 @@ html:has(.willem-header.is--loading) body {
    column line and the runner at every width, with nothing measured and
    nothing to drift.
 
-   Which column: `--dial-column`, set by hero-dial.js. The dial visits the
-   five intersections left to right, every thirteen seconds, and goes straight
-   to any of them that is clicked — the four targets below are the click
-   surfaces, one per intersection. The script tweens one progress value and
-   writes the column from it every frame — the same value that fades the
-   hero's photographs and slides the one in the dial's centre, so the three
-   are one movement — and the dial is on a line, exactly, whenever it is
-   still. Past the fifth line it carries on to the right, out of the hero,
-   and comes back in from the left: the column goes past 3 and below 0 for
-   those two legs, and the hero's own overflow clips them. The pointer over
-   the dial holds it where it is. */
+   Which column: `--dial-column`, fixed here at the fourth line. The dial
+   never moves; hero-dial.js runs its five states through it — every
+   thirteen seconds, or straight to any of the five line targets below that
+   is clicked — fading the hero's photographs and sliding the one in the
+   dial's centre. The pointer over the dial holds the clock. */
 .hero-dial {
   /* Outer radius of the tick ring, in the page's scale so it grows and
      shrinks with the hero's type. The SVG viewBox is 500 units across, so
@@ -1586,7 +1580,9 @@ html:has(.willem-header.is--loading) body {
   -webkit-tap-highlight-color: transparent;
 }
 .hero-dial__target:focus-visible { outline: 1px solid var(--runner-color-strong); outline-offset: 2px; }
-.hero-dial__target[aria-current="true"] { pointer-events: none; }
+/* The target on the dial's own line never takes the pointer: the dial's
+   hover circles do, and the dial's face takes the click for that state */
+.hero-dial__target[data-hero-dial-target="3"] { pointer-events: none; }
 
 .hero-dial__face {
   position: absolute;

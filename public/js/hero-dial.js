@@ -2,34 +2,29 @@
 // HOME HERO DIAL
 // -----------------------------------------
 //
-// Walks the hero dial along the runner's five strong lines — the four
-// column starts and the far gutter — left to
-// right, and changes the hero's photographs with it. One number does all of
-// it: a progress value in slides, tweened from one whole number to the next
-// and rendered every frame into
-//   - the dial's column, through the `--dial-column` custom property the
-//     stylesheet places it by
+// Runs the hero dial's five states and changes the hero's photographs with
+// them. The dial itself stays put, on the fourth of the runner's five strong
+// lines (the stylesheet fixes its column); what moves is the content. One
+// number does all of it: a progress value in slides, tweened from one whole
+// number to the next and rendered every frame into
 //   - the hero's photographs, the one nearest the progress at full opacity
 //     and its neighbour crossfading in
 //   - the strip of photographs in the dial's centre, slid across the round
 //     frame by their distance from the progress
 // The rendering is the layered image slider's (Osmo Supply): a wrapped
 // signed offset per slide, opacity from its distance, x from the offset and
-// the frame's width. The dial's column comes from the same offset. Past the
-// last line it carries on to the right, out of the hero, and comes in
-// again from the left to the first: the column goes a fraction past 4 for
-// the first half of that step and a fraction below 0 for the second, with
-// the dial wholly outside the hero at the switch.
+// the frame's width. The states run left to right and round again.
 //
 // Autoplay as the slider's, with the ring as its bar: one GSAP tween of
 // thirteen seconds that lights the ticks in turn, clockwise from the top,
 // steps forward on completion and restarts from nothing on every move —
 // paused, where it is, while the pointer is over the dial and resumed from
-// there when it leaves. A click on any of the five targets goes straight to
-// that line, the short way round, and starts the ring again.
+// there when it leaves. A click on any of the five line targets goes
+// straight to that state, the short way round, and starts the ring again;
+// the target on the dial's own line never takes the pointer, so the dial's
+// hover circles keep it, and a click on the dial itself selects that state.
 //
-// The targets mark the current line with aria-current so the one under the
-// dial gives the pointer up to the dial's own hover circles; the active
+// The targets mark the current state with aria-current; the active
 // photographs carry [data-active], as the slider's do.
 //
 // Lifecycle as the runner's: `initHeroDial()` tears down any instance and
@@ -40,11 +35,6 @@
   const AUTOPLAY = 13;           // seconds between moves: one turn of the ring
   const TRANSITION_DURATION = 1.1;
   const COLUMNS = 5;
-  // How far past the edge lines the wrap legs go, in columns: enough that
-  // the ring and its note are wholly outside the hero before the switch, at
-  // any desktop width — the last line is the far gutter, so the ring has to
-  // travel most of its own radius before it is clear
-  const OVERSHOOT = 0.8;
 
   function createHeroDial(dial, targets, face, backgrounds, maskFrame, maskItems, ticks) {
     const count = COLUMNS;
@@ -74,20 +64,6 @@
       });
     };
 
-    // The dial's column for a progress: the line it is nearest plus the
-    // signed fraction to the next, except across the seam between the last
-    // line and the first, where it leaves to the right and returns from the
-    // left instead of crossing the hero
-    const columnFor = (progress) => {
-      const base = Math.floor(progress);
-      const fraction = progress - base;
-      const line = ((base % count) + count) % count;
-      if (line !== count - 1) return line + fraction;
-      return fraction < 0.5
-        ? line + fraction * 2 * OVERSHOOT
-        : -OVERSHOOT + (fraction - 0.5) * 2 * OVERSHOOT;
-    };
-
     const render = (progress) => {
       const centeredIndex = ((Math.round(progress) % count) + count) % count;
 
@@ -110,8 +86,6 @@
           gsap.set(maskItem, { x: offset * maskStep });
         }
       }
-
-      dial.style.setProperty("--dial-column", columnFor(progress).toFixed(4));
 
       if (centeredIndex !== activeIndex) {
         const previousIndex = activeIndex;
@@ -144,9 +118,12 @@
       if (hovering > 0) autoTween.pause();
     };
 
+    // The first state is the dial's own line, whose photograph is the
+    // intro's, so the handover from the intro is not a change
     let slideTween = null;
     let current = parseInt(getComputedStyle(dial).getPropertyValue("--dial-column"), 10);
     if (!(current >= 0 && current < count)) current = count - 1;
+    const home = current;
 
     function goTo(delta) {
       current += delta;
@@ -183,6 +160,9 @@
       goToIndex(parseInt(event.currentTarget.dataset.heroDialTarget, 10));
     };
     targets.forEach((target) => target.addEventListener("click", onClick));
+    // The dial stands on its own line's target, so it takes that click
+    const onFaceClick = () => goToIndex(home);
+    face.addEventListener("click", onFaceClick);
 
     // Autoplay pauses only while the dial is hovered
     const onEnter = () => {
@@ -211,6 +191,7 @@
       if (autoTween) autoTween.kill();
       window.removeEventListener("resize", onResize);
       targets.forEach((target) => target.removeEventListener("click", onClick));
+      face.removeEventListener("click", onFaceClick);
       face.removeEventListener("pointerenter", onEnter);
       face.removeEventListener("pointerleave", onLeave);
     }
