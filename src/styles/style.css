@@ -1544,7 +1544,7 @@ html:has(.willem-header.is--loading) body {
   /* Outer radius of the tick ring, in the page's scale so it grows and
      shrinks with the hero's type. The SVG viewBox is 500 units across, so
      the ring's 230 units are 230/250 of this. */
-  --dial-radius: 16.5rem;
+  --dial-radius: 18.5rem;
   --dial-color: var(--runner-color);
   --dial-color-strong: var(--runner-color-strong);
   --dial-column: 3;
@@ -1571,8 +1571,8 @@ html:has(.willem-header.is--loading) body {
   position: absolute;
   left: calc(var(--site-gutter) + var(--grid-column) * var(--target-column));
   top: var(--runner-axis);
-  width: calc(var(--dial-radius, 16.5rem) * 0.4);
-  height: calc(var(--dial-radius, 16.5rem) * 0.4);
+  width: calc(var(--dial-radius, 18.5rem) * 0.4);
+  height: calc(var(--dial-radius, 18.5rem) * 0.4);
   margin: 0;
   padding: 0;
   border: 0;
