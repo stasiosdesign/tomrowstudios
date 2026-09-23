@@ -1533,13 +1533,14 @@ html:has(.willem-header.is--loading) body {
    Which column: `--dial-column`, set by hero-dial.js. The dial visits the
    four intersections left to right, every eight seconds, and goes straight
    to any of them that is clicked — the four targets below are the click
-   surfaces, one per intersection. The move is a transition on `left`, so
-   the dial slides along the runner from one line to the next and is on a
-   line, exactly, whenever it is still. Past the fourth line it carries on
-   to the right, out of the hero, and comes back in from the left: the
-   script takes the column past 3 and below 0 for those two legs, and the
-   hero's own overflow clips them. The pointer over the dial holds it where
-   it is. */
+   surfaces, one per intersection. The script tweens one progress value and
+   writes the column from it every frame — the same value that fades the
+   hero's photographs and slides the one in the dial's centre, so the three
+   are one movement — and the dial is on a line, exactly, whenever it is
+   still. Past the fourth line it carries on to the right, out of the hero,
+   and comes back in from the left: the column goes past 3 and below 0 for
+   those two legs, and the hero's own overflow clips them. The pointer over
+   the dial holds it where it is. */
 .hero-dial {
   /* Outer radius of the tick ring, in the page's scale so it grows and
      shrinks with the hero's type. The SVG viewBox is 500 units across, so
@@ -1559,7 +1560,7 @@ html:has(.willem-header.is--loading) body {
      listening surface, and only the hit circle below takes the pointer */
   pointer-events: none;
   opacity: 0;
-  transition: opacity 0.9s ease-out, left 1.1s var(--cta-ease);
+  transition: opacity 0.9s ease-out;
 }
 
 .willem-header.is--settled .hero-dial { opacity: 1; }
@@ -1605,15 +1606,40 @@ html:has(.willem-header.is--loading) body {
   vector-effect: non-scaling-stroke;
 }
 
-.hero-dial__inner {
-  fill: none;
-  /* Dots, not dashes: zero-length dashes with round caps, each dot the
-     width of the stroke, a hair over a pixel so it survives the opacity */
-  stroke: var(--dial-color-strong);
-  stroke-width: 1.5;
-  stroke-linecap: round;
-  stroke-dasharray: 0 4.5;
-  vector-effect: non-scaling-stroke;
+/* The centre: a round frame the size of the inner circle, clipping a strip
+   of photographs the script slides across it — the layered slider's masked
+   images, in a circle. A hairline rim in the runner's colour keeps its edge
+   where the dotted circle used to be. */
+.hero-dial__mask {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: calc(var(--dial-radius) * 0.4);
+  height: calc(var(--dial-radius) * 0.4);
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  overflow: hidden;
+  box-shadow: inset 0 0 0 1px var(--dial-color);
+  /* The face's pointer circles sit over it; this catches nothing */
+  pointer-events: none;
+}
+
+.hero-dial__mask-item {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+.hero-dial__mask-img {
+  pointer-events: none;
+  object-fit: cover;
+  -webkit-user-select: none;
+  user-select: none;
+  width: 100%;
+  height: 100%;
+  display: block;
 }
 
 /* The invisible pointer surfaces. The disc of the whole ring holds the
@@ -1637,17 +1663,14 @@ html:has(.willem-header.is--loading) body {
   transform: scale(var(--dial-dot-scale));
 }
 
-/* The turn: slow, and the two circles at different rates in opposite
-   directions, so the motion is felt rather than watched. The centre dot
+/* The turn: slow, so the motion is felt rather than watched. The centre
    stays put. A CSS animation rather than a tween, since a steady endless
    rotation is exactly what the compositor runs for free. */
-.hero-dial__ticks,
-.hero-dial__inner {
+.hero-dial__ticks {
   transform-origin: 0 0;
   transform-box: view-box;
   animation: hero-dial-turn 240s linear infinite;
 }
-.hero-dial__inner { animation-duration: 90s; animation-direction: reverse; }
 
 @keyframes hero-dial-turn {
   to { transform: rotate(360deg); }
@@ -1706,8 +1729,7 @@ html:has(.willem-header.is--loading) body {
 
 @media (prefers-reduced-motion: reduce) {
   .hero-dial { transition: none; }
-  .hero-dial__ticks,
-  .hero-dial__inner { animation: none; }
+  .hero-dial__ticks { animation: none; }
   .hero-dial__dot { transition: none; }
 }
 
@@ -1802,9 +1824,41 @@ html:has(.willem-header.is--loading) body {
   object-fit: cover;
   opacity: 0;
 }
-/* Temporary placeholder: the settled hero stays on its plain black
-   background-color instead of revealing the photograph. */
 .willem-header.is--settled .willem-loader { display: none; }
+
+/* The hero's photographs: one full-bleed image per column line of the dial,
+   stacked, with hero-dial.js holding the active one at full opacity and
+   crossfading to the next as the dial moves. Under the wash and the content,
+   over the old single background, which stays as the intro's handover
+   asset. Kept out of sight until the hero has settled, so the intro's
+   loader is all that is seen while it plays. */
+.hero-slides {
+  position: absolute;
+  inset: 0;
+  overflow: clip;
+  /* Its own stacking context: the script raises the active photograph by
+     z-index, and that must play out among the photographs, never over the
+     wash and the copy above this layer. */
+  isolation: isolate;
+  visibility: hidden;
+}
+.willem-header.is--settled .hero-slides { visibility: visible; }
+
+.hero-slides__item {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.hero-slides__img {
+  object-fit: cover;
+  -webkit-user-select: none;
+  user-select: none;
+  width: 100%;
+  height: 100%;
+  display: block;
+}
 
 @media screen and (max-width: 991px) {
   .willem-nav__links {

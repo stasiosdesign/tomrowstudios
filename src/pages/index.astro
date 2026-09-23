@@ -9,6 +9,16 @@ import Button from '../components/Button.astro';
 <!-- Home intro (plays only on a first load / refresh of the home page) -->
 <section class="willem-header is--loading is--hidden">
   <img class="willem-header__bg" src="assets/photos/talks/talk-01.jpg" alt="">
+  <!-- The hero's photographs, one per column line of the dial. hero-dial.js
+       crossfades them as the dial moves — the layered-slider treatment, on
+       the dial's own index. The fourth is the intro's photograph, so the
+       handover from the intro's grown image is not a change. -->
+  <div class="hero-slides" data-hero-slides aria-hidden="true">
+    <div data-hero-slide-bg class="hero-slides__item"><img src="assets/photos/events/event-01.jpg" class="hero-slides__img" alt=""></div>
+    <div data-hero-slide-bg class="hero-slides__item"><img src="assets/photos/studio/studio-01.jpg" class="hero-slides__img" alt=""></div>
+    <div data-hero-slide-bg class="hero-slides__item"><img src="assets/photos/lifestyle/lifestyle-01.jpg" class="hero-slides__img" alt=""></div>
+    <div data-hero-slide-bg class="hero-slides__item"><img src="assets/photos/talks/talk-01.jpg" class="hero-slides__img" alt=""></div>
+  </div>
   <div class="willem-loader">
     <div class="willem__h1">
       <div class="willem__h1-start">
@@ -53,16 +63,26 @@ import Button from '../components/Button.astro';
          little under the pointer. hero-dial.js walks it along the four
          intersections left to right every eight seconds, wrapping round off
          the right edge, holds it under the pointer and sends it to whichever
-         of the four targets below is clicked. The caption is placeholder
+         of the four targets below is clicked; the hero's photographs and the
+         one in the dial's centre change with it. The caption is placeholder
          copy. -->
     <div class="hero-dial" data-hero-dial>
+      <!-- The centre: a round frame with one photograph per column line,
+           slid across it by hero-dial.js in step with the backgrounds. Before
+           the face in the markup so the face's dot and pointer circles sit
+           over it. -->
+      <div data-hero-dial-mask class="hero-dial__mask">
+        <div data-hero-dial-mask-item class="hero-dial__mask-item"><img src="assets/photos/portraits/portrait-01.jpg" draggable="false" class="hero-dial__mask-img" alt=""></div>
+        <div data-hero-dial-mask-item class="hero-dial__mask-item"><img src="assets/photos/verticals/vertical-01.jpg" draggable="false" class="hero-dial__mask-img" alt=""></div>
+        <div data-hero-dial-mask-item class="hero-dial__mask-item"><img src="assets/photos/portraits/portrait-02.jpg" draggable="false" class="hero-dial__mask-img" alt=""></div>
+        <div data-hero-dial-mask-item class="hero-dial__mask-item"><img src="assets/photos/studio/studio-02.jpg" draggable="false" class="hero-dial__mask-img" alt=""></div>
+      </div>
       <svg class="hero-dial__face" viewBox="-250 -250 500 500" aria-hidden="true" focusable="false">
         <g class="hero-dial__ticks">
           {Array.from({ length: 72 }, (_, i) => (
             <line x1="0" y1="-230" x2="0" y2="-206" transform={`rotate(${i * 5})`} />
           ))}
         </g>
-        <circle class="hero-dial__inner" r="46" />
         <circle class="hero-dial__pause" r="230" />
         <circle class="hero-dial__hit" r="46" />
         <circle class="hero-dial__dot" r="4.5" />

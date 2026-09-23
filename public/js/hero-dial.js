@@ -3,131 +3,190 @@
 // -----------------------------------------
 //
 // Walks the hero dial along the runner's four strong column lines, left to
-// right. The dial is placed by the stylesheet from one custom property,
-// `--dial-column`, and slides between lines on a CSS transition — so all
-// this does is set that number: to the next line every eight seconds, or to
-// whichever of the four click targets is pressed, after which the clock
-// restarts from there.
+// right, and changes the hero's photographs with it. One number does all of
+// it: a progress value in slides, tweened from one whole number to the next
+// and rendered every frame into
+//   - the dial's column, through the `--dial-column` custom property the
+//     stylesheet places it by
+//   - the hero's photographs, the one nearest the progress at full opacity
+//     and its neighbour crossfading in
+//   - the strip of photographs in the dial's centre, slid across the round
+//     frame by their distance from the progress
+// The rendering is the layered image slider's (Osmo Supply): a wrapped
+// signed offset per slide, opacity from its distance, x from the offset and
+// the frame's width. The dial's column comes from the same offset. Past the
+// fourth line it carries on to the right, out of the hero, and comes in
+// again from the left to the first: the column goes a fraction past 3 for
+// the first half of that step and a fraction below 0 for the second, with
+// the dial wholly outside the hero at the switch.
 //
-// The walk never turns back. After the fourth line the dial carries on to
-// the right, out of the hero (the hero clips its overflow), and comes in
-// again from the left to the first line: two legs, a column past the last
-// line and a column before the first, with the transition switched off for
-// the jump between them. The pointer over the dial holds it where it is; the
-// clock restarts when the pointer leaves.
+// Autoplay as the slider's: a paused GSAP clock of eight seconds that steps
+// forward on completion and restarts on every move, paused while the pointer
+// is over the dial and resumed when it leaves. A click on any of the four
+// targets goes straight to that line, the short way round.
 //
 // The targets mark the current line with aria-current so the one under the
-// dial gives the pointer up to the dial's own hover circles.
+// dial gives the pointer up to the dial's own hover circles; the active
+// photographs carry [data-active], as the slider's do.
 //
 // Lifecycle as the runner's: `initHeroDial()` tears down any instance and
 // builds one if the dial is on the page. transitions.js calls it on every
 // navigation; DOMContentLoaded covers the first load.
 
 (function () {
-  const INTERVAL = 8000;   // ms between moves
+  const AUTOPLAY = 8;            // seconds between moves
+  const TRANSITION_DURATION = 1.1;
   const COLUMNS = 4;
   // How far past the edge lines the wrap legs go, in columns: enough that
-  // the ring and its note are wholly outside the hero before the jump, at
+  // the ring and its note are wholly outside the hero before the switch, at
   // any desktop width
   const OVERSHOOT = 0.6;
 
-  function createHeroDial(dial, targets, face) {
-    let column = parseInt(getComputedStyle(dial).getPropertyValue("--dial-column"), 10);
-    if (!(column >= 0 && column < COLUMNS)) column = COLUMNS - 1;
-    let timer = 0;
-    let hovered = false;
-    let wrapping = false;
+  function createHeroDial(dial, targets, face, backgrounds, maskFrame, maskItems) {
+    const count = COLUMNS;
+    const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const clamp = gsap.utils.clamp;
+    const wrap = (distance) => distance - count * Math.round(distance / count);
 
-    function place(value) {
-      dial.style.setProperty("--dial-column", String(value));
-    }
+    let maskStep = 0;
+    const measure = () => {
+      maskStep = maskFrame ? maskFrame.clientWidth : 0;
+    };
+    measure();
 
-    function mark() {
+    const state = { progress: 0 };
+    let activeIndex = -1;
+
+    // The active slide has [data-active] on its background and mask item,
+    // and aria-current on its target
+    const setActive = (previousIndex, index) => {
+      [backgrounds, maskItems].forEach((list) => {
+        if (previousIndex >= 0 && list[previousIndex]) list[previousIndex].removeAttribute("data-active");
+        if (list[index]) list[index].setAttribute("data-active", "");
+      });
       targets.forEach((target, i) => {
-        if (i === column) target.setAttribute("aria-current", "true");
+        if (i === index) target.setAttribute("aria-current", "true");
         else target.removeAttribute("aria-current");
       });
+    };
+
+    // The dial's column for a progress: the line it is nearest plus the
+    // signed fraction to the next, except across the seam between the last
+    // line and the first, where it leaves to the right and returns from the
+    // left instead of crossing the hero
+    const columnFor = (progress) => {
+      const base = Math.floor(progress);
+      const fraction = progress - base;
+      const line = ((base % count) + count) % count;
+      if (line !== count - 1) return line + fraction;
+      return fraction < 0.5
+        ? line + fraction * 2 * OVERSHOOT
+        : -OVERSHOOT + (fraction - 0.5) * 2 * OVERSHOOT;
+    };
+
+    const render = (progress) => {
+      const centeredIndex = ((Math.round(progress) % count) + count) % count;
+
+      for (let i = 0; i < count; i++) {
+        // How far this slide sits from the centre: signed (left / right) and absolute.
+        const offset = wrap(i - progress);
+        const distance = Math.abs(offset);
+
+        const background = backgrounds[i];
+        if (background) {
+          const backgroundOpacity = clamp(0, 1, 1 - distance);
+          gsap.set(background, {
+            opacity: backgroundOpacity,
+            zIndex: Math.round(backgroundOpacity * 100)
+          });
+        }
+
+        const maskItem = maskItems[i];
+        if (maskItem) {
+          gsap.set(maskItem, { x: offset * maskStep });
+        }
+      }
+
+      dial.style.setProperty("--dial-column", columnFor(progress).toFixed(4));
+
+      if (centeredIndex !== activeIndex) {
+        const previousIndex = activeIndex;
+        activeIndex = centeredIndex;
+        setActive(previousIndex, centeredIndex);
+      }
+    };
+
+    let hovering = 0;
+    let autoTween = null;
+    const startAutoplay = () => {
+      if (!autoTween) return;
+      autoTween.restart(true);
+      if (hovering > 0) autoTween.pause();
+    };
+
+    let slideTween = null;
+    let current = parseInt(getComputedStyle(dial).getPropertyValue("--dial-column"), 10);
+    if (!(current >= 0 && current < count)) current = count - 1;
+
+    function goTo(delta) {
+      current += delta;
+      if (slideTween) slideTween.kill();
+      slideTween = gsap.to(state, {
+        progress: current,
+        duration: reduced ? 0 : TRANSITION_DURATION,
+        ease: "osmo",
+        onUpdate: () => render(state.progress)
+      });
+      startAutoplay();
     }
 
-    // Straight to a line: one slide, whichever way it lies
-    function setColumn(next) {
-      wrapping = false;
-      column = ((next % COLUMNS) + COLUMNS) % COLUMNS;
-      place(column);
-      mark();
+    // Step to a specific slide by index, the short way round
+    function goToIndex(i) {
+      const delta = wrap(i - current);
+      if (delta !== 0) goTo(delta);
     }
 
-    // Off the right edge, then in from the left to the first line
-    function wrap() {
-      wrapping = true;
-      column = 0;
-      mark();
-      place(COLUMNS - 1 + OVERSHOOT);
+    if (AUTOPLAY > 0 && !reduced) {
+      autoTween = gsap.delayedCall(AUTOPLAY, () => goTo(1)).pause();
     }
 
-    function onTransitionEnd(event) {
-      if (event.target !== dial || event.propertyName !== "left" || !wrapping) return;
-      wrapping = false;
-      // The jump: no transition, a column before the first line, then the
-      // slide in. The reflow between them commits the jump so the slide
-      // starts from there rather than from where the dial was.
-      dial.style.transition = "none";
-      place(-OVERSHOOT);
-      void dial.offsetWidth;
-      dial.style.transition = "";
-      place(column);
-    }
-
-    function step() {
-      if (column === COLUMNS - 1) wrap();
-      else setColumn(column + 1);
-    }
-
-    function schedule() {
-      window.clearInterval(timer);
-      timer = window.setInterval(step, INTERVAL);
-    }
-
-    function hold() {
-      window.clearInterval(timer);
-      timer = 0;
-    }
-
-    function onClick(event) {
-      const index = parseInt(event.currentTarget.dataset.heroDialTarget, 10);
-      if (index === column && !wrapping) return;
-      setColumn(index);
-      if (!hovered) schedule(); // the cycle continues from the chosen line
-    }
-
-    function onEnter() {
-      hovered = true;
-      hold();
-    }
-
-    function onLeave() {
-      hovered = false;
-      schedule();
-    }
-
+    const onClick = (event) => {
+      goToIndex(parseInt(event.currentTarget.dataset.heroDialTarget, 10));
+    };
     targets.forEach((target) => target.addEventListener("click", onClick));
+
+    // Autoplay pauses only while the dial is hovered
+    const onEnter = () => {
+      hovering++;
+      if (autoTween) autoTween.pause();
+    };
+    const onLeave = () => {
+      hovering = Math.max(0, hovering - 1);
+      if (autoTween && hovering === 0) autoTween.resume();
+    };
     face.addEventListener("pointerenter", onEnter);
     face.addEventListener("pointerleave", onLeave);
-    dial.addEventListener("transitionend", onTransitionEnd);
 
-    setColumn(column);
-    schedule();
+    const onResize = () => {
+      measure();
+      render(state.progress);
+    };
+    window.addEventListener("resize", onResize);
+
+    state.progress = current;
+    render(current);
+    startAutoplay();
 
     function destroy() {
-      hold();
+      if (slideTween) slideTween.kill();
+      if (autoTween) autoTween.kill();
+      window.removeEventListener("resize", onResize);
       targets.forEach((target) => target.removeEventListener("click", onClick));
       face.removeEventListener("pointerenter", onEnter);
       face.removeEventListener("pointerleave", onLeave);
-      dial.removeEventListener("transitionend", onTransitionEnd);
-      dial.style.transition = "";
     }
 
-    return { dial, targets, setColumn, step, destroy };
+    return { dial, targets, state, goTo, goToIndex, destroy };
   }
 
   function initHeroDial() {
@@ -136,6 +195,8 @@
       window.heroDial = null;
     }
 
+    if (typeof gsap === "undefined") return;
+
     const dial = document.querySelector("[data-hero-dial]");
     const face = dial && dial.querySelector(".hero-dial__face");
     if (!dial || !face) return;
@@ -143,7 +204,11 @@
       .sort((a, b) => a.dataset.heroDialTarget - b.dataset.heroDialTarget);
     if (targets.length !== COLUMNS) return;
 
-    window.heroDial = createHeroDial(dial, targets, face);
+    const backgrounds = Array.from(document.querySelectorAll("[data-hero-slide-bg]"));
+    const maskFrame = dial.querySelector("[data-hero-dial-mask]");
+    const maskItems = Array.from(dial.querySelectorAll("[data-hero-dial-mask-item]"));
+
+    window.heroDial = createHeroDial(dial, targets, face, backgrounds, maskFrame, maskItems);
   }
 
   window.initHeroDial = initHeroDial;
