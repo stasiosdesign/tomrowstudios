@@ -1432,7 +1432,11 @@ html:has(.willem-header.is--loading) body {
   width: 100%;
   display: flex;
   position: relative;
-  overflow: hidden;
+  /* Clipped as before top and bottom, but a column pad wider each side, so
+     the hero CTAs pulled out onto the grid lines (see `.actions` below) reach
+     the last line instead of being cut a pad short of it. */
+  overflow: visible;
+  clip-path: inset(0 calc(-1 * var(--grid-pad)));
 }
 
 /* ---------- Home hero runner ---------- */
