@@ -99,11 +99,9 @@ import Button from '../components/Button.astro';
       </div>
     </div>
     <!-- The five lines the dial visits — the four column starts and the far
-         gutter — each a click target with a small label beside it. -->
-    {["Influence", "Architecture", "Shop", "Partners", "About"].map((label, column) => (
-      <button class="hero-dial__target" type="button" data-hero-dial-target={column} style={`--target-column: ${column}`} aria-label={`Move the dial to ${label}`}>
-        <span class="hero-dial__label">{label}</span>
-      </button>
+         gutter — each an unstyled click target. -->
+    {[0, 1, 2, 3, 4].map((column) => (
+      <button class="hero-dial__target" type="button" data-hero-dial-target={column} style={`--target-column: ${column}`} aria-label={`Move the dial to line ${column + 1}`}></button>
     ))}
     <div class="willem-header__bottom">
       <div class="willem-hero__content">

@@ -1587,32 +1587,6 @@ html:has(.willem-header.is--loading) body {
 .hero-dial__target:focus-visible { outline: 1px solid var(--runner-color-strong); outline-offset: 2px; }
 .hero-dial__target[aria-current="true"] { pointer-events: none; }
 
-/* The label beside each line: small, in the label face like the nav, just
-   below the runner and a step in from the line. The active one takes the
-   runner's strong colour, the rest its ordinary one — the same two steps
-   the strong strokes use. Always there, whichever line the dial is on. */
-.hero-dial__label {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  margin: 1rem 0 0 1.2rem;
-  white-space: nowrap;
-  font-family: var(--font-label);
-  text-transform: uppercase;
-  font-size: var(--size-label);
-  letter-spacing: var(--track-label);
-  color: rgba(244, 244, 244, 0.62);
-  transition: color 0.45s ease-out;
-}
-.hero-dial__target[aria-current="true"] .hero-dial__label { color: #f4f4f4; }
-/* The last line is the far gutter, so its label hangs to the left of the
-   line instead, inside the page */
-.hero-dial__target[data-hero-dial-target="4"] .hero-dial__label {
-  left: auto;
-  right: 50%;
-  margin: 1rem 1.2rem 0 0;
-}
-
 .hero-dial__face {
   position: absolute;
   left: 0;
@@ -1692,9 +1666,9 @@ html:has(.willem-header.is--loading) body {
 }
 
 /* The ticks stand still. Their opacity is the dial's clock: hero-dial.js
-   brightens them in turn, clockwise from the top, over the thirteen seconds
-   before the next move — a progress ring — and the two levels it moves
-   between are these. */
+   lights them one at a time, clockwise from the top, over the thirteen
+   seconds before the next move — a stepped progress ring — and the two
+   levels a tick is ever at are these. */
 .hero-dial__ticks {
   --tick-opacity-rest: 0.3;
   --tick-opacity-lit: 1;

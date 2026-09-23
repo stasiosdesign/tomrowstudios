@@ -38,8 +38,6 @@
 
 (function () {
   const AUTOPLAY = 13;           // seconds between moves: one turn of the ring
-  // How many ticks the lit edge fades across, so it travels rather than steps
-  const RING_EDGE = 3;
   const TRANSITION_DURATION = 1.1;
   const COLUMNS = 5;
   // How far past the edge lines the wrap legs go, in columns: enough that
@@ -123,17 +121,18 @@
     };
 
     // The ring: the ticks lit up to the clock's progress, clockwise from the
-    // top (the order they are drawn in), with a soft edge a few ticks wide
+    // top (the order they are drawn in). Each tick is either lit or at rest
+    // — nothing between — so the clock steps, one tick at a time, like a
+    // mechanical dial rather than a fade travelling round
     const ring = { progress: 0 };
     const tickStyles = getComputedStyle(ticks);
     const tickRest = parseFloat(tickStyles.getPropertyValue("--tick-opacity-rest")) || 0.3;
     const tickLit = parseFloat(tickStyles.getPropertyValue("--tick-opacity-lit")) || 1;
     const tickLines = Array.from(ticks.children);
     const renderRing = (progress) => {
-      const lit = progress * tickLines.length;
+      const lit = Math.floor(progress * tickLines.length);
       for (let i = 0; i < tickLines.length; i++) {
-        const t = clamp(0, 1, (lit - i) / RING_EDGE);
-        tickLines[i].style.opacity = (tickRest + (tickLit - tickRest) * t).toFixed(3);
+        tickLines[i].style.opacity = i < lit ? tickLit : tickRest;
       }
     };
 
