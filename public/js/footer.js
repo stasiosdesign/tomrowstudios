@@ -7,7 +7,9 @@ gsap.registerPlugin(ScrollTrigger);
    from lagging behind and its dark layer lifts. The home hero is the same
    move run the other way: as it leaves, its inner layer falls behind and
    darkens, so the section after it slides up over it. Anything inside it
-   marked `-lead` cancels that lag and leaves at the page's own speed. */
+   marked `-lead` cancels a share of that lag — the attribute's value, 1 if
+   it is empty — so it leaves faster than the hero but, below 1, still
+   slower than the page. */
 function bindRevealParallax(el, prefix, leaving){
   // Barba re-runs this on every navigation; never bind the same element twice
   if (el.__revealParallax) return;
@@ -42,11 +44,14 @@ function bindRevealParallax(el, prefix, leaving){
     }, '<');
   }
 
-  if (inner && leads.length) {
-    tl[tween](leads, {
-      y: () => inner.offsetHeight * (leaving ? -0.25 : 0.25),
-      ease: 'linear'
-    }, '<');
+  if (inner) {
+    leads.forEach(lead => {
+      const share = parseFloat(lead.getAttribute(`${prefix}-lead`)) || 1;
+      tl[tween](lead, {
+        y: () => inner.offsetHeight * 0.25 * share * (leaving ? -1 : 1),
+        ease: 'linear'
+      }, 0);
+    });
   }
 }
 
