@@ -221,7 +221,7 @@ textarea { font-family: inherit; }
   /* For a band standing on a photograph — the home hero's backgrounds. Well
      above the flat default so the lines hold against the picture, still
      short of white so they sit in it. */
-  --grid-line-color-image: rgba(255, 255, 255, 0.45);
+  --grid-line-color-image: rgba(255, 255, 255, 0.24);
   --grid-line-width: 1px;
   /* The colour actually painted. Sections and themes override this one. */
   --grid-line: var(--grid-line-color);
