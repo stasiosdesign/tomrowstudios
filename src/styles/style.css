@@ -1395,6 +1395,20 @@ html:has(.willem-header.is--loading) body {
 }
 
 .willem-header__content {
+  /* Where the runner's axis crosses the hero, as a share of its height.
+     The dial below is centred on the same line, so the two can never
+     part: move this and both move. Just past the middle, so the open field
+     above the copy carries the runner and the dial's lower half still
+     clears the headline. */
+  --runner-axis: 50%;
+  /* The runner's two colours. Declared here rather than on the runner so
+     the dial, its sibling, draws in the same off-white. Between the grid
+     line and the copy: a visible instrument, not a background rule, but
+     kept well short of the white of the type so it sits behind the
+     headline in weight. The strong one is for the four strokes on the
+     starts of the main columns — a step brighter, same off-white. */
+  --runner-color: rgba(244, 244, 244, 0.38);
+  --runner-color-strong: rgba(244, 244, 244, 0.62);
   flex-flow: column;
   justify-content: space-between;
   align-items: center;
@@ -1453,23 +1467,17 @@ html:has(.willem-header.is--loading) body {
   --runner-radius: 90px;
   --runner-reach: 200px;
   --runner-reach-fade: 120px;
-  /* Between the grid line and the copy: a visible instrument, not a
-     background rule, but kept well short of the white of the type so it
-     sits behind the headline in weight. */
-  --runner-color: rgba(244, 244, 244, 0.38);
   /* The four strokes that sit on the starts of the four main columns — the
-     grid's 1, 4, 7 and 10 — are a hair thicker and a step brighter than
-     the rest, in the same off-white, so the runner marks the column groups
-     it is laid out on. Subtle: still well under the type in weight. */
+     grid's 1, 4, 7 and 10 — are a hair thicker: see `--runner-color-strong`
+     on the hero content for their colour. Subtle: still well under the
+     type in weight. */
   --runner-stroke-strong: 2px;
-  --runner-color-strong: rgba(244, 244, 244, 0.62);
 
   position: absolute;
   left: 0;
   right: 0;
-  /* A little above the middle of the hero, so it sits in the open field
-     above the copy rather than crowding the headline's cap height. */
-  top: 42%;
+  /* On the shared axis, see `--runner-axis` on the hero content */
+  top: var(--runner-axis);
   /* Taller than the tallest stroke: the peak carries a few percent of
      grain over `--runner-max`, and a stroke must never reach the edge of
      the bitmap — a stroke ending on the edge row is what a partial repaint
@@ -1488,7 +1496,7 @@ html:has(.willem-header.is--loading) body {
 
 .willem-header.is--settled .hero-runner { opacity: 1; }
 
-/* The box above lands at a fractional pixel — 42% of the hero less half its
+/* The box above lands at a fractional pixel — the axis share of the hero less half its
    own height — and a canvas straddling a pixel boundary is repainted by the
    compositor a row short on some frames, which is how strokes that reached
    the edge were leaving their tips on screen after they had gone. The
@@ -1505,6 +1513,164 @@ html:has(.willem-header.is--loading) body {
    settled hero rather than fading in. */
 @media (prefers-reduced-motion: reduce) {
   .hero-runner { transition: none; }
+}
+
+/* ---------- Home hero dial ----------
+
+   A circular instrument on the runner: a ring of short radial ticks, a
+   dotted circle inside it and a solid dot at the centre, with a small note
+   hanging below and to the right. It is drawn in the runner's own off-white
+   so it reads as part of the same hairline family, not a graphic laid over
+   it.
+
+   It is anchored, not placed. The box is a point — no size of its own —
+   whose left is the start of the fourth main column, written from the same
+   two tokens the grid paints its lines from (the gutter and the column), and
+   whose top is the runner's axis. So it sits on the intersection of that
+   column line and the runner at every width, with nothing measured and
+   nothing to drift. Only the fourth line carries it for now; the others
+   will follow. */
+.hero-dial {
+  /* Outer radius of the tick ring, in the page's scale so it grows and
+     shrinks with the hero's type. The SVG viewBox is 500 units across, so
+     the ring's 230 units are 230/250 of this. */
+  --dial-radius: 20rem;
+  --dial-color: var(--runner-color);
+  --dial-color-strong: var(--runner-color-strong);
+  --dial-dot-scale: 1.3;
+
+  position: absolute;
+  left: calc(var(--site-gutter) + var(--grid-column) * 3);
+  top: var(--runner-axis);
+  width: 0;
+  height: 0;
+  /* Under the copy in the stack, like the runner; the hero is the
+     listening surface, and only the hit circle below takes the pointer */
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.9s ease-out;
+}
+
+.willem-header.is--settled .hero-dial { opacity: 1; }
+
+.hero-dial__face {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: calc(var(--dial-radius) * 500 / 230);
+  height: calc(var(--dial-radius) * 500 / 230);
+  transform: translate(-50%, -50%);
+  overflow: visible;
+  display: block;
+}
+
+.hero-dial__ticks line {
+  stroke: var(--dial-color);
+  stroke-width: 1;
+  /* A hairline at any size: the stroke stays one CSS pixel as the SVG
+     scales, like the runner's strokes and the grid's lines */
+  vector-effect: non-scaling-stroke;
+}
+
+.hero-dial__inner {
+  fill: none;
+  /* Dots, not dashes: zero-length dashes with round caps, each dot the
+     width of the stroke, a hair over a pixel so it survives the opacity */
+  stroke: var(--dial-color-strong);
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-dasharray: 0 4.5;
+  vector-effect: non-scaling-stroke;
+}
+
+/* The invisible pointer target: the inner circle's disc, around the
+   intersection. Nothing else on the dial catches the pointer. */
+.hero-dial__hit {
+  fill: transparent;
+  pointer-events: fill;
+}
+
+.hero-dial__dot {
+  fill: var(--dial-color-strong);
+  transform-box: fill-box;
+  transform-origin: center;
+  transition: transform 0.45s cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+.hero-dial__hit:hover ~ .hero-dial__dot {
+  transform: scale(var(--dial-dot-scale));
+}
+
+/* The turn: slow, and the two circles at different rates in opposite
+   directions, so the motion is felt rather than watched. The centre dot
+   stays put. A CSS animation rather than a tween, since a steady endless
+   rotation is exactly what the compositor runs for free. */
+.hero-dial__ticks,
+.hero-dial__inner {
+  transform-origin: 0 0;
+  transform-box: view-box;
+  animation: hero-dial-turn 240s linear infinite;
+}
+.hero-dial__inner { animation-duration: 90s; animation-direction: reverse; }
+
+@keyframes hero-dial-turn {
+  to { transform: rotate(360deg); }
+}
+
+/* The note: a small dot on the column line a little below the axis, a
+   dotted guide falling from it, and the caption to its right — set in the
+   label face like the site's other small supporting type. */
+.hero-dial__note {
+  position: absolute;
+  left: 0;
+  top: calc(var(--dial-radius) * 0.3);
+  width: 16rem;
+  padding-left: 2rem;
+  color: var(--dial-color-strong);
+}
+
+.hero-dial__note-dot {
+  position: absolute;
+  left: 0;
+  top: 0.4em;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--dial-color-strong);
+  transform: translateX(-50%);
+}
+
+/* The guide: a dotted hairline from under the dot to the foot of the text */
+.hero-dial__note-dot::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 14px;
+  height: 6em;
+  border-left: 1px dotted var(--dial-color);
+  transform: translateX(-50%);
+}
+
+.hero-dial__note p {
+  margin: 0;
+  font-family: var(--font-label);
+  text-transform: uppercase;
+  font-size: var(--size-label);
+  letter-spacing: var(--track-label);
+  line-height: 1.5;
+}
+
+/* Below the desktop grid the fourth column is gone — the grid drops to two
+   columns — so there is no intersection for the dial to stand on. */
+@media screen and (max-width: 991px) {
+  .hero-dial { display: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-dial { transition: none; }
+  .hero-dial__ticks,
+  .hero-dial__inner { animation: none; }
+  .hero-dial__dot { transition: none; }
 }
 
 .willem__letter-white {
