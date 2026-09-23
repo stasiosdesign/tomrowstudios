@@ -218,12 +218,10 @@ textarea { font-family: inherit; }
      foreground line. */
   --grid-line-color: rgba(255, 255, 255, 0.14);
   --grid-line-color-dark: rgba(10, 10, 10, 0.14);
-  /* For a band standing on a photograph. Stronger than the flat default so
-     it survives a picture's own bright passages, but only a little above
-     it now — the home hero's background is a flat black these days, not a
-     photograph, so the old, much stronger value read as a different, denser
-     grid rather than the same system continuing over a darker band. */
-  --grid-line-color-image: rgba(255, 255, 255, 0.16);
+  /* For a band standing on a photograph — the home hero's backgrounds. Well
+     above the flat default so the lines hold against the picture, still
+     short of white so they sit in it. */
+  --grid-line-color-image: rgba(255, 255, 255, 0.3);
   --grid-line-width: 1px;
   /* The colour actually painted. Sections and themes override this one. */
   --grid-line: var(--grid-line-color);
@@ -1226,7 +1224,7 @@ h3 {
      kept well short of the white of the type so it sits behind the
      headline in weight. The strong one is for the four strokes on the
      starts of the main columns — a step brighter, same off-white. */
-  --runner-color: rgba(244, 244, 244, 0.38);
+  --runner-color: rgba(244, 244, 244, 0.52);
   --runner-color-strong: rgba(244, 244, 244, 0.62);
   flex-flow: column;
   justify-content: space-between;
@@ -1350,7 +1348,7 @@ h3 {
      shrinks with the hero's type. The SVG viewBox is 500 units across, so
      the ring's 230 units are 230/250 of this. */
   --dial-radius: 18.5rem;
-  --dial-color: var(--runner-color);
+  --dial-color: rgba(244, 244, 244, 0.78);
   --dial-color-strong: var(--runner-color-strong);
   --dial-column: 3;
 
