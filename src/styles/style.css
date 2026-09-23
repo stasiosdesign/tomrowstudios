@@ -1256,6 +1256,12 @@ h3 {
   clip-path: inset(0 calc(-1 * var(--grid-pad)));
 }
 
+/* ---------- Colour block under the home hero ---------- */
+.hero-follow {
+  height: 100vh;
+  background-color: #e6402a;
+}
+
 /* ---------- Home hero runner ---------- */
 
 /* A fine horizontal rule through the middle of the hero, made of very short
