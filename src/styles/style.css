@@ -1553,10 +1553,11 @@ h3 {
 }
 
 .willem-nav__links {
-  /* One column of links, stacked on the centre line at every width. Closed
-     up, with the tap target carried by the link's own padding. */
+  /* One column of links, stacked on the centre line at every width. Nearly
+     closed up, with the tap target carried by the link's own padding. */
   display: flex;
   flex-flow: column;
+  row-gap: 0.25em;
 }
 
 .willem-nav__link {
@@ -1577,7 +1578,38 @@ h3 {
   padding-bottom: 0.5em;
   margin-top: -0.5em;
   margin-bottom: -0.5em;
+  /* A step up from the label size, for the column of links only */
+  font-size: 1.4rem;
+  opacity: 0.72;
+  transition: opacity 0.3s ease;
 }
+
+/* The link being pointed at, and the current page's, come up to full; while
+   one is hovered, the rest fall back. */
+.willem-nav__links .willem-nav__link[aria-current],
+.willem-nav__links .willem-nav__link:hover,
+.willem-nav__links .willem-nav__link:focus-visible { opacity: 1; }
+.willem-nav__links:hover .willem-nav__link:not(:hover) { opacity: 0.4; }
+
+/* The marker: a small square in the column pad, between the grid line and
+   the text, beside the hovered link — or the current page's when nothing is
+   hovered. */
+.willem-nav__links .willem-nav__link::before {
+  content: "";
+  position: absolute;
+  left: calc(var(--grid-pad) * -0.5);
+  top: 50%;
+  width: 0.45em;
+  height: 0.45em;
+  background-color: currentColor;
+  transform: translate(-50%, -50%);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+}
+.willem-nav__links:not(:hover) .willem-nav__link[aria-current]::before,
+.willem-nav__links .willem-nav__link:hover::before,
+.willem-nav__links .willem-nav__link:focus-visible::before { opacity: 1; }
 
 /* The hero's photographs: one full-bleed image per column line of the dial,
    stacked, with hero-dial.js holding the active one at full opacity and
@@ -1980,14 +2012,14 @@ h3 {
 /* ---------- Sticky section tabs ---------- */
 /* Height of the fixed bar: 3.2rem top padding, 2.4rem bottom, plus the
    stacked links' line boxes. Every sticky offset below is derived from it. */
-:root { --nav-height: 11.5rem; }
+:root { --nav-height: 13.6rem; }
 
 /* The bar is fixed and its links stack, so below 992px it grows to roughly
    a third of a phone screen. The token has to grow with it — measured at 11.3
    and 15.7rem before the bar's own top padding grew by 0.6rem at this
    breakpoint — or every inner page starts its first block underneath the
    bar. On a phone that was hiding the project eyebrow entirely. */
-@media screen and (max-width: 991px) { :root { --nav-height: 12.1rem; } }
+@media screen and (max-width: 991px) { :root { --nav-height: 12.2rem; } }
 @media screen and (max-width: 767px) { :root { --nav-height: 16.6rem; } }
 
 .sticky-tab-group {

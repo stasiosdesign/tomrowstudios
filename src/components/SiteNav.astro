@@ -4,6 +4,14 @@
    `overHero` starts it transparent over the home hero on the first paint. */
 interface Props { overHero?: boolean }
 const { overHero } = Astro.props;
+// The page being built, as the links name it, so its link carries aria-current
+const page = Astro.url.pathname.split('/').pop() || 'index.html';
+const links = [
+  ['influence.html', 'Influence'],
+  ['architecture.html', 'Architecture'],
+  ['shop.html', 'Shop'],
+  ['partner.html', 'Partner']
+];
 ---
 <!-- Navbar -->
 <header class={overHero ? "site-nav is--over-hero" : "site-nav"}>
@@ -13,10 +21,9 @@ const { overHero } = Astro.props;
     </div>
     <div class="willem-nav__end">
       <div class="willem-nav__links">
-        <a href="influence.html" data-scramble-hover="link" class="willem-nav__link">Influence</a>
-        <a href="architecture.html" data-scramble-hover="link" class="willem-nav__link">Architecture</a>
-        <a href="shop.html" data-scramble-hover="link" class="willem-nav__link">Shop</a>
-        <a href="partner.html" data-scramble-hover="link" class="willem-nav__link">Partner</a>
+        {links.map(([href, label]) => (
+          <a href={href} data-scramble-hover="link" class="willem-nav__link" aria-current={page === href ? 'page' : undefined}>{label}</a>
+        ))}
       </div>
       <div class="willem-nav__cta">
         <a href="#contact" data-panel-open="contact" data-barba-prevent="self" data-scramble-hover="link" class="willem-nav__link">Let's Talk</a>
