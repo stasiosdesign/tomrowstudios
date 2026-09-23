@@ -2,7 +2,8 @@
 // HOME HERO DIAL
 // -----------------------------------------
 //
-// Walks the hero dial along the runner's four strong column lines, left to
+// Walks the hero dial along the runner's five strong lines — the four
+// column starts and the far gutter — left to
 // right, and changes the hero's photographs with it. One number does all of
 // it: a progress value in slides, tweened from one whole number to the next
 // and rendered every frame into
@@ -15,15 +16,15 @@
 // The rendering is the layered image slider's (Osmo Supply): a wrapped
 // signed offset per slide, opacity from its distance, x from the offset and
 // the frame's width. The dial's column comes from the same offset. Past the
-// fourth line it carries on to the right, out of the hero, and comes in
-// again from the left to the first: the column goes a fraction past 3 for
+// last line it carries on to the right, out of the hero, and comes in
+// again from the left to the first: the column goes a fraction past 4 for
 // the first half of that step and a fraction below 0 for the second, with
 // the dial wholly outside the hero at the switch.
 //
 // Autoplay as the slider's: a paused GSAP clock of eight seconds that steps
 // forward on completion and restarts on every move, paused while the pointer
-// is over the dial and resumed when it leaves. A click on any of the four
-// targets goes straight to that line, the short way round.
+// is over the dial and resumed when it leaves. A click on any of the
+// five targets goes straight to that line, the short way round.
 //
 // The targets mark the current line with aria-current so the one under the
 // dial gives the pointer up to the dial's own hover circles; the active
@@ -36,11 +37,12 @@
 (function () {
   const AUTOPLAY = 8;            // seconds between moves
   const TRANSITION_DURATION = 1.1;
-  const COLUMNS = 4;
+  const COLUMNS = 5;
   // How far past the edge lines the wrap legs go, in columns: enough that
   // the ring and its note are wholly outside the hero before the switch, at
-  // any desktop width
-  const OVERSHOOT = 0.6;
+  // any desktop width — the last line is the far gutter, so the ring has to
+  // travel most of its own radius before it is clear
+  const OVERSHOOT = 0.8;
 
   function createHeroDial(dial, targets, face, backgrounds, maskFrame, maskItems) {
     const count = COLUMNS;

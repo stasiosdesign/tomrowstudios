@@ -9,7 +9,7 @@ import Button from '../components/Button.astro';
 <!-- Home intro (plays only on a first load / refresh of the home page) -->
 <section class="willem-header is--loading is--hidden">
   <img class="willem-header__bg" src="assets/photos/talks/talk-01.jpg" alt="">
-  <!-- The hero's photographs, one per column line of the dial. hero-dial.js
+  <!-- The hero's photographs, one per line of the dial. hero-dial.js
        crossfades them as the dial moves — the layered-slider treatment, on
        the dial's own index. The fourth is the intro's photograph, so the
        handover from the intro's grown image is not a change. -->
@@ -18,6 +18,10 @@ import Button from '../components/Button.astro';
     <div data-hero-slide-bg class="hero-slides__item"><img src="assets/photos/studio/studio-01.jpg" class="hero-slides__img" alt=""></div>
     <div data-hero-slide-bg class="hero-slides__item"><img src="assets/photos/lifestyle/lifestyle-01.jpg" class="hero-slides__img" alt=""></div>
     <div data-hero-slide-bg class="hero-slides__item"><img src="assets/photos/talks/talk-01.jpg" class="hero-slides__img" alt=""></div>
+    <div data-hero-slide-bg class="hero-slides__item"><img src="assets/photos/talks/talk-02.jpg" class="hero-slides__img" alt=""></div>
+    <!-- A flat darkening over whichever photograph is up, so the grid, the
+         dial and the copy stand off it. Over the photographs in the stack. -->
+    <div class="hero-slides__dark"></div>
   </div>
   <div class="willem-loader">
     <div class="willem__h1">
@@ -76,6 +80,7 @@ import Button from '../components/Button.astro';
         <div data-hero-dial-mask-item class="hero-dial__mask-item"><img src="assets/photos/verticals/vertical-01.jpg" draggable="false" class="hero-dial__mask-img" alt=""></div>
         <div data-hero-dial-mask-item class="hero-dial__mask-item"><img src="assets/photos/portraits/portrait-02.jpg" draggable="false" class="hero-dial__mask-img" alt=""></div>
         <div data-hero-dial-mask-item class="hero-dial__mask-item"><img src="assets/photos/studio/studio-02.jpg" draggable="false" class="hero-dial__mask-img" alt=""></div>
+        <div data-hero-dial-mask-item class="hero-dial__mask-item"><img src="assets/photos/verticals/vertical-02.jpg" draggable="false" class="hero-dial__mask-img" alt=""></div>
       </div>
       <svg class="hero-dial__face" viewBox="-250 -250 500 500" aria-hidden="true" focusable="false">
         <g class="hero-dial__ticks">
@@ -92,8 +97,12 @@ import Button from '../components/Button.astro';
         <p>Architecture, content and education for a global audience.</p>
       </div>
     </div>
-    {[0, 1, 2, 3].map((column) => (
-      <button class="hero-dial__target" type="button" data-hero-dial-target={column} style={`--target-column: ${column}`} aria-label={`Move the dial to column ${column + 1}`}></button>
+    <!-- The five lines the dial visits — the four column starts and the far
+         gutter — each a click target with a small label beside it. -->
+    {["Influence", "Architecture", "Shop", "Partners", "About"].map((label, column) => (
+      <button class="hero-dial__target" type="button" data-hero-dial-target={column} style={`--target-column: ${column}`} aria-label={`Move the dial to ${label}`}>
+        <span class="hero-dial__label">{label}</span>
+      </button>
     ))}
     <div class="willem-header__bottom">
       <div class="willem-hero__content">

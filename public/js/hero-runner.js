@@ -276,8 +276,8 @@
       }
 
       // Which strokes sit on a column start: every `divisions`th stroke
-      // from the origin, for as many columns as the grid has — so the four
-      // column-start lines at desktop, never the right gutter
+      // from the origin, for as many columns as the grid has, plus the far
+      // gutter — so the five lines the dial visits at desktop
       const divisions = Math.max(1, Math.round(grid.column / step));
       const columns = Math.max(1, Math.round((width - grid.origin * 2) / grid.column));
 
@@ -292,7 +292,7 @@
         strokes.grain[i] = 1 + GRAIN_AMOUNT * hash(index);
         const onLine = index % divisions === 0;
         const column = index / divisions;
-        strokes.strong[i] = onLine && column >= 0 && column < columns ? 1 : 0;
+        strokes.strong[i] = onLine && column >= 0 && column <= columns ? 1 : 0;
       }
 
       computeTargets();
