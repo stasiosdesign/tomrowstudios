@@ -1840,7 +1840,10 @@ html:has(.willem-header.is--loading) body {
   isolation: isolate;
   visibility: hidden;
 }
-.willem-header.is--settled .hero-slides { visibility: visible; }
+/* For now the hero stays on its plain black: the photographs are still
+   crossfaded with the dial, ready to show, but the layer is never revealed.
+   Reinstate this rule to bring them back. */
+/* .willem-header.is--settled .hero-slides { visibility: visible; } */
 
 .hero-slides__item {
   position: absolute;
