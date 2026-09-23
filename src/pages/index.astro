@@ -51,8 +51,10 @@ import Button from '../components/Button.astro';
          centre dot, centred on the intersection of the runner and one of its
          four strong column lines. Both circles turn slowly; the dot grows a
          little under the pointer. hero-dial.js walks it along the four
-         intersections every three seconds and sends it to whichever of the
-         four targets below is clicked. The caption is placeholder copy. -->
+         intersections left to right every eight seconds, wrapping round off
+         the right edge, holds it under the pointer and sends it to whichever
+         of the four targets below is clicked. The caption is placeholder
+         copy. -->
     <div class="hero-dial" data-hero-dial>
       <svg class="hero-dial__face" viewBox="-250 -250 500 500" aria-hidden="true" focusable="false">
         <g class="hero-dial__ticks">
@@ -61,6 +63,7 @@ import Button from '../components/Button.astro';
           ))}
         </g>
         <circle class="hero-dial__inner" r="46" />
+        <circle class="hero-dial__pause" r="230" />
         <circle class="hero-dial__hit" r="46" />
         <circle class="hero-dial__dot" r="4.5" />
       </svg>
