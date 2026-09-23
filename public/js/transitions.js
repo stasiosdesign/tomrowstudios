@@ -70,6 +70,7 @@ function initAfterEnterFunctions(next) {
      the outgoing container, so it is rebuilt when we land on home and torn
      down when we land anywhere else. */
   if (typeof initHeroRunner === "function") initHeroRunner();
+  if (typeof initHeroDial === "function") initHeroDial();
   // Click-to-zoom binds one delegated listener on the document, so images
   // arriving with a new container are already covered — nothing to rebind.
 

@@ -48,10 +48,11 @@ import Button from '../components/Button.astro';
          puts a canvas in it. -->
     <div class="hero-runner" data-hero-runner aria-hidden="true"></div>
     <!-- The dial: a ring of radial ticks, a dotted inner circle and a solid
-         centre dot, centred on the intersection of the runner and the fourth
-         of its strong column lines. Both circles turn slowly; the dot grows a
-         little under the pointer. The caption below and to the right is
-         placeholder copy. -->
+         centre dot, centred on the intersection of the runner and one of its
+         four strong column lines. Both circles turn slowly; the dot grows a
+         little under the pointer. hero-dial.js walks it along the four
+         intersections every three seconds and sends it to whichever of the
+         four targets below is clicked. The caption is placeholder copy. -->
     <div class="hero-dial" data-hero-dial>
       <svg class="hero-dial__face" viewBox="-250 -250 500 500" aria-hidden="true" focusable="false">
         <g class="hero-dial__ticks">
@@ -65,9 +66,12 @@ import Button from '../components/Button.astro';
       </svg>
       <div class="hero-dial__note">
         <span class="hero-dial__note-dot"></span>
-        <p>Architecture, content and education, made in London for a global audience.</p>
+        <p>Architecture, content and education for a global audience.</p>
       </div>
     </div>
+    {[0, 1, 2, 3].map((column) => (
+      <button class="hero-dial__target" type="button" data-hero-dial-target={column} style={`--target-column: ${column}`} aria-label={`Move the dial to column ${column + 1}`}></button>
+    ))}
     <div class="willem-header__bottom">
       <div class="willem-hero__content">
         <div class="willem-hero__col">
