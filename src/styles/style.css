@@ -223,6 +223,8 @@ textarea { font-family: inherit; }
      short of white so they sit in it. */
   --grid-line-color-image: rgba(255, 255, 255, 0.24);
   --grid-line-width: 1px;
+  /* Length of one dash-dot period of the grid lines */
+  --grid-dash-period: 2.8rem;
   /* The colour actually painted. Sections and themes override this one. */
   --grid-line: var(--grid-line-color);
 }
@@ -281,14 +283,33 @@ textarea { font-family: inherit; }
 .project-grid,
 .project-note,
 .project-close {
-  background-image: linear-gradient(
-    to right,
-    var(--grid-line) 0 var(--grid-line-width),
-    transparent var(--grid-line-width)
+  /* The line itself: a technical-drawing centre line — a long dash, a gap, a
+     dot, a gap — one period tall. Declared here, on the element, so it
+     resolves against this band's own --grid-line. */
+  --grid-dash: linear-gradient(
+    to bottom,
+    var(--grid-line) 0 64.2857%,
+    transparent 0 78.5714%,
+    var(--grid-line) 0 85.7143%,
+    transparent 0
   );
-  background-size: var(--grid-column) 100%;
-  background-position: var(--site-gutter) 0;
-  background-repeat: repeat-x;
+  /* One layer per line, at the gutter and every column boundary: the most
+     columns the grid ever has is four, so five lines. A layer whose line
+     falls past the far gutter (fewer columns) is off the box and paints
+     nothing. A percentage in background-position is of the box less the
+     layer's own width, which is what the added line width puts back — so
+     each line lands on exactly the pixel the column grid puts it on. */
+  background-image: var(--grid-dash), var(--grid-dash), var(--grid-dash), var(--grid-dash), var(--grid-dash);
+  background-size: var(--grid-line-width) var(--grid-dash-period);
+  background-position:
+    var(--site-gutter) 0,
+    calc(var(--site-gutter) + 1 * (100% + var(--grid-line-width) - var(--site-gutter) * 2) / var(--grid-columns)) 0,
+    calc(var(--site-gutter) + 2 * (100% + var(--grid-line-width) - var(--site-gutter) * 2) / var(--grid-columns)) 0,
+    calc(var(--site-gutter) + 3 * (100% + var(--grid-line-width) - var(--site-gutter) * 2) / var(--grid-columns)) 0,
+    calc(var(--site-gutter) + 4 * (100% + var(--grid-line-width) - var(--site-gutter) * 2) / var(--grid-columns)) 0;
+  /* Down only, and rounded to whole periods, so every band starts and ends
+     on a complete dash at any height. */
+  background-repeat: no-repeat round;
 }
 
 /* Section-level control. These are the whole vocabulary: a section shows the
