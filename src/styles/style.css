@@ -468,9 +468,11 @@ textarea { font-family: inherit; }
 
 .actions { display: flex; align-items: center; flex-wrap: wrap; }
 
-/* ---------- Site nav (fixed) ---------- */
+/* ---------- Site nav ----------
+   Part of the top of the page, not the viewport: it sits over the hero (or
+   the page's first block) and scrolls away with it. */
 .site-nav {
-  position: fixed;
+  position: absolute;
   top: 0;
   left: 0;
   width: 100%;
@@ -480,7 +482,7 @@ textarea { font-family: inherit; }
   border-bottom: 1px solid rgba(255, 255, 255, 0.12);
   /* A touch more top padding than bottom — the links sit slightly clear of
      the viewport's own top edge rather than flush against it. --nav-height
-     (below) carries the same extra amount, so pages clearing the fixed bar
+     (below) carries the same extra amount, so pages clearing the bar
      still clear it exactly. */
   padding: 3.2rem var(--site-inset) 2.4rem;
   color: #f4f4f4;
@@ -488,7 +490,7 @@ textarea { font-family: inherit; }
   z-index: 80;
 }
 
-/* Inner pages clear the fixed bar; the home page hero sits under it by design.
+/* Inner pages clear the bar; the home page hero sits under it by design.
    A block that wants more than bare clearance opts out here rather than
    fighting this rule — it is more specific than a single class, so it would
    otherwise win and pin the block's top padding to the height of the bar. */
@@ -5125,7 +5127,7 @@ body:has(.arch-page) {
   grid-column: 1 / span 1;
   min-width: 0;
   position: sticky;
-  top: calc(var(--nav-height) + 4rem);
+  top: 4rem;
 }
 .faq-layout__head h2 { margin-bottom: 1.6rem; }
 .faq-layout__note {
