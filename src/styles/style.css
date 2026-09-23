@@ -1337,7 +1337,7 @@ h3 {
 
    Which column: `--dial-column`, fixed here at the fourth line. The dial
    never moves; hero-dial.js runs its five states through it — every
-   thirteen seconds, or straight to any of the five line targets below that
+   five seconds, or straight to any of the five line targets below that
    is clicked — fading the hero's photographs and sliding the one in the
    dial's centre. The pointer over the dial holds the clock. */
 .hero-dial {
@@ -1451,7 +1451,7 @@ h3 {
 }
 
 /* The ticks stand still. Their opacity is the dial's clock: hero-dial.js
-   lights them one at a time, clockwise from the top, over the thirteen
+   lights them one at a time, clockwise from the top, over the five
    seconds before the next move — a stepped progress ring — and the two
    levels a tick is ever at are these. */
 .hero-dial__ticks {

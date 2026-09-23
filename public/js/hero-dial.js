@@ -16,7 +16,7 @@
 // the frame's width. The states run left to right and round again.
 //
 // Autoplay as the slider's, with the ring as its bar: one GSAP tween of
-// thirteen seconds that lights the ticks in turn, clockwise from the top,
+// five seconds that lights the ticks in turn, clockwise from the top,
 // steps forward on completion and restarts from nothing on every move —
 // paused, where it is, while the pointer is over the dial and resumed from
 // there when it leaves. A click on any of the five line targets goes
@@ -40,7 +40,7 @@
 // navigation; DOMContentLoaded covers the first load.
 
 (function () {
-  const AUTOPLAY = 13;           // seconds between moves: one turn of the ring
+  const AUTOPLAY = 5;            // seconds between moves: one turn of the ring
   const TRANSITION_DURATION = 1.1;
   const COLUMNS = 5;
   // The caption swap, short enough that the caption lands inside the
