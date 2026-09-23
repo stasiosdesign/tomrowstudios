@@ -1,9 +1,12 @@
 ---
 /* Fixed site bar. It lives inside the Barba container on every page: the
-   transition swaps it with the page, and intro.js / footer.js rebind it. */
+   transition swaps it with the page, and hero-nav.js / footer.js rebind it.
+   `overHero` starts it transparent over the home hero on the first paint. */
+interface Props { overHero?: boolean }
+const { overHero } = Astro.props;
 ---
 <!-- Navbar -->
-<header class="site-nav">
+<header class={overHero ? "site-nav is--over-hero" : "site-nav"}>
   <nav class="willen-nav">
     <div class="willem-nav__start">
       <a href="index.html" data-scramble-hover="link" class="willem-nav__link">tomrowstudios ©</a>

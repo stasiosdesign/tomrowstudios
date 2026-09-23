@@ -489,9 +489,7 @@
     reducedMotion.addEventListener?.("change", onPreferenceChange);
     canHover.addEventListener?.("change", onPreferenceChange);
 
-    // Sizing: follows the runner element itself, which follows the hero. The
-    // hero is display:none until the intro shows it, so the first real layout
-    // arrives through the observer rather than at construction.
+    // Sizing: follows the runner element itself, which follows the hero.
     const observer = new ResizeObserver(() => layout());
     observer.observe(root);
     // A zoom change alters devicePixelRatio without resizing the element

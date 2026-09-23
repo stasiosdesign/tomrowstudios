@@ -1173,29 +1173,7 @@ h3 {
 }
 
 
-/* ---------- Home intro (first load / refresh only) ---------- */
-
-/* Disable Scroll on Loading — scoped to the visible state so a Barba
-   navigation back to home (section stays hidden) does not lock the height */
-main:has(.willem-header.is--loading) {
-  height: 100dvh;
-}
-
-/* The height above only shrinks main's own box. Anything overflowing it still
-   lengthens the page, so the intro could be scrolled away from while it played
-   — Lenis being stopped does not stop a keyboard, a scrollbar drag or a touch
-   flick. Hiding the overflow on the scroller itself is what actually holds the
-   page still, and `overscroll-behavior` keeps a drag from rubber-banding it.
-
-   Both hang off `is--loading`, which is on the section in the markup — so the
-   lock is on from the first paint, before any script runs — and which the
-   timeline drops when it finishes. The lock cannot outlive the class, and
-   intro.js drops the class from one place with a watchdog behind it. */
-html:has(.willem-header.is--loading),
-html:has(.willem-header.is--loading) body {
-  overflow: hidden;
-  overscroll-behavior: none;
-}
+/* ---------- Home hero ---------- */
 
 .willem-header {
   /* Temporary placeholder for the hero photograph — plain black. */
@@ -1208,11 +1186,7 @@ html:has(.willem-header.is--loading) body {
 /* The hero copy is white and the photograph behind it is bright, so the
    headline and the standfirst were washing out. A wash over the picture,
    barely there at the top and weighted to the bottom where the title, the
-   buttons and the intro paragraph sit.
-
-   Stated once, here, because two elements wear it: the settled hero, and the
-   photograph the intro grows out of the wordmark. They have to match exactly
-   — the whole point is that the handover between them is invisible. */
+   buttons and the intro paragraph sit. */
 :root {
   --hero-wash: linear-gradient(
     to bottom,
@@ -1224,7 +1198,7 @@ html:has(.willem-header.is--loading) body {
   );
 }
 
-.willem-header.is--settled::after {
+.willem-header::after {
   content: "";
   position: absolute;
   inset: 0;
@@ -1233,166 +1207,11 @@ html:has(.willem-header.is--loading) body {
   background: var(--hero-wash);
 }
 
-/* Above the wash; the loader beneath it keeps its own lighter treatment */
+/* Above the wash */
 .willem-header__content { z-index: 2; }
 
 /* The hero's grid stands on the photograph, so it takes the stronger line. */
 .willem-header__content { --grid-line: var(--grid-line-color-image); }
-
-/* Loading: Hidden */
-.willem-header.is--loading.is--hidden {
-  display: none;
-}
-
-.willem-loader {
-  color: #201d1d;
-  justify-content: center;
-  align-items: center;
-  width: 100%;
-  height: 100%;
-  display: flex;
-  position: absolute;
-  top: 0;
-  left: 0;
-  overflow: hidden;
-}
-
-/* Resource sizing, scaled for a 13-letter word rather than 6. Stepped down
-   from 6em: "tomrow studios" set at that size ran nearly the full width of a
-   desktop screen, so the gap opening in the middle of it had nowhere to go
-   and the photograph growing out of the gap started at almost full bleed. The
-   three sizes move together — the ratio between the breakpoints is unchanged,
-   the whole wordmark is simply smaller. */
-.willem__h1 {
-  white-space: nowrap;
-  justify-content: center;
-  font-size: 4.2em;
-  font-weight: var(--weight-strong); --wght: var(--weight-strong);
-  line-height: .75;
-  display: flex;
-  position: relative;
-}
-
-/* Widths are content-driven: "tomrow" and "studios" are unequal, so fixed
-   em widths would clip them */
-.willem__h1-start {
-  justify-content: flex-end;
-  width: max-content;
-  display: flex;
-  overflow: hidden;
-}
-
-.willem__h1-end {
-  justify-content: flex-start;
-  width: max-content;
-  display: flex;
-  overflow: hidden;
-}
-
-.willem__letter {
-  display: block;
-  position: relative;
-}
-
-.willem__letter-white.is--space {
-  margin-left: .25em;
-}
-
-.willem-loader__box {
-  flex-flow: column;
-  justify-content: center;
-  align-items: center;
-  width: 0;
-  display: flex;
-  position: relative;
-}
-
-.willem-loader__box-inner {
-  justify-content: center;
-  align-items: center;
-  min-width: 1em;
-  height: 95%;
-  display: flex;
-  position: relative;
-}
-
-.willem__growing-image {
-  justify-content: center;
-  align-items: center;
-  width: 0%;
-  height: 100%;
-  display: flex;
-  position: absolute;
-  overflow: hidden;
-  /* How much of the hero's wash this photograph is wearing. The intro brings
-     it up over the growth so that the picture already has its final treatment
-     by the moment it fills the screen — see the rule below. */
-  --wash-opacity: 0;
-}
-
-/* The same wash the settled hero wears, on the photograph while it is still
-   growing out of the wordmark, and clipped to it — so it darkens the picture
-   and nothing else. When the growth lands, this element is the size of the
-   viewport and so is the hero's own wash: the loader is dropped, the
-   full-bleed background takes over, and the treatment does not change. It used
-   to arrive with `is--settled`, all at once, on a picture that had been clear
-   the instant before — which is the pop.
-
-   Rising from nothing across the growth rather than simply being on: for most
-   of that move the photograph is a narrow strip, and a wash weighted this hard
-   to the bottom reads on a strip. */
-.willem__growing-image::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  z-index: 2;
-  pointer-events: none;
-  opacity: var(--wash-opacity);
-  background: var(--hero-wash);
-}
-
-.willem__growing-image-wrap {
-  width: 100%;
-  min-width: 1em;
-  height: 100%;
-  position: absolute;
-}
-
-.willem__cover-image {
-  pointer-events: none;
-  object-fit: cover;
-  -webkit-user-select: none;
-  user-select: none;
-  width: 100%;
-  height: 100%;
-  position: absolute;
-  top: 0;
-  left: 0;
-}
-
-.willem__cover-image-extra {
-  pointer-events: none;
-  object-fit: cover;
-  -webkit-user-select: none;
-  user-select: none;
-  width: 100%;
-  height: 100%;
-  position: absolute;
-  top: 0;
-  left: 0;
-}
-
-.willem__cover-image-extra.is--1 {
-  z-index: 3;
-}
-
-.willem__cover-image-extra.is--2 {
-  z-index: 2;
-}
-
-.willem__cover-image-extra.is--3 {
-  z-index: 1;
-}
 
 .willem-header__content {
   /* Where the runner's axis crosses the hero, as a share of its height.
@@ -1492,14 +1311,7 @@ html:has(.willem-header.is--loading) body {
   /* The hero itself is the listening surface, so the pointer is never
      caught by this box or the canvas */
   pointer-events: none;
-  /* On with the settled hero, so it is not seen over the intro's loader.
-     Present from the first paint when the page is reached through a
-     navigation, since that arrives already settled. */
-  opacity: 0;
-  transition: opacity 0.9s ease-out;
 }
-
-.willem-header.is--settled .hero-runner { opacity: 1; }
 
 /* The box above lands at a fractional pixel — the axis share of the hero less half its
    own height — and a canvas straddling a pixel boundary is repainted by the
@@ -1511,13 +1323,6 @@ html:has(.willem-header.is--loading) body {
 .hero-runner__canvas {
   display: block;
   will-change: transform;
-}
-
-/* Reduced motion: the runner is still there as the resting rule — the script
-   draws it once and never binds the pointer — and it simply appears with the
-   settled hero rather than fading in. */
-@media (prefers-reduced-motion: reduce) {
-  .hero-runner { transition: none; }
 }
 
 /* ---------- Home hero dial ----------
@@ -1557,11 +1362,7 @@ html:has(.willem-header.is--loading) body {
   /* Under the copy in the stack, like the runner; the hero is the
      listening surface, and only the hit circle below takes the pointer */
   pointer-events: none;
-  opacity: 0;
-  transition: opacity 0.9s ease-out;
 }
-
-.willem-header.is--settled .hero-dial { opacity: 1; }
 
 /* The four click surfaces, one on each intersection: the same anchoring as
    the dial, a disc the size of its inner circle. Unstyled — the dial itself
@@ -1722,27 +1523,6 @@ html:has(.willem-header.is--loading) body {
   .hero-dial__target { display: none; }
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .hero-dial { transition: none; }
-}
-
-.willem__letter-white {
-  display: block;
-  position: relative;
-}
-
-@media screen and (max-width: 991px) {
-  .willem__h1 {
-    font-size: 3.15em;
-  }
-}
-
-@media screen and (max-width: 767px) {
-  .willem__h1 {
-    font-size: 2.1em;
-  }
-}
-
 
 /* Hero nav — the reference's brand-left / links-and-CTA-right split, snapped
    to the four column grid: brand spans the first two columns, the links and
@@ -1805,26 +1585,9 @@ html:has(.willem-header.is--loading) body {
   margin-bottom: -0.5em;
 }
 
-/* Settled state — the hero once the intro is over, or when the home page is
-   reached through a Barba navigation and the intro never runs. The loader is
-   dropped entirely and a plain full-bleed image takes over, so none of the
-   loader sizing can bleed into the animation. */
-.willem-header__bg {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  opacity: 0;
-}
-.willem-header.is--settled .willem-loader { display: none; }
-
 /* The hero's photographs: one full-bleed image per column line of the dial,
    stacked, with hero-dial.js holding the active one at full opacity and
-   crossfading to the next as the dial moves. Under the wash and the content,
-   over the old single background, which stays as the intro's handover
-   asset. Kept out of sight until the hero has settled, so the intro's
-   loader is all that is seen while it plays. */
+   crossfading to the next as the dial moves. Under the wash and the content. */
 .hero-slides {
   position: absolute;
   inset: 0;
@@ -1838,7 +1601,7 @@ html:has(.willem-header.is--loading) body {
 /* For now the hero stays on its plain black: the photographs are still
    crossfaded with the dial, ready to show, but the layer is never revealed.
    Reinstate this rule to bring them back. */
-/* .willem-header.is--settled .hero-slides { visibility: visible; } */
+/* .willem-header .hero-slides { visibility: visible; } */
 
 .hero-slides__item {
   position: absolute;
@@ -1927,22 +1690,14 @@ html:has(.willem-header.is--loading) body {
 
 .willem-hero__intro { margin: 0; font-size: 1.8rem; }
 
-/* Each revealed block gets its own mask so the intro's rise reads cleanly */
-/* The right-hand column hugs its content (align-items: flex-end), so the mask
-   would shrink to fit once the intro splits the standfirst into block lines —
-   and a narrower box re-wraps the text a word at a time. Holding the mask to
-   the column's width keeps the line breaks the ones the reader would have got
-   anyway; the right alignment still comes from the column. */
 .willem__reveal-mask { overflow: hidden; width: 100%; }
 .willem__reveal { display: block; position: relative; }
 .actions.willem__reveal { display: flex; }
 
-/* SplitText pieces, created by the home intro and reverted once it finishes.
-   The plugin sets the clipping and the wrappers itself; these only pin down
-   what it assumes about the layout, so a line cannot sit inline beside its
-   neighbour and a character cannot collapse its transform. */
+/* SplitText pieces, created by hero-dial.js for its caption swap. The plugin
+   sets the clipping and the wrappers itself; this only keeps a word from
+   collapsing its transform. */
 .willem__split-word { display: inline-block; will-change: transform; }
-.willem__split-char { display: inline-block; will-change: transform; }
 
 @media screen and (max-width: 991px) {
   .willem-hero__content {
@@ -2219,22 +1974,18 @@ html:has(.willem-header.is--loading) body {
   }
 }
 
-/* The nav's black band would cut across the intro screen and across the hero
-   photograph behind it, so over the hero it is links alone on the picture and
-   the band fades in behind them once the hero has been scrolled past.
+/* The nav's black band would cut across the hero photograph behind it, so
+   over the hero it is links alone on the picture and the band fades in behind
+   them once the hero has been scrolled past.
 
-   Two selectors, one state, because they cover different moments of the same
-   thing. `is--loading` is in the markup, so the band is already transparent on
-   the first paint, before any script has run. `is--over-hero` is set by
-   intro.js from the hero's own position and takes over from there — it is put
-   on before the intro drops `is--loading`, so the handover between them is not
-   a frame the band appears in. The transition below is what carries the band
-   in and out; nothing else fades. */
+   `is--over-hero` is in the home page's markup, so the band is already
+   transparent on the first paint, before any script has run; hero-nav.js then
+   sets it from the hero's own position and takes over from there. The
+   transition below is what carries the band in and out; nothing else fades. */
 .site-nav {
   transition: background-color 0.6s ease, border-color 0.6s ease;
 }
 
-main:has(.willem-header.is--loading) .site-nav,
 .site-nav.is--over-hero {
   background-color: transparent;
   border-bottom-color: transparent;
@@ -5612,11 +5363,7 @@ body:has(.arch-page) {
 .testimonial-slide__who,
 .project-hero,
 .project-note,
-.project-close,
-/* The intro's wordmark is type too. The two halves of it only — the box
-   between them carries the photograph that grows out of the word, and that
-   wants the grain like every other picture on the site. */
-.willem__h1-start {
+.project-close {
   position: relative;
   z-index: 91;
 }
@@ -5638,8 +5385,7 @@ body:has(.arch-page) {
    a stacking context — anything lifted inside one is lifted only within it and
    still comes out under a layer fixed to the page. The card rises as a unit,
    so its picture loses the grain along with its caption. */
-.parallax-slider__item,
-.willem__h1-end {
+.parallax-slider__item {
   z-index: 91;
 }
 

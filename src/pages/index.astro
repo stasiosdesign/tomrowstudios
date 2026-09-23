@@ -6,13 +6,11 @@ import ContactPanel from '../components/ContactPanel.astro';
 import Button from '../components/Button.astro';
 ---
 <BaseLayout title="Tomrow Studios" namespace="index" pageName="Home">
-<!-- Home intro (plays only on a first load / refresh of the home page) -->
-<section class="willem-header is--loading is--hidden">
-  <img class="willem-header__bg" src="assets/photos/talks/talk-01.jpg" alt="">
+<!-- Home hero -->
+<section class="willem-header">
   <!-- The hero's photographs, one per line of the dial. hero-dial.js
        crossfades them as the dial moves — the layered-slider treatment, on
-       the dial's own index. The fourth is the intro's photograph, so the
-       handover from the intro's grown image is not a change. -->
+       the dial's own index. -->
   <div class="hero-slides" data-hero-slides aria-hidden="true">
     <div data-hero-slide-bg class="hero-slides__item"><img src="assets/photos/events/event-01.jpg" class="hero-slides__img" alt=""></div>
     <div data-hero-slide-bg class="hero-slides__item"><img src="assets/photos/studio/studio-01.jpg" class="hero-slides__img" alt=""></div>
@@ -22,37 +20,6 @@ import Button from '../components/Button.astro';
     <!-- A flat darkening over whichever photograph is up, so the grid, the
          dial and the copy stand off it. Over the photographs in the stack. -->
     <div class="hero-slides__dark"></div>
-  </div>
-  <div class="willem-loader">
-    <div class="willem__h1">
-      <div class="willem__h1-start">
-        <span class="willem__letter">t</span>
-        <span class="willem__letter">o</span>
-        <span class="willem__letter">m</span>
-        <span class="willem__letter">r</span>
-        <span class="willem__letter">o</span>
-        <span class="willem__letter">w</span>
-      </div>
-      <div class="willem-loader__box">
-        <div class="willem-loader__box-inner">
-          <div class="willem__growing-image">
-            <div class="willem__growing-image-wrap">
-              <img class="willem__cover-image-extra is--1" src="assets/photos/events/event-01.jpg" loading="lazy" alt="">
-              <img class="willem__cover-image-extra is--2" src="assets/photos/studio/studio-01.jpg" loading="lazy" alt="">
-              <img class="willem__cover-image-extra is--3" src="assets/photos/lifestyle/lifestyle-01.jpg" loading="lazy" alt="">
-              <img class="willem__cover-image" src="assets/photos/talks/talk-01.jpg" loading="lazy" alt=""></div>
-          </div>
-        </div>
-      </div>
-      <div class="willem__h1-end">
-        <span class="willem__letter">s</span>
-        <span class="willem__letter">t</span>
-        <span class="willem__letter">u</span>
-        <span class="willem__letter">d</span>
-        <span class="willem__letter">i</span>
-        <span class="willem__letter">o</span>
-        <span class="willem__letter">s</span></div>
-    </div>
   </div>
   <div class="willem-header__content">
     <!-- The nav lives in the fixed .site-nav below, which sits in this slot -->
@@ -136,7 +103,7 @@ import Button from '../components/Button.astro';
 </section>
 
 
-<SiteNav />
+<SiteNav overHero />
 
 <!-- Logo marquee -->
 <section class="logo-marquee">

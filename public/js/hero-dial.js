@@ -28,8 +28,8 @@
 // photographs carry [data-active], as the slider's do.
 //
 // Each state has its own caption under the note's dot. They change the
-// moment a move starts, with the photographs, using the intro's own masked
-// SplitText reveal (intro.js): the words of the outgoing caption rise out
+// moment a move starts, with the photographs, using a masked SplitText
+// reveal: the words of the outgoing caption rise out
 // through their masks while the incoming caption's rise in from below, a
 // word at a time. Each caption is split once, when the dial is built, and
 // reverted when it is torn down, so however many moves run, the markup never
@@ -43,14 +43,13 @@
   const AUTOPLAY = 13;           // seconds between moves: one turn of the ring
   const TRANSITION_DURATION = 1.1;
   const COLUMNS = 5;
-  // The caption swap. The same ease, rise and small-type stagger as the
-  // intro's standfirst, run a little shorter so the caption lands inside the
+  // The caption swap, short enough that the caption lands inside the
   // photographs' own move rather than after it
   const CAPTION_IN = 0.9;
   const CAPTION_OUT = 0.45;
   const CAPTION_STAGGER = 0.012;
-  const CAPTION_EASE_IN = typeof WILLEM_EASE_ARRIVE !== "undefined" ? WILLEM_EASE_ARRIVE : "expo.out";
-  const CAPTION_EASE_OUT = typeof WILLEM_EASE_SWELL !== "undefined" ? WILLEM_EASE_SWELL : "power3.inOut";
+  const CAPTION_EASE_IN = "expo.out";
+  const CAPTION_EASE_OUT = "power3.inOut";
 
   function createHeroDial(dial, targets, face, backgrounds, maskFrame, maskItems, ticks, captions) {
     const count = COLUMNS;
@@ -134,8 +133,8 @@
       if (hovering > 0) autoTween.pause();
     };
 
-    // The captions, split into masked words once, as intro.js splits the
-    // hero copy. Without SplitText they still swap, just without the rise.
+    // The captions, split into masked words once. Without SplitText they
+    // still swap, just without the rise.
     const captionSplits = captions.map((caption) =>
       typeof SplitText !== "undefined"
         ? new SplitText(caption, { type: "words", mask: "words", wordsClass: "willem__split-word" })
@@ -189,8 +188,7 @@
       });
     };
 
-    // The first state is the dial's own line, whose photograph is the
-    // intro's, so the handover from the intro is not a change
+    // The first state is the dial's own line
     let slideTween = null;
     let current = parseInt(getComputedStyle(dial).getPropertyValue("--dial-column"), 10);
     if (!(current >= 0 && current < count)) current = count - 1;

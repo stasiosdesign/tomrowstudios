@@ -235,9 +235,6 @@ barba.hooks.afterEnter(data => {
 // Opening a page straight from disk falls back to normal navigation.
 if (location.protocol === "file:") {
   initOnceFunctions();
-  if (typeof initWillemLoadingAnimation === "function") {
-    initWillemLoadingAnimation();
-  }
 } else {
 barba.init({
   debug: false,
@@ -252,12 +249,6 @@ barba.init({
       async once(data) {
         initOnceFunctions();
 
-        // Home intro — `once` only fires on a full page load, never on a
-        // Barba navigation, so this is the first-load / refresh restriction.
-        if (typeof initWillemLoadingAnimation === "function") {
-          initWillemLoadingAnimation();
-        }
-
         return runPageOnceAnimation(data.next.container);
       },
 
@@ -266,11 +257,8 @@ barba.init({
         return runPageLeaveAnimation(data.current.container, data.next.container);
       },
 
-      // New page enters. `enter` never runs on a first load — that is `once` —
-      // so this is the safe place to show the home hero without its intro.
+      // New page enters
       async enter(data) {
-        if (typeof settleHomeHero === "function") settleHomeHero(data.next.container);
-
         return runPageEnterAnimation(data.next.container);
       }
     }

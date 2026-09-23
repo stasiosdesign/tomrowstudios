@@ -10,13 +10,7 @@
    The markup sits outside [data-barba="container"], alongside the grain and
    the transition overlay, so a Barba navigation leaves it in place — which is
    why this initialises once on DOMContentLoaded and is not re-run per page.
-
-   The home page's opening animation is the one thing the overlay waits for.
-   It is a development aid laid over the finished page, and the intro is not
-   the finished page — so while the intro is running the columns stay parked
-   off-screen and the toggle is inert, and if the overlay was left open it
-   runs its own opening the moment the intro lets go. Nothing new is animated
-   to do that; it is the component's own `openGrid`, called later. */
+ */
 function initAnimatedGrid() {
   const grid = document.querySelector("[data-animated-grid]");
   const cols = document.querySelectorAll("[data-animated-grid-col]");
@@ -27,31 +21,12 @@ function initAnimatedGrid() {
   const storageKey = "animatedGridState";
   let isOpen = localStorage.getItem(storageKey) === "open";
 
-  /* `is--loading` is on the hero in the markup, so this is true from the first
-     paint, before the intro's own script has run — the overlay can never be
-     caught on screen for the frame in between. intro.js drops the class from
-     one place, with a watchdog behind it, when the timeline is fully done. */
-  const intro = document.querySelector(".willem-header.is--loading");
-  let introRunning = !!intro;
-
   gsap.set(grid, { display: "block" });
 
-  if (isOpen && !introRunning) {
+  if (isOpen) {
     gsap.set(cols, { yPercent: 0 });
   } else {
     gsap.set(cols, { yPercent: 100 });
-  }
-
-  if (introRunning) {
-    const watch = new MutationObserver(() => {
-      if (intro.classList.contains("is--loading")) return;
-      watch.disconnect();
-      introRunning = false;
-      // Left open before the reload: bring it in now, the component's own way
-      if (isOpen) openGrid();
-    });
-
-    watch.observe(intro, { attributes: true, attributeFilter: ["class"] });
   }
 
   function openGrid() {
@@ -85,8 +60,6 @@ function initAnimatedGrid() {
   }
 
   function toggleGrid() {
-    // Inert until the home intro has finished; see the note at the top
-    if (introRunning) return;
     if (isOpen) closeGrid();
     else openGrid();
   }
