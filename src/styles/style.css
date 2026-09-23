@@ -221,7 +221,7 @@ textarea { font-family: inherit; }
   /* For a band standing on a photograph — the home hero's backgrounds. Well
      above the flat default so the lines hold against the picture, still
      short of white so they sit in it. */
-  --grid-line-color-image: rgba(255, 255, 255, 0.3);
+  --grid-line-color-image: rgba(255, 255, 255, 0.45);
   --grid-line-width: 1px;
   /* The colour actually painted. Sections and themes override this one. */
   --grid-line: var(--grid-line-color);
@@ -1218,14 +1218,14 @@ h3 {
      above the copy carries the runner and the dial's lower half still
      clears the headline. */
   --runner-axis: 50%;
-  /* The runner's two colours. Declared here rather than on the runner so
+  /* The runner's colours. Declared here rather than on the runner so
      the dial, its sibling, draws in the same off-white. Between the grid
      line and the copy: a visible instrument, not a background rule, but
-     kept well short of the white of the type so it sits behind the
-     headline in weight. The strong one is for the four strokes on the
-     starts of the main columns — a step brighter, same off-white. */
-  --runner-color: rgba(244, 244, 244, 0.52);
-  --runner-color-strong: rgba(244, 244, 244, 0.62);
+     kept short of the white of the type so it sits behind the headline in
+     weight. Every stroke is the same now, including those on the column
+     lines; the strong token remains for the dial's dot and focus ring. */
+  --runner-color: rgba(244, 244, 244, 0.68);
+  --runner-color-strong: var(--runner-color);
   flex-flow: column;
   justify-content: space-between;
   align-items: center;
@@ -1289,11 +1289,8 @@ h3 {
   --runner-radius: 72px;
   --runner-reach: 120px;
   --runner-reach-fade: 90px;
-  /* The four strokes that sit on the starts of the four main columns — the
-     grid's 1, 4, 7 and 10 — and the far gutter are a hair thicker: see `--runner-color-strong`
-     on the hero content for their colour. Subtle: still well under the
-     type in weight. */
-  --runner-stroke-strong: 2px;
+  /* The strokes on the column lines take the ordinary width */
+  --runner-stroke-strong: var(--runner-stroke);
 
   position: absolute;
   left: 0;
@@ -1348,7 +1345,7 @@ h3 {
      shrinks with the hero's type. The SVG viewBox is 500 units across, so
      the ring's 230 units are 230/250 of this. */
   --dial-radius: 18.5rem;
-  --dial-color: rgba(244, 244, 244, 0.78);
+  --dial-color: rgba(244, 244, 244, 0.9);
   --dial-color-strong: var(--runner-color-strong);
   --dial-column: 3;
 
