@@ -8,15 +8,17 @@ import Button from '../components/Button.astro';
 <BaseLayout title="Tomrow Studios" namespace="index" pageName="Home">
 <!-- Home hero -->
 <section class="willem-header">
-  <!-- The hero's photographs, one per line of the dial. hero-dial.js
+  <!-- The hero's backgrounds, one per line of the dial. hero-dial.js
        crossfades them as the dial moves — the layered-slider treatment, on
-       the dial's own index. -->
+       the dial's own index. Two photographs, alternated across the five
+       states, so every move changes the picture except the wrap from the
+       last state back to the first. -->
   <div class="hero-slides" data-hero-slides aria-hidden="true">
-    <div data-hero-slide-bg class="hero-slides__item"><img src="assets/photos/events/event-01.jpg" class="hero-slides__img" alt=""></div>
-    <div data-hero-slide-bg class="hero-slides__item"><img src="assets/photos/studio/studio-01.jpg" class="hero-slides__img" alt=""></div>
-    <div data-hero-slide-bg class="hero-slides__item"><img src="assets/photos/lifestyle/lifestyle-01.jpg" class="hero-slides__img" alt=""></div>
-    <div data-hero-slide-bg class="hero-slides__item"><img src="assets/photos/talks/talk-01.jpg" class="hero-slides__img" alt=""></div>
-    <div data-hero-slide-bg class="hero-slides__item"><img src="assets/photos/talks/talk-02.jpg" class="hero-slides__img" alt=""></div>
+    <div data-hero-slide-bg class="hero-slides__item"><img src="assets/photos/backgrounds/background-01.jpg" class="hero-slides__img" alt=""></div>
+    <div data-hero-slide-bg class="hero-slides__item"><img src="assets/photos/backgrounds/background-02.jpg" class="hero-slides__img" alt=""></div>
+    <div data-hero-slide-bg class="hero-slides__item"><img src="assets/photos/backgrounds/background-01.jpg" class="hero-slides__img" alt=""></div>
+    <div data-hero-slide-bg class="hero-slides__item"><img src="assets/photos/backgrounds/background-02.jpg" class="hero-slides__img" alt=""></div>
+    <div data-hero-slide-bg class="hero-slides__item"><img src="assets/photos/backgrounds/background-01.jpg" class="hero-slides__img" alt=""></div>
     <!-- A flat darkening over whichever photograph is up, so the grid, the
          dial and the copy stand off it. Over the photographs in the stack. -->
     <div class="hero-slides__dark"></div>

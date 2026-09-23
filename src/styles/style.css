@@ -1596,19 +1596,19 @@ h3 {
      z-index, and that must play out among the photographs, never over the
      wash and the copy above this layer. */
   isolation: isolate;
-  visibility: hidden;
 }
-/* For now the hero stays on its plain black: the photographs are still
-   crossfaded with the dial, ready to show, but the layer is never revealed.
-   Reinstate this rule to bring them back. */
-/* .willem-header .hero-slides { visibility: visible; } */
 
 .hero-slides__item {
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
+  /* Before hero-dial.js takes over, only the dial's home state — the fourth
+     line — is showing, so the first paint is already the picture the dial
+     starts on. The script's inline opacity wins from then on. */
+  opacity: 0;
 }
+.hero-slides__item:nth-child(4) { opacity: 1; z-index: 100; }
 
 .hero-slides__dark {
   position: absolute;
