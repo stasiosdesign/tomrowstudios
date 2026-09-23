@@ -1580,15 +1580,10 @@ h3 {
   margin-bottom: -0.5em;
   /* A step up from the label size, for the column of links only */
   font-size: 1.4rem;
-  opacity: 0.72;
   transition: opacity 0.3s ease;
 }
 
-/* The link being pointed at, and the current page's, come up to full; while
-   one is hovered, the rest fall back. */
-.willem-nav__links .willem-nav__link[aria-current],
-.willem-nav__links .willem-nav__link:hover,
-.willem-nav__links .willem-nav__link:focus-visible { opacity: 1; }
+/* Every link is full white at rest; while one is hovered, the rest fall back. */
 .willem-nav__links:hover .willem-nav__link:not(:hover) { opacity: 0.4; }
 
 /* The marker: a small square in the column pad, between the grid line and
