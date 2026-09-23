@@ -15,18 +15,18 @@ const links = [
 ---
 <!-- Navbar -->
 <header class={overHero ? "site-nav is--over-hero" : "site-nav"}>
-  <nav class="willen-nav">
-    <div class="willem-nav__start">
-      <a href="index.html" data-scramble-hover="link" class="willem-nav__link">tomrowstudios ©</a>
+  <nav class="site-nav__inner">
+    <div class="site-nav__start">
+      <a href="index.html" data-scramble-hover="link" class="site-nav__link">tomrowstudios ©</a>
     </div>
-    <div class="willem-nav__end">
-      <div class="willem-nav__links">
+    <div class="site-nav__end">
+      <div class="site-nav__links">
         {links.map(([href, label]) => (
-          <a href={href} data-scramble-hover="link" class="willem-nav__link" aria-current={page === href ? 'page' : undefined}>{label}</a>
+          <a href={href} data-scramble-hover="link" class="site-nav__link" aria-current={page === href ? 'page' : undefined}>{label}</a>
         ))}
       </div>
-      <div class="willem-nav__cta">
-        <a href="#contact" data-panel-open="contact" data-barba-prevent="self" data-scramble-hover="link" class="willem-nav__link">Let's Talk</a>
+      <div class="site-nav__cta">
+        <a href="#contact" data-panel-open="contact" data-barba-prevent="self" data-scramble-hover="link" class="site-nav__link">Let's Talk</a>
       </div>
     </div>
   </nav>

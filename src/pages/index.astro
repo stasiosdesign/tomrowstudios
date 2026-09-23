@@ -8,8 +8,8 @@ import Button from '../components/Button.astro';
 <BaseLayout title="Tomrow Studios" namespace="index" pageName="Home">
 <!-- Home hero, in the reveal-parallax wrapper: the section after it slides
      up over it (footer.js) -->
-<div data-hero-parallax class="hero-wrap">
-<section data-hero-parallax-inner class="willem-header">
+<div data-hero-parallax class="home-hero-wrap">
+<section data-hero-parallax-inner class="home-hero">
   <!-- The hero's backgrounds, one per line of the dial. hero-dial.js
        crossfades them as the dial moves — the layered-slider treatment, on
        the dial's own index. Two photographs, alternated across the five
@@ -25,9 +25,9 @@ import Button from '../components/Button.astro';
          dial and the copy stand off it. Over the photographs in the stack. -->
     <div class="hero-slides__dark"></div>
   </div>
-  <div class="willem-header__content">
+  <div class="home-hero__content">
     <!-- The nav lives in the fixed .site-nav below, which sits in this slot -->
-    <div class="willem-header__top"></div>
+    <div class="home-hero__top"></div>
     <!-- The runner: a fine rule of short vertical strokes through the middle
          of the hero, bent by the pointer. Empty in the markup — hero-runner.js
          puts a canvas in it. -->
@@ -82,20 +82,20 @@ import Button from '../components/Button.astro';
     {[0, 1, 2, 3, 4].map((column) => (
       <button class="hero-dial__target" type="button" data-hero-dial-target={column} style={`--target-column: ${column}`} aria-label={`Show state ${column + 1}`}></button>
     ))}
-    <div class="willem-header__bottom">
-      <div class="willem-hero__content">
-        <div class="willem-hero__col">
-          <div class="willem__reveal-mask" data-hero-parallax-lead="0.5">
-            <h1 class="willem-hero__title willem__reveal">Architecture, content Education for a global audience.</h1>
+    <div class="home-hero__bottom">
+      <div class="home-hero__copy">
+        <div class="home-hero__col">
+          <div class="home-hero__reveal-mask" data-hero-parallax-lead="0.5">
+            <h1 class="home-hero__title home-hero__reveal">Architecture, content Education for a global audience.</h1>
           </div>
         </div>
         <!-- The CTAs take the right-hand half of the grid: one site column
              each, so Collaborate sits on dev columns 7–9 and About on 10–12.
              The `.actions` rules pull the first out to the column line and
              the last out to the gutter line. -->
-        <div class="willem-hero__col is--end">
-          <div class="willem__reveal-mask is--actions">
-            <div class="actions willem__reveal">
+        <div class="home-hero__col is--end">
+          <div class="home-hero__reveal-mask is--actions">
+            <div class="actions home-hero__reveal">
               <Button href="#contact" data-panel-open="contact" data-barba-prevent="self" label="Collaborate" />
               <Button href="influence.html" label="About" secondary />
             </div>
@@ -105,11 +105,11 @@ import Button from '../components/Button.astro';
     </div>
   </div>
 </section>
-<div data-hero-parallax-dark class="hero-wrap__dark"></div>
+<div data-hero-parallax-dark class="home-hero-wrap__dark"></div>
 </div>
 
-<!-- Colour block under the hero: empty for now, to judge the colour at full height -->
-<section class="hero-follow"></section>
+<!-- Placeholder band under the hero: empty for now, to judge the colour at full height -->
+<section class="placeholder-band"></section>
 
 <SiteNav overHero />
 

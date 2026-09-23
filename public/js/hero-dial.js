@@ -137,7 +137,7 @@
     // still swap, just without the rise.
     const captionSplits = captions.map((caption) =>
       typeof SplitText !== "undefined"
-        ? new SplitText(caption, { type: "words", mask: "words", wordsClass: "willem__split-word" })
+        ? new SplitText(caption, { type: "words", mask: "words", wordsClass: "hero-dial__word" })
         : null
     );
     const captionWords = (i) => (captionSplits[i] ? captionSplits[i].words : []);

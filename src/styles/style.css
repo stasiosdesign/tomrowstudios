@@ -131,13 +131,12 @@ body {
 .scroll-next__sub,
 /* Eyebrows, under their own components' names rather than `.tagline`'s. */
 .footer-eyebrow,
-.sticky-tab__eyebrow,
 .slide-demo__eyebrow,
 /* Navigation — the type you read to move rather than to think. The bar at the
    top of the page and the legal row at the foot of it. The footer's large
    link column is deliberately not here: at 2.25em it is set at heading scale
    and reads with the headings, which stay on the body face. */
-.willen-nav .willem-nav__link,
+.site-nav__inner .site-nav__link,
 .site-footer__legal,
 /* Buttons and calls to action. The label sits on the inner span, which is what
    the button's hover split reads and rebuilds character by character, so the
@@ -276,7 +275,7 @@ textarea { font-family: inherit; }
    hero and carries the same inset as every other band, so the gutter and the
    columns work out identically and the lines run on from the nav above it
    without a break. */
-.willem-header__content,
+.home-hero__content,
 .project-hero,
 .project-grid,
 .project-note,
@@ -447,25 +446,7 @@ textarea { font-family: inherit; }
   background-color: #000000;
 }
 
-/* ---------- Buttons ---------- */
-.btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.8rem;
-  padding: 1rem 2.4rem;
-  border: 1px solid transparent;
-  border-radius: var(--radius);
-  font-weight: var(--weight-label); --wght: var(--weight-label);
-  text-decoration: none;
-}
-.btn-white  { background: #ffffff; border-color: #ffffff; color: #0a0a0a; padding: 0.8rem 2rem; }
-.btn-black  { background: #000000; border-color: #000000; color: #ffffff; }
-.btn-light  { background: rgba(10, 10, 10, 0.05); color: #0a0a0a; }
-.btn-ghost  { background: rgba(255, 255, 255, 0.1); color: #ffffff; }
-.btn-link   { background: none; padding: 1rem 0; color: #ffffff; }
-.btn-link img { width: 2.4rem; height: 2.4rem; }
-
+/* ---------- Actions row ---------- */
 .actions { display: flex; align-items: center; flex-wrap: wrap; }
 
 /* ---------- Site nav ----------
@@ -494,37 +475,7 @@ textarea { font-family: inherit; }
    A block that wants more than bare clearance opts out here rather than
    fighting this rule — it is more specific than a single class, so it would
    otherwise win and pin the block's top padding to the height of the bar. */
-main:not(:has(.willem-header)) .site-nav + *:not(.project-hero):not(.page-header) { padding-top: var(--nav-height); }
-
-/* ---------- Hero ---------- */
-.hero {
-  position: relative;
-  min-height: 90rem;
-  padding: 8rem var(--site-inset);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background-image: linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)), url("/assets/photos/talks/talk-01.jpg");
-  background-size: cover;
-  background-position: center;
-}
-.hero-inner {
-  width: 100%;
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: var(--grid-gap);
-  align-items: stretch;
-}
-.hero-col { flex: 1; display: flex; flex-direction: column; justify-content: center; gap: 2.4rem; }
-.hero-col-two { justify-content: flex-end; align-items: flex-end; text-align: right; }
-.hero h1 {
-  margin: 0;
-  font-size: 5.6rem;
-  line-height: var(--leading-display);
-  letter-spacing: var(--track-display);
-  font-weight: var(--weight-strong); --wght: var(--weight-strong);
-}
-.hero-col-two p { margin: 0; font-size: 1.8rem; }
+main:not(:has(.home-hero)) .site-nav + *:not(.project-hero):not(.page-header) { padding-top: var(--nav-height); }
 
 /* ---------- Typography ---------- */
 /* .tagline is the site's eyebrow, and it is set further down with the rest of
@@ -924,7 +875,6 @@ h3 {
 .tag-dark { background: rgba(255, 255, 255, 0.1); color: #ffffff; }
 .product-card h5 { margin: 0; font-size: 2.4rem; line-height: var(--leading-title); letter-spacing: var(--track-title); font-weight: var(--weight-strong); --wght: var(--weight-strong); }
 .product-card p { margin: 0; }
-.product-card .btn-link { margin-top: auto; align-self: flex-start; }
 .actions-end { justify-content: flex-end; margin-top: 5.6rem; }
 
 
@@ -1056,35 +1006,6 @@ h3 {
   border-radius: var(--radius);
 }
 
-/* ---------- Footer ---------- */
-.footer { padding: 5.6rem var(--site-inset); background-color: #000000; }
-.footer-top { display: grid; grid-template-columns: repeat(2, 1fr); gap: var(--grid-gap); margin-bottom: 5.6rem; }
-.footer-brand { display: flex; flex-direction: column; gap: 2.4rem; }
-.footer-logo { width: 8.4rem; height: 3.6rem; object-fit: contain; margin-bottom: 0.8rem; }
-.footer-block { font-size: 1.4rem; }
-.footer-block p { margin: 0 0 0.4rem; }
-.footer-block .strong { font-weight: var(--weight-strong); --wght: var(--weight-strong); }
-.footer-block a { text-decoration: underline; }
-
-.social { display: flex; gap: 1.2rem; margin-top: 0.8rem; }
-.social img { width: 2.4rem; height: 2.4rem; }
-
-.footer-links { display: grid; grid-template-columns: repeat(2, 1fr); gap: 2.4rem; }
-.footer-links ul { flex: 1; list-style: none; margin: 0; padding: 0; }
-.footer-links li { padding: 0.8rem 0; font-size: 1.4rem; font-weight: var(--weight-ui); --wght: var(--weight-ui); }
-.footer-links a { text-decoration: none; }
-
-.footer-bottom {
-  border-top: 1px solid rgba(255, 255, 255, 0.2);
-  padding-top: 2.4rem;
-  display: flex;
-  justify-content: space-between;
-  font-size: 1.4rem;
-}
-.footer-bottom p { margin: 0; }
-.footer-legal { display: flex; gap: 2.4rem; }
-.footer-legal a { text-decoration: underline; }
-
 /* ---------- Basic responsive fallback ---------- */
 @media (max-width: 991px) {
   /* The gutter and column count for this breakpoint live with the rest of the
@@ -1093,9 +1014,9 @@ h3 {
   .site-nav { padding: 2.4rem var(--site-inset) 1.8rem; }
   .form-row { flex-direction: column; }
   /* every grid collapses to a single column */
-  .hero-inner, .two-col, .cards, .gallery, .footer-top, 
+  .two-col, .cards, .gallery,
   .feature-split, .contact-split, .product-grid, 
-  .project-gallery, .rich-split, .page-header-body, .footer-links {
+  .project-gallery, .rich-split, .page-header-body {
     grid-template-columns: 1fr;
     gap: var(--grid-gap);
   }
@@ -1114,12 +1035,9 @@ h3 {
   .panel-dialog { width: 100%; }
   .panel .section, .panel-form, .panel-form-header { padding-left: 2.4rem; padding-right: 2.4rem; }
   .panel-form-header h2 { font-size: 3.2rem; }
-  .hero-col-two { text-align: left; align-items: flex-start; }
   .two-col-offset, .card-offset-1, .card-offset-2 { padding-top: 0; }
-  .hero h1 { font-size: 4rem; }
   h2 { font-size: 3.2rem; }
   h3 { font-size: 2.4rem; }
-  .footer-bottom { flex-direction: column; gap: 1.6rem; }
 }
 
 /* ---------- Open-menu backdrop blur + scrollable menu ---------- */
@@ -1175,8 +1093,8 @@ h3 {
 
 /* ---------- Home hero ---------- */
 
-.willem-header {
-  /* Temporary placeholder for the hero photograph — plain black. */
+.home-hero {
+  /* Black under the photographs until they load. */
   background-color: #000;
   color: #f4f4f4;
   position: relative;
@@ -1198,7 +1116,7 @@ h3 {
   );
 }
 
-.willem-header::after {
+.home-hero::after {
   content: "";
   position: absolute;
   inset: 0;
@@ -1208,12 +1126,12 @@ h3 {
 }
 
 /* Above the wash */
-.willem-header__content { z-index: 2; }
+.home-hero__content { z-index: 2; }
 
 /* The hero's grid stands on the photograph, so it takes the stronger line. */
-.willem-header__content { --grid-line: var(--grid-line-color-image); }
+.home-hero__content { --grid-line: var(--grid-line-color-image); }
 
-.willem-header__content {
+.home-hero__content {
   /* Where the runner's axis crosses the hero, as a share of its height.
      The dial below is centred on the same line, so the two can never
      part: move this and both move. Just past the middle, so the open field
@@ -1240,12 +1158,12 @@ h3 {
   position: relative;
 }
 
-.willem-header__top {
+.home-hero__top {
   width: 100%;
   position: relative;
 }
 
-.willem-header__bottom {
+.home-hero__bottom {
   justify-content: flex-start;
   align-items: flex-end;
   width: 100%;
@@ -1261,11 +1179,11 @@ h3 {
 
 /* The hero's reveal-parallax wrapper: the footer's, run the other way (see
    footer.js). The dark layer sits over the hero's lifted copy (91). */
-.hero-wrap {
+.home-hero-wrap {
   position: relative;
   overflow: hidden;
 }
-.hero-wrap__dark {
+.home-hero-wrap__dark {
   position: absolute;
   inset: 0;
   z-index: 92;
@@ -1274,8 +1192,8 @@ h3 {
   background-color: #000000;
 }
 
-/* ---------- Colour block under the home hero ---------- */
-.hero-follow {
+/* ---------- Placeholder band under the home hero ---------- */
+.placeholder-band {
   height: 100vh;
   background-color: #e6402a;
 }
@@ -1543,10 +1461,10 @@ h3 {
 }
 
 
-/* Hero nav — the reference's brand-left / links-and-CTA-right split, snapped
+/* Site nav — brand left, links and CTA right, snapped
    to the four column grid: brand spans the first two columns, the links and
    CTA the last two */
-.willen-nav {
+.site-nav__inner {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   width: 100%;
@@ -1554,14 +1472,14 @@ h3 {
   overflow: hidden;
 }
 
-.willem-nav__start {
+.site-nav__start {
   grid-column: span 2;
   justify-content: flex-start;
   align-items: flex-start;
   display: flex;
 }
 
-.willem-nav__end {
+.site-nav__end {
   grid-column: span 2;
   justify-content: space-between;
   align-items: flex-start;
@@ -1572,11 +1490,11 @@ h3 {
   padding-left: var(--grid-pad);
 }
 
-.willem-nav__cta {
+.site-nav__cta {
   display: flex;
 }
 
-.willem-nav__links {
+.site-nav__links {
   /* One column of links, stacked on the centre line at every width. Nearly
      closed up, with the tap target carried by the link's own padding. */
   display: flex;
@@ -1584,20 +1502,20 @@ h3 {
   row-gap: 0.25em;
 }
 
-.willem-nav__link {
+.site-nav__link {
   color: inherit;
   font-weight: var(--weight-ui); --wght: var(--weight-ui);
   line-height: 1.2;
   text-decoration: none;
   position: relative;
   /* Mono, uppercase, size and tracking all come from the label rule at the
-     top of the file — `.willen-nav .willem-nav__link` there outranks this
+     top of the file — `.site-nav__inner .site-nav__link` there outranks this
      single-class selector, so they win here rather than needing restating. */
 }
 
 /* The gap closed up, so the tap height comes from the link
    itself rather than from the space around it */
-.willem-nav__links .willem-nav__link {
+.site-nav__links .site-nav__link {
   padding-top: 0.5em;
   padding-bottom: 0.5em;
   margin-top: -0.5em;
@@ -1608,12 +1526,12 @@ h3 {
 }
 
 /* Every link is full white at rest; while one is hovered, the rest fall back. */
-.willem-nav__links:hover .willem-nav__link:not(:hover) { opacity: 0.4; }
+.site-nav__links:hover .site-nav__link:not(:hover) { opacity: 0.4; }
 
 /* The marker: a small square in the column pad, between the grid line and
    the text, beside the hovered link — or the current page's when nothing is
    hovered. */
-.willem-nav__links .willem-nav__link::before {
+.site-nav__links .site-nav__link::before {
   content: "";
   position: absolute;
   left: calc(var(--grid-pad) * -0.5);
@@ -1626,9 +1544,9 @@ h3 {
   transition: opacity 0.3s ease;
   pointer-events: none;
 }
-.willem-nav__links:not(:hover) .willem-nav__link[aria-current]::before,
-.willem-nav__links .willem-nav__link:hover::before,
-.willem-nav__links .willem-nav__link:focus-visible::before { opacity: 1; }
+.site-nav__links:not(:hover) .site-nav__link[aria-current]::before,
+.site-nav__links .site-nav__link:hover::before,
+.site-nav__links .site-nav__link:focus-visible::before { opacity: 1; }
 
 /* The hero's photographs: one full-bleed image per column line of the dial,
    stacked, with hero-dial.js holding the active one at full opacity and
@@ -1674,11 +1592,11 @@ h3 {
 }
 
 @media screen and (max-width: 767px) {
-  .willem-nav__start {
+  .site-nav__start {
     grid-column: span 2;
   }
 
-  .willem-nav__end {
+  .site-nav__end {
     grid-column-gap: 1.5em;
     grid-row-gap: 1.5em;
     flex-flow: column;
@@ -1688,9 +1606,9 @@ h3 {
 }
 
 
-/* Hero copy + CTAs, in place of the original wordmark. Two halves of two
+/* Home hero copy: headline and CTAs. Two halves of two
    grid columns each, matching the rest of the site. */
-.willem-hero__content {
+.home-hero__copy {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: var(--grid-gap);
@@ -1698,7 +1616,7 @@ h3 {
   width: 100%;
 }
 
-.willem-hero__col {
+.home-hero__col {
   grid-column: span 2;
   display: flex;
   flex-direction: column;
@@ -1711,13 +1629,13 @@ h3 {
    other block of copy on the site. `stretch` rather than `flex-end` so the
    block fills its column and the text has a left edge to sit on; ragging it
    right off a hugged box left each line starting somewhere different. */
-.willem-hero__col.is--end {
+.home-hero__col.is--end {
   justify-content: flex-end;
   align-items: stretch;
   text-align: left;
 }
 
-.willem-hero__title {
+.home-hero__title {
   margin: 0;
   font-size: 5.6rem;
   line-height: var(--leading-display);
@@ -1725,31 +1643,29 @@ h3 {
   font-weight: var(--weight-strong); --wght: var(--weight-strong);
 }
 
-.willem-hero__intro { margin: 0; font-size: 1.8rem; }
-
-.willem__reveal-mask { overflow: hidden; width: 100%; }
-.willem__reveal { display: block; position: relative; }
-.actions.willem__reveal { display: flex; }
+.home-hero__reveal-mask { overflow: hidden; width: 100%; }
+.home-hero__reveal { display: block; position: relative; }
+.actions.home-hero__reveal { display: flex; }
 
 /* SplitText pieces, created by hero-dial.js for its caption swap. The plugin
    sets the clipping and the wrappers itself; this only keeps a word from
    collapsing its transform. */
-.willem__split-word { display: inline-block; will-change: transform; }
+.hero-dial__word { display: inline-block; will-change: transform; }
 
 @media screen and (max-width: 991px) {
-  .willem-hero__content {
+  .home-hero__copy {
     grid-template-columns: 1fr;
     gap: 2.4rem;
   }
 
-  .willem-hero__col,
-  .willem-hero__col.is--end {
+  .home-hero__col,
+  .home-hero__col.is--end {
     grid-column: span 1;
     align-items: flex-start;
     text-align: left;
   }
 
-  .willem-hero__title { font-size: 4rem; }
+  .home-hero__title { font-size: 4rem; }
 }
 
 /* ---------- Parallax image slider (Smooothy) ---------- */
@@ -2028,7 +1944,7 @@ h3 {
   border-bottom-color: transparent;
 }
 
-/* ---------- Sticky section tabs ---------- */
+/* ---------- Nav height ---------- */
 /* Height of the fixed bar: 3.2rem top padding, 2.4rem bottom, plus the
    stacked links' line boxes. Every sticky offset below is derived from it. */
 :root { --nav-height: 13.6rem; }
@@ -2040,85 +1956,6 @@ h3 {
    bar. On a phone that was hiding the project eyebrow entirely. */
 @media screen and (max-width: 991px) { :root { --nav-height: 12.2rem; } }
 @media screen and (max-width: 767px) { :root { --nav-height: 16.6rem; } }
-
-.sticky-tab-group {
-  overflow: clip;
-}
-
-.sticky-tab-group__nav-bg {
-  z-index: 2;
-  height: var(--nav-height);
-  background-color: #000000;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.15);
-  width: 100%;
-  position: sticky;
-  top: 0;
-  left: 0;
-}
-
-.sticky-tab {
-  background-color: #0a0a0a;
-  position: relative;
-  overflow: clip;
-}
-
-.sticky-tab__sticky {
-  z-index: 1;
-  top: calc(var(--nav-height) - 1px);
-  flex-flow: column;
-  margin-top: -1px;
-  display: flex;
-  position: sticky;
-  box-shadow: 0 .25em .5em 0 rgba(0, 0, 0, 0.25);
-}
-
-.sticky-tab__inner {
-  background-color: #000000;
-  border-top: 1px solid rgba(255, 255, 255, 0.15);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.15);
-  justify-content: space-between;
-  align-items: center;
-  padding-top: 2em;
-  padding-bottom: 2em;
-}
-
-.sticky-tab__content {
-  justify-content: space-between;
-  align-items: center;
-  gap: 2.4rem;
-  display: flex;
-}
-
-.sticky-tab__title {
-  margin: 0;
-  font-size: 3.2rem;
-  letter-spacing: var(--track-display);
-  font-weight: var(--weight-strong); --wght: var(--weight-strong);
-  line-height: 1;
-}
-
-.sticky-tab__eyebrow {
-  margin: 0;
-  font-weight: var(--weight-label); --wght: var(--weight-label);
-  white-space: nowrap;
-}
-
-/* The tab sections are full bleed, so their own containers carry the page
-   padding and stay on the column grid */
-.sticky-tab .container {
-  padding-left: var(--site-inset);
-  padding-right: var(--site-inset);
-}
-
-.sticky-tab__body {
-  padding-top: 5.6rem;
-  padding-bottom: 5.6rem;
-}
-
-@media screen and (max-width: 767px) {
-  .sticky-tab__title { font-size: 2.4rem; }
-  .sticky-tab__body { padding-top: 3.2rem; padding-bottom: 3.2rem; }
-}
 
 /* ---------- CTA ----------
 
@@ -2330,7 +2167,7 @@ h3 {
 
 /* The home hero clips each revealed block to its own mask. Widen the one
    holding the CTAs by a pad each side so the pull-out is not clipped. */
-.willem__reveal-mask.is--actions {
+.home-hero__reveal-mask.is--actions {
   width: calc(100% + var(--grid-pad) * 2);
   margin-left: calc(-1 * var(--grid-pad));
   padding: 0 var(--grid-pad);
@@ -5408,7 +5245,7 @@ body:has(.arch-page) {
 /* Already positioned in their own rules — the lift only. Naming a `position`
    here would overwrite the one they are laid out by. */
 .scroll-next__inner,  /* sticky — the end-of-project panel */
-.willem-header__content,
+.home-hero__content,
 .page-header-body,
 .testimonial-slide__body,
 .scroll-next__center,
@@ -5464,7 +5301,7 @@ body:has(.arch-page) {
    The supplied component asked for a `.container` with its own max-width and
    padding. This site already has a `.container`, doing a different job, so
    the overlay's copy is scoped to the overlay rather than redefining it. */
-.animated-grid {
+.grid-overlay {
   position: fixed;
   inset: 0;
   /* Above the grain (90) and the lifted type (91), under the fixed nav
@@ -5474,7 +5311,7 @@ body:has(.arch-page) {
   display: block;
 }
 
-.animated-grid .container {
+.grid-overlay .container {
   width: 100%;
   max-width: var(--size-container);
   margin-inline: auto;
@@ -5483,7 +5320,7 @@ body:has(.arch-page) {
   padding-inline: var(--site-gutter);
 }
 
-.animated-grid .container.is--full-height {
+.grid-overlay .container.is--full-height {
   height: 100%;
 }
 
@@ -5496,7 +5333,7 @@ body:has(.arch-page) {
 
    `--grid-gap` between bars is two pads, the same gap the site's own columns
    keep, so the bars' boundaries stay centred on the site's lines. */
-.animated-grid__row {
+.grid-overlay__row {
   display: grid;
   grid-template-columns: repeat(12, minmax(0, 1fr));
   column-gap: var(--grid-gap);
@@ -5504,10 +5341,10 @@ body:has(.arch-page) {
   width: 100%;
   height: 100%;
   overflow: clip;
-  counter-reset: animated-grid-col;
+  counter-reset: grid-overlay-col;
 }
 
-.animated-grid__col {
+.grid-overlay__col {
   width: 100%;
   height: 100%;
   min-height: 100%;
@@ -5538,7 +5375,7 @@ body:has(.arch-page) {
    only — the six- and four-column breakpoints below keep the even spacing,
    since a cluster of three doesn't map onto either of those. */
 @media screen and (min-width: 992px) {
-  .animated-grid__row {
+  .grid-overlay__row {
     --grid-gap-tight: calc(var(--grid-gap) * 0.55);
     --bar: minmax(0, 1fr);
     --tight: var(--grid-gap-tight);
@@ -5550,18 +5387,18 @@ body:has(.arch-page) {
       var(--bar) var(--tight) var(--bar) var(--tight) var(--bar);
     column-gap: 0;
   }
-  .animated-grid__col:nth-child(1) { grid-column: 1; }
-  .animated-grid__col:nth-child(2) { grid-column: 3; }
-  .animated-grid__col:nth-child(3) { grid-column: 5; }
-  .animated-grid__col:nth-child(4) { grid-column: 7; }
-  .animated-grid__col:nth-child(5) { grid-column: 9; }
-  .animated-grid__col:nth-child(6) { grid-column: 11; }
-  .animated-grid__col:nth-child(7) { grid-column: 13; }
-  .animated-grid__col:nth-child(8) { grid-column: 15; }
-  .animated-grid__col:nth-child(9) { grid-column: 17; }
-  .animated-grid__col:nth-child(10) { grid-column: 19; }
-  .animated-grid__col:nth-child(11) { grid-column: 21; }
-  .animated-grid__col:nth-child(12) { grid-column: 23; }
+  .grid-overlay__col:nth-child(1) { grid-column: 1; }
+  .grid-overlay__col:nth-child(2) { grid-column: 3; }
+  .grid-overlay__col:nth-child(3) { grid-column: 5; }
+  .grid-overlay__col:nth-child(4) { grid-column: 7; }
+  .grid-overlay__col:nth-child(5) { grid-column: 9; }
+  .grid-overlay__col:nth-child(6) { grid-column: 11; }
+  .grid-overlay__col:nth-child(7) { grid-column: 13; }
+  .grid-overlay__col:nth-child(8) { grid-column: 15; }
+  .grid-overlay__col:nth-child(9) { grid-column: 17; }
+  .grid-overlay__col:nth-child(10) { grid-column: 19; }
+  .grid-overlay__col:nth-child(11) { grid-column: 21; }
+  .grid-overlay__col:nth-child(12) { grid-column: 23; }
 }
 
 /* The column numbers. Counters rather than markup, so the supplied HTML keeps
@@ -5571,9 +5408,9 @@ body:has(.arch-page) {
 
    Cleared below the fixed bar so a number never sits on a nav link, and set in
    the label face at the size of the site's other small figures. */
-.animated-grid__col::before {
-  counter-increment: animated-grid-col;
-  content: counter(animated-grid-col);
+.grid-overlay__col::before {
+  counter-increment: grid-overlay-col;
+  content: counter(grid-overlay-col);
   margin-top: calc(var(--nav-height) + 1.6rem);
   font-family: var(--font-label);
   font-size: 1.1rem;
@@ -5585,16 +5422,16 @@ body:has(.arch-page) {
 
 /* Tablet: the site is on two columns, the overlay on six. */
 @media screen and (max-width: 991px) {
-  .animated-grid__row {
+  .grid-overlay__row {
     grid-template-columns: repeat(6, minmax(0, 1fr));
   }
-  .animated-grid__col:nth-child(n + 7) { display: none; }
+  .grid-overlay__col:nth-child(n + 7) { display: none; }
 }
 
 /* Mobile: the site is on one column, the overlay on four. */
 @media screen and (max-width: 767px) {
-  .animated-grid__row {
+  .grid-overlay__row {
     grid-template-columns: repeat(4, minmax(0, 1fr));
   }
-  .animated-grid__col:nth-child(n + 5) { display: none; }
+  .grid-overlay__col:nth-child(n + 5) { display: none; }
 }

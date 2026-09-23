@@ -47,7 +47,7 @@ function initAfterEnterFunctions(next) {
   // The incoming container carries its own panels and triggers, so rebind them
   if (typeof initSidePanels === "function") initSidePanels();
   if (typeof initSwiperSlider === "function") initSwiperSlider();
-  if (typeof initFooterParallax === "function") initFooterParallax();
+  if (typeof initRevealParallax === "function") initRevealParallax();
   if (typeof initCta === "function") initCta();
   if (typeof initScrambleHover === "function") initScrambleHover();
   if (typeof initMarqueeScrollDirection === "function") initMarqueeScrollDirection();

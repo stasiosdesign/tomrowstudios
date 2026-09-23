@@ -55,13 +55,13 @@ function bindRevealParallax(el, prefix, leaving){
   }
 }
 
-function initFooterParallax(){
+function initRevealParallax(){
   document.querySelectorAll('[data-footer-parallax]').forEach(el =>
     bindRevealParallax(el, 'data-footer-parallax', false));
   document.querySelectorAll('[data-hero-parallax]').forEach(el =>
     bindRevealParallax(el, 'data-hero-parallax', true));
 }
-// Initialize Footer with Parallax Effect
+// Bind the footer and home hero reveals
 document.addEventListener('DOMContentLoaded', () => {
-  initFooterParallax();
+  initRevealParallax();
 });

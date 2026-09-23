@@ -11,7 +11,7 @@
    the transition overlay, so a Barba navigation leaves it in place — which is
    why this initialises once on DOMContentLoaded and is not re-run per page.
  */
-function initAnimatedGrid() {
+function initGridOverlay() {
   const grid = document.querySelector("[data-animated-grid]");
   const cols = document.querySelectorAll("[data-animated-grid-col]");
   const toggles = document.querySelectorAll("[data-animated-grid-toggle]");
@@ -87,5 +87,5 @@ function initAnimatedGrid() {
 }
 
 document.addEventListener("DOMContentLoaded", () => {
-  initAnimatedGrid();
+  initGridOverlay();
 });

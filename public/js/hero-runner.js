@@ -155,7 +155,7 @@
     // Falls back to the authored stroke pitch from the left edge if the
     // background is ever not there to read — the runner still draws, just
     // not tied to a grid that is not being painted.
-    const gridSource = root.closest(".willem-header__content") || root.parentElement;
+    const gridSource = root.closest(".home-hero__content") || root.parentElement;
 
     function readGrid(width) {
       const fallback = { origin: 0, column: config.spacing };
@@ -523,7 +523,7 @@
 
     if (typeof gsap === "undefined") return;
 
-    const hero = document.querySelector(".willem-header");
+    const hero = document.querySelector(".home-hero");
     const root = hero && hero.querySelector("[data-hero-runner]");
     if (!hero || !root) return;
 

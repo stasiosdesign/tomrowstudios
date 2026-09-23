@@ -14,7 +14,7 @@ function initHeroNav() {
   const nav = document.querySelector(".site-nav");
   if (!nav) return;
 
-  const hero = document.querySelector(".willem-header");
+  const hero = document.querySelector(".home-hero");
   if (!hero || !window.ScrollTrigger) {
     nav.classList.remove("is--over-hero");
     return;
