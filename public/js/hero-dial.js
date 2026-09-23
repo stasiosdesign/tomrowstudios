@@ -21,10 +21,12 @@
 // the first half of that step and a fraction below 0 for the second, with
 // the dial wholly outside the hero at the switch.
 //
-// Autoplay as the slider's: a paused GSAP clock of eight seconds that steps
-// forward on completion and restarts on every move, paused while the pointer
-// is over the dial and resumed when it leaves. A click on any of the
-// five targets goes straight to that line, the short way round.
+// Autoplay as the slider's, with the ring as its bar: one GSAP tween of
+// thirteen seconds that lights the ticks in turn, clockwise from the top,
+// steps forward on completion and restarts from nothing on every move —
+// paused, where it is, while the pointer is over the dial and resumed from
+// there when it leaves. A click on any of the five targets goes straight to
+// that line, the short way round, and starts the ring again.
 //
 // The targets mark the current line with aria-current so the one under the
 // dial gives the pointer up to the dial's own hover circles; the active
@@ -35,7 +37,9 @@
 // navigation; DOMContentLoaded covers the first load.
 
 (function () {
-  const AUTOPLAY = 8;            // seconds between moves
+  const AUTOPLAY = 13;           // seconds between moves: one turn of the ring
+  // How many ticks the lit edge fades across, so it travels rather than steps
+  const RING_EDGE = 3;
   const TRANSITION_DURATION = 1.1;
   const COLUMNS = 5;
   // How far past the edge lines the wrap legs go, in columns: enough that
@@ -44,7 +48,7 @@
   // travel most of its own radius before it is clear
   const OVERSHOOT = 0.8;
 
-  function createHeroDial(dial, targets, face, backgrounds, maskFrame, maskItems) {
+  function createHeroDial(dial, targets, face, backgrounds, maskFrame, maskItems, ticks) {
     const count = COLUMNS;
     const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
     const clamp = gsap.utils.clamp;
@@ -118,6 +122,21 @@
       }
     };
 
+    // The ring: the ticks lit up to the clock's progress, clockwise from the
+    // top (the order they are drawn in), with a soft edge a few ticks wide
+    const ring = { progress: 0 };
+    const tickStyles = getComputedStyle(ticks);
+    const tickRest = parseFloat(tickStyles.getPropertyValue("--tick-opacity-rest")) || 0.3;
+    const tickLit = parseFloat(tickStyles.getPropertyValue("--tick-opacity-lit")) || 1;
+    const tickLines = Array.from(ticks.children);
+    const renderRing = (progress) => {
+      const lit = progress * tickLines.length;
+      for (let i = 0; i < tickLines.length; i++) {
+        const t = clamp(0, 1, (lit - i) / RING_EDGE);
+        tickLines[i].style.opacity = (tickRest + (tickLit - tickRest) * t).toFixed(3);
+      }
+    };
+
     let hovering = 0;
     let autoTween = null;
     const startAutoplay = () => {
@@ -148,9 +167,18 @@
       if (delta !== 0) goTo(delta);
     }
 
+    // Autoplay fills the ring
     if (AUTOPLAY > 0 && !reduced) {
-      autoTween = gsap.delayedCall(AUTOPLAY, () => goTo(1)).pause();
+      autoTween = gsap.to(ring, {
+        progress: 1,
+        duration: AUTOPLAY,
+        ease: "none",
+        paused: true,
+        onUpdate: () => renderRing(ring.progress),
+        onComplete: () => goTo(1)
+      });
     }
+    renderRing(reduced ? 1 : 0);
 
     const onClick = (event) => {
       goToIndex(parseInt(event.currentTarget.dataset.heroDialTarget, 10));
@@ -188,7 +216,7 @@
       face.removeEventListener("pointerleave", onLeave);
     }
 
-    return { dial, targets, state, goTo, goToIndex, destroy };
+    return { dial, targets, state, ring, goTo, goToIndex, destroy };
   }
 
   function initHeroDial() {
@@ -209,8 +237,10 @@
     const backgrounds = Array.from(document.querySelectorAll("[data-hero-slide-bg]"));
     const maskFrame = dial.querySelector("[data-hero-dial-mask]");
     const maskItems = Array.from(dial.querySelectorAll("[data-hero-dial-mask-item]"));
+    const ticks = dial.querySelector(".hero-dial__ticks");
+    if (!ticks) return;
 
-    window.heroDial = createHeroDial(dial, targets, face, backgrounds, maskFrame, maskItems);
+    window.heroDial = createHeroDial(dial, targets, face, backgrounds, maskFrame, maskItems, ticks);
   }
 
   window.initHeroDial = initHeroDial;

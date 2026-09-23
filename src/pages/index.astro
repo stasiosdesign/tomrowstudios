@@ -61,15 +61,16 @@ import Button from '../components/Button.astro';
          of the hero, bent by the pointer. Empty in the markup — hero-runner.js
          puts a canvas in it. -->
     <div class="hero-runner" data-hero-runner aria-hidden="true"></div>
-    <!-- The dial: a ring of radial ticks, a dotted inner circle and a solid
+    <!-- The dial: a ring of radial ticks, a framed photograph and a solid
          centre dot, centred on the intersection of the runner and one of its
-         four strong column lines. Both circles turn slowly; the dot grows a
-         little under the pointer. hero-dial.js walks it along the four
-         intersections left to right every eight seconds, wrapping round off
-         the right edge, holds it under the pointer and sends it to whichever
-         of the four targets below is clicked; the hero's photographs and the
-         one in the dial's centre change with it. The caption is placeholder
-         copy. -->
+         five strong lines. The ticks brighten in turn, clockwise, over
+         thirteen seconds — the autoplay's clock, drawn — and at the full
+         circle hero-dial.js walks the dial to the next line, left to right,
+         wrapping round off the right edge; the dot grows a little under the
+         pointer, which also holds the dial and its clock. Any of the five
+         targets below sends it straight to that line; the hero's photographs
+         and the one in the dial's centre change with it. The caption is
+         placeholder copy. -->
     <div class="hero-dial" data-hero-dial>
       <!-- The centre: a round frame with one photograph per column line,
            slid across it by hero-dial.js in step with the backgrounds. Before
@@ -94,7 +95,7 @@ import Button from '../components/Button.astro';
       </svg>
       <div class="hero-dial__note">
         <span class="hero-dial__note-dot"></span>
-        <p>Architecture, content and education for a global audience.</p>
+        <p>Design for a global audience.</p>
       </div>
     </div>
     <!-- The five lines the dial visits — the four column starts and the far
