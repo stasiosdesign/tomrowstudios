@@ -1553,11 +1553,10 @@ h3 {
 }
 
 .willem-nav__links {
-  /* The four links were reading as four separate items rather than one set.
-     Closed up, with the tap target carried by the link's own padding. */
-  grid-column-gap: 1.4em;
-  grid-row-gap: 1.4em;
+  /* One column of links, stacked on the centre line at every width. Closed
+     up, with the tap target carried by the link's own padding. */
   display: flex;
+  flex-flow: column;
 }
 
 .willem-nav__link {
@@ -1571,7 +1570,7 @@ h3 {
      single-class selector, so they win here rather than needing restating. */
 }
 
-/* The gap closed up horizontally, so the tap height comes from the link
+/* The gap closed up, so the tap height comes from the link
    itself rather than from the space around it */
 .willem-nav__links .willem-nav__link {
   padding-top: 0.5em;
@@ -1621,14 +1620,6 @@ h3 {
   width: 100%;
   height: 100%;
   display: block;
-}
-
-@media screen and (max-width: 991px) {
-  .willem-nav__links {
-    grid-column-gap: 0em;
-    grid-row-gap: 0em;
-    flex-flow: column;
-  }
 }
 
 @media screen and (max-width: 767px) {
@@ -1988,10 +1979,10 @@ h3 {
 
 /* ---------- Sticky section tabs ---------- */
 /* Height of the fixed bar: 3.2rem top padding, 2.4rem bottom, plus the
-   link's line box. Every sticky offset below is derived from it. */
-:root { --nav-height: 7.8rem; }
+   stacked links' line boxes. Every sticky offset below is derived from it. */
+:root { --nav-height: 11.5rem; }
 
-/* The bar is fixed, and below 992px its links stack, so it grows to roughly
+/* The bar is fixed and its links stack, so below 992px it grows to roughly
    a third of a phone screen. The token has to grow with it — measured at 11.3
    and 15.7rem before the bar's own top padding grew by 0.6rem at this
    breakpoint — or every inner page starts its first block underneath the
