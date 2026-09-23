@@ -6,7 +6,8 @@ gsap.registerPlugin(ScrollTrigger);
    The footer is revealed: as it comes up into view, its inner layer settles
    from lagging behind and its dark layer lifts. The home hero is the same
    move run the other way: as it leaves, its inner layer falls behind and
-   darkens, so the section after it slides up over it. */
+   darkens, so the section after it slides up over it. Anything inside it
+   marked `-lead` cancels that lag and leaves at the page's own speed. */
 function bindRevealParallax(el, prefix, leaving){
   // Barba re-runs this on every navigation; never bind the same element twice
   if (el.__revealParallax) return;
@@ -17,12 +18,14 @@ function bindRevealParallax(el, prefix, leaving){
       trigger: el,
       start: leaving ? 'clamp(bottom bottom)' : 'clamp(top bottom)',
       end: leaving ? 'clamp(bottom top)' : 'clamp(top top)',
-      scrub: true
+      scrub: true,
+      invalidateOnRefresh: true
     }
   });
 
   const inner = el.querySelector(`[${prefix}-inner]`);
   const dark  = el.querySelector(`[${prefix}-dark]`);
+  const leads = el.querySelectorAll(`[${prefix}-lead]`);
   const tween = leaving ? 'to' : 'from';
 
   if (inner) {
@@ -35,6 +38,13 @@ function bindRevealParallax(el, prefix, leaving){
   if (dark) {
     tl[tween](dark, {
       opacity: 0.5,
+      ease: 'linear'
+    }, '<');
+  }
+
+  if (inner && leads.length) {
+    tl[tween](leads, {
+      y: () => inner.offsetHeight * (leaving ? -0.25 : 0.25),
       ease: 'linear'
     }, '<');
   }

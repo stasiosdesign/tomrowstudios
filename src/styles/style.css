@@ -1251,11 +1251,12 @@ h3 {
   width: 100%;
   display: flex;
   position: relative;
-  /* Clipped as before top and bottom, but a column pad wider each side, so
-     the hero CTAs pulled out onto the grid lines (see `.actions` below) reach
-     the last line instead of being cut a pad short of it. */
+  /* Clipped at the bottom, but a column pad wider each side, so the hero
+     CTAs pulled out onto the grid lines (see `.actions` below) reach the
+     last line instead of being cut a pad short of it — and open above, so the
+     headline can rise out of it as the hero is scrolled away (footer.js). */
   overflow: visible;
-  clip-path: inset(0 calc(-1 * var(--grid-pad)));
+  clip-path: inset(-100vh calc(-1 * var(--grid-pad)) 0);
 }
 
 /* The hero's reveal-parallax wrapper: the footer's, run the other way (see
