@@ -4,6 +4,12 @@ import SiteNav from '../components/SiteNav.astro';
 import SiteFooter from '../components/SiteFooter.astro';
 import ContactPanel from '../components/ContactPanel.astro';
 import Button from '../components/Button.astro';
+import { sanityClient } from '../sanity/client';
+import { urlFor } from '../sanity/image';
+import { CLIENT_LOGOS_QUERY } from '../sanity/queries';
+
+// The logo wall's clients, from Sanity, in the order set in the Studio
+const clients = await sanityClient.fetch(CLIENT_LOGOS_QUERY);
 ---
 <BaseLayout title="Tomrow Studios" namespace="index" pageName="Home">
 <!-- Home hero, in the reveal-parallax wrapper: the section after it slides
@@ -103,8 +109,11 @@ import Button from '../components/Button.astro';
 <!-- Client logo wall under the hero: a tall red band, the eyebrow and one
      black hairline at its top, the logo strip in the open space below. The
      strip is the site's logo marquee (marquee.js; the Partner page has the
-     same one), dressed down here: black marks, no tiles. The logo files are
-     white artwork, turned black in CSS. -->
+     same one), dressed down here: black marks, no tiles. The logos are white
+     artwork, turned black in CSS; they come from the Studio's Clients list,
+     scaled to fit inside 600 by 240, well over the size the strip shows them
+     at. ignoreImageParams keeps the URL builder from cropping each logo to that
+     box's shape; logos have no crop of their own to lose. -->
 <section class="logo-marquee logo-wall">
   <div class="logo-wall__head">
     <p class="tagline logo-wall__eyebrow">[&nbsp;Clients&nbsp;]</p>
@@ -113,22 +122,8 @@ import Button from '../components/Button.astro';
   <div data-marquee-duplicate="2" data-marquee-scroll-direction-target data-marquee-direction="left" data-marquee-status="normal" data-marquee-speed="15" data-marquee-scroll-speed="10" class="marquee-advanced">
     <div data-marquee-scroll-target class="marquee-advanced__scroll">
       <div data-marquee-collection-target class="marquee-advanced__collection">
-        {[
-          ['Architypes-Logo-White.png', 'Architypes'],
-          ['D5-Render-Logo-White.png', 'D5 Render'],
-          ['Epic-Games-Logo-White.png', 'Epic Games'],
-          ['Gendo-Logo-White.png', 'Gendo'],
-          ['Giraffe-Logo-White.png', 'Giraffe'],
-          ['Intel-Logo-White.png', 'Intel'],
-          ['Krea-Logo-White.png', 'Krea'],
-          ['Material-Bank-Logo-White.png', 'Material Bank'],
-          ['Motif-Logo-White.png', 'Motif'],
-          ['Qonic-Logo-White.png', 'Qonic'],
-          ['Speckle-Logo-White.png', 'Speckle'],
-          ['finch-logo.png', 'Finch'],
-          ['xfigura-logo.png', 'xfigura'],
-        ].map(([file, name]) => (
-          <div class="marquee-advanced__item-width"><img src={`assets/logos/${file}`} loading="lazy" alt={name}></div>
+        {clients.map((client) => (
+          <div class="marquee-advanced__item-width"><img src={urlFor(client.logo).ignoreImageParams().width(600).height(240).url()} loading="lazy" alt={client.name ?? ''}></div>
         ))}
       </div>
     </div>

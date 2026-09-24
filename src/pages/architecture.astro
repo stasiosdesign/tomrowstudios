@@ -2,6 +2,13 @@
 import BaseLayout from '../layouts/BaseLayout.astro';
 import SiteNav from '../components/SiteNav.astro';
 import ContactPanel from '../components/ContactPanel.astro';
+import { sanityClient } from '../sanity/client';
+import { imageAttrs } from '../sanity/image';
+import { PROJECT_INDEX_QUERY } from '../sanity/queries';
+
+// The projects from Sanity, in the order set in the Studio
+const projects = await sanityClient.fetch(PROJECT_INDEX_QUERY);
+const pad = (n: number) => String(n).padStart(2, '0');
 ---
 <BaseLayout title="Architecture — Tomrow Studios" namespace="architecture" pageName="Architecture" mainClass="arch-page">
 <SiteNav />
@@ -15,97 +22,31 @@ import ContactPanel from '../components/ContactPanel.astro';
 
     <div class="arch-stage__head">
       <p class="tagline">Architecture</p>
-      <p class="arch-stage__count"><strong data-parallax-counter>01</strong> / 05</p>
+      <p class="arch-stage__count"><strong data-parallax-counter>01</strong> / {pad(projects.length)}</p>
     </div>
 
     <div class="arch-stage__slider">
       <div class="parallax-slider__collection">
         <div data-parallax-slider data-parallax-infinite="false" data-parallax-snap="false" data-parallax-amount="10" data-parallax-lerp="0.2" class="parallax-slider__list">
 
+          {projects.map((project, i) => (
           <div class="parallax-slider__item">
-            <a href="project-transport.html" class="parallax-slider__item-link">
+            <a href={`project-${project.slug}.html`} class="parallax-slider__item-link">
               <div class="parallax-slider__item-inner">
                 <div data-parallax-inner class="parallax-slider__item-visual">
-                  <img src="assets/projects/transport/01.jpg" width="1600" height="902" draggable="false" alt="Trans[port]: Logistics Market" class="parallax-slider__item-img">
+                  {project.coverImage && <img {...imageAttrs(project.coverImage)} draggable="false" alt={project.coverImage.alt || project.name || ''} class="parallax-slider__item-img">}
                 </div>
               </div>
               <div class="parallax-slider__item-label">
                 <div>
-                  <p class="parallax-slider__item-name">Trans[port]: Logistics Market</p>
-                  <p class="parallax-slider__item-meta">01 — MArch 2 — 2023</p>
+                  <p class="parallax-slider__item-name">{project.name}</p>
+                  <p class="parallax-slider__item-meta">{[pad(i + 1), project.context, project.year].filter(Boolean).join(' — ')}</p>
                 </div>
                 <span class="parallax-slider__item-cta" aria-hidden="true"></span>
               </div>
             </a>
           </div>
-
-          <div class="parallax-slider__item">
-            <a href="project-sets-in-motion.html" class="parallax-slider__item-link">
-              <div class="parallax-slider__item-inner">
-                <div data-parallax-inner class="parallax-slider__item-visual">
-                  <img src="assets/projects/sets-in-motion/01.jpg" width="1600" height="902" draggable="false" alt="Sets in Motion" class="parallax-slider__item-img">
-                </div>
-              </div>
-              <div class="parallax-slider__item-label">
-                <div>
-                  <p class="parallax-slider__item-name">Sets in Motion</p>
-                  <p class="parallax-slider__item-meta">02 — MArch 1 — 2022</p>
-                </div>
-                <span class="parallax-slider__item-cta" aria-hidden="true"></span>
-              </div>
-            </a>
-          </div>
-
-          <div class="parallax-slider__item">
-            <a href="project-irrational-matrix.html" class="parallax-slider__item-link">
-              <div class="parallax-slider__item-inner">
-                <div data-parallax-inner class="parallax-slider__item-visual">
-                  <img src="assets/projects/irrational-matrix/01.jpg" width="1600" height="1600" draggable="false" alt="Irrational Matrix" class="parallax-slider__item-img">
-                </div>
-              </div>
-              <div class="parallax-slider__item-label">
-                <div>
-                  <p class="parallax-slider__item-name">Irrational Matrix</p>
-                  <p class="parallax-slider__item-meta">03 — Dissertation</p>
-                </div>
-                <span class="parallax-slider__item-cta" aria-hidden="true"></span>
-              </div>
-            </a>
-          </div>
-
-          <div class="parallax-slider__item">
-            <a href="project-the-sequel.html" class="parallax-slider__item-link">
-              <div class="parallax-slider__item-inner">
-                <div data-parallax-inner class="parallax-slider__item-visual">
-                  <img src="assets/projects/the-sequel/01.jpg" width="1600" height="451" draggable="false" alt="The Sequel" class="parallax-slider__item-img">
-                </div>
-              </div>
-              <div class="parallax-slider__item-label">
-                <div>
-                  <p class="parallax-slider__item-name">The Sequel</p>
-                  <p class="parallax-slider__item-meta">04 — Digbeth — 2020</p>
-                </div>
-                <span class="parallax-slider__item-cta" aria-hidden="true"></span>
-              </div>
-            </a>
-          </div>
-
-          <div class="parallax-slider__item">
-            <a href="project-the-sequel-post.html" class="parallax-slider__item-link">
-              <div class="parallax-slider__item-inner">
-                <div data-parallax-inner class="parallax-slider__item-visual">
-                  <img src="assets/projects/the-sequel-post/01.jpg" width="1600" height="450" draggable="false" alt="The Sequel: Post-production" class="parallax-slider__item-img">
-                </div>
-              </div>
-              <div class="parallax-slider__item-label">
-                <div>
-                  <p class="parallax-slider__item-name">The Sequel: Post-production</p>
-                  <p class="parallax-slider__item-meta">05 — Digbeth — 2020</p>
-                </div>
-                <span class="parallax-slider__item-cta" aria-hidden="true"></span>
-              </div>
-            </a>
-          </div>
+          ))}
 
         </div>
       </div>
