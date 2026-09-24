@@ -671,7 +671,7 @@ h3 {
 }
 
 .transition__panel {
-  background-color: #f20505;
+  background-color: var(--cta-accent-color);
   width: 100%;
   height: 100%;
   position: relative;
@@ -1146,7 +1146,7 @@ h3 {
      line and the copy: a visible instrument, not a background rule, but
      kept short of the white of the type so it sits behind the headline in
      weight. Every stroke is the same now, including those on the column
-     lines; the strong token remains for the dial's dot and focus ring. */
+     lines, which hero-runner.js still reads the strong token for. */
   --runner-color: rgba(244, 244, 244, 0.68);
   --runner-color-strong: var(--runner-color);
   flex-flow: column;
@@ -1212,7 +1212,7 @@ h3 {
   /* A band and a half; the open space is the point of it */
   min-height: 150svh;
   padding: 4rem 0 0;
-  background-color: #e6402a;
+  background-color: var(--cta-accent-color);
   /* No column lines through this band */
   background-image: none;
   color: #000000;
@@ -1346,17 +1346,18 @@ h3 {
    nothing to drift.
 
    Which column: `--dial-column`, fixed here at the fourth line. The dial
-   never moves; hero-dial.js runs its five states through it — every
-   five seconds, or straight to any of the five line targets below that
-   is clicked — fading the hero's photographs and sliding the one in the
+   never moves; hero-dial.js runs its five states through it every five
+   seconds, fading the hero's photographs and sliding the one in the
    dial's centre. The pointer over the dial holds the clock. */
 .hero-dial {
   /* Outer radius of the tick ring, in the page's scale so it grows and
-     shrinks with the hero's type. The SVG viewBox is 500 units across, so
-     the ring's 230 units are 230/250 of this. */
-  --dial-radius: 18.5rem;
+     shrinks with the hero's type. On a short, wide screen the height gives
+     out first, so it is also held to half the hero less the copy row at its
+     foot (the buttons, the bottom padding and a little air, 12rem): the ring
+     never reaches the buttons under it. The SVG viewBox is 500 units across,
+     so the ring's 230 units are 230/250 of this. */
+  --dial-radius: min(21.3rem, 50dvh - 12rem);
   --dial-color: rgba(244, 244, 244, 0.9);
-  --dial-color-strong: var(--runner-color-strong);
   --dial-column: 3;
 
   position: absolute;
@@ -1365,33 +1366,9 @@ h3 {
   width: 0;
   height: 0;
   /* Under the copy in the stack, like the runner; the hero is the
-     listening surface, and only the hit circle below takes the pointer */
+     listening surface, and only the pause disc below takes the pointer */
   pointer-events: none;
 }
-
-/* The four click surfaces, one on each intersection: the same anchoring as
-   the dial, a disc the size of its inner circle. Unstyled — the dial itself
-   is the only thing drawn — and the one under the dial gives the pointer up
-   so the dial's own hit circle keeps the hover. */
-.hero-dial__target {
-  position: absolute;
-  left: calc(var(--site-gutter) + var(--grid-column) * var(--target-column));
-  top: var(--runner-axis);
-  width: calc(var(--dial-radius, 18.5rem) * 0.4);
-  height: calc(var(--dial-radius, 18.5rem) * 0.4);
-  margin: 0;
-  padding: 0;
-  border: 0;
-  border-radius: 50%;
-  background: transparent;
-  transform: translate(-50%, -50%);
-  cursor: pointer;
-  -webkit-tap-highlight-color: transparent;
-}
-.hero-dial__target:focus-visible { outline: 1px solid var(--runner-color-strong); outline-offset: 2px; }
-/* The target on the dial's own line never takes the pointer: the dial's
-   hover circles do, and the dial's face takes the click for that state */
-.hero-dial__target[data-hero-dial-target="3"] { pointer-events: none; }
 
 .hero-dial__face {
   position: absolute;
@@ -1450,12 +1427,10 @@ h3 {
   display: block;
 }
 
-/* The invisible pointer surfaces. The disc of the whole ring holds the
-   dial still while the pointer is over it (hero-dial.js listens on the
-   face); the inner circle's disc sits around the intersection.
+/* The invisible pointer surface: the disc of the whole ring holds the dial
+   still while the pointer is over it (hero-dial.js listens on the face).
    Nothing else on the dial catches the pointer. */
-.hero-dial__pause,
-.hero-dial__hit {
+.hero-dial__pause {
   fill: transparent;
   pointer-events: fill;
 }
@@ -1469,11 +1444,11 @@ h3 {
   --tick-opacity-lit: 1;
 }
 
-/* The note: a small dot on the column line a little below the axis, a
+/* The note: a small square on the column line a little below the axis, a
    dotted guide falling from it, and the caption to its right, in the body
    face. It starts just under the frame (whose edge is at 0.3r) and is
-   sized against the ring's radius so the whole block — dot, guide and text
-   — stays inside the ring with clear air to the ticks at any width: its
+   sized against the ring's radius so the whole block — marker, guide and
+   text — stays inside the ring with clear air to the ticks at any width: its
    far corner, at about (0.56r, 0.62r) from the centre, is under 0.85r out,
    inside the ticks' inner ends at 0.9r. */
 .hero-dial__note {
@@ -1483,25 +1458,30 @@ h3 {
   width: calc(var(--dial-radius) * 0.56);
   padding-left: calc(var(--dial-radius) * 0.1);
   color: #f4f4f4;
+  /* The caption's size, against the radius like the rest of the note, and
+     set on the note so the marker shares its em */
+  font-size: calc(var(--dial-radius) * 0.07);
+  line-height: 1.15;
 }
 
-.hero-dial__note-dot {
+/* A solid square in the caption's own colour, centred on the first line's
+   x-height — which, at this line height, stands 0.685em down the line */
+.hero-dial__note-marker {
   position: absolute;
   left: 0;
-  top: 0.4em;
-  width: 5px;
-  height: 5px;
-  border-radius: 50%;
-  background: var(--dial-color-strong);
+  top: 0.485em;
+  width: 0.4em;
+  height: 0.4em;
+  background: currentColor;
   transform: translateX(-50%);
 }
 
-/* The guide: a dotted hairline from under the dot to the foot of the text */
-.hero-dial__note-dot::after {
+/* The guide: a dotted hairline from under the marker to the foot of the text */
+.hero-dial__note-marker::after {
   content: "";
   position: absolute;
   left: 50%;
-  top: 12px;
+  top: calc(100% + 0.6em);
   height: calc(var(--dial-radius) * 0.24);
   border-left: 1px dotted var(--dial-color);
   transform: translateX(-50%);
@@ -1510,8 +1490,8 @@ h3 {
 .hero-dial__note p {
   margin: 0;
   font-family: var(--font-body);
-  font-size: 1.2rem;
-  line-height: 1.3;
+  /* A step over the running text, as the site's small interface type is */
+  font-weight: var(--weight-ui); --wght: var(--weight-ui);
 }
 
 /* One caption per state, all in the same cell so the box keeps the height
@@ -1524,8 +1504,7 @@ h3 {
 /* Below the desktop grid the fourth column is gone — the grid drops to two
    columns — so there is no intersection for the dial to stand on. */
 @media screen and (max-width: 991px) {
-  .hero-dial,
-  .hero-dial__target { display: none; }
+  .hero-dial { display: none; }
 }
 
 
@@ -2012,11 +1991,21 @@ h3 {
   border-bottom-color: transparent;
 }
 
+/* Over a light page — the bar followed straight by .theme-light, as on
+   Partners and the archive — the bar drops its band the same way, and its
+   links and the grid lines through it turn dark to read on the white */
+.site-nav:has(+ .theme-light) {
+  background-color: transparent;
+  border-bottom-color: transparent;
+  color: #0a0a0a;
+  --grid-line: var(--grid-line-color-dark);
+}
+
 /* ---------- Stepped menu (scrolled-state navigation) ----------
    StepNav.astro / stepnav.js. Once a page's hero has scrolled by, a Menu
-   control stands where the bar's right-hand column was; it opens five
+   control stands where the bar's right-hand column was; it opens four
    panels, one link each, side by side from gutter to gutter, sharing a top
-   edge and stepping down in height from Influence to Contact. The
+   edge and stepping down in height from Influence to Partners. The
    staircase is these heights — each panel is built at its final size and
    revealed by a clip-path the script animates; nothing here moves to make
    the shape. White panels on the black page, dark hairlines between them:
@@ -2032,7 +2021,7 @@ h3 {
 
 /* The control. Hidden over the hero; in from above once the hero has gone.
    It sits at the bar's own top padding and right inset, so it appears where
-   the bar's "Let's Talk" was. Open, it stands on the white Contact panel and
+   the bar's "Let's Talk" was. Open, it stands on the white Partners panel and
    takes the panel's colours. */
 .step-nav__toggle {
   position: absolute;
@@ -2097,7 +2086,23 @@ h3 {
 }
 .step-nav__char { display: inline-block; }
 
-/* The panels. Nothing until the script opens them, then five equal columns
+/* The page behind the open menu: dimmed and blurred, under the panels and
+   the control. The script fades it with the panels; a click on it closes. */
+.step-nav__backdrop {
+  position: absolute;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.75);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  opacity: 0;
+  visibility: hidden;
+}
+.step-nav[data-step-nav-open="true"] .step-nav__backdrop { pointer-events: auto; }
+/* Open, nothing in the menu starts a pan: the page under it holds still on
+   touch as it does under the wheel (stepnav.js stops Lenis for that). */
+.step-nav[data-step-nav-open="true"] { touch-action: none; }
+
+/* The panels. Nothing until the script opens them, then four equal columns
    from gutter to gutter. `visibility` follows the open attribute, which the
    script sets before opening and clears after closing, so the reveal and the
    reverse both play in view. */
@@ -2120,11 +2125,13 @@ h3 {
   display: flex;
   flex: 1 1 0;
   flex-direction: column;
-  justify-content: space-between;
+  /* The number and its word, one unit at the panel's foot */
+  justify-content: flex-end;
+  gap: 1.2rem;
   min-width: 0;
-  /* The staircase: eleven hundredths of the screen between neighbours,
+  /* The staircase: eight hundredths of the screen between neighbours,
      Influence the tallest. Set in the height, so the shape is the layout. */
-  height: calc(88svh - var(--step) * 11svh);
+  height: calc(56svh - var(--step) * 8svh);
   padding: 2.4rem var(--grid-pad) 2rem;
   background-color: #ffffff;
   color: #0a0a0a;
@@ -2171,7 +2178,7 @@ h3 {
     right: 0;
   }
   .step-nav__panel {
-    height: calc(76svh - var(--step) * 9svh);
+    height: calc(52svh - var(--step) * 7svh);
     padding: 1.6rem 1.2rem;
   }
   .step-nav__label {
@@ -2224,7 +2231,7 @@ h3 {
   /* The one persistent mark on the CTA at rest — everything else is drawn in
      on hover. Deliberately not a grid-line colour: it is a fixed accent, not
      part of the frame. */
-  --cta-accent-color: #e6402a;
+  --cta-accent-color: #DD341D;
   --cta-height: 5.6rem;
   /* Selected text, site-wide (below). The same accent, so the one red on
      the site is the one red on the site. */
@@ -5395,7 +5402,7 @@ body:has(.arch-page) {
   height: 0.14em;
   margin-left: 0.06em;
   border-radius: 50%;
-  background: #f20505;
+  background: var(--cta-accent-color);
   vertical-align: baseline;
 }
 

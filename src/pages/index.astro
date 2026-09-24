@@ -32,20 +32,18 @@ import Button from '../components/Button.astro';
          of the hero, bent by the pointer. Empty in the markup — hero-runner.js
          puts a canvas in it. -->
     <div class="hero-runner" data-hero-runner aria-hidden="true"></div>
-    <!-- The dial: a ring of radial ticks, a framed photograph and a solid
-         centre dot, fixed on the intersection of the runner and the fourth
-         of its five strong lines. The ticks light in turn, clockwise, over
-         five seconds — the autoplay's clock, drawn — and at the full
-         circle hero-dial.js moves on to the next of its five states, whose
-         photographs the hero and the dial's centre change to; the dot grows
-         a little under the pointer, which also holds the clock. Any of the
-         five targets below selects that state. One caption per state, in
-         column order, swapped with the photographs; placeholder copy. -->
+    <!-- The dial: a ring of radial ticks and a framed photograph, fixed on
+         the intersection of the runner and the fourth of its five strong
+         lines. The ticks light in turn, clockwise, over five seconds — the
+         autoplay's clock, drawn — and at the full circle hero-dial.js moves
+         on to the next of its five states, whose photographs the hero and
+         the dial's centre change to; the pointer over the dial holds the
+         clock. One caption per state, in column order, swapped with the
+         photographs; placeholder copy. -->
     <div class="hero-dial" data-hero-dial>
       <!-- The centre: a round frame with one photograph per column line,
            slid across it by hero-dial.js in step with the backgrounds. Before
-           the face in the markup so the face's dot and pointer circles sit
-           over it. -->
+           the face in the markup so the face's pointer circle sits over it. -->
       <div data-hero-dial-mask class="hero-dial__mask">
         <div data-hero-dial-mask-item class="hero-dial__mask-item"><img src="assets/photos/portraits/portrait-01.jpg" draggable="false" class="hero-dial__mask-img" alt=""></div>
         <div data-hero-dial-mask-item class="hero-dial__mask-item"><img src="assets/photos/verticals/vertical-01.jpg" draggable="false" class="hero-dial__mask-img" alt=""></div>
@@ -60,10 +58,9 @@ import Button from '../components/Button.astro';
           ))}
         </g>
         <circle class="hero-dial__pause" r="230" />
-        <circle class="hero-dial__hit" r="46" />
       </svg>
       <div class="hero-dial__note">
-        <span class="hero-dial__note-dot"></span>
+        <span class="hero-dial__note-marker"></span>
         <div class="hero-dial__captions">
           {[
             "Architecture drawn by hand.",
@@ -77,11 +74,6 @@ import Button from '../components/Button.astro';
         </div>
       </div>
     </div>
-    <!-- The five lines that stand for the dial's five states — the four
-         column starts and the far gutter — each an unstyled click target. -->
-    {[0, 1, 2, 3, 4].map((column) => (
-      <button class="hero-dial__target" type="button" data-hero-dial-target={column} style={`--target-column: ${column}`} aria-label={`Show state ${column + 1}`}></button>
-    ))}
     <div class="home-hero__bottom">
       <div class="home-hero__copy">
         <div class="home-hero__col">

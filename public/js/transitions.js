@@ -114,7 +114,12 @@ function runPageLeaveAnimation(current, next) {
   transitionLabelText.innerText = nextPageName || "Hi there";
 
   const tl = gsap.timeline({
-    onComplete: () => { current.remove() }
+    onComplete: () => {
+      current.remove();
+      // Left with the stepped menu open (the back button, say): it closes
+      // under the cover rather than over the incoming page
+      getStepNav()?.close({ instant: true });
+    }
   });
 
   if (reducedMotion) {
@@ -197,6 +202,47 @@ function runPageEnterAnimation(next){
   });
 }
 
+// The stepped menu's panels carry their own links (stepnav.js): they grow
+// down over the page, the page is swapped under them, and they retract to
+// show the new one. Leave, then enter, in turn — the panels have to cover the
+// page before it goes.
+
+function getStepNav() {
+  const root = document.querySelector("[data-step-nav]");
+  return root && root.__stepNavApi;
+}
+
+function isStepNavLink(trigger) {
+  return trigger instanceof Element && trigger.hasAttribute("data-step-nav-link") && !!getStepNav();
+}
+
+function runStepNavLeaveAnimation(current, link) {
+  if (reducedMotion) {
+    getStepNav().close({ instant: true });
+    return gsap.set(current, { autoAlpha: 0 });
+  }
+
+  return getStepNav().cover(link);
+}
+
+function runStepNavEnterAnimation(current, next) {
+  // Covered now: the old page goes before the new one's functions run, as it
+  // does in the default transition
+  current.remove();
+
+  const tl = gsap.timeline();
+
+  if (!reducedMotion) {
+    tl.add(getStepNav().uncover(), 0);
+    // The page settles down into place as the panels retract from it
+    tl.from(next, { y: "-6vh", duration: 0.9 }, 0);
+  }
+
+  tl.call(resetPage, [next]);
+
+  return tl;
+}
+
 
 // -----------------------------------------
 // BARBA HOOKS + INIT
@@ -265,6 +311,20 @@ barba.init({
       // New page enters
       async enter(data) {
         return runPageEnterAnimation(data.next.container);
+      }
+    },
+    {
+      // Only for the stepped menu's panels; its rule puts it ahead of the
+      // default for them, and everything else falls through to the default
+      name: "step-nav",
+      custom: ({ trigger }) => isStepNavLink(trigger),
+
+      async leave(data) {
+        return runStepNavLeaveAnimation(data.current.container, data.trigger);
+      },
+
+      async enter(data) {
+        return runStepNavEnterAnimation(data.current.container, data.next.container);
       }
     }
   ],

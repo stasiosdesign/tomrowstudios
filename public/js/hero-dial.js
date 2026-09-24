@@ -19,15 +19,11 @@
 // five seconds that lights the ticks in turn, clockwise from the top,
 // steps forward on completion and restarts from nothing on every move —
 // paused, where it is, while the pointer is over the dial and resumed from
-// there when it leaves. A click on any of the five line targets goes
-// straight to that state, the short way round, and starts the ring again;
-// the target on the dial's own line never takes the pointer, so the dial's
-// hover circles keep it, and a click on the dial itself selects that state.
+// there when it leaves. The autoplay is the only thing that moves it.
 //
-// The targets mark the current state with aria-current; the active
-// photographs carry [data-active], as the slider's do.
+// The active photographs carry [data-active], as the slider's do.
 //
-// Each state has its own caption under the note's dot. They change the
+// Each state has its own caption beside the note's marker. They change the
 // moment a move starts, with the photographs, using a masked SplitText
 // reveal: the words of the outgoing caption rise out
 // through their masks while the incoming caption's rise in from below, a
@@ -51,7 +47,7 @@
   const CAPTION_EASE_IN = "expo.out";
   const CAPTION_EASE_OUT = "power3.inOut";
 
-  function createHeroDial(dial, targets, face, backgrounds, maskFrame, maskItems, ticks, captions) {
+  function createHeroDial(dial, face, backgrounds, maskFrame, maskItems, ticks, captions) {
     const count = COLUMNS;
     const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
     const clamp = gsap.utils.clamp;
@@ -66,16 +62,11 @@
     const state = { progress: 0 };
     let activeIndex = -1;
 
-    // The active slide has [data-active] on its background and mask item,
-    // and aria-current on its target
+    // The active slide has [data-active] on its background and mask item
     const setActive = (previousIndex, index) => {
       [backgrounds, maskItems].forEach((list) => {
         if (previousIndex >= 0 && list[previousIndex]) list[previousIndex].removeAttribute("data-active");
         if (list[index]) list[index].setAttribute("data-active", "");
-      });
-      targets.forEach((target, i) => {
-        if (i === index) target.setAttribute("aria-current", "true");
-        else target.removeAttribute("aria-current");
       });
     };
 
@@ -192,7 +183,6 @@
     let slideTween = null;
     let current = parseInt(getComputedStyle(dial).getPropertyValue("--dial-column"), 10);
     if (!(current >= 0 && current < count)) current = count - 1;
-    const home = current;
 
     function goTo(delta) {
       current += delta;
@@ -207,12 +197,6 @@
       startAutoplay();
     }
 
-    // Step to a specific slide by index, the short way round
-    function goToIndex(i) {
-      const delta = wrap(i - current);
-      if (delta !== 0) goTo(delta);
-    }
-
     // Autoplay fills the ring
     if (AUTOPLAY > 0 && !reduced) {
       autoTween = gsap.to(ring, {
@@ -225,14 +209,6 @@
       });
     }
     renderRing(reduced ? 1 : 0);
-
-    const onClick = (event) => {
-      goToIndex(parseInt(event.currentTarget.dataset.heroDialTarget, 10));
-    };
-    targets.forEach((target) => target.addEventListener("click", onClick));
-    // The dial stands on its own line's target, so it takes that click
-    const onFaceClick = () => goToIndex(home);
-    face.addEventListener("click", onFaceClick);
 
     // Autoplay pauses only while the dial is hovered
     const onEnter = () => {
@@ -261,8 +237,6 @@
       if (slideTween) slideTween.kill();
       if (autoTween) autoTween.kill();
       window.removeEventListener("resize", onResize);
-      targets.forEach((target) => target.removeEventListener("click", onClick));
-      face.removeEventListener("click", onFaceClick);
       face.removeEventListener("pointerenter", onEnter);
       face.removeEventListener("pointerleave", onLeave);
       captions.forEach((caption, i) => gsap.killTweensOf(captionWords(i)));
@@ -274,7 +248,7 @@
       });
     }
 
-    return { dial, targets, state, ring, goTo, goToIndex, destroy };
+    return { dial, state, ring, destroy };
   }
 
   function initHeroDial() {
@@ -288,9 +262,6 @@
     const dial = document.querySelector("[data-hero-dial]");
     const face = dial && dial.querySelector(".hero-dial__face");
     if (!dial || !face) return;
-    const targets = Array.from(document.querySelectorAll("[data-hero-dial-target]"))
-      .sort((a, b) => a.dataset.heroDialTarget - b.dataset.heroDialTarget);
-    if (targets.length !== COLUMNS) return;
 
     const backgrounds = Array.from(document.querySelectorAll("[data-hero-slide-bg]"));
     const maskFrame = dial.querySelector("[data-hero-dial-mask]");
@@ -299,7 +270,7 @@
     if (!ticks) return;
     const captions = Array.from(dial.querySelectorAll("[data-hero-dial-caption]"));
 
-    window.heroDial = createHeroDial(dial, targets, face, backgrounds, maskFrame, maskItems, ticks, captions);
+    window.heroDial = createHeroDial(dial, face, backgrounds, maskFrame, maskItems, ticks, captions);
   }
 
   window.initHeroDial = initHeroDial;

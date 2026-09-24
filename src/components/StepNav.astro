@@ -1,8 +1,8 @@
 ---
 /* The scrolled-state navigation: a Menu control fixed at the top right once
-   the page's hero has gone by, and the stepped menu it opens — five panels
+   the page's hero has gone by, and the stepped menu it opens — four panels
    side by side, each a link, sharing a top edge and stepping down in height
-   from Influence to Contact. The staircase is layout: each panel is built at
+   from Influence to Partners. The staircase is layout: each panel is built at
    its final size and revealed by a clip-path from its top edge down, in a
    short overlapping stagger (stepnav.js). The labels' rolling text is a
    separate layer: two copies of each word in a clipped line, the second
@@ -13,14 +13,13 @@
    The exposed bar (SiteNav.astro) is untouched — this only appears where
    that bar has scrolled away.
 
-   Contact is the site's contact drawer, not a page: the link opens the
-   drawer of the current page and falls back to the home page's anchor. */
+   A panel's link is also its page transition: the panels cover the page and
+   retract from the new one (stepnav.js, called from transitions.js). */
 const items = [
   { href: 'influence.html', label: 'Influence' },
   { href: 'architecture.html', label: 'Architecture' },
   { href: 'shop.html', label: 'Shop' },
   { href: 'partner.html', label: 'Partners' },
-  { href: 'index.html#contact', label: 'Contact', contact: true },
 ];
 ---
 <div data-step-nav data-step-nav-state="hero" data-step-nav-open="false" class="step-nav">
@@ -30,18 +29,17 @@ const items = [
       <span class="step-nav__roll-text is--shadow" data-step-nav-toggle-label="close" aria-hidden="true">Close</span>
     </span>
   </button>
+  <div data-step-nav-backdrop class="step-nav__backdrop" aria-hidden="true"></div>
   <nav id="step-nav-menu" data-step-nav-menu class="step-nav__menu" aria-label="Site menu" aria-hidden="true" inert>
     {items.map((item, i) => (
       <a
         href={item.href}
         data-step-nav-link
-        data-step-nav-contact={item.contact ? '' : undefined}
-        data-barba-prevent={item.contact ? 'self' : undefined}
         class="step-nav__panel"
         style={`--step: ${i};`}
       >
         <span class="step-nav__index" data-step-nav-index>{String(i + 1).padStart(2, '0')}</span>
-        <span class="step-nav__label">
+        <span class="step-nav__label" data-step-nav-label>
           <span class="step-nav__roll">
             <span class="step-nav__roll-text" data-step-nav-text>{item.label}</span>
             <span class="step-nav__roll-text is--shadow" data-step-nav-text-shadow aria-hidden="true">{item.label}</span>
