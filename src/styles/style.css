@@ -2197,16 +2197,18 @@ h3 {
 
 /* ---------- Nav height ---------- */
 /* Height of the fixed bar: 3.2rem top padding, 2.4rem bottom, plus the
-   stacked links' line boxes. Every sticky offset below is derived from it. */
-:root { --nav-height: 13.6rem; }
+   stacked links' line boxes — five of them, Home to Partner, each about
+   2.1rem with its gap, at every width. Every sticky offset below is derived
+   from it. */
+:root { --nav-height: 15.7rem; }
 
 /* The bar is fixed and its links stack, so below 992px it grows to roughly
    a third of a phone screen. The token has to grow with it — measured at 11.3
    and 15.7rem before the bar's own top padding grew by 0.6rem at this
    breakpoint — or every inner page starts its first block underneath the
    bar. On a phone that was hiding the project eyebrow entirely. */
-@media screen and (max-width: 991px) { :root { --nav-height: 12.2rem; } }
-@media screen and (max-width: 767px) { :root { --nav-height: 16.6rem; } }
+@media screen and (max-width: 991px) { :root { --nav-height: 14.3rem; } }
+@media screen and (max-width: 767px) { :root { --nav-height: 18.7rem; } }
 
 /* ---------- CTA ----------
 

@@ -7,6 +7,7 @@ const { overHero } = Astro.props;
 // The page being built, as the links name it, so its link carries aria-current
 const page = Astro.url.pathname.split('/').pop() || 'index.html';
 const links = [
+  ['index.html', 'Home'],
   ['influence.html', 'Influence'],
   ['architecture.html', 'Architecture'],
   ['shop.html', 'Shop'],
