@@ -97,7 +97,7 @@ import Button from '../components/Button.astro';
           <div class="home-hero__reveal-mask is--actions">
             <div class="actions home-hero__reveal">
               <Button href="#contact" data-panel-open="contact" data-barba-prevent="self" label="Collaborate" />
-              <Button href="influence.html" label="About" secondary />
+              <Button href="influence.html" label="About" />
             </div>
           </div>
         </div>
@@ -108,35 +108,43 @@ import Button from '../components/Button.astro';
 <div data-hero-parallax-dark class="home-hero-wrap__dark"></div>
 </div>
 
-<!-- Placeholder band under the hero: empty for now, to judge the colour at full height -->
-<section class="placeholder-band"></section>
-
-<SiteNav overHero />
-
-<!-- Logo marquee -->
-<section class="logo-marquee">
-  <div data-marquee-duplicate="2" data-marquee-scroll-direction-target data-marquee-direction="right" data-marquee-status="normal" data-marquee-speed="15" data-marquee-scroll-speed="10" class="marquee-advanced">
+<!-- Client logo wall under the hero: a tall red band, the eyebrow and one
+     black hairline at its top, the logo strip in the open space below. The
+     strip is the site's logo marquee (marquee.js; the Partner page has the
+     same one), dressed down here: black marks, no tiles. The logo files are
+     white artwork, turned black in CSS. -->
+<section class="logo-marquee logo-wall">
+  <div class="logo-wall__head">
+    <p class="tagline logo-wall__eyebrow">[&nbsp;Clients&nbsp;]</p>
+  </div>
+  <div class="logo-wall__body">
+  <div data-marquee-duplicate="2" data-marquee-scroll-direction-target data-marquee-direction="left" data-marquee-status="normal" data-marquee-speed="15" data-marquee-scroll-speed="10" class="marquee-advanced">
     <div data-marquee-scroll-target class="marquee-advanced__scroll">
       <div data-marquee-collection-target class="marquee-advanced__collection">
-        <!-- Placeholder strip: the two supplied marks alternating. An even
-             count so the pair still alternates across the loop seam. Swap these
-             rows for the real set when the rest of the logos arrive. -->
-        <div class="marquee-advanced__item-width"><img src="assets/logos/finch-logo.png" loading="lazy" alt="Finch"></div>
-        <div class="marquee-advanced__item-width"><img src="assets/logos/Gendo-Logo-White.png" loading="lazy" alt="Gendo"></div>
-        <div class="marquee-advanced__item-width"><img src="assets/logos/finch-logo.png" loading="lazy" alt="Finch"></div>
-        <div class="marquee-advanced__item-width"><img src="assets/logos/Gendo-Logo-White.png" loading="lazy" alt="Gendo"></div>
-        <div class="marquee-advanced__item-width"><img src="assets/logos/finch-logo.png" loading="lazy" alt="Finch"></div>
-        <div class="marquee-advanced__item-width"><img src="assets/logos/Gendo-Logo-White.png" loading="lazy" alt="Gendo"></div>
-        <div class="marquee-advanced__item-width"><img src="assets/logos/finch-logo.png" loading="lazy" alt="Finch"></div>
-        <div class="marquee-advanced__item-width"><img src="assets/logos/Gendo-Logo-White.png" loading="lazy" alt="Gendo"></div>
-        <div class="marquee-advanced__item-width"><img src="assets/logos/finch-logo.png" loading="lazy" alt="Finch"></div>
-        <div class="marquee-advanced__item-width"><img src="assets/logos/Gendo-Logo-White.png" loading="lazy" alt="Gendo"></div>
-        <div class="marquee-advanced__item-width"><img src="assets/logos/finch-logo.png" loading="lazy" alt="Finch"></div>
-        <div class="marquee-advanced__item-width"><img src="assets/logos/Gendo-Logo-White.png" loading="lazy" alt="Gendo"></div>
+        {[
+          ['Architypes-Logo-White.png', 'Architypes'],
+          ['D5-Render-Logo-White.png', 'D5 Render'],
+          ['Epic-Games-Logo-White.png', 'Epic Games'],
+          ['Gendo-Logo-White.png', 'Gendo'],
+          ['Giraffe-Logo-White.png', 'Giraffe'],
+          ['Intel-Logo-White.png', 'Intel'],
+          ['Krea-Logo-White.png', 'Krea'],
+          ['Material-Bank-Logo-White.png', 'Material Bank'],
+          ['Motif-Logo-White.png', 'Motif'],
+          ['Qonic-Logo-White.png', 'Qonic'],
+          ['Speckle-Logo-White.png', 'Speckle'],
+          ['finch-logo.png', 'Finch'],
+          ['xfigura-logo.png', 'xfigura'],
+        ].map(([file, name]) => (
+          <div class="marquee-advanced__item-width"><img src={`assets/logos/${file}`} loading="lazy" alt={name}></div>
+        ))}
       </div>
     </div>
   </div>
+  </div>
 </section>
+
+<SiteNav overHero />
 
 <!-- Practice -->
 <section class="section">

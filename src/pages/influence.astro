@@ -4,6 +4,8 @@ import SiteNav from '../components/SiteNav.astro';
 import SiteFooter from '../components/SiteFooter.astro';
 import ContactPanel from '../components/ContactPanel.astro';
 import Button from '../components/Button.astro';
+import WorldMapLines from '../components/WorldMapLines.astro';
+import AtlasHotspots from '../components/AtlasHotspots.astro';
 ---
 <BaseLayout title="Influence — Tomrow Studios" namespace="influence" pageName="Influence">
 <SiteNav />
@@ -165,13 +167,18 @@ import Button from '../components/Button.astro';
 </section>
 
 <!-- Atlas — the map, then the book it came from -->
-<section class="map-spread theme-light">
+<section class="map-spread is--influence">
   <div class="map-spread__head">
     <p class="tagline">Global reach</p>
     <h2>Twenty-one creators, thirteen countries</h2>
   </div>
   <div class="map-spread__media">
-    <img class="map-spread__img" src="assets/graphics/atlas-map.png" loading="lazy" decoding="async" alt="World map plotting the twenty-one architecture creators studied in Architectural Influence">
+    <!-- The stage is exactly the plate's box, so the hotspot layer inside it
+         shares the map's coordinates at any width -->
+    <div class="world-map-stage" data-hotspot-area>
+      <WorldMapLines />
+      <AtlasHotspots />
+    </div>
   </div>
   <div class="book-feature">
     <div class="book-feature__intro">

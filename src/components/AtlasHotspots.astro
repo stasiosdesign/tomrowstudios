@@ -1,0 +1,123 @@
+---
+/* Hotspots on the atlas, and the card drawer they open. The interaction is
+   Osmo's Product Hotspot Modal (public/js/hotspot.js) on the site's own
+   dress: a marker per country pinned to the plate, a drawer that slides in
+   from the right and steps between the countries with arrows and dots, and
+   the markers' active states following it.
+
+   The markers sit in a layer the exact size of the SVG plate, so a position
+   given as a percentage of that layer is a position in the map's own viewBox,
+   and holds when the plate scales. The percentages below were computed with
+   the same projection that drew the map (Natural Earth I, rotated 11°),
+   against the component's cropped viewBox — not read off by eye.
+
+   The `data-hotspot-*` attributes are the script's contract: a marker's
+   `data-hotspot-target` is matched to the card with the same
+   `data-hotspot-name`; statuses and control values are what the script
+   reads and writes. Rename nothing there.
+
+   Placeholder content for now: five of the book's thirteen countries, a city
+   in each where a studied creator works, and stand-in copy and photographs. */
+const countries = [
+  {
+    name: "united-states",
+    country: "United States",
+    city: "Chicago",
+    x: 16.15, y: 30.05,
+    title: "Building an audience from a mid-size practice",
+    body: "Placeholder copy. Two of the twenty-one creators studied in the book work from the United States, one of them from a small practice in Chicago that grew a following by publishing the drawing process rather than the finished building.",
+    img: "assets/photos/events/event-03.jpg",
+  },
+  {
+    name: "brazil",
+    country: "Brazil",
+    city: "Curitiba",
+    x: 28.47, y: 67.14,
+    title: "Teaching as the format, not the by-product",
+    body: "Placeholder copy. From Curitiba, a studio that turned tutorials into its main output and its practice into the case study — the pattern the book calls the educator's route to visibility.",
+    img: "assets/photos/events/event-07.jpg",
+  },
+  {
+    name: "united-kingdom",
+    country: "United Kingdom",
+    city: "London",
+    x: 45.23, y: 20.36,
+    title: "Where most of the twenty-one are",
+    body: "Placeholder copy. Nine of the studied creators are based in the UK, most of them in London. Tom Rowntree's own account is one of them, which is where the book's questions started.",
+    img: "assets/photos/events/event-11.jpg",
+  },
+  {
+    name: "india",
+    country: "India",
+    city: "Jaipur",
+    x: 70.02, y: 42.94,
+    title: "A regional voice with a global audience",
+    body: "Placeholder copy. Working from Jaipur, one creator built the largest audience in the study by explaining vernacular construction to people who would never visit — the clearest case of content travelling further than the work.",
+    img: "assets/photos/events/event-05.jpg",
+  },
+  {
+    name: "australia",
+    country: "Australia",
+    city: "Sydney",
+    x: 87.23, y: 77.80,
+    title: "Personal brand ahead of the practice",
+    body: "Placeholder copy. In Sydney, a sole practitioner whose name is better known than the studio's — the book reads this as the most direct example of visibility becoming commissions.",
+    img: "assets/photos/events/event-09.jpg",
+  },
+];
+---
+<!-- Clicking the plate away from a marker closes the drawer -->
+<div data-hotspot-control="close" class="atlas-hotspots__close"></div>
+
+<div class="atlas-hotspots" aria-label="Countries in the study">
+  {countries.map((c) => (
+    <div class="atlas-hotspots__item" style={`--x: ${c.x}%; --y: ${c.y}%;`}>
+      <button type="button" data-hotspot-target={c.name} data-hotspot-status="not-active" aria-label={`View ${c.country}`} aria-expanded="false" class="atlas-hotspot">
+        <span class="atlas-hotspot__ring" aria-hidden="true"></span>
+        <svg class="atlas-hotspot__icon" viewBox="0 0 12 12" fill="none" aria-hidden="true"><path d="M6 1v10M1 6h10" stroke="currentColor" stroke-width="1.25" stroke-linecap="square"/></svg>
+      </button>
+    </div>
+  ))}
+</div>
+
+<div data-hotspot-modal-init data-hotspot-modal-status="not-active" role="dialog" aria-modal="true" aria-hidden="true" aria-label="Country details" class="atlas-modal">
+  <div class="atlas-modal__side">
+    <div class="atlas-modal__tile">
+      <div class="atlas-modal__top">
+        <button type="button" data-hotspot-control="close" aria-label="Close country details" class="atlas-modal__close">
+          <svg viewBox="0 0 12 12" fill="none" aria-hidden="true"><path d="M1.5 1.5l9 9M10.5 1.5l-9 9" stroke="currentColor" stroke-width="1.25" stroke-linecap="square"/></svg>
+        </button>
+      </div>
+      <div class="atlas-modal__collection">
+        <div class="atlas-modal__list">
+          {countries.map((c, i) => (
+            <div data-hotspot-status={i === 0 ? "active" : "not-active"} data-hotspot-name={c.name} class="atlas-modal__item">
+              <div class="atlas-modal__media">
+                <img src={c.img} loading="lazy" decoding="async" alt="" class="atlas-modal__img">
+              </div>
+              <div class="atlas-modal__info">
+                <p class="tagline atlas-modal__eyebrow">{c.country} — {c.city}</p>
+                <h3 class="atlas-modal__h">{c.title}</h3>
+                <p class="atlas-modal__p">{c.body}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+      <div class="atlas-modal__bottom">
+        <div class="atlas-modal__controls">
+          <button type="button" data-hotspot-control="prev" aria-label="Previous country" class="atlas-modal__arrow is--prev">
+            <svg viewBox="0 0 12 12" fill="none" aria-hidden="true"><path d="M4 1.5 8.5 6 4 10.5" stroke="currentColor" stroke-width="1.25" stroke-linecap="square"/></svg>
+          </button>
+          <!-- One dot as the template; hotspot.js makes one per card -->
+          <div data-hotspot-generate-dots class="atlas-modal__dots">
+            <button type="button" data-hotspot-control="1" data-hotspot-control-status="active" aria-label="Go to country 1" aria-current="true" class="atlas-modal__dot"></button>
+          </div>
+          <button type="button" data-hotspot-control="next" aria-label="Next country" class="atlas-modal__arrow">
+            <svg viewBox="0 0 12 12" fill="none" aria-hidden="true"><path d="M4 1.5 8.5 6 4 10.5" stroke="currentColor" stroke-width="1.25" stroke-linecap="square"/></svg>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

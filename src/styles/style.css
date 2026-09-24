@@ -138,6 +138,9 @@ body {
    and reads with the headings, which stay on the body face. */
 .site-nav__inner .site-nav__link,
 .site-footer__legal,
+/* The scrolled-state navigation's control and the panels' numbers. */
+.step-nav__toggle,
+.step-nav__index,
 /* Buttons and calls to action. The label sits on the inner span, which is what
    the button's hover split reads and rebuilds character by character, so the
    face has to be named there rather than on the button around it. */
@@ -1192,10 +1195,74 @@ h3 {
   background-color: #000000;
 }
 
-/* ---------- Placeholder band under the home hero ---------- */
-.placeholder-band {
-  height: 100vh;
+/* ---------- Client logo wall under the home hero ----------
+   The logo marquee (same markup and script as the Partner page's strip) on
+   a tall red band, stripped back: the eyebrow and one black hairline at the
+   top, then a large open field with the strip set in its middle — no tiles,
+   the marks in black on an even pitch, and none of the column lines the
+   other bands draw. Each item is a fixed share of the viewport with its mark
+   centred, which is what gives the row its rhythm; the share grows as the
+   screen narrows so the marks stay readable. Written against both classes:
+   the shared marquee rule further down paints the band black and draws the
+   grid, and the tagline rule paints the eyebrow white, and either would win
+   over a single class declared up here. */
+.logo-marquee.logo-wall {
+  display: flex;
+  flex-direction: column;
+  /* A band and a half; the open space is the point of it */
+  min-height: 150svh;
+  padding: 4rem 0 0;
   background-color: #e6402a;
+  /* No column lines through this band */
+  background-image: none;
+  color: #000000;
+}
+.logo-wall__head {
+  display: flex;
+  flex: none;
+  padding: 0 var(--site-inset) 4rem;
+  /* The one line in the band: under the eyebrow, over the open field */
+  border-bottom: 1px solid rgba(0, 0, 0, 0.35);
+}
+.logo-wall .logo-wall__eyebrow {
+  margin: 0;
+  color: #000000;
+}
+/* The field takes the rest of the band and holds the strip at its centre */
+.logo-wall__body {
+  display: flex;
+  flex: 1 1 auto;
+  align-items: center;
+  min-width: 0;
+}
+.logo-wall .marquee-advanced__item-width {
+  width: 13.5vw;
+  aspect-ratio: auto;
+  height: 6rem;
+  margin: 0;
+  padding: 0 1.5vw;
+  border-radius: 0;
+  background-color: transparent;
+}
+/* White artwork to black. The marks are bounded on both axes, as in the
+   strip below, so a long wordmark and a tall symbol carry a similar weight. */
+.logo-wall .marquee-advanced__item-width img {
+  max-width: 70%;
+  max-height: 3.6rem;
+  filter: brightness(0);
+}
+
+/* Shorter as the screen narrows — still well over a screen's worth on a
+   tablet and a full screen on a phone, so it never reads as a strip */
+@media screen and (max-width: 991px) {
+  .logo-marquee.logo-wall { min-height: 120svh; }
+  .logo-wall .marquee-advanced__item-width { width: 22vw; }
+}
+@media screen and (max-width: 767px) {
+  .logo-marquee.logo-wall { min-height: 100svh; padding-top: 3.2rem; }
+  .logo-wall__head { padding-bottom: 3.2rem; }
+  .logo-wall .marquee-advanced__item-width { width: 32vw; height: 5.2rem; margin: 0; }
+  .logo-wall .marquee-advanced__item-width img { max-height: 3rem; }
 }
 
 /* ---------- Home hero runner ---------- */
@@ -1944,6 +2011,182 @@ h3 {
   border-bottom-color: transparent;
 }
 
+/* ---------- Stepped menu (scrolled-state navigation) ----------
+   StepNav.astro / stepnav.js. Once a page's hero has scrolled by, a Menu
+   control stands where the bar's right-hand column was; it opens five
+   panels, one link each, side by side from gutter to gutter, sharing a top
+   edge and stepping down in height from Influence to Contact. The
+   staircase is these heights — each panel is built at its final size and
+   revealed by a clip-path the script animates; nothing here moves to make
+   the shape. White panels on the black page, dark hairlines between them:
+   the bar's palette, reversed. */
+.step-nav {
+  position: fixed;
+  inset: 0;
+  /* Over the bar (150); under the drawers (300) and the transition (400),
+     which are meant to cover it. */
+  z-index: 200;
+  pointer-events: none;
+}
+
+/* The control. Hidden over the hero; in from above once the hero has gone.
+   It sits at the bar's own top padding and right inset, so it appears where
+   the bar's "Let's Talk" was. Open, it stands on the white Contact panel and
+   takes the panel's colours. */
+.step-nav__toggle {
+  position: absolute;
+  top: 3.2rem;
+  right: var(--site-inset);
+  z-index: 2;
+  pointer-events: auto;
+  display: block;
+  min-width: 7.2rem;
+  margin: 0;
+  padding: 1.1rem 1.4rem;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  background-color: #000000;
+  color: #f4f4f4;
+  text-align: center;
+  font-weight: var(--weight-ui); --wght: var(--weight-ui);
+  line-height: 1.2;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-0.8rem);
+  transition:
+    opacity 0.3s var(--cta-ease),
+    transform 0.3s var(--cta-ease),
+    visibility 0s linear 0.3s,
+    background-color 0.3s var(--cta-ease),
+    border-color 0.3s var(--cta-ease),
+    color 0.3s var(--cta-ease);
+}
+.step-nav[data-step-nav-state="scrolled"] .step-nav__toggle,
+.step-nav[data-step-nav-open="true"] .step-nav__toggle {
+  opacity: 1;
+  visibility: visible;
+  transform: none;
+  transition-delay: 0s;
+}
+.step-nav[data-step-nav-open="true"] .step-nav__toggle {
+  background-color: transparent;
+  border-color: rgba(10, 10, 10, 0.3);
+  color: #0a0a0a;
+}
+.step-nav__toggle:hover,
+.step-nav__toggle:focus-visible { border-color: currentColor; outline: none; }
+
+/* The roll: one line, clipped, holding two copies of the text — the second
+   sits a line below the first, where the clip hides it, and the script
+   rolls both up together. */
+.step-nav__roll {
+  position: relative;
+  display: block;
+  overflow: hidden;
+  line-height: 1.15;
+}
+.step-nav__roll-text {
+  display: block;
+  white-space: nowrap;
+}
+.step-nav__roll-text.is--shadow {
+  position: absolute;
+  inset: 0;
+}
+.step-nav__char { display: inline-block; }
+
+/* The panels. Nothing until the script opens them, then five equal columns
+   from gutter to gutter. `visibility` follows the open attribute, which the
+   script sets before opening and clears after closing, so the reveal and the
+   reverse both play in view. */
+.step-nav__menu {
+  position: absolute;
+  top: 0;
+  left: var(--site-gutter);
+  right: var(--site-gutter);
+  display: flex;
+  align-items: flex-start;
+  visibility: hidden;
+  pointer-events: none;
+}
+.step-nav[data-step-nav-open="true"] .step-nav__menu {
+  visibility: visible;
+  pointer-events: auto;
+}
+.step-nav__panel {
+  position: relative;
+  display: flex;
+  flex: 1 1 0;
+  flex-direction: column;
+  justify-content: space-between;
+  min-width: 0;
+  /* The staircase: eleven hundredths of the screen between neighbours,
+     Influence the tallest. Set in the height, so the shape is the layout. */
+  height: calc(88svh - var(--step) * 11svh);
+  padding: 2.4rem var(--grid-pad) 2rem;
+  background-color: #ffffff;
+  color: #0a0a0a;
+  text-decoration: none;
+  outline: none;
+  clip-path: inset(0 0 100% 0);
+}
+.step-nav__panel + .step-nav__panel { box-shadow: inset 1px 0 0 var(--grid-line-color-dark); }
+.step-nav__index {
+  display: block;
+  color: rgba(10, 10, 10, 0.55);
+}
+/* The current page's number carries the bar's small square marker */
+.step-nav__panel[aria-current] .step-nav__index::before {
+  content: "";
+  display: inline-block;
+  width: 0.45em;
+  height: 0.45em;
+  margin-right: 0.7em;
+  vertical-align: middle;
+  background-color: currentColor;
+}
+.step-nav__label {
+  display: block;
+  font-size: clamp(2rem, 2.3vw, 3.6rem);
+  line-height: var(--leading-heading);
+  letter-spacing: var(--track-display);
+  font-weight: var(--weight-strong); --wght: var(--weight-strong);
+}
+.step-nav__panel:focus-visible .step-nav__index { color: #0a0a0a; }
+
+@media screen and (max-width: 991px) {
+  .step-nav__toggle { top: 2.4rem; }
+}
+
+/* The phone: the panels run edge to edge under the control rather than
+   around it, the steps come closer, and the labels turn to run up the
+   panel's left edge from its foot — a column of 75px cannot set
+   "Architecture" across. The second copy is not needed there: no hover. */
+@media screen and (max-width: 767px) {
+  .step-nav__menu {
+    top: 7.2rem;
+    left: 0;
+    right: 0;
+  }
+  .step-nav__panel {
+    height: calc(76svh - var(--step) * 9svh);
+    padding: 1.6rem 1.2rem;
+  }
+  .step-nav__label {
+    align-self: flex-start;
+    writing-mode: vertical-rl;
+    transform: rotate(180deg);
+    font-size: 2rem;
+  }
+  .step-nav__roll { line-height: 1.1; }
+  .step-nav__roll-text.is--shadow { display: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .step-nav__toggle { transition: none; }
+}
+
 /* ---------- Nav height ---------- */
 /* Height of the fixed bar: 3.2rem top padding, 2.4rem bottom, plus the
    stacked links' line boxes. Every sticky offset below is derived from it. */
@@ -2124,13 +2367,17 @@ h3 {
   display: block;
   width: 1.2rem;
   height: 1.2rem;
+  transition: color 0.2s var(--cta-ease);
 }
 
 /* States. Hover is only asked for where there is a pointer to hover with;
    focus-visible is always there. */
 @media (hover: hover) and (pointer: fine) {
   .cta:hover .cta__line { opacity: 1; transform: scale(1); }
+  /* The arrow takes the accent red while the CTA is hovered */
+  .cta:hover .cta__icon { color: var(--cta-accent-color); }
 }
+.cta:focus-visible .cta__icon { color: var(--cta-accent-color); }
 .cta:focus-visible .cta__line { opacity: 1; transform: scale(1); }
 /* A press nudges the content a hair to the right, the way a switch moves */
 .cta:active .cta__content { translate: 0.1rem 0; }
@@ -2632,6 +2879,7 @@ body{
   background-color: #000000;
   padding-bottom: 8rem;
 }
+/* The printed plate, where a page still shows it (book) */
 .map-spread__img {
   width: 100%;
   max-width: none;
@@ -2640,6 +2888,328 @@ body{
      positioned against it, and without this the spread collapses until the
      image arrives */
   aspect-ratio: 3542 / 1996;
+}
+/* The plate on the Influence page: a black band the full page width, the
+   atlas drawn on it in vertical hairlines (WorldMapLines.astro). Not an image
+   in a frame — no radius, no border, no inset — so it reads as a band of the
+   page. */
+.map-spread__media {
+  background-color: #000000;
+  padding: 4.8rem 0;
+}
+.world-map {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+/* The strokes are finer than the home runner's hairline: three quarters of a
+   CSS pixel, in the runner's near-white, drawn a little lighter. Not pinned to
+   the pixel grid — a sub-pixel stroke antialiased is what gives it the
+   delicacy; snapped it would be a full pixel again. non-scaling-stroke keeps
+   the weight the same whatever width the plate scales to. */
+.world-map__field {
+  stroke: #f4f4f4;
+  stroke-opacity: 0.65;
+  stroke-width: 0.75px;
+  vector-effect: non-scaling-stroke;
+}
+/* Two densities of the one drawing: the fine field above the phone
+   breakpoint, the coarse one below it, where the fine pitch would scale down
+   to a pixel or two and close up. */
+.world-map__field.is--coarse { display: none; }
+@media screen and (max-width: 767px) {
+  .map-spread__media { padding: 3.2rem 0; }
+  .world-map__field.is--fine { display: none; }
+  .world-map__field.is--coarse { display: block; }
+}
+
+/* ---------- Atlas hotspots ----------
+   Markers on the plate and the drawer of country cards they open
+   (AtlasHotspots.astro, hotspot.js). The behaviour is Osmo's hotspot modal:
+   every state below is a `data-hotspot-*` attribute the script sets, and the
+   card transitions are the resource's own, retimed to nothing. */
+
+/* The stage is the plate's box exactly; the hotspot layer fills it, so a
+   marker at --x / --y percent is at that point of the map's viewBox. */
+.world-map-stage { position: relative; }
+.atlas-hotspots__close {
+  position: absolute;
+  inset: 0;
+  cursor: default;
+}
+.atlas-hotspots {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.atlas-hotspots__item {
+  position: absolute;
+  left: var(--x);
+  top: var(--y);
+  transform: translate(-50%, -50%);
+  pointer-events: auto;
+}
+
+/* The marker: a plus in a hairline ring on black, the accent's red dot at
+   its centre behind the glyph — the one persistent red on the site is the
+   CTA's bar, and this is its point form. Hover and the open state turn the
+   plus through 45° into a cross, the way the resource does, and draw the
+   ring in red. */
+.atlas-hotspot {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 3.6rem;
+  height: 3.6rem;
+  min-width: 36px;
+  min-height: 36px;
+  padding: 0;
+  margin: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: #ffffff;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.atlas-hotspot__ring {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: #000000;
+  border: 1px solid rgba(255, 255, 255, 0.45);
+  transition: border-color 0.3s var(--cta-ease), transform 0.3s var(--cta-ease);
+}
+.atlas-hotspot__icon {
+  position: relative;
+  width: 1.2rem;
+  height: 1.2rem;
+  transition: transform 0.3s var(--cta-ease), color 0.3s var(--cta-ease);
+}
+@media (hover: hover) and (pointer: fine) {
+  .atlas-hotspot:hover .atlas-hotspot__ring { border-color: var(--cta-accent-color); transform: scale(1.1); }
+  .atlas-hotspot:hover .atlas-hotspot__icon { transform: rotate(45deg); }
+}
+.atlas-hotspot:focus-visible .atlas-hotspot__ring,
+.atlas-hotspot[data-hotspot-status="active"] .atlas-hotspot__ring {
+  border-color: var(--cta-accent-color);
+  transform: scale(1.1);
+}
+.atlas-hotspot[data-hotspot-status="active"] .atlas-hotspot__icon {
+  transform: rotate(45deg);
+  color: var(--cta-accent-color);
+}
+.atlas-hotspot:focus { outline: none; }
+
+/* The drawer. Fixed over the page like the side panels (z 300: over the nav,
+   under the page transition), pointer-events off until it is open so the
+   page beneath keeps working. It slides in from the right on the resource's
+   own curve. */
+.atlas-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 300;
+  pointer-events: none;
+  overflow: hidden;
+}
+.atlas-modal__side {
+  position: absolute;
+  top: 0;
+  right: 0;
+  display: flex;
+  align-items: stretch;
+  width: 100%;
+  max-width: 48rem;
+  height: 100%;
+  transition: transform 0.6s cubic-bezier(0.625, 0.05, 0, 1);
+  transform: translateX(100%) rotate(0.001deg);
+}
+[data-hotspot-modal-status="active"] .atlas-modal__side {
+  transform: translateX(0%) rotate(0.001deg);
+}
+/* The sheet: the site's near-black with a hairline down its open edge, no
+   radius — a panel of the page, not a card floating over it. */
+.atlas-modal__tile {
+  pointer-events: auto;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  width: 100%;
+  height: 100%;
+  background-color: #0a0a0a;
+  color: #ffffff;
+  border-left: 1px solid var(--grid-line-color);
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+.atlas-modal__top {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  display: flex;
+  justify-content: flex-end;
+  height: 0;
+  pointer-events: none;
+}
+.atlas-modal__close,
+.atlas-modal__arrow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 4.8rem;
+  height: 4.8rem;
+  padding: 0;
+  margin: 0;
+  border: 1px solid var(--grid-line-color);
+  background: #0a0a0a;
+  color: #ffffff;
+  cursor: pointer;
+  transition: border-color 0.2s var(--cta-ease), color 0.2s var(--cta-ease);
+  -webkit-tap-highlight-color: transparent;
+}
+.atlas-modal__close { pointer-events: auto; margin: 2.4rem 2.4rem 0 0; }
+.atlas-modal__close svg,
+.atlas-modal__arrow svg { width: 1.2rem; height: 1.2rem; }
+.atlas-modal__close:hover,
+.atlas-modal__arrow:hover,
+.atlas-modal__close:focus-visible,
+.atlas-modal__arrow:focus-visible { border-color: #ffffff; outline: none; }
+.atlas-modal__arrow:hover svg,
+.atlas-modal__arrow:focus-visible svg { color: var(--cta-accent-color); }
+.atlas-modal__arrow.is--prev svg { transform: scaleX(-1); }
+
+.atlas-modal__collection {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+}
+.atlas-modal__list {
+  display: grid;
+  grid-template-columns: 1fr;
+  width: 100%;
+  height: 100%;
+}
+/* Every card in the one grid cell; the status attribute says which shows */
+.atlas-modal__item {
+  grid-area: 1 / 1;
+  display: flex;
+  flex-direction: column;
+  padding: 2.4rem 2.4rem 0;
+}
+.atlas-modal__media {
+  position: relative;
+  aspect-ratio: 4 / 3;
+  overflow: hidden;
+  border-radius: var(--radius);
+  background: #1a1a1a;
+}
+.atlas-modal__img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.atlas-modal__info {
+  display: flex;
+  flex-direction: column;
+  gap: 1.6rem;
+  padding: 3.2rem 0 2.4rem;
+}
+.atlas-modal__eyebrow { margin: 0; color: rgba(255, 255, 255, 0.55); }
+.atlas-modal__h { margin: 0; }
+.atlas-modal__p { margin: 0; color: rgba(255, 255, 255, 0.7); }
+
+.atlas-modal__bottom { padding: 0 2.4rem 2.4rem; }
+.atlas-modal__controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.6rem;
+}
+/* The dots: hairline rings, the current one filled in the accent */
+.atlas-modal__dots {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+.atlas-modal__dot {
+  width: 0.8rem;
+  height: 0.8rem;
+  padding: 0;
+  margin: 0;
+  border: 1px solid rgba(255, 255, 255, 0.45);
+  border-radius: 50%;
+  background: transparent;
+  cursor: pointer;
+  transition: background-color 0.2s var(--cta-ease), border-color 0.2s var(--cta-ease);
+}
+.atlas-modal__dot:hover,
+.atlas-modal__dot:focus-visible { border-color: #ffffff; outline: none; }
+.atlas-modal__dot[data-hotspot-control-status="active"] {
+  border-color: var(--cta-accent-color);
+  background: var(--cta-accent-color);
+}
+
+/* The card transitions, as the resource has them: the leaving card fades
+   and slips a little in the direction of travel, the arriving one is placed
+   a little the other side and fades in. */
+[data-hotspot-name] {
+  transition: opacity 0.6s cubic-bezier(0.625, 0.05, 0, 1), transform 0.6s cubic-bezier(0.625, 0.05, 0, 1);
+}
+[data-hotspot-name][data-hotspot-status="not-active"] {
+  opacity: 0;
+  visibility: hidden;
+  transform: translateX(0em) rotate(0.001deg);
+}
+[data-hotspot-name][data-hotspot-status="active"] {
+  opacity: 1;
+  visibility: visible;
+  transform: translateX(0em) rotate(0.001deg);
+}
+[data-hotspot-name][data-hotspot-status="transition-in-right"] {
+  opacity: 0;
+  visibility: visible;
+  transform: translateX(1em) rotate(0.001deg);
+  transition: none;
+}
+[data-hotspot-name][data-hotspot-status="transition-in-left"] {
+  opacity: 0;
+  visibility: visible;
+  transform: translateX(-1em) rotate(0.001deg);
+  transition: none;
+}
+[data-hotspot-name][data-hotspot-status="transition-out-right"] {
+  opacity: 0;
+  visibility: visible;
+  transform: translateX(1em) rotate(0.001deg);
+}
+[data-hotspot-name][data-hotspot-status="transition-out-left"] {
+  opacity: 0;
+  visibility: visible;
+  transform: translateX(-1em) rotate(0.001deg);
+}
+
+@media screen and (max-width: 767px) {
+  .atlas-hotspot { width: 3.2rem; height: 3.2rem; }
+  /* Full width on the phone, the photograph shallower so the copy is above
+     the fold, the buttons the touch size */
+  .atlas-modal__side { max-width: none; }
+  .atlas-modal__tile { border-left: 0; }
+  .atlas-modal__close { margin: 1.6rem 1.6rem 0 0; }
+  .atlas-modal__item { padding: 1.6rem 1.6rem 0; }
+  .atlas-modal__media { aspect-ratio: 16 / 10; }
+  .atlas-modal__info { padding: 2.4rem 0 1.6rem; }
+  .atlas-modal__bottom { padding: 0 1.6rem 1.6rem; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .atlas-modal__side,
+  [data-hotspot-name],
+  .atlas-hotspot__ring,
+  .atlas-hotspot__icon { transition: none; }
 }
 .map-spread__footer {
   display: flex;
@@ -3450,23 +4020,22 @@ main section + section,
    48rem the other standfirsts use says what is actually intended. */
 .influence-hero__lead { max-width: 48rem; margin-bottom: 0; }
 
-/* ---------- The book plate, on white ---------- */
-/* The map is a dark plate, so setting the section white lets it sit on the
-   page like a printed spread and pulls the whole band forward */
-.map-spread.theme-light {
-  background-color: #ffffff;
-  color: #0a0a0a;
+/* ---------- The atlas band, on black ---------- */
+/* The Influence page runs black end to end, so the band around the plate is
+   black too — the map and its head and book feature sit on the page rather
+   than on a white spread. */
+.map-spread.is--influence {
+  background-color: #000000;
+  color: #ffffff;
   padding-bottom: 10rem;
 }
-.map-spread.theme-light .book-feature__intro h2,
-.map-spread.theme-light .lead { color: #0a0a0a; }
 
 .book-feature__body .lead { margin-bottom: 4rem; }
 
 @media screen and (max-width: 991px) {
   .influence-hero,
   .influence-hero__lead { max-width: none; }
-  .map-spread.theme-light { padding-bottom: 6.4rem; }
+  .map-spread.is--influence { padding-bottom: 6.4rem; }
 }
 
 /* =============================================================
@@ -3809,7 +4378,7 @@ strong, b, th { font-weight: var(--weight-strong); --wght: var(--weight-strong);
   max-width: calc(var(--site-gutter) * 2 + var(--grid-column) * 3);
 }
 .map-spread__head h2 { margin-bottom: 0; }
-.map-spread.theme-light { padding-top: 8rem; }
+.map-spread.is--influence { padding-top: 8rem; }
 
 /* ---------- Insight row: link beside a word value ---------- */
 .insights-row__value-group {

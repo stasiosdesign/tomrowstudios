@@ -54,6 +54,7 @@ function initAfterEnterFunctions(next) {
   if (typeof initParallaxImageGalleryThumbnails === "function") initParallaxImageGalleryThumbnails();
   if (typeof initNumberOdometer === "function") initNumberOdometer();
   if (typeof initStepByStepTimeline === "function") initStepByStepTimeline();
+  if (typeof initProductHotspotModal === "function") initProductHotspotModal();
   if (typeof initCenteredSliders === "function") initCenteredSliders();
   if (typeof initServiceList === "function") initServiceList();
   if (typeof initTestimonialSwitcher === "function") initTestimonialSwitcher();
@@ -66,6 +67,10 @@ function initAfterEnterFunctions(next) {
      page's triggers. Rebinding here restores it when we arrive on home, and
      clears the state when we arrive anywhere else. */
   if (typeof initHeroNav === "function") initHeroNav();
+  /* The stepped menu lives in the layout and is bound once; only its tie to
+     the page's hero is rebuilt here, with the rest of the page's triggers. */
+  if (typeof initStepNav === "function") initStepNav();
+  if (typeof initStepNavHero === "function") initStepNavHero(nextPage);
   /* Same story for the hero runner: its canvas and pointer listeners go with
      the outgoing container, so it is rebuilt when we land on home and torn
      down when we land anywhere else. */
