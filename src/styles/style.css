@@ -1228,11 +1228,12 @@ h3 {
   margin: 0;
   color: #000000;
 }
-/* The field takes the rest of the band and holds the strip at its centre */
+/* The field takes the rest of the band; the strip sits just under the line */
 .logo-wall__body {
   display: flex;
   flex: 1 1 auto;
-  align-items: center;
+  align-items: flex-start;
+  padding-top: 4rem;
   min-width: 0;
 }
 .logo-wall .marquee-advanced__item-width {
