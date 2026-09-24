@@ -25,8 +25,25 @@ src/
     ContactPanel.astro       "Start a project" slide-out drawer + form
     Button.astro             the button-011 pattern (label + link attributes)
   pages/                     one .astro file per page → /<name>.html
+    project-[slug].astro     one page per Sanity project → /project-<slug>.html
+  sanity/                    read-only Sanity client, image URL helper, every GROQ query
   styles/style.css           global stylesheet, imported once by the layout
 ```
+
+## Content (Sanity)
+
+Project content is moving to [Sanity](https://www.sanity.io) (project `5cwu7mnl`,
+dataset `production`). The Studio is its own app, kept beside this repository
+in `../studio-tomrowstudios`, not inside it.
+
+- Content is read at build time, published documents only, so a publish in the
+  Studio reaches the site on its next build.
+- `project-[slug].astro` builds a page for every project in the dataset. A
+  hand-written `project-*.astro` page of the same name takes precedence (Astro
+  warns and keeps it), so the hand-written pages stay live until they are
+  removed.
+- The project ID and dataset default to the values above;
+  `PUBLIC_SANITY_PROJECT_ID` / `PUBLIC_SANITY_DATASET` override them.
 
 ## Notes
 
