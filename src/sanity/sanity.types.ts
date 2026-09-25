@@ -76,6 +76,36 @@ export type ProjectCredit = {
   kind?: "won" | "award" | "detail";
 };
 
+export type HomeCard = {
+  _type: "homeCard";
+  image?: {
+    asset?: SanityImageAssetReference;
+    media?: unknown;
+    hotspot?: SanityImageHotspot;
+    crop?: SanityImageCrop;
+    alt?: string;
+    _type: "image";
+  };
+  title?: string;
+  text?: string;
+};
+
+export type HomeGallery = {
+  _type: "homeGallery";
+  heading?: string;
+  lead?: string;
+  images?: Array<{
+    asset?: SanityImageAssetReference;
+    media?: unknown;
+    hotspot?: SanityImageHotspot;
+    crop?: SanityImageCrop;
+    alt?: string;
+    _type: "image";
+    _key: string;
+  }>;
+  button?: string;
+};
+
 export type HeroSlide = {
   _type: "heroSlide";
   caption?: string;
@@ -202,6 +232,53 @@ export type HomePage = {
     primaryButton?: string;
     secondaryButton?: string;
   };
+  logoWall?: {
+    label?: string;
+  };
+  practice?: {
+    label?: string;
+    statement?: string;
+  };
+  slider?: {
+    images?: Array<{
+      asset?: SanityImageAssetReference;
+      media?: unknown;
+      hotspot?: SanityImageHotspot;
+      crop?: SanityImageCrop;
+      alt?: string;
+      _type: "image";
+      _key: string;
+    }>;
+  };
+  recognition?: {
+    label?: string;
+    heading?: string;
+    lead?: string;
+    button?: string;
+    cards?: Array<
+      {
+        _key: string;
+      } & HomeCard
+    >;
+  };
+  influence?: HomeGallery;
+  partners?: HomeGallery;
+  projects?: HomeGallery;
+  courses?: HomeGallery;
+  getInTouch?: {
+    label?: string;
+    title?: string;
+    portrait?: {
+      asset?: SanityImageAssetReference;
+      media?: unknown;
+      hotspot?: SanityImageHotspot;
+      crop?: SanityImageCrop;
+      alt?: string;
+      _type: "image";
+    };
+    lead?: string;
+    button?: string;
+  };
 };
 
 export type SanityImagePaletteSwatch = {
@@ -307,6 +384,8 @@ export type AllSanitySchemaTypes =
   | ImageGallery
   | FeatureImage
   | ProjectCredit
+  | HomeCard
+  | HomeGallery
   | HeroSlide
   | Client
   | SanityImageCrop
@@ -467,42 +546,210 @@ export type CLIENT_LOGOS_QUERY_RESULT = Array<{
 }>;
 
 // Source: ../src/sanity/queries.ts
-// Variable: HOME_HERO_QUERY
-// Query: *[_id == "homePage"][0].hero {  headline,  slides[]{ _key, caption, photo { asset->{ _id, metadata { dimensions { width, height } } }, crop, hotspot }, background { asset->{ _id, metadata { dimensions { width, height } } }, crop, hotspot } },  primaryButton,  secondaryButton}
-export type HOME_HERO_QUERY_RESULT = null | {
-  headline: string | null;
-  slides: Array<{
-    _key: string;
-    caption: string | null;
-    photo: {
-      asset: {
-        _id: string;
-        metadata: {
-          dimensions: {
-            width: number | null;
-            height: number | null;
+// Variable: HOME_PAGE_QUERY
+// Query: *[_id == "homePage"][0] {  hero {    headline,    slides[]{ _key, caption, photo { asset->{ _id, metadata { dimensions { width, height } } }, crop, hotspot }, background { asset->{ _id, metadata { dimensions { width, height } } }, crop, hotspot } },    primaryButton,    secondaryButton  },  logoWall { label },  practice { label, statement },  slider { images[]{ _key, asset->{ _id, metadata { dimensions { width, height } } }, crop, hotspot, alt } },  recognition { label, heading, lead, button, cards[]{ _key, title, text, image { asset->{ _id, metadata { dimensions { width, height } } }, crop, hotspot, alt } } },  influence { heading, lead, images[]{ _key, asset->{ _id, metadata { dimensions { width, height } } }, crop, hotspot, alt }, button },  partners { heading, lead, images[]{ _key, asset->{ _id, metadata { dimensions { width, height } } }, crop, hotspot, alt }, button },  projects { heading, lead, images[]{ _key, asset->{ _id, metadata { dimensions { width, height } } }, crop, hotspot, alt }, button },  courses { heading, lead, images[]{ _key, asset->{ _id, metadata { dimensions { width, height } } }, crop, hotspot, alt }, button }}
+export type HOME_PAGE_QUERY_RESULT =
+  | {
+      hero: null;
+      logoWall: null;
+      practice: null;
+      slider: null;
+      recognition: null;
+      influence: null;
+      partners: null;
+      projects: null;
+      courses: null;
+    }
+  | {
+      hero: {
+        headline: string | null;
+        slides: Array<{
+          _key: string;
+          caption: string | null;
+          photo: {
+            asset: {
+              _id: string;
+              metadata: {
+                dimensions: {
+                  width: number | null;
+                  height: number | null;
+                } | null;
+              } | null;
+            } | null;
+            crop: SanityImageCrop | null;
+            hotspot: SanityImageHotspot | null;
           } | null;
+          background: {
+            asset: {
+              _id: string;
+              metadata: {
+                dimensions: {
+                  width: number | null;
+                  height: number | null;
+                } | null;
+              } | null;
+            } | null;
+            crop: SanityImageCrop | null;
+            hotspot: SanityImageHotspot | null;
+          } | null;
+        }> | null;
+        primaryButton: string | null;
+        secondaryButton: string | null;
+      } | null;
+      logoWall: {
+        label: string | null;
+      } | null;
+      practice: {
+        label: string | null;
+        statement: string | null;
+      } | null;
+      slider: {
+        images: Array<{
+          _key: string;
+          asset: {
+            _id: string;
+            metadata: {
+              dimensions: {
+                width: number | null;
+                height: number | null;
+              } | null;
+            } | null;
+          } | null;
+          crop: SanityImageCrop | null;
+          hotspot: SanityImageHotspot | null;
+          alt: string | null;
+        }> | null;
+      } | null;
+      recognition: {
+        label: string | null;
+        heading: string | null;
+        lead: string | null;
+        button: string | null;
+        cards: Array<{
+          _key: string;
+          title: string | null;
+          text: string | null;
+          image: {
+            asset: {
+              _id: string;
+              metadata: {
+                dimensions: {
+                  width: number | null;
+                  height: number | null;
+                } | null;
+              } | null;
+            } | null;
+            crop: SanityImageCrop | null;
+            hotspot: SanityImageHotspot | null;
+            alt: string | null;
+          } | null;
+        }> | null;
+      } | null;
+      influence: {
+        heading: string | null;
+        lead: string | null;
+        images: Array<{
+          _key: string;
+          asset: {
+            _id: string;
+            metadata: {
+              dimensions: {
+                width: number | null;
+                height: number | null;
+              } | null;
+            } | null;
+          } | null;
+          crop: SanityImageCrop | null;
+          hotspot: SanityImageHotspot | null;
+          alt: string | null;
+        }> | null;
+        button: string | null;
+      } | null;
+      partners: {
+        heading: string | null;
+        lead: string | null;
+        images: Array<{
+          _key: string;
+          asset: {
+            _id: string;
+            metadata: {
+              dimensions: {
+                width: number | null;
+                height: number | null;
+              } | null;
+            } | null;
+          } | null;
+          crop: SanityImageCrop | null;
+          hotspot: SanityImageHotspot | null;
+          alt: string | null;
+        }> | null;
+        button: string | null;
+      } | null;
+      projects: {
+        heading: string | null;
+        lead: string | null;
+        images: Array<{
+          _key: string;
+          asset: {
+            _id: string;
+            metadata: {
+              dimensions: {
+                width: number | null;
+                height: number | null;
+              } | null;
+            } | null;
+          } | null;
+          crop: SanityImageCrop | null;
+          hotspot: SanityImageHotspot | null;
+          alt: string | null;
+        }> | null;
+        button: string | null;
+      } | null;
+      courses: {
+        heading: string | null;
+        lead: string | null;
+        images: Array<{
+          _key: string;
+          asset: {
+            _id: string;
+            metadata: {
+              dimensions: {
+                width: number | null;
+                height: number | null;
+              } | null;
+            } | null;
+          } | null;
+          crop: SanityImageCrop | null;
+          hotspot: SanityImageHotspot | null;
+          alt: string | null;
+        }> | null;
+        button: string | null;
+      } | null;
+    }
+  | null;
+
+// Source: ../src/sanity/queries.ts
+// Variable: GET_IN_TOUCH_QUERY
+// Query: *[_id == "homePage"][0].getInTouch {  label,  title,  portrait { asset->{ _id, metadata { dimensions { width, height } } }, crop, hotspot, alt },  lead,  button}
+export type GET_IN_TOUCH_QUERY_RESULT = null | {
+  label: string | null;
+  title: string | null;
+  portrait: {
+    asset: {
+      _id: string;
+      metadata: {
+        dimensions: {
+          width: number | null;
+          height: number | null;
         } | null;
       } | null;
-      crop: SanityImageCrop | null;
-      hotspot: SanityImageHotspot | null;
     } | null;
-    background: {
-      asset: {
-        _id: string;
-        metadata: {
-          dimensions: {
-            width: number | null;
-            height: number | null;
-          } | null;
-        } | null;
-      } | null;
-      crop: SanityImageCrop | null;
-      hotspot: SanityImageHotspot | null;
-    } | null;
-  }> | null;
-  primaryButton: string | null;
-  secondaryButton: string | null;
+    crop: SanityImageCrop | null;
+    hotspot: SanityImageHotspot | null;
+    alt: string | null;
+  } | null;
+  lead: string | null;
+  button: string | null;
 };
 
 // Query TypeMap
@@ -511,7 +758,8 @@ declare global {
     '*[_type == "project" && defined(slug.current)] | order(sortOrder asc, _createdAt asc) {\n  _id,\n  "name": coalesce(shortTitle, title),\n  "slug": slug.current,\n  context,\n  year,\n  coverImage { asset->{ _id, metadata { dimensions { width, height } } }, crop, hotspot, alt }\n}': PROJECT_INDEX_QUERY_RESULT;
     '*[_type == "project" && defined(slug.current)] | order(sortOrder asc, _createdAt asc) {\n  _id,\n  title,\n  "name": coalesce(shortTitle, title),\n  "slug": slug.current,\n  context,\n  year,\n  lead,\n  credits[]{ _key, name, note, kind },\n  "portfolioUrl": coalesce(portfolio.asset->url, portfolioUrl),\n  coverImage { asset->{ _id, metadata { dimensions { width, height } } }, crop, hotspot, alt },\n  content[]{\n    _key,\n    _type,\n    _type == "featureImage" => { asset->{ _id, metadata { dimensions { width, height } } }, crop, hotspot, alt },\n    _type == "imageGallery" => { layout, framing, images[]{ _key, asset->{ _id, metadata { dimensions { width, height } } }, crop, hotspot, alt } },\n    _type == "textSection" => { label, body }\n  }\n}': PROJECT_PAGES_QUERY_RESULT;
     '*[_type == "client" && defined(logo.asset)] | order(sortOrder asc, name asc) {\n  _id,\n  name,\n  logo { asset->{ _id, metadata { dimensions { width, height } } }, crop, hotspot }\n}': CLIENT_LOGOS_QUERY_RESULT;
-    '*[_id == "homePage"][0].hero {\n  headline,\n  slides[]{ _key, caption, photo { asset->{ _id, metadata { dimensions { width, height } } }, crop, hotspot }, background { asset->{ _id, metadata { dimensions { width, height } } }, crop, hotspot } },\n  primaryButton,\n  secondaryButton\n}': HOME_HERO_QUERY_RESULT;
+    '*[_id == "homePage"][0] {\n  hero {\n    headline,\n    slides[]{ _key, caption, photo { asset->{ _id, metadata { dimensions { width, height } } }, crop, hotspot }, background { asset->{ _id, metadata { dimensions { width, height } } }, crop, hotspot } },\n    primaryButton,\n    secondaryButton\n  },\n  logoWall { label },\n  practice { label, statement },\n  slider { images[]{ _key, asset->{ _id, metadata { dimensions { width, height } } }, crop, hotspot, alt } },\n  recognition { label, heading, lead, button, cards[]{ _key, title, text, image { asset->{ _id, metadata { dimensions { width, height } } }, crop, hotspot, alt } } },\n  influence { heading, lead, images[]{ _key, asset->{ _id, metadata { dimensions { width, height } } }, crop, hotspot, alt }, button },\n  partners { heading, lead, images[]{ _key, asset->{ _id, metadata { dimensions { width, height } } }, crop, hotspot, alt }, button },\n  projects { heading, lead, images[]{ _key, asset->{ _id, metadata { dimensions { width, height } } }, crop, hotspot, alt }, button },\n  courses { heading, lead, images[]{ _key, asset->{ _id, metadata { dimensions { width, height } } }, crop, hotspot, alt }, button }\n}': HOME_PAGE_QUERY_RESULT;
+    '*[_id == "homePage"][0].getInTouch {\n  label,\n  title,\n  portrait { asset->{ _id, metadata { dimensions { width, height } } }, crop, hotspot, alt },\n  lead,\n  button\n}': GET_IN_TOUCH_QUERY_RESULT;
   }
 }
 // Lets @sanity/client releases that predate the global registry read it too

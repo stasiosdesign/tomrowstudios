@@ -22,6 +22,19 @@ const previewOrigin = ({origin}: {origin: string}) =>
 // One fixed document each: never created from the menu, duplicated or deleted
 const SINGLETONS = new Set(['homePage'])
 
+// The Home page document is the home page, and also the Get in touch block
+// that ends these pages (src/components/GetInTouch.astro)
+const GET_IN_TOUCH_PAGES = [
+  {title: 'Influence', href: '/influence'},
+  {title: 'Partners', href: '/partner'},
+  {title: 'Partners archive', href: '/partners-archive'},
+  {title: 'Shop', href: '/shop'},
+  {title: 'Book', href: '/book'},
+  {title: 'Presentation masterclass', href: '/product'},
+  {title: 'Communication package', href: '/course-communication'},
+  {title: 'Digital Sketchbook', href: '/course-sketchbook'},
+]
+
 export default defineConfig({
   name: 'default',
   title: 'tomrowstudios',
@@ -42,8 +55,7 @@ export default defineConfig({
         mainDocuments: defineDocuments([{route: '/', filter: `_id == "homePage"`}]),
         locations: {
           homePage: defineLocations({
-            locations: [{title: 'Home', href: '/'}],
-            message: 'The hero at the top of the home page',
+            locations: [{title: 'Home', href: '/'}, ...GET_IN_TOUCH_PAGES],
           }),
           project: defineLocations({
             select: {title: 'title', slug: 'slug.current'},

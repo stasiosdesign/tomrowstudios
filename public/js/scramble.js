@@ -16,7 +16,10 @@
 //                                   children — the link then scrambles
 //                                   itself)
 //   data-scramble-text="..."     — optional replacement text, otherwise the
-//                                   element's own text is used
+//                                   element's own text is used. Read again on
+//                                   every hover, so text rewritten in place
+//                                   (the Studio's live preview does, with
+//                                   this attribute) lands on the new words
 //
 // Design notes:
 // - The tween always ends on the element's own source text — scrambleText's
@@ -68,14 +71,15 @@ function bindScrambleHover(trigger, textEl, opts = {}) {
 
   const enter = () => {
     if (gsap.isTweening(textEl)) return; // already mid-run — let it finish
+    const text = textEl.getAttribute('data-scramble-text') || originalText;
     gsap.to(textEl, {
       duration,
       ease: 'none',
       overwrite: 'auto',
-      scrambleText: { text: originalText, chars, speed },
+      scrambleText: { text, chars, speed },
       // Belt-and-braces: guarantee the exact source text once the tween
       // settles, regardless of anything the plugin's own reveal left behind.
-      onComplete: () => { textEl.textContent = originalText; },
+      onComplete: () => { textEl.textContent = text; },
     });
   };
 

@@ -49,11 +49,35 @@ export const CLIENT_LOGOS_QUERY = defineQuery(`*[_type == "client" && defined(lo
   logo { ${IMAGE_ASSET} }
 }`);
 
-// The home page hero: the headline, the dial's five slides and the two button
-// labels, from the one Home page document.
-export const HOME_HERO_QUERY = defineQuery(`*[_id == "homePage"][0].hero {
-  headline,
-  slides[]{ _key, caption, photo { ${IMAGE_ASSET} }, background { ${IMAGE_ASSET} } },
-  primaryButton,
-  secondaryButton
+// One of the home page's four photo bands
+const HOME_GALLERY = `heading, lead, images[]{ _key, ${IMAGE} }, button`;
+
+// The home page, section by section, from the one Home page document. The
+// logos in its logo wall are CLIENT_LOGOS_QUERY; the Get in touch block that
+// closes it is GET_IN_TOUCH_QUERY, as on every other page that ends with it.
+export const HOME_PAGE_QUERY = defineQuery(`*[_id == "homePage"][0] {
+  hero {
+    headline,
+    slides[]{ _key, caption, photo { ${IMAGE_ASSET} }, background { ${IMAGE_ASSET} } },
+    primaryButton,
+    secondaryButton
+  },
+  logoWall { label },
+  practice { label, statement },
+  slider { images[]{ _key, ${IMAGE} } },
+  recognition { label, heading, lead, button, cards[]{ _key, title, text, image { ${IMAGE} } } },
+  influence { ${HOME_GALLERY} },
+  partners { ${HOME_GALLERY} },
+  projects { ${HOME_GALLERY} },
+  courses { ${HOME_GALLERY} }
+}`);
+
+// The closing Get in touch block, the same on every page that ends with it:
+// one copy, kept in the Home page document.
+export const GET_IN_TOUCH_QUERY = defineQuery(`*[_id == "homePage"][0].getInTouch {
+  label,
+  title,
+  portrait { ${IMAGE} },
+  lead,
+  button
 }`);

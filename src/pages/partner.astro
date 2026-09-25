@@ -4,6 +4,7 @@ import SiteNav from '../components/SiteNav.astro';
 import SiteFooter from '../components/SiteFooter.astro';
 import ContactPanel from '../components/ContactPanel.astro';
 import Button from '../components/Button.astro';
+import GetInTouch from '../components/GetInTouch.astro';
 ---
 <BaseLayout title="Partners — Tomrow Studios" namespace="partner" pageName="Partners">
 <SiteNav />
@@ -449,22 +450,7 @@ import Button from '../components/Button.astro';
 
 </div>
 
-<!-- Closing CTA -->
-<section class="section final-cta">
-  <div class="container">
-    <div class="final-cta__inner">
-      <p class="tagline final-cta__eyebrow">Get in touch</p>
-      <h2 class="final-cta__title">Talk to Tom</h2>
-      <span class="final-cta__portrait"><img src="/assets/photos/portraits/portrait-01.jpg" width="1200" height="1200" loading="lazy" decoding="async" alt="Tom Rowntree"></span>
-      <div class="final-cta__foot">
-        <p class="lead final-cta__lead">Speaking, partnerships, teaching or a project you are still working out — start the conversation and Tom will come back to you himself.</p>
-        <div class="actions">
-          <Button href="#contact" data-panel-open="contact" data-barba-prevent="self" label="Contact Tom" />
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
+<GetInTouch />
 
 
 <SiteFooter />

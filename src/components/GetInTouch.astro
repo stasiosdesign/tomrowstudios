@@ -1,0 +1,31 @@
+---
+/* The closing call to action that ends most pages: the label, "Talk to Tom",
+   Tom's portrait, a line of copy and the button that opens the contact panel.
+   The words and the portrait are the Get in touch section of the Home page
+   document in Sanity, so one edit there changes every page that ends with it.
+   The button always opens the contact panel. */
+import Button from './Button.astro';
+import { sanityClient } from '../sanity/client';
+import { imageAttrs } from '../sanity/image';
+import { GET_IN_TOUCH_QUERY } from '../sanity/queries';
+
+const cta = await sanityClient.fetch(GET_IN_TOUCH_QUERY);
+if (!cta?.portrait?.asset) throw new Error('Get in touch is missing in Sanity (Home page document)');
+const portrait = imageAttrs(cta.portrait, 600);
+---
+<!-- Closing CTA -->
+<section class="section final-cta">
+  <div class="container">
+    <div class="final-cta__inner">
+      <p class="tagline final-cta__eyebrow">{cta.label}</p>
+      <h2 class="final-cta__title">{cta.title}</h2>
+      <span class="final-cta__portrait"><img src={portrait.src} width={portrait.width} height={portrait.height} loading="lazy" decoding="async" alt={cta.portrait.alt ?? ''}></span>
+      <div class="final-cta__foot">
+        <p class="lead final-cta__lead">{cta.lead}</p>
+        <div class="actions">
+          <Button href="#contact" data-panel-open="contact" data-barba-prevent="self" label={cta.button ?? ''} />
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

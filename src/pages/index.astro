@@ -3,17 +3,33 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 import SiteNav from '../components/SiteNav.astro';
 import SiteFooter from '../components/SiteFooter.astro';
 import ContactPanel from '../components/ContactPanel.astro';
+import GetInTouch from '../components/GetInTouch.astro';
 import Button from '../components/Button.astro';
 import { sanityClient } from '../sanity/client';
 import { urlFor } from '../sanity/image';
-import { CLIENT_LOGOS_QUERY, HOME_HERO_QUERY } from '../sanity/queries';
+import { CLIENT_LOGOS_QUERY, HOME_PAGE_QUERY } from '../sanity/queries';
 
-// The hero (headline, the dial's five slides, the two button labels) and the
-// logo wall's clients, from Sanity, in the order set in the Studio. Opened in
-// the Studio's Presentation tool, src/sanity/live-preview.ts marks the hero
-// editable and swaps in drafts as they are typed.
-const [hero, clients] = await Promise.all([sanityClient.fetch(HOME_HERO_QUERY), sanityClient.fetch(CLIENT_LOGOS_QUERY)]);
-if (!hero?.slides?.length) throw new Error('The Home page hero is missing in Sanity (Home page document)');
+// Every section's words and photos, from the Home page document in Sanity,
+// and the logo wall's clients in the order set in the Studio. The navigation,
+// the footer and where each button leads stay here. Each section below the
+// hero carries data-home-section, its field name in the document: opened in
+// the Studio's Presentation tool, src/sanity/live-preview.ts finds the
+// sections by it, marks their parts editable and swaps in drafts as they are
+// typed.
+const [home, clients] = await Promise.all([sanityClient.fetch(HOME_PAGE_QUERY), sanityClient.fetch(CLIENT_LOGOS_QUERY)]);
+if (!home) throw new Error('The Home page document is missing in Sanity');
+const { hero, logoWall, practice, slider, recognition, influence, partners, projects, courses } = home;
+if (!hero?.slides?.length || !logoWall || !practice || !slider?.images?.length || !recognition?.cards?.length || !influence || !partners || !projects || !courses) {
+  throw new Error('A home page section is missing in Sanity (Home page document)');
+}
+
+// The four photo bands, each with the page its button leads to
+const galleries = [
+  { name: 'influence', gallery: influence, href: '/influence' },
+  { name: 'partners', gallery: partners, href: '/partner' },
+  { name: 'projects', gallery: projects, href: '/architecture' },
+  { name: 'courses', gallery: courses, href: '/shop' },
+];
 ---
 <BaseLayout title="Tomrow Studios" namespace="index" pageName="Home">
 <!-- Home hero, in the reveal-parallax wrapper: the section after it slides
@@ -107,9 +123,9 @@ if (!hero?.slides?.length) throw new Error('The Home page hero is missing in San
      scaled to fit inside 600 by 240, well over the size the strip shows them
      at. ignoreImageParams keeps the URL builder from cropping each logo to that
      box's shape; logos have no crop of their own to lose. -->
-<section class="logo-marquee logo-wall">
+<section class="logo-marquee logo-wall" data-home-section="logoWall">
   <div class="logo-wall__head">
-    <p class="tagline logo-wall__eyebrow">[&nbsp;Clients&nbsp;]</p>
+    <p class="tagline logo-wall__eyebrow">[&nbsp;{logoWall.label}&nbsp;]</p>
   </div>
   <div class="logo-wall__body">
   <div data-marquee-duplicate="2" data-marquee-scroll-direction-target data-marquee-direction="left" data-marquee-status="normal" data-marquee-speed="15" data-marquee-scroll-speed="10" class="marquee-advanced">
@@ -127,161 +143,82 @@ if (!hero?.slides?.length) throw new Error('The Home page hero is missing in San
 <SiteNav overHero />
 
 <!-- Practice -->
-<section class="section">
+<section class="section" data-home-section="practice">
   <div class="container container-narrow">
-    <p class="tagline">Practice</p>
-    <h2>Tom Rowntree is an architectural designer, author and content strategist. His work translates the discipline for a wider world, shaping conversations and connecting ideas with clarity.</h2>
+    <p class="tagline">{practice.label}</p>
+    <h2>{practice.statement}</h2>
   </div>
 </section>
 
-<!-- Parallax image gallery -->
-<section class="section">
+<!-- Parallax image gallery (gallery.js): the photos stacked full size, the
+     same photos again as the thumbnails that pick one -->
+<section class="section" data-home-section="slider">
   <div class="container">
     <div data-slideshow="wrap" class="img-slider">
       <div class="img-slider__list">
-        <div data-slideshow="slide" class="img-slide is--current"><img data-slideshow="parallax" alt="" src="/assets/photos/thumbnails/thumb-04.jpg" draggable="false" class="img-slide__inner"></div>
-        <div data-slideshow="slide" class="img-slide"><img data-slideshow="parallax" alt="" src="/assets/photos/thumbnails/thumb-05.jpg" draggable="false" class="img-slide__inner"></div>
-        <div data-slideshow="slide" class="img-slide"><img data-slideshow="parallax" alt="" src="/assets/photos/thumbnails/thumb-06.jpg" draggable="false" class="img-slide__inner"></div>
-        <div data-slideshow="slide" class="img-slide"><img data-slideshow="parallax" alt="" src="/assets/photos/thumbnails/thumb-07.jpg" draggable="false" class="img-slide__inner"></div>
+        {slider.images.map((image, i) => (
+        <div data-slideshow="slide" class:list={['img-slide', { 'is--current': i === 0 }]}><img data-slideshow="parallax" alt={image.alt ?? ''} src={urlFor(image).width(2000).url()} draggable="false" class="img-slide__inner"></div>
+        ))}
       </div>
       <div class="img-slider__nav">
-        <div data-slideshow="thumb" class="img-slider__thumb is--current"><img src="/assets/photos/thumbnails/thumb-04.jpg" class="slider-thumb__img"></div>
-        <div data-slideshow="thumb" class="img-slider__thumb"><img src="/assets/photos/thumbnails/thumb-05.jpg" class="slider-thumb__img"></div>
-        <div data-slideshow="thumb" class="img-slider__thumb"><img src="/assets/photos/thumbnails/thumb-06.jpg" class="slider-thumb__img"></div>
-        <div data-slideshow="thumb" class="img-slider__thumb"><img src="/assets/photos/thumbnails/thumb-07.jpg" class="slider-thumb__img"></div>
+        {slider.images.map((image, i) => (
+        <div data-slideshow="thumb" class:list={['img-slider__thumb', { 'is--current': i === 0 }]}><img src={urlFor(image).width(240).url()} class="slider-thumb__img"></div>
+        ))}
       </div>
     </div>
   </div>
 </section>
 
 <!-- Recognition -->
-<section class="section">
+<section class="section" data-home-section="recognition">
   <div class="container">
     <div class="two-col">
       <div>
-        <p class="tagline">Recognition</p>
-        <h2>Awards, recognition and achievements</h2>
+        <p class="tagline">{recognition.label}</p>
+        <h2>{recognition.heading}</h2>
       </div>
       <div class="two-col-offset">
-        <p class="lead">Shortlisted by RIBA and the AJ. Published by RIBA Publishing and selected for the Dezeen School Shows. An audience of over 180,000 follows the conversation across platforms.</p>
+        <p class="lead">{recognition.lead}</p>
         <div class="actions">
-          <Button href="/influence" label="About" />
+          <Button href="/influence" label={recognition.button ?? ''} />
         </div>
       </div>
     </div>
 
+    <!-- Three cards, each a step lower than the one before -->
     <div class="cards">
-      <div class="card">
-        <img class="card-img" src="/assets/photos/thumbnails/thumb-01.jpg" alt="">
-        <h3>Awards and nominations</h3>
-        <p>RIBA and AJ recognition for projects that value clarity over spectacle.</p>
+      {recognition.cards.map((card, i) => (
+      <div class:list={['card', i > 0 && `card-offset-${i}`]}>
+        {card.image && <img class="card-img" src={urlFor(card.image).width(1200).url()} alt={card.image.alt ?? ''}>}
+        <h3>{card.title}</h3>
+        <p>{card.text}</p>
       </div>
-      <div class="card card-offset-1">
-        <img class="card-img" src="/assets/photos/thumbnails/thumb-02.jpg" alt="">
-        <h3>Publishing and exhibitions</h3>
-        <p>A book with RIBA Publishing and selection for the Dezeen School Shows.</p>
-      </div>
-      <div class="card card-offset-2">
-        <img class="card-img" src="/assets/photos/thumbnails/thumb-03.jpg" alt="">
-        <h3>Speaking and collaboration</h3>
-        <p>Talks and partnerships with leading architecture, design, and technology organisations.</p>
-      </div>
+      ))}
     </div>
   </div>
 </section>
 
-<!-- Gallery: Architectural Influence -->
-<section class="section">
+<!-- The four photo bands: Influence, Partners, Architecture and the Shop -->
+{galleries.map(({ name, gallery, href }) => (
+<section class="section" data-home-section={name}>
   <div class="container">
     <div class="section-title">
-      <h2>Architectural Influence</h2>
-      <p class="lead">Architecture travels further when it is shared with clarity.</p>
+      <h2>{gallery.heading}</h2>
+      <p class="lead">{gallery.lead}</p>
     </div>
     <div class="gallery">
-      <img src="/assets/photos/events/event-01.jpg" alt="">
-      <img src="/assets/photos/events/event-02.jpg" alt="">
-      <img src="/assets/photos/events/event-03.jpg" alt="">
-      <img src="/assets/photos/events/event-04.jpg" alt="">
+      {gallery.images?.map((image) => (
+      <img src={urlFor(image).width(1200).url()} alt={image.alt ?? ''}>
+      ))}
     </div>
     <div class="actions actions-end">
-      <Button href="/influence" label="Explore Influence" />
+      <Button href={href} label={gallery.button ?? ''} />
     </div>
   </div>
 </section>
+))}
 
-<!-- Gallery: Selected partners -->
-<section class="section">
-  <div class="container">
-    <div class="section-title">
-      <h2>Selected partners</h2>
-      <p class="lead">Strategic work with organisations that shape the built environment.</p>
-    </div>
-    <div class="gallery">
-      <img src="/assets/photos/studio/studio-01.jpg" alt="">
-      <img src="/assets/photos/studio/studio-02.jpg" alt="">
-      <img src="/assets/photos/studio/studio-03.jpg" alt="">
-      <img src="/assets/photos/studio/studio-04.jpg" alt="">
-    </div>
-    <div class="actions actions-end">
-      <Button href="/partner" label="View Partners" />
-    </div>
-  </div>
-</section>
-
-<!-- Gallery: Architectural Projects -->
-<section class="section">
-  <div class="container">
-    <div class="section-title">
-      <h2>Architectural Projects</h2>
-      <p class="lead">Drawings, models, and spaces that earned their place in the conversation.</p>
-    </div>
-    <div class="gallery">
-      <img src="/assets/photos/lifestyle/lifestyle-01.jpg" alt="">
-      <img src="/assets/photos/lifestyle/lifestyle-02.jpg" alt="">
-      <img src="/assets/photos/lifestyle/lifestyle-03.jpg" alt="">
-      <img src="/assets/photos/lifestyle/lifestyle-04.jpg" alt="">
-    </div>
-    <div class="actions actions-end">
-      <Button href="/architecture" label="View Architecture" />
-    </div>
-  </div>
-</section>
-
-<!-- Gallery: Courses & Resources -->
-<section class="section">
-  <div class="container">
-    <div class="section-title">
-      <h2>Courses &amp; Resources</h2>
-      <p class="lead">A visual index of work, influence, and the spaces between.</p>
-    </div>
-    <div class="gallery">
-      <img src="/assets/photos/talks/talk-03.jpg" alt="">
-      <img src="/assets/photos/talks/talk-04.jpg" alt="">
-      <img src="/assets/photos/talks/talk-05.jpg" alt="">
-      <img src="/assets/photos/talks/talk-06.jpg" alt="">
-    </div>
-    <div class="actions actions-end">
-      <Button href="/shop" label="Visit the Shop" />
-    </div>
-  </div>
-</section>
-
-<!-- Closing CTA -->
-<section class="section final-cta">
-  <div class="container">
-    <div class="final-cta__inner">
-      <p class="tagline final-cta__eyebrow">Get in touch</p>
-      <h2 class="final-cta__title">Talk to Tom</h2>
-      <span class="final-cta__portrait"><img src="/assets/photos/portraits/portrait-01.jpg" width="1200" height="1200" loading="lazy" decoding="async" alt="Tom Rowntree"></span>
-      <div class="final-cta__foot">
-        <p class="lead final-cta__lead">Speaking, partnerships, teaching or a project you are still working out — start the conversation and Tom will come back to you himself.</p>
-        <div class="actions">
-          <Button href="#contact" data-panel-open="contact" data-barba-prevent="self" label="Contact Tom" />
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
+<GetInTouch />
 
 
 <SiteFooter />
