@@ -2,8 +2,11 @@ import {defineConfig} from 'sanity'
 import {structureTool} from 'sanity/structure'
 import {defineDocuments, defineLocations, presentationTool} from 'sanity/presentation'
 import {visionTool} from '@sanity/vision'
+import './page'
+import './publish-button.css'
 import {schemaTypes} from './schemaTypes'
 import {structure} from './structure'
+import {theme} from './theme'
 
 // The website the Presentation tool shows: the live site from the hosted Studio,
 // your own dev server (npm run dev, port 8766) from a local one;
@@ -25,6 +28,11 @@ export default defineConfig({
 
   projectId: '5cwu7mnl',
   dataset: 'production',
+
+  // The website's fonts on a pure black ground (theme.ts; page.ts loads the
+  // fonts and blacks out the page behind the Studio). The Publish button is
+  // the site's red call to action (publish-button.css).
+  theme,
 
   plugins: [
     structureTool({structure}),

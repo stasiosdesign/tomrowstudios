@@ -1,0 +1,72 @@
+/* The Publish button, at the bottom right of every document, set as the
+   website's call to action rather than Sanity's small grey button: the site's
+   one red (--cta-accent-color in src/styles/style.css), the mono uppercase
+   label its CTAs wear, and a bigger target. It is red only while there is
+   something to publish. Once everything is live Sanity disables the button,
+   and it drops back to a quiet outline, so the colour alone says whether the
+   site is up to date.
+
+   The rule takes the document footer's main action whatever it reads at the
+   moment (Publish, Validating document…, Publishing…, Published, or Restore
+   while an old revision is open) and leaves the ⋯ menu beside it alone.
+   Sanity gives neither a class, so the selector goes by the test IDs its own
+   tests use; if an update renames them, the button falls back to Sanity's
+   look. The selector also outranks Sanity's own button rules, which only
+   carry a class. */
+[data-testid='pane-footer']
+  button[data-ui='Button'][data-testid^='action-']:not([data-testid='action-menu-button']) {
+  min-width: 10rem;
+  min-height: 2.75rem;
+  transition:
+    background-color 0.2s ease,
+    box-shadow 0.2s ease;
+
+  & > span {
+    padding: 0.5rem 1.25rem;
+  }
+
+  /* The label and the icon beside it; the kit has the mono in one cut, 300 */
+  & [data-ui='Text'] {
+    font-family: 'chivo-mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-weight: 300;
+    letter-spacing: 0.01em;
+    text-transform: uppercase;
+  }
+
+  /* Sanity paints its buttons through these card variables, the label and
+     the icon included, so the colours are set there */
+  &:enabled {
+    --card-bg-color: #dd341d;
+    --card-fg-color: #ffffff;
+    --card-icon-color: #ffffff;
+    background-color: var(--card-bg-color);
+    box-shadow: none;
+  }
+
+  @media (hover: hover) {
+    &:enabled:hover {
+      --card-bg-color: color-mix(in srgb, #dd341d 88%, #ffffff);
+    }
+  }
+
+  &:enabled:active {
+    --card-bg-color: color-mix(in srgb, #dd341d 88%, #000000);
+  }
+
+  &:disabled {
+    --card-bg-color: transparent;
+    --card-fg-color: rgb(255 255 255 / 0.4);
+    --card-icon-color: rgb(255 255 255 / 0.4);
+    background-color: transparent;
+    box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.2);
+  }
+
+  &:focus-visible {
+    outline: 2px solid #ffffff;
+    outline-offset: 2px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    transition: none;
+  }
+}
