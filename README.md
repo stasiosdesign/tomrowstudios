@@ -12,14 +12,15 @@ like a Webflow site's live and staging domains.
 
 ## Addresses
 
-|              | URL                                                                    | From                       |
-| ------------ | ---------------------------------------------------------------------- | -------------------------- |
-| Production   | https://tomrowstudios-final-wireframes.vercel.app                      | `main`                     |
-| Staging      | https://tomrowstudios-final-wireframes-git-staging-stasiosdesign.vercel.app | `staging`             |
-| Studio       | https://tomrowstudios.sanity.studio                                    | `studio/`, deployed by hand |
+|            | URL                                                     | From                        |
+| ---------- | ------------------------------------------------------- | --------------------------- |
+| Production | https://tomrowstudios.vercel.app                        | `main`                      |
+| Staging    | https://tomrowstudios-git-staging-stasiosdesign.vercel.app | `staging`                |
+| Studio     | https://tomrowstudios.sanity.studio                     | `studio/`, deployed by hand |
 
 Staging's URL is Vercel's alias for the `staging` branch: it always shows the
 branch's latest deployment. (Every deployment also has its own unique URL.)
+The Vercel project is `tomrowstudios`, in the `stasiosdesign` team.
 
 ## Production and staging
 
@@ -154,8 +155,10 @@ Studio), http://localhost:8766 in `studio/.env.development` (`npm run studio`).
   except the production domain. The Studio gets through with Vercel's
   *Protection Bypass for Automation* secret, saved once in the Studio's
   **Vercel Protection Bypass** tool.
-- **Deploy hook** on `main`, called by the Sanity webhook above. Its URL is a
-  secret: it lives only in the webhook.
+- **Deploy hook** "Sanity publish" on `main`, called by the Sanity webhook
+  above. Its URL is a secret: it lives only in the webhook.
+- **Environment variables:** `SITE_URL` (Production and Preview) and
+  `SANITY_API_READ_TOKEN` (Preview, branch `staging`); see below.
 
 ## Adding a custom domain
 
