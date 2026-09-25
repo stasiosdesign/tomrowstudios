@@ -46,6 +46,21 @@ const draftModeRoutes = () => ({
   },
 });
 
+// Production only: a build stamp, dist/build.json, saying when the site was
+// built. The Studio's publishing bar reads it (with the CORS header vercel.ts
+// gives it) to tell an editor when a live publish has reached the site.
+/** @returns {import('astro').AstroIntegration} */
+const buildStamp = () => ({
+  name: 'tomrowstudios:build-stamp',
+  hooks: {
+    'astro:build:done': async ({ dir }) => {
+      const { writeFile } = await import('node:fs/promises');
+      const stamp = { builtAt: new Date().toISOString(), deployment };
+      await writeFile(new URL('build.json', dir), JSON.stringify(stamp));
+    },
+  },
+});
+
 // https://astro.build/config
 export default defineConfig({
   site,
@@ -56,7 +71,7 @@ export default defineConfig({
   adapter: onDemand ? vercel() : undefined,
 
   integrations: [
-    ...(deployment === 'production' ? [sitemap()] : []),
+    ...(deployment === 'production' ? [sitemap(), buildStamp()] : []),
     ...(onDemand ? [draftModeRoutes()] : []),
   ],
 

@@ -10,16 +10,20 @@
    - marks the parts it edits with data-sanity attributes and writes the drafts
      into them, and again whenever Barba brings a page in.
    That covers every section of the home page, its logos (each opens its
-   client), and the Get in touch block on every page that ends with it. The
-   page underneath is rendered by staging in draft mode (src/sanity/draft-mode/),
-   so everything else a draft changes, a photo, card, client or whole project
+   client), the Get in touch block on every page that ends with it, and on
+   every other page the parts its own document holds (each page names its
+   document on <main>, and each part the field it shows: data-page-doc and
+   data-page-field, see BaseLayout.astro and src/pages). The page underneath
+   is rendered by staging in draft mode (src/sanity/draft-mode/), so
+   everything else a draft changes, a photo, card, client or whole project
    added or removed, shows when the page is reloaded. */
 import { createQueryStore } from '@sanity/core-loader';
 import { createDataAttribute, enableVisualEditing } from '@sanity/visual-editing-standalone';
 import { sanityClient } from './client';
+import { contentParams } from './content';
 import { urlFor, type SanityImage } from './image';
-import { CLIENT_LOGOS_QUERY, GET_IN_TOUCH_QUERY, HOME_PAGE_QUERY } from './queries';
-import type { CLIENT_LOGOS_QUERY_RESULT, GET_IN_TOUCH_QUERY_RESULT, HOME_PAGE_QUERY_RESULT } from './sanity.types';
+import { CLIENT_LOGOS_QUERY, GET_IN_TOUCH_QUERY, HOME_PAGE_QUERY, PAGE_LIVE_QUERY } from './queries';
+import type { CLIENT_LOGOS_QUERY_RESULT, GET_IN_TOUCH_QUERY_RESULT, HOME_PAGE_QUERY_RESULT, PAGE_LIVE_QUERY_RESULT } from './sanity.types';
 
 type Home = NonNullable<HOME_PAGE_QUERY_RESULT>;
 type Gallery = NonNullable<Home['influence']>;
@@ -55,15 +59,15 @@ const setImage = (img: Element | null | undefined, image: SanityImage | null | u
 };
 
 // A field shown as an element's text
-const text = (el: Element | null | undefined, path: Path, value: Value) => {
-  mark(el, path);
+const text = (el: Element | null | undefined, path: Path, value: Value, doc = HOME) => {
+  mark(el, path, doc);
   setText(el, value);
 };
 
 // A button (Button.astro) and its label, which is also the text its hover
 // scramble settles on (scramble.js reads data-scramble-text on each hover)
-const button = (cta: Element | null | undefined, path: Path, label: Value) => {
-  mark(cta, path);
+const button = (cta: Element | null | undefined, path: Path, label: Value, doc = HOME) => {
+  mark(cta, path, doc);
   const el = cta?.querySelector('.cta__label');
   setText(el, label);
   if (el instanceof HTMLElement && label != null) el.dataset.scrambleText = label;
@@ -196,6 +200,29 @@ function renderGetInTouch(cta: NonNullable<GET_IN_TOUCH_QUERY_RESULT>) {
   button(root.querySelector('a.cta'), ['getInTouch', 'button'], cta.button);
 }
 
+// Every other page: its <main> names its document (data-page-doc, the type,
+// which is also the ID), and each part it holds names its field as a path
+// into the document (data-page-field="hero.heading"): a picture (an img, at
+// the width in data-page-width), a button (Button.astro's a.cta) or, for
+// anything else, the element's text. A field a draft leaves empty keeps the
+// page's own words.
+function renderPage(doc: Doc, page: Record<string, unknown>) {
+  const main = document.querySelector(`main[data-page-doc="${doc.id}"]`);
+  main?.querySelectorAll('[data-page-field]').forEach((el) => {
+    if (!(el instanceof HTMLElement) || !el.dataset.pageField) return;
+    const path = el.dataset.pageField.split('.');
+    const value = path.reduce<unknown>((at, key) => (at && typeof at === 'object' ? (at as Record<string, unknown>)[key] : undefined), page);
+    if (el instanceof HTMLImageElement) {
+      mark(el, path, doc);
+      setImage(el, value as SanityImage | null | undefined, Number(el.dataset.pageWidth) || 1600);
+    } else if (el.matches('a.cta')) {
+      button(el, path, typeof value === 'string' ? value : null, doc);
+    } else {
+      text(el, path, typeof value === 'string' ? value : null, doc);
+    }
+  });
+}
+
 enableVisualEditing({ zIndex: 10000 }); // above the site's own layers (400 at most)
 
 const { createFetcherStore, enableLiveMode } = createQueryStore({ client: sanityClient, ssr: false });
@@ -204,14 +231,14 @@ enableLiveMode({ client: sanityClient });
 // A live query, asked for the first time a page needs it (so the Studio's
 // list of documents on a page only has the ones it shows); its latest result
 // is drawn in on arrival and again on every page Barba brings in after that
-function live<T>(query: string, render: (data: NonNullable<T>) => void) {
+function live<T>(query: string, render: (data: NonNullable<T>) => void, params: Record<string, unknown> = contentParams) {
   let latest: NonNullable<T> | undefined;
   let asked = false;
   return () => {
     if (latest) render(latest);
     if (asked) return;
     asked = true;
-    createFetcherStore<T>(query).subscribe(({ data }) => {
+    createFetcherStore<T>(query, params).subscribe(({ data }) => {
       if (data == null) return;
       latest = data;
       render(data);
@@ -223,12 +250,26 @@ const home = live<HOME_PAGE_QUERY_RESULT>(HOME_PAGE_QUERY, renderHome);
 const logos = live<CLIENT_LOGOS_QUERY_RESULT>(CLIENT_LOGOS_QUERY, renderLogos);
 const getInTouch = live<GET_IN_TOUCH_QUERY_RESULT>(GET_IN_TOUCH_QUERY, renderGetInTouch);
 
+// One live query per page document, made the first time its page is shown
+const pages = new Map<string, () => void>();
+function page(type: string) {
+  let show = pages.get(type);
+  if (!show) {
+    const doc: Doc = { id: type, type };
+    show = live<PAGE_LIVE_QUERY_RESULT>(PAGE_LIVE_QUERY, (data) => renderPage(doc, data as Record<string, unknown>), { ...contentParams, id: type });
+    pages.set(type, show);
+  }
+  show();
+}
+
 function update() {
   if (document.querySelector('.home-hero')) {
     home();
     logos();
   }
   if (document.querySelector('.final-cta')) getInTouch();
+  const main = document.querySelector('main[data-page-doc]');
+  if (main instanceof HTMLElement && main.dataset.pageDoc) page(main.dataset.pageDoc);
 }
 
 update();

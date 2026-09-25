@@ -7,6 +7,7 @@ import GetInTouch from '../components/GetInTouch.astro';
 import Button from '../components/Button.astro';
 import { urlFor } from '../sanity/image';
 import { CLIENT_LOGOS_QUERY, HOME_PAGE_QUERY } from '../sanity/queries';
+import { contentParams } from '../sanity/content';
 
 // Every section's words and photos, from the Home page document in Sanity,
 // and the logo wall's clients in the order set in the Studio. The navigation,
@@ -16,7 +17,7 @@ import { CLIENT_LOGOS_QUERY, HOME_PAGE_QUERY } from '../sanity/queries';
 // sections by it, marks their parts editable and swaps in drafts as they are
 // typed.
 const { sanity } = Astro.locals;
-const [home, clients] = await Promise.all([sanity.fetch(HOME_PAGE_QUERY), sanity.fetch(CLIENT_LOGOS_QUERY)]);
+const [home, clients] = await Promise.all([sanity.fetch(HOME_PAGE_QUERY, contentParams), sanity.fetch(CLIENT_LOGOS_QUERY, contentParams)]);
 if (!home) throw new Error('The Home page document is missing in Sanity');
 const { hero, logoWall, practice, slider, recognition, influence, partners, projects, courses } = home;
 if (!hero?.slides?.length || !logoWall || !practice || !slider?.images?.length || !recognition?.cards?.length || !influence || !partners || !projects || !courses) {
@@ -131,7 +132,7 @@ const galleries = [
   <div data-marquee-duplicate="2" data-marquee-scroll-direction-target data-marquee-direction="left" data-marquee-status="normal" data-marquee-speed="15" data-marquee-scroll-speed="10" class="marquee-advanced">
     <div data-marquee-scroll-target class="marquee-advanced__scroll">
       <div data-marquee-collection-target class="marquee-advanced__collection">
-        {clients.map((client) => (
+        {clients.map((client) => client.logo && (
           <div class="marquee-advanced__item-width"><img src={urlFor(client.logo).ignoreImageParams().width(600).height(240).url()} loading="lazy" alt={client.name ?? ''}></div>
         ))}
       </div>

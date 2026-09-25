@@ -5,8 +5,21 @@ import SiteFooter from '../components/SiteFooter.astro';
 import ContactPanel from '../components/ContactPanel.astro';
 import Button from '../components/Button.astro';
 import GetInTouch from '../components/GetInTouch.astro';
+import { imageAttrs, type SanityImage } from '../sanity/image';
+import { PARTNERS_PAGE_QUERY } from '../sanity/queries';
+import { contentParams } from '../sanity/content';
+import { PAGE_DEFAULTS, type ImageDefault } from '../sanity/page-defaults';
+
+// The page's words and portrait, from the Partners page document (or the
+// page's defaults); the case studies, the logos, the services, the
+// testimonials, the results and the form stay here
+const page = await Astro.locals.sanity.fetch(PARTNERS_PAGE_QUERY, contentParams);
+const D = PAGE_DEFAULTS.partnersPage;
+// An <img>'s src, size and alt: the photo set in the Studio, or the page's own file
+const img = (image: SanityImage | null | undefined, fallback: ImageDefault, width: number) =>
+  image?.asset ? { ...imageAttrs(image, width), alt: image.alt ?? fallback.alt } : { src: fallback.path, width: fallback.width, height: fallback.height, alt: fallback.alt };
 ---
-<BaseLayout title="Partners — Tomrow Studios" namespace="partner" pageName="Partners">
+<BaseLayout title="Partners — Tomrow Studios" namespace="partner" pageName="Partners" pageDoc="partnersPage">
 <SiteNav />
 
 <div class="theme-light">
@@ -15,10 +28,10 @@ import GetInTouch from '../components/GetInTouch.astro';
 <section class="section">
   <div class="container">
     <div class="section-title section-title-left">
-      <h2 class="page-hero-title">Partners</h2>
-      <p class="lead">Content, strategy and collaboration for architecture, design and technology organisations</p>
+      <h2 class="page-hero-title" data-page-field="intro.heading">{page?.intro?.heading ?? D.intro.heading}</h2>
+      <p class="lead" data-page-field="intro.lead">{page?.intro?.lead ?? D.intro.lead}</p>
       <div class="actions">
-        <Button href="#contact" data-panel-open="contact" data-barba-prevent="self" label="Get in touch" />
+        <Button href="#contact" data-panel-open="contact" data-barba-prevent="self" data-page-field="intro.button" label={page?.intro?.button ?? D.intro.button} />
       </div>
     </div>
     <div data-swiper-group class="swiper-group">
@@ -126,9 +139,9 @@ import GetInTouch from '../components/GetInTouch.astro';
 <!-- Logo strip -->
 <section class="section logo-strip">
   <div class="section-title section-title-left logo-strip__head">
-    <p class="tagline">Clients</p>
-    <h2 class="logo-strip-title">Seen in the studios that shape our world</h2>
-    <p class="logo-strip__note">Brands we&rsquo;ve worked with</p>
+    <p class="tagline" data-page-field="clients.label">{page?.clients?.label ?? D.clients.label}</p>
+    <h2 class="logo-strip-title" data-page-field="clients.heading">{page?.clients?.heading ?? D.clients.heading}</h2>
+    <p class="logo-strip__note" data-page-field="clients.note">{page?.clients?.note ?? D.clients.note}</p>
   </div>
 </section>
 
@@ -161,15 +174,15 @@ import GetInTouch from '../components/GetInTouch.astro';
      portrait in the first column against the copy in the last two. -->
 <section class="section statement">
   <div class="container">
-    <h2 class="statement__title">We make architecture legible<span class="statement__dot" aria-hidden="true"></span></h2>
+    <h2 class="statement__title"><span data-page-field="statement.heading">{page?.statement?.heading ?? D.statement.heading}</span><span class="statement__dot" aria-hidden="true"></span></h2>
     <div class="statement__row">
       <div class="statement__media">
-        <img src="/assets/photos/events/event-01.jpg" width="1200" height="1600" loading="lazy" decoding="async" alt="Tom Rowntree at the AEC summit">
+        <img data-page-field="statement.image" data-page-width="1200" {...img(page?.statement?.image, D.statement.image, 1200)} loading="lazy" decoding="async">
       </div>
       <div class="statement__body">
-        <p class="statement__lead">Practices, platforms and manufacturers come to Tomrow Studios to turn technical work into content people actually watch. Strategy, film and editorial &mdash; made by someone who has drawn the details.</p>
+        <p class="statement__lead" data-page-field="statement.lead">{page?.statement?.lead ?? D.statement.lead}</p>
         <div class="actions">
-          <Button href="/partners-archive" label="See the work" />
+          <Button href="/partners-archive" data-page-field="statement.button" label={page?.statement?.button ?? D.statement.button} />
         </div>
       </div>
     </div>
@@ -181,8 +194,8 @@ import GetInTouch from '../components/GetInTouch.astro';
     <div data-service-list class="service-list">
       <div class="service-list__aside">
         <div class="service-list__intro">
-          <p class="tagline">Services</p>
-          <p class="service-list__lead">What Tom does</p>
+          <p class="tagline" data-page-field="services.label">{page?.services?.label ?? D.services.label}</p>
+          <p class="service-list__lead" data-page-field="services.lead">{page?.services?.lead ?? D.services.lead}</p>
         </div>
       </div>
       <ul class="service-list__items">
@@ -266,15 +279,15 @@ import GetInTouch from '../components/GetInTouch.astro';
   <div class="container">
     <div class="two-col two-col-flat">
       <div>
-        <p class="tagline">Results</p>
-        <h2>What it delivered</h2>
+        <p class="tagline" data-page-field="results.label">{page?.results?.label ?? D.results.label}</p>
+        <h2 data-page-field="results.heading">{page?.results?.heading ?? D.results.heading}</h2>
         <div class="actions">
           <Button href="#contact" data-panel-open="contact" data-barba-prevent="self" label="Get Started" />
           <Button href="/partners-archive" label="View Work" secondary />
         </div>
       </div>
       <div>
-        <p class="results-note">Averaged across partner campaigns run in the last two years.</p>
+        <p class="results-note" data-page-field="results.note">{page?.results?.note ?? D.results.note}</p>
       </div>
     </div>
     <ul data-odometer-group data-odometer-stagger="0.1" class="results-grid">
@@ -339,9 +352,9 @@ import GetInTouch from '../components/GetInTouch.astro';
   <div class="container">
     <div class="contact-split">
       <div>
-        <p class="tagline">Enquire</p>
-        <h2>Send your enquiry</h2>
-        <p class="lead">Tell Tom about your organisation, what you are planning and the support you need.</p>
+        <p class="tagline" data-page-field="enquire.label">{page?.enquire?.label ?? D.enquire.label}</p>
+        <h2 data-page-field="enquire.heading">{page?.enquire?.heading ?? D.enquire.heading}</h2>
+        <p class="lead" data-page-field="enquire.lead">{page?.enquire?.lead ?? D.enquire.lead}</p>
         <ul class="contact-details">
           <li><img src="/assets/ui/mail.svg" alt=""><a href="mailto:tom@tomrowstudios.com" data-scramble-hover="link">tom@tomrowstudios.com</a></li>
           <li><img src="/assets/ui/call.svg" alt=""><a href="tel:+61280000000" data-scramble-hover="link">+61 2 8000 0000</a></li>

@@ -5,18 +5,30 @@ import SiteFooter from '../components/SiteFooter.astro';
 import ContactPanel from '../components/ContactPanel.astro';
 import Button from '../components/Button.astro';
 import GetInTouch from '../components/GetInTouch.astro';
+import { imageAttrs, type SanityImage } from '../sanity/image';
+import { BOOK_PAGE_QUERY } from '../sanity/queries';
+import { contentParams } from '../sanity/content';
+import { PAGE_DEFAULTS, type ImageDefault } from '../sanity/page-defaults';
+
+// The page's headings, photos, caption and buttons, from the Book page
+// document (or the page's defaults); the paragraphs and the details stay here
+const page = await Astro.locals.sanity.fetch(BOOK_PAGE_QUERY, contentParams);
+const D = PAGE_DEFAULTS.bookPage;
+// An <img>'s src, size and alt: the photo set in the Studio, or the page's own file
+const img = (image: SanityImage | null | undefined, fallback: ImageDefault, width: number) =>
+  image?.asset ? { ...imageAttrs(image, width), alt: image.alt ?? fallback.alt } : { src: fallback.path, width: fallback.width, height: fallback.height, alt: fallback.alt };
 ---
-<BaseLayout title="Architectural Influence — Tomrow Studios" namespace="book" pageName="Book">
+<BaseLayout title="Architectural Influence — Tomrow Studios" namespace="book" pageName="Book" pageDoc="bookPage">
 <SiteNav />
 
 
 <!-- Header -->
 <header class="page-header">
-  <img class="page-header-img" src="/assets/photos/lifestyle/lifestyle-10.jpg" alt="">
+  <img class="page-header-img" data-page-field="header.image" data-page-width="1600" {...img(page?.header?.image, D.header.image, 1600)}>
   <div class="page-header-body">
     <div class="page-header-main">
-      <h1>Architectural Influence</h1>
-      <p class="lead">A precedent analysis of the top 21 social media creators in the architecture profession, across the globe</p>
+      <h1 data-page-field="header.heading">{page?.header?.heading ?? D.header.heading}</h1>
+      <p class="lead" data-page-field="header.lead">{page?.header?.lead ?? D.header.lead}</p>
       <div class="tags">
         <span class="tag">Hardcover</span>
         <span class="tag">RIBA Publishing</span>
@@ -36,7 +48,7 @@ import GetInTouch from '../components/GetInTouch.astro';
 <section class="section section-alt">
   <div class="container">
     <div class="rich-split">
-      <h3>How architecture travels beyond the building</h3>
+      <h3 data-page-field="overview.heading">{page?.overview?.heading ?? D.overview.heading}</h3>
       <div class="rich-text">
         <p>Architecture has always depended on being seen. Drawings, photographs and journals carried the discipline further than any building could reach on its own. What has changed is who does the carrying. A generation of architects, students and designers now publishes directly, and in doing so has rebuilt the route between the profession and everyone outside it.</p>
         <p>This book studies that shift as a subject worth taking seriously. It is not a manual for growing an account, and it is not a complaint about the state of the discipline. It is a precedent analysis, in the way an architect would read a set of buildings: what was attempted, what was made, and what it produced.</p>
@@ -44,7 +56,7 @@ import GetInTouch from '../components/GetInTouch.astro';
         <p>What emerges is a set of deliberate strategies. The creators who built something durable did not do it by accident, and the patterns behind their work are legible, transferable, and available to anyone willing to look at them closely.</p>
       </div>
     </div>
-    <img class="panel-wide-img" src="/assets/photos/thumbnails/thumb-01.jpg" alt="">
+    <img class="panel-wide-img" data-page-field="overview.image" data-page-width="1600" {...img(page?.overview?.image, D.overview.image, 1600)}>
   </div>
 </section>
 
@@ -52,7 +64,7 @@ import GetInTouch from '../components/GetInTouch.astro';
 <section class="section section-alt">
   <div class="container">
     <div class="rich-split">
-      <h3>Inside the book</h3>
+      <h3 data-page-field="inside.heading">{page?.inside?.heading ?? D.inside.heading}</h3>
       <div class="rich-text">
         <p>The book opens with the case for treating architectural content as a discipline rather than a distraction. It sets out why visibility has become part of practice, and why the profession has been slow to study it.</p>
         <p>The central section is the atlas. Twenty-one creator profiles, each mapped to a city and read against the same set of questions. Instagram, TikTok, YouTube and LinkedIn are treated as distinct instruments rather than interchangeable channels, because each rewards a different kind of thinking.</p>
@@ -67,10 +79,10 @@ import GetInTouch from '../components/GetInTouch.astro';
 <section class="map-spread">
   <img class="map-spread__img" src="/assets/graphics/atlas-map.png" loading="lazy" decoding="async" alt="World map plotting the twenty-one architecture creators studied in Architectural Influence">
   <div class="map-spread__footer">
-    <p class="map-spread__caption">Twenty-one creators, mapped across thirteen countries — from Vancouver and Bogotá to London, Jaipur and Sydney.</p>
+    <p class="map-spread__caption" data-page-field="atlas.caption">{page?.atlas?.caption ?? D.atlas.caption}</p>
     <div class="actions">
-      <Button href="/influence" label="Explore Influence" />
-      <Button href="/shop" label="Back to Shop" secondary />
+      <Button href="/influence" data-page-field="atlas.primaryButton" label={page?.atlas?.primaryButton ?? D.atlas.primaryButton} />
+      <Button href="/shop" data-page-field="atlas.secondaryButton" label={page?.atlas?.secondaryButton ?? D.atlas.secondaryButton} secondary />
     </div>
   </div>
 </section>

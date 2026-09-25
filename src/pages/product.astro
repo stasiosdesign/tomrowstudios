@@ -5,17 +5,29 @@ import SiteFooter from '../components/SiteFooter.astro';
 import ContactPanel from '../components/ContactPanel.astro';
 import Button from '../components/Button.astro';
 import GetInTouch from '../components/GetInTouch.astro';
+import { imageAttrs, type SanityImage } from '../sanity/image';
+import { PRODUCT_PAGE_QUERY } from '../sanity/queries';
+import { contentParams } from '../sanity/content';
+import { PAGE_DEFAULTS, type ImageDefault } from '../sanity/page-defaults';
+
+// The page's headings and photos, from the Masterclass page document (or the
+// page's defaults); the paragraphs, the details and the related products stay here
+const page = await Astro.locals.sanity.fetch(PRODUCT_PAGE_QUERY, contentParams);
+const D = PAGE_DEFAULTS.productPage;
+// An <img>'s src, size and alt: the photo set in the Studio, or the page's own file
+const img = (image: SanityImage | null | undefined, fallback: ImageDefault, width: number) =>
+  image?.asset ? { ...imageAttrs(image, width), alt: image.alt ?? fallback.alt } : { src: fallback.path, width: fallback.width, height: fallback.height, alt: fallback.alt };
 ---
-<BaseLayout title="Architectural presentation masterclass — Tomrow Studios" namespace="product" pageName="Product">
+<BaseLayout title="Architectural presentation masterclass — Tomrow Studios" namespace="product" pageName="Product" pageDoc="productPage">
 <SiteNav />
 
 <!-- Header -->
 <header class="page-header">
-  <img class="page-header-img" src="/assets/photos/lifestyle/lifestyle-06.jpg" width="1200" height="1500" alt="">
+  <img class="page-header-img" data-page-field="header.image" data-page-width="1200" {...img(page?.header?.image, D.header.image, 1200)}>
   <div class="page-header-body">
     <div class="page-header-main">
-      <h1>Architectural presentation masterclass</h1>
-      <p class="lead">Learn how to structure, design and deliver clear architecture presentations</p>
+      <h1 data-page-field="header.heading">{page?.header?.heading ?? D.header.heading}</h1>
+      <p class="lead" data-page-field="header.lead">{page?.header?.lead ?? D.header.lead}</p>
       <div class="tags">
         <span class="tag">6 modules</span>
         <span class="tag">Self-paced</span>
@@ -35,7 +47,7 @@ import GetInTouch from '../components/GetInTouch.astro';
 <section class="section section-alt">
   <div class="container">
     <div class="rich-split">
-      <h3>Present your work clearly and confidently</h3>
+      <h3 data-page-field="overview.heading">{page?.overview?.heading ?? D.overview.heading}</h3>
       <div class="rich-text">
         <p>Strong design work fails when it cannot be understood. You have seen it happen. A student produces a rigorous project but loses the room during a review. A designer has the right answer but cannot land it in a meeting. The work was good. The communication was not.</p>
         <p>This course addresses that gap directly. It teaches you to structure a presentation that holds attention. You will learn to select images that do real work rather than fill slides. You will practice verbal techniques that make your thinking accessible without dumbing it down. The goal is not performance. The goal is clarity.</p>
@@ -43,7 +55,7 @@ import GetInTouch from '../components/GetInTouch.astro';
         <p>The methods are practical. You will finish with templates, frameworks, and rehearsed approaches you can use immediately. No theory for its own sake. Only what works when you are standing in front of a panel with fifteen minutes to make your case.</p>
       </div>
     </div>
-    <img data-click-zoom class="panel-wide-img" src="/assets/photos/lifestyle/lifestyle-08.jpg" width="1200" height="1500" loading="lazy" decoding="async" alt="An architecture studio mid-review">
+    <img data-click-zoom class="panel-wide-img" data-page-field="overview.image" data-page-width="1200" {...img(page?.overview?.image, D.overview.image, 1200)} loading="lazy" decoding="async">
   </div>
 </section>
 
@@ -51,7 +63,7 @@ import GetInTouch from '../components/GetInTouch.astro';
 <section class="section section-alt">
   <div class="container">
     <div class="rich-split">
-      <h3>What you will learn</h3>
+      <h3 data-page-field="details.heading">{page?.details?.heading ?? D.details.heading}</h3>
       <div class="rich-text">
         <p>The course is built around six practical modules. Each one addresses a specific skill you need when presenting architectural work. There is no filler. You move through concept, structure, visuals, physical materials, verbal delivery, and handling critique. By the end you will have a repeatable method for any presentation situation.</p>
         <p>Concept-led presentations start with the idea, not the building. You learn to identify the core argument of your project and make every slide serve that argument. If an image does not support the concept, it does not belong in the deck. This module gives you tools to test whether your presentation has a spine or just a sequence.</p>
@@ -65,7 +77,7 @@ import GetInTouch from '../components/GetInTouch.astro';
         </ul>
       </div>
     </div>
-    <img data-click-zoom class="panel-wide-img" src="/assets/photos/lifestyle/lifestyle-02.jpg" width="1200" height="1500" loading="lazy" decoding="async" alt="Drawings under review">
+    <img data-click-zoom class="panel-wide-img" data-page-field="details.image" data-page-width="1200" {...img(page?.details?.image, D.details.image, 1200)} loading="lazy" decoding="async">
   </div>
 </section>
 

@@ -5,17 +5,29 @@ import SiteFooter from '../components/SiteFooter.astro';
 import ContactPanel from '../components/ContactPanel.astro';
 import Button from '../components/Button.astro';
 import GetInTouch from '../components/GetInTouch.astro';
+import { imageAttrs, type SanityImage } from '../sanity/image';
+import { SHOP_PAGE_QUERY } from '../sanity/queries';
+import { contentParams } from '../sanity/content';
+import { PAGE_DEFAULTS, type ImageDefault } from '../sanity/page-defaults';
+
+// The page's words and photo, from the Shop page document (or the page's
+// defaults); the products, the quotes and the questions stay here
+const page = await Astro.locals.sanity.fetch(SHOP_PAGE_QUERY, contentParams);
+const D = PAGE_DEFAULTS.shopPage;
+// An <img>'s src, size and alt: the photo set in the Studio, or the page's own file
+const img = (image: SanityImage | null | undefined, fallback: ImageDefault, width: number) =>
+  image?.asset ? { ...imageAttrs(image, width), alt: image.alt ?? fallback.alt } : { src: fallback.path, width: fallback.width, height: fallback.height, alt: fallback.alt };
 ---
-<BaseLayout title="Shop — Tomrow Studios" namespace="shop" pageName="Shop">
+<BaseLayout title="Shop — Tomrow Studios" namespace="shop" pageName="Shop" pageDoc="shopPage">
 <SiteNav />
 
 <!-- Hero -->
 <header class="shop-hero">
   <div class="shop-hero__body">
     <div class="shop-hero__copy">
-      <p class="tagline">Shop</p>
-      <h1>Tools for a clearer Practice</h1>
-      <p class="lead">Courses, books and resources built for working architects — the methods behind the drawings, the writing and the presentations.</p>
+      <p class="tagline" data-page-field="hero.label">{page?.hero?.label ?? D.hero.label}</p>
+      <h1 data-page-field="hero.heading">{page?.hero?.heading ?? D.hero.heading}</h1>
+      <p class="lead" data-page-field="hero.lead">{page?.hero?.lead ?? D.hero.lead}</p>
       <div class="social-proof">
         <div class="social-proof__avatars">
           <img src="/assets/photos/portraits/portrait-02.jpg" alt="">
@@ -29,12 +41,12 @@ import GetInTouch from '../components/GetInTouch.astro';
         </div>
       </div>
       <div class="actions">
-        <Button href="#catalogue" data-barba-prevent="self" label="Browse the shop" />
-        <Button href="/book" label="Read the book" secondary />
+        <Button href="#catalogue" data-barba-prevent="self" data-page-field="hero.primaryButton" label={page?.hero?.primaryButton ?? D.hero.primaryButton} />
+        <Button href="/book" data-page-field="hero.secondaryButton" label={page?.hero?.secondaryButton ?? D.hero.secondaryButton} secondary />
       </div>
     </div>
     <div class="shop-hero__media">
-      <img src="/assets/photos/studio/studio-05.jpg" alt="">
+      <img data-page-field="hero.image" data-page-width="1600" {...img(page?.hero?.image, D.hero.image, 1600)}>
     </div>
   </div>
 </header>
@@ -43,8 +55,8 @@ import GetInTouch from '../components/GetInTouch.astro';
 <section class="section section-alt" id="catalogue">
   <div class="container">
     <div class="section-title section-title-left">
-      <p class="tagline">Catalogue</p>
-      <h2>Everything in the shop</h2>
+      <p class="tagline" data-page-field="catalogue.label">{page?.catalogue?.label ?? D.catalogue.label}</p>
+      <h2 data-page-field="catalogue.heading">{page?.catalogue?.heading ?? D.catalogue.heading}</h2>
     </div>
 
     <div class="product-grid">
@@ -107,8 +119,8 @@ import GetInTouch from '../components/GetInTouch.astro';
 <section class="section section-alt">
   <div class="container">
     <div class="section-title">
-      <h2>What students say</h2>
-      <p class="lead">Architects and designers on how the courses changed their work</p>
+      <h2 data-page-field="testimonials.heading">{page?.testimonials?.heading ?? D.testimonials.heading}</h2>
+      <p class="lead" data-page-field="testimonials.lead">{page?.testimonials?.lead ?? D.testimonials.lead}</p>
     </div>
 
     <div data-slider-autoplay-duration="4" aria-label="Testimonial Slider" data-centered-slider="wrapper" data-slider-autoplay="true" class="centered-slider-group">
@@ -204,9 +216,9 @@ import GetInTouch from '../components/GetInTouch.astro';
   <div class="container">
     <div class="faq-layout">
       <div class="faq-layout__head">
-        <p class="tagline">Support</p>
-        <h2>FAQ</h2>
-        <p class="faq-layout__note">Everything you need to know about access, delivery and support.</p>
+        <p class="tagline" data-page-field="faq.label">{page?.faq?.label ?? D.faq.label}</p>
+        <h2 data-page-field="faq.heading">{page?.faq?.heading ?? D.faq.heading}</h2>
+        <p class="faq-layout__note" data-page-field="faq.note">{page?.faq?.note ?? D.faq.note}</p>
       </div>
 
       <div class="faq">
@@ -232,9 +244,9 @@ import GetInTouch from '../components/GetInTouch.astro';
       </details>
 
         <div class="faq-footer">
-          <h3>Need more help?</h3>
-          <p class="lead">Get in touch directly for anything not covered here</p>
-          <Button href="#contact" data-panel-open="contact" data-barba-prevent="self" label="Contact" />
+          <h3 data-page-field="faq.helpHeading">{page?.faq?.helpHeading ?? D.faq.helpHeading}</h3>
+          <p class="lead" data-page-field="faq.helpLead">{page?.faq?.helpLead ?? D.faq.helpLead}</p>
+          <Button href="#contact" data-panel-open="contact" data-barba-prevent="self" data-page-field="faq.helpButton" label={page?.faq?.helpButton ?? D.faq.helpButton} />
         </div>
       </div>
     </div>

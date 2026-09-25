@@ -1,0 +1,92 @@
+/* The Studio's own styles, on top of the theme (theme.ts): the website's red
+   call to action for "Publish live", the collection tables, and the two
+   labelled parts of the Content sidebar.
+
+   Sanity paints its buttons through card variables, so colours are set
+   there. The selectors go by the classes and data attributes this Studio's
+   own components set; where they touch Sanity's markup (the sidebar's
+   dividers) they go by the test IDs its own tests use, and simply fall back
+   to Sanity's look if an update renames them. */
+
+/* The site's one red (--cta-accent-color in src/styles/style.css), the mono
+   uppercase label its calls to action wear. Red only while it can be pressed:
+   disabled, it drops back to a quiet outline, so the colour alone says
+   whether the live site is up to date. */
+button.tomrow-cta {
+  min-width: 9rem;
+  transition:
+    background-color 0.2s ease,
+    box-shadow 0.2s ease;
+
+  & [data-ui='Text'] {
+    font-family: 'chivo-mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-weight: 300;
+    letter-spacing: 0.01em;
+    text-transform: uppercase;
+  }
+
+  &:enabled {
+    --card-bg-color: #dd341d;
+    --card-fg-color: #ffffff;
+    --card-icon-color: #ffffff;
+    background-color: var(--card-bg-color);
+    box-shadow: none;
+  }
+
+  @media (hover: hover) {
+    &:enabled:hover {
+      --card-bg-color: color-mix(in srgb, #dd341d 88%, #ffffff);
+    }
+  }
+
+  &:enabled:active {
+    --card-bg-color: color-mix(in srgb, #dd341d 88%, #000000);
+  }
+
+  &:disabled {
+    --card-bg-color: transparent;
+    --card-fg-color: rgb(255 255 255 / 0.4);
+    --card-icon-color: rgb(255 255 255 / 0.4);
+    background-color: transparent;
+    box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.2);
+  }
+
+  &:focus-visible {
+    outline: 2px solid #ffffff;
+    outline-offset: 2px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    transition: none;
+  }
+}
+
+/* The Content sidebar's two headings, "Page editor" and "CMS collections":
+   the site's mono, small, uppercase, with room above */
+[data-testid='structure-tool-list-pane'] [data-ui='Stack'] > div:has(> hr) + div,
+[data-testid='structure-tool-list-pane'] hr + [data-ui='Text'],
+[data-testid='structure-tool-list-pane'] [data-testid^='divider-'] {
+  margin-top: 8px;
+}
+
+[data-testid='structure-tool-list-pane'] [data-testid^='divider-'] [data-ui='Text'] {
+  font-family: 'chivo-mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-weight: 300;
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: rgb(255 255 255 / 0.55);
+}
+
+/* A collection: the table fills its pane; the compact list keeps to a narrow
+   column beside the item */
+[data-tomrow-collection] {
+  min-height: 0;
+}
+
+/* Small screens: the publishing bar's actions wrap under the status */
+@media (max-width: 640px) {
+  [data-tomrow-publish-bar] [data-ui='Flex'] {
+    row-gap: 8px;
+  }
+}

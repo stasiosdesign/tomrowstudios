@@ -40,10 +40,18 @@ The README explains the system; these are the working rules.
 
 ## Sanity
 
-- Publish goes straight to the live site (the webhook rebuilds `main` on every
-  publish). The user chose this over a separate staging publish step: content
-  is previewed as drafts in the Visual editor, and staging is for reviewing
-  code. Don't add a staging publish step back.
+- Content has three states in the one dataset: draft (`drafts.<id>`),
+  staging (the published document) and live (`live.<id>`, a copy made by
+  **Publish live**). Production is built from live copies only; staging reads
+  published documents. The publishing bar (`studio/components/PublishBar.tsx`)
+  and `studio/lib/live.ts` implement it; every site query takes `$live`
+  (`src/sanity/content.ts`). Keep that separation: never make production read
+  published documents, never edit live copies by hand, and keep the webhook
+  filtered on `_id in path("live.*")`. (This replaced the earlier one-step
+  publish on 2026-09-25, at the user's request for a Webflow-like
+  staging/live workflow.)
+- Dataset writes from here (scripts, `sanity dataset create`) are blocked by
+  auto mode: the user runs `studio/scripts/*.ts` themselves.
 - Every query lives in `src/sanity/queries.ts`. After changing a query or the
   schema, run `npm run typegen`.
 - The hosted Studio is deployed by hand (`npm run studio:deploy`), from

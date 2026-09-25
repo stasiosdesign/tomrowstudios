@@ -5,18 +5,31 @@ import SiteFooter from '../components/SiteFooter.astro';
 import ContactPanel from '../components/ContactPanel.astro';
 import Button from '../components/Button.astro';
 import GetInTouch from '../components/GetInTouch.astro';
+import { imageAttrs, type SanityImage } from '../sanity/image';
+import { COURSE_SKETCHBOOK_PAGE_QUERY } from '../sanity/queries';
+import { contentParams } from '../sanity/content';
+import { PAGE_DEFAULTS, type ImageDefault } from '../sanity/page-defaults';
+
+// The page's headings and photos, from the Digital Sketchbook page document
+// (or the page's defaults); the paragraphs, the details and the related
+// products stay here
+const page = await Astro.locals.sanity.fetch(COURSE_SKETCHBOOK_PAGE_QUERY, contentParams);
+const D = PAGE_DEFAULTS.courseSketchbookPage;
+// An <img>'s src, size and alt: the photo set in the Studio, or the page's own file
+const img = (image: SanityImage | null | undefined, fallback: ImageDefault, width: number) =>
+  image?.asset ? { ...imageAttrs(image, width), alt: image.alt ?? fallback.alt } : { src: fallback.path, width: fallback.width, height: fallback.height, alt: fallback.alt };
 ---
-<BaseLayout title="An Architect's Digital Sketchbook — Tomrow Studios" namespace="course-sketchbook" pageName="Digital Sketchbook">
+<BaseLayout title="An Architect's Digital Sketchbook — Tomrow Studios" namespace="course-sketchbook" pageName="Digital Sketchbook" pageDoc="courseSketchbookPage">
 <SiteNav />
 
 
 <!-- Header -->
 <header class="page-header">
-  <img class="page-header-img" src="/assets/photos/products/sketchbook.jpg" width="1600" height="1600" alt="">
+  <img class="page-header-img" data-page-field="header.image" data-page-width="1600" {...img(page?.header?.image, D.header.image, 1600)}>
   <div class="page-header-body">
     <div class="page-header-main">
-      <h1>An Architect&rsquo;s Digital Sketchbook</h1>
-      <p class="lead">Sketch, layer and compose on an iPad in Morpholio Trace, ready for the portfolio</p>
+      <h1 data-page-field="header.heading">{page?.header?.heading ?? D.header.heading}</h1>
+      <p class="lead" data-page-field="header.lead">{page?.header?.lead ?? D.header.lead}</p>
       <div class="tags">
         <span class="tag">Free</span>
         <span class="tag">PDF guide</span>
@@ -36,14 +49,14 @@ import GetInTouch from '../components/GetInTouch.astro';
 <section class="section section-alt">
   <div class="container">
     <div class="rich-split">
-      <h3>Six tips for sketching digitally</h3>
+      <h3 data-page-field="overview.heading">{page?.overview?.heading ?? D.overview.heading}</h3>
       <div class="rich-text">
         <p>A step-by-step tutorial on creating digital sketches quickly and easily. The PDF covers how to layer your sketches and compose them as photomontage, ready to include in your portfolios.</p>
         <p>Digital sketching is usually taught as a software problem, which is why so much of it looks like software. This guide treats it as a drawing problem that happens to use a tablet: what you trace, what you leave out, and how much of the underlay should still be visible when you are finished.</p>
         <p>Made with Hamza Shaikh, it works through six tips in order, each one building on the file you already have open. No project setup, no long preamble, nothing you cannot try on the sketch in front of you this afternoon.</p>
       </div>
     </div>
-    <img data-click-zoom class="panel-wide-img" src="/assets/photos/lifestyle/lifestyle-04.jpg" width="1200" height="1500" loading="lazy" decoding="async" alt="Sketching over a drawing in the studio">
+    <img data-click-zoom class="panel-wide-img" data-page-field="overview.image" data-page-width="1200" {...img(page?.overview?.image, D.overview.image, 1200)} loading="lazy" decoding="async">
   </div>
 </section>
 
@@ -51,7 +64,7 @@ import GetInTouch from '../components/GetInTouch.astro';
 <section class="section section-alt">
   <div class="container">
     <div class="rich-split">
-      <h3>What it covers</h3>
+      <h3 data-page-field="details.heading">{page?.details?.heading ?? D.details.heading}</h3>
       <div class="rich-text">
         <p>The guide runs from a blank Trace file to a finished photomontage. It assumes you can hold a stylus and nothing else, and it stops short of anything you would not actually use on a live project.</p>
         <p>Layering is the part most people skip and then regret. Keeping the underlay, the line work and the tone on separate layers is what lets you throw away a bad pass without redrawing the good one, and it is what makes the sketch usable at portfolio scale later.</p>
@@ -65,7 +78,7 @@ import GetInTouch from '../components/GetInTouch.astro';
         </ul>
       </div>
     </div>
-    <img data-click-zoom class="panel-wide-img" src="/assets/photos/lifestyle/lifestyle-09.jpg" width="1200" height="1500" loading="lazy" decoding="async" alt="A drawing pinned up in the studio">
+    <img data-click-zoom class="panel-wide-img" data-page-field="details.image" data-page-width="1200" {...img(page?.details?.image, D.details.image, 1200)} loading="lazy" decoding="async">
   </div>
 </section>
 

@@ -7,8 +7,20 @@ import Button from '../components/Button.astro';
 import WorldMapLines from '../components/WorldMapLines.astro';
 import AtlasHotspots from '../components/AtlasHotspots.astro';
 import GetInTouch from '../components/GetInTouch.astro';
+import { imageAttrs, type SanityImage } from '../sanity/image';
+import { INFLUENCE_PAGE_QUERY } from '../sanity/queries';
+import { contentParams } from '../sanity/content';
+import { PAGE_DEFAULTS, type ImageDefault } from '../sanity/page-defaults';
+
+// The page's words and photo, from the Influence page document (or the
+// page's defaults); the timeline, the numbers and the map stay here
+const page = await Astro.locals.sanity.fetch(INFLUENCE_PAGE_QUERY, contentParams);
+const D = PAGE_DEFAULTS.influencePage;
+// An <img>'s src, size and alt: the photo set in the Studio, or the page's own file
+const img = (image: SanityImage | null | undefined, fallback: ImageDefault, width: number) =>
+  image?.asset ? { ...imageAttrs(image, width), alt: image.alt ?? fallback.alt } : { src: fallback.path, width: fallback.width, height: fallback.height, alt: fallback.alt };
 ---
-<BaseLayout title="Influence — Tomrow Studios" namespace="influence" pageName="Influence">
+<BaseLayout title="Influence — Tomrow Studios" namespace="influence" pageName="Influence" pageDoc="influencePage">
 <SiteNav />
 
 <!-- Intro + lightbox -->
@@ -16,14 +28,14 @@ import GetInTouch from '../components/GetInTouch.astro';
   <div class="section">
     <div class="container">
       <div class="influence-hero">
-        <p class="tagline">Influence</p>
-        <h2 class="page-hero-title">Architectural Influence</h2>
-        <p class="lead influence-hero__lead">Tom Rowntree builds visibility, authority and opportunity for architects through deliberate content and a clear personal brand.</p>
+        <p class="tagline" data-page-field="hero.label">{page?.hero?.label ?? D.hero.label}</p>
+        <h2 class="page-hero-title" data-page-field="hero.heading">{page?.hero?.heading ?? D.hero.heading}</h2>
+        <p class="lead influence-hero__lead" data-page-field="hero.lead">{page?.hero?.lead ?? D.hero.lead}</p>
       </div>
     </div>
   </div>
   <div class="lightbox">
-    <img class="lightbox-img" src="/assets/photos/talks/talk-02.jpg" alt="">
+    <img class="lightbox-img" data-page-field="hero.image" data-page-width="1600" {...img(page?.hero?.image, D.hero.image, 1600)}>
     <img class="lightbox-play" src="/assets/ui/play.svg" alt="Play">
   </div>
 </section>
@@ -32,9 +44,9 @@ import GetInTouch from '../components/GetInTouch.astro';
 <section class="section">
   <div class="container">
     <div data-odometer-group class="figure-lead">
-      <p class="tagline">Reach</p>
-      <p data-odometer-element data-odometer-duration="2.4" class="figure-lead__number">180,700</p>
-      <p class="figure-lead__label">Total followers across Instagram, TikTok, YouTube and LinkedIn.</p>
+      <p class="tagline" data-page-field="reach.label">{page?.reach?.label ?? D.reach.label}</p>
+      <p data-odometer-element data-odometer-duration="2.4" class="figure-lead__number" data-page-field="reach.number">{page?.reach?.number ?? D.reach.number}</p>
+      <p class="figure-lead__label" data-page-field="reach.text">{page?.reach?.text ?? D.reach.text}</p>
     </div>
   </div>
 </section>
@@ -42,8 +54,8 @@ import GetInTouch from '../components/GetInTouch.astro';
 <!-- Approach -->
 <section class="section">
   <div class="container container-narrow">
-    <p class="tagline">Approach</p>
-    <h2>A more entrepreneurial approach to architecture. Architectural influence is about using content, social media and personal brand to build visibility, authority and opportunity within architecture.</h2>
+    <p class="tagline" data-page-field="approach.label">{page?.approach?.label ?? D.approach.label}</p>
+    <h2 data-page-field="approach.statement">{page?.approach?.statement ?? D.approach.statement}</h2>
   </div>
 </section>
 
@@ -52,8 +64,8 @@ import GetInTouch from '../components/GetInTouch.astro';
   <div class="container">
     <div class="two-col two-col-flat">
       <div>
-        <p class="tagline">Origins</p>
-        <h2>From architecture to influence</h2>
+        <p class="tagline" data-page-field="origins.label">{page?.origins?.label ?? D.origins.label}</p>
+        <h2 data-page-field="origins.heading">{page?.origins?.heading ?? D.origins.heading}</h2>
       </div>
       <div>
         <div data-step-timeline-init data-step-timeline-activation="0.5" class="step-timeline">
@@ -103,11 +115,11 @@ import GetInTouch from '../components/GetInTouch.astro';
   <div class="container">
     <div class="two-col two-col-flat">
       <div>
-        <p class="tagline">Insights</p>
-        <h2>The numbers behind the platform</h2>
+        <p class="tagline" data-page-field="insights.label">{page?.insights?.label ?? D.insights.label}</p>
+        <h2 data-page-field="insights.heading">{page?.insights?.heading ?? D.insights.heading}</h2>
       </div>
       <div>
-        <p class="lead">Audience, reach and recognition measured channel by channel — the full record of what the platform has built and what it has produced.</p>
+        <p class="lead" data-page-field="insights.lead">{page?.insights?.lead ?? D.insights.lead}</p>
       </div>
     </div>
 
@@ -170,8 +182,8 @@ import GetInTouch from '../components/GetInTouch.astro';
 <!-- Atlas — the map, then the book it came from -->
 <section class="map-spread is--influence">
   <div class="map-spread__head">
-    <p class="tagline">Global reach</p>
-    <h2>Twenty-one creators, thirteen countries</h2>
+    <p class="tagline" data-page-field="atlas.label">{page?.atlas?.label ?? D.atlas.label}</p>
+    <h2 data-page-field="atlas.heading">{page?.atlas?.heading ?? D.atlas.heading}</h2>
   </div>
   <div class="map-spread__media">
     <!-- The stage is exactly the plate's box, so the hotspot layer inside it
@@ -183,13 +195,13 @@ import GetInTouch from '../components/GetInTouch.astro';
   </div>
   <div class="book-feature">
     <div class="book-feature__intro">
-      <p class="tagline">The book</p>
-      <h2>Architectural&nbsp;Influence</h2>
+      <p class="tagline" data-page-field="book.label">{page?.book?.label ?? D.book.label}</p>
+      <h2 data-page-field="book.heading">{page?.book?.heading ?? D.book.heading}</h2>
     </div>
     <div class="book-feature__body">
-      <p class="lead">A precedent analysis of the top 21 social media creators in the architecture profession, mapped across the globe — read for method rather than metrics, and published by RIBA Publishing.</p>
+      <p class="lead" data-page-field="book.lead">{page?.book?.lead ?? D.book.lead}</p>
       <div class="actions">
-        <Button href="/book" label="Read the book" />
+        <Button href="/book" data-page-field="book.button" label={page?.book?.button ?? D.book.button} />
       </div>
     </div>
   </div>

@@ -7,8 +7,9 @@
 import Button from './Button.astro';
 import { imageAttrs } from '../sanity/image';
 import { GET_IN_TOUCH_QUERY } from '../sanity/queries';
+import { contentParams } from '../sanity/content';
 
-const cta = await Astro.locals.sanity.fetch(GET_IN_TOUCH_QUERY);
+const cta = await Astro.locals.sanity.fetch(GET_IN_TOUCH_QUERY, contentParams);
 if (!cta?.portrait?.asset) throw new Error('Get in touch is missing in Sanity (Home page document)');
 const portrait = imageAttrs(cta.portrait, 600);
 ---

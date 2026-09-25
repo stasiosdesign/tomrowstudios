@@ -5,8 +5,10 @@ import {visionTool} from '@sanity/vision'
 import {vercelProtectionBypassTool} from '@sanity/vercel-protection-bypass'
 import {DesktopIcon} from '@sanity/icons/Desktop'
 import './page'
-import './publish-button.css'
+import './studio.css'
+import {DocumentLayout} from './components/DocumentLayout'
 import {schemaTypes} from './schemaTypes'
+import {PAGES} from './schemaTypes/pages'
 import {structure} from './structure'
 import {theme} from './theme'
 
@@ -21,8 +23,9 @@ if (!previewOrigin) {
   throw new Error('SANITY_STUDIO_PREVIEW_ORIGIN is not set: see studio/.env.production and .env.development')
 }
 
-// One fixed document each: never created from the menu, duplicated or deleted
-const SINGLETONS = new Set(['homePage'])
+// The fixed pages: one document each, never created from the menu, duplicated
+// or deleted. Its ID is its type (structure.ts opens that one document).
+const SINGLETONS = new Set(PAGES.map((page) => page.type))
 
 export default defineConfig({
   name: 'default',
@@ -32,12 +35,13 @@ export default defineConfig({
   dataset: 'production',
 
   // The website's fonts on a pure black ground (theme.ts; page.ts loads the
-  // fonts and blacks out the page behind the Studio). The Publish button is
-  // the site's red call to action (publish-button.css).
+  // fonts and blacks out the page behind the Studio). studio.css sets the
+  // rest: the red "Publish live" call to action, the tables, the sidebar.
   theme,
 
   // The visual editor comes first, so the Studio opens on it: the home page,
-  // with its form beside it. Content is the same documents as plain forms.
+  // with its form beside it. Content is the same documents as plain forms, in
+  // two parts: the Page editor and the CMS collections (structure.ts).
   plugins: [
     presentationTool({
       title: 'Visual editor',
@@ -47,9 +51,10 @@ export default defineConfig({
         previewMode: {enable: '/api/draft-mode/enable'},
       },
       resolve: {
-        mainDocuments: defineDocuments([{route: '/', filter: `_id == "homePage"`}]),
-        // Where else a document shows, listed above its form. The Home page
-        // has none: it is the page the visual editor opens on.
+        // Each page's route opens its document beside the preview
+        mainDocuments: defineDocuments(PAGES.map((page) => ({route: page.route, filter: `_id == "${page.type}"`}))),
+        // Where else a document shows, listed above its form. The pages have
+        // none: each is the page the visual editor is looking at.
         locations: {
           project: defineLocations({
             select: {title: 'title', slug: 'slug.current'},
@@ -79,9 +84,11 @@ export default defineConfig({
   },
 
   document: {
-    actions: (actions, {schemaType}) =>
-      SINGLETONS.has(schemaType)
-        ? actions.filter(({action}) => action && ['publish', 'discardChanges', 'restore'].includes(action))
-        : actions,
+    // Sanity's Publish button and its menu are replaced by the publishing bar
+    // (components/PublishBar.tsx), which knows about staging and the live site
+    actions: () => [],
+    components: {
+      unstable_layout: DocumentLayout,
+    },
   },
 })

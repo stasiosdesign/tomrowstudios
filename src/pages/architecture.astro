@@ -3,13 +3,18 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 import SiteNav from '../components/SiteNav.astro';
 import ContactPanel from '../components/ContactPanel.astro';
 import { imageAttrs } from '../sanity/image';
-import { PROJECT_INDEX_QUERY } from '../sanity/queries';
+import { ARCHITECTURE_PAGE_QUERY, PROJECT_INDEX_QUERY } from '../sanity/queries';
+import { contentParams } from '../sanity/content';
+import { PAGE_DEFAULTS } from '../sanity/page-defaults';
 
-// The projects from Sanity, in the order set in the Studio
-const projects = await Astro.locals.sanity.fetch(PROJECT_INDEX_QUERY);
+// The projects from Sanity, in the order set in the Studio, and the page's
+// own words (the Architecture page document, or the page's defaults)
+const { sanity } = Astro.locals;
+const [projects, page] = await Promise.all([sanity.fetch(PROJECT_INDEX_QUERY, contentParams), sanity.fetch(ARCHITECTURE_PAGE_QUERY, contentParams)]);
+const D = PAGE_DEFAULTS.architecturePage;
 const pad = (n: number) => String(n).padStart(2, '0');
 ---
-<BaseLayout title="Architecture — Tomrow Studios" namespace="architecture" pageName="Architecture" mainClass="arch-page">
+<BaseLayout title="Architecture — Tomrow Studios" namespace="architecture" pageName="Architecture" mainClass="arch-page" pageDoc="architecturePage">
 <SiteNav />
 
 <!-- One screen, moving sideways. The projects run off the right-hand edge and
@@ -20,7 +25,7 @@ const pad = (n: number) => String(n).padStart(2, '0');
   <div data-parallax-init class="parallax-slider__group arch-stage__group">
 
     <div class="arch-stage__head">
-      <p class="tagline">Architecture</p>
+      <p class="tagline" data-page-field="header.label">{page?.header?.label ?? D.header.label}</p>
       <p class="arch-stage__count"><strong data-parallax-counter>01</strong> / {pad(projects.length)}</p>
     </div>
 
@@ -52,7 +57,7 @@ const pad = (n: number) => String(n).padStart(2, '0');
     </div>
 
     <div class="arch-stage__foot">
-      <h1 class="arch-stage__title">Architecture</h1>
+      <h1 class="arch-stage__title" data-page-field="header.heading">{page?.header?.heading ?? D.header.heading}</h1>
       <div class="arch-arrows">
         <button type="button" data-parallax-prev class="arch-arrow is--prev is--disabled" aria-label="Previous project"></button>
         <button type="button" data-parallax-next class="arch-arrow is--next" aria-label="Next project"></button>

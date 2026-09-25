@@ -21,10 +21,20 @@ export const config: VercelConfig = {
     { source: '/project-:slug(.*)', destination: '/projects/:slug', permanent: true },
     { source: '/projects', destination: '/architecture', permanent: false },
   ],
-  // Staging is never indexed. Every response says so, files and images too,
-  // on any domain (Vercel's own preview header is missing on a custom one).
-  // The rendered pages say it again themselves (src/middleware.ts).
-  ...(staging && {
-    headers: [{ source: '/(.*)', headers: [{ key: 'X-Robots-Tag', value: 'noindex, nofollow' }] }],
-  }),
+  headers: [
+    // The build stamp (astro.config.mjs): read by the Studio, on another
+    // origin, and never from a cache, so it always says when the site was
+    // last built
+    {
+      source: '/build.json',
+      headers: [
+        { key: 'Access-Control-Allow-Origin', value: '*' },
+        { key: 'Cache-Control', value: 'no-store' },
+      ],
+    },
+    // Staging is never indexed. Every response says so, files and images too,
+    // on any domain (Vercel's own preview header is missing on a custom one).
+    // The rendered pages say it again themselves (src/middleware.ts).
+    ...(staging ? [{ source: '/(.*)', headers: [{ key: 'X-Robots-Tag', value: 'noindex, nofollow' }] }] : []),
+  ],
 };

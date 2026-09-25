@@ -4,8 +4,16 @@ import SiteNav from '../components/SiteNav.astro';
 import SiteFooter from '../components/SiteFooter.astro';
 import ContactPanel from '../components/ContactPanel.astro';
 import GetInTouch from '../components/GetInTouch.astro';
+import { PARTNERS_ARCHIVE_PAGE_QUERY } from '../sanity/queries';
+import { contentParams } from '../sanity/content';
+import { PAGE_DEFAULTS } from '../sanity/page-defaults';
+
+// The page's words, from the Partners archive page document (or the page's
+// defaults); the grid stays here
+const page = await Astro.locals.sanity.fetch(PARTNERS_ARCHIVE_PAGE_QUERY, contentParams);
+const D = PAGE_DEFAULTS.partnersArchivePage;
 ---
-<BaseLayout title="Archive — Tomrow Studios" namespace="partners-archive" pageName="Archive">
+<BaseLayout title="Archive — Tomrow Studios" namespace="partners-archive" pageName="Archive" pageDoc="partnersArchivePage">
 <SiteNav />
 
 <div class="theme-light">
@@ -13,8 +21,8 @@ import GetInTouch from '../components/GetInTouch.astro';
 <section class="section">
   <div class="container">
     <div class="section-title">
-      <h2>The record</h2>
-      <p class="lead">A complete directory of collaborations, talks, and industry work</p>
+      <h2 data-page-field="intro.heading">{page?.intro?.heading ?? D.intro.heading}</h2>
+      <p class="lead" data-page-field="intro.lead">{page?.intro?.lead ?? D.intro.lead}</p>
     </div>
 
     <div class="archive-grid">
