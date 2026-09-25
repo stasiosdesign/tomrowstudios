@@ -76,6 +76,25 @@ export type ProjectCredit = {
   kind?: "won" | "award" | "detail";
 };
 
+export type HeroSlide = {
+  _type: "heroSlide";
+  caption?: string;
+  photo?: {
+    asset?: SanityImageAssetReference;
+    media?: unknown;
+    hotspot?: SanityImageHotspot;
+    crop?: SanityImageCrop;
+    _type: "image";
+  };
+  background?: {
+    asset?: SanityImageAssetReference;
+    media?: unknown;
+    hotspot?: SanityImageHotspot;
+    crop?: SanityImageCrop;
+    _type: "image";
+  };
+};
+
 export type Client = {
   _id: string;
   _type: "client";
@@ -165,6 +184,24 @@ export type Slug = {
   _type: "slug";
   current?: string;
   source?: string;
+};
+
+export type HomePage = {
+  _id: string;
+  _type: "homePage";
+  _createdAt: string;
+  _updatedAt: string;
+  _rev: string;
+  hero?: {
+    headline?: string;
+    slides?: Array<
+      {
+        _key: string;
+      } & HeroSlide
+    >;
+    primaryButton?: string;
+    secondaryButton?: string;
+  };
 };
 
 export type SanityImagePaletteSwatch = {
@@ -270,12 +307,14 @@ export type AllSanitySchemaTypes =
   | ImageGallery
   | FeatureImage
   | ProjectCredit
+  | HeroSlide
   | Client
   | SanityImageCrop
   | SanityImageHotspot
   | SanityFileAssetReference
   | Project
   | Slug
+  | HomePage
   | SanityImagePaletteSwatch
   | SanityImagePalette
   | SanityImageDimensions
@@ -427,12 +466,52 @@ export type CLIENT_LOGOS_QUERY_RESULT = Array<{
   };
 }>;
 
+// Source: ../src/sanity/queries.ts
+// Variable: HOME_HERO_QUERY
+// Query: *[_id == "homePage"][0].hero {  headline,  slides[]{ _key, caption, photo { asset->{ _id, metadata { dimensions { width, height } } }, crop, hotspot }, background { asset->{ _id, metadata { dimensions { width, height } } }, crop, hotspot } },  primaryButton,  secondaryButton}
+export type HOME_HERO_QUERY_RESULT = null | {
+  headline: string | null;
+  slides: Array<{
+    _key: string;
+    caption: string | null;
+    photo: {
+      asset: {
+        _id: string;
+        metadata: {
+          dimensions: {
+            width: number | null;
+            height: number | null;
+          } | null;
+        } | null;
+      } | null;
+      crop: SanityImageCrop | null;
+      hotspot: SanityImageHotspot | null;
+    } | null;
+    background: {
+      asset: {
+        _id: string;
+        metadata: {
+          dimensions: {
+            width: number | null;
+            height: number | null;
+          } | null;
+        } | null;
+      } | null;
+      crop: SanityImageCrop | null;
+      hotspot: SanityImageHotspot | null;
+    } | null;
+  }> | null;
+  primaryButton: string | null;
+  secondaryButton: string | null;
+};
+
 // Query TypeMap
 declare global {
   interface SanityQueries {
     '*[_type == "project" && defined(slug.current)] | order(sortOrder asc, _createdAt asc) {\n  _id,\n  "name": coalesce(shortTitle, title),\n  "slug": slug.current,\n  context,\n  year,\n  coverImage { asset->{ _id, metadata { dimensions { width, height } } }, crop, hotspot, alt }\n}': PROJECT_INDEX_QUERY_RESULT;
     '*[_type == "project" && defined(slug.current)] | order(sortOrder asc, _createdAt asc) {\n  _id,\n  title,\n  "name": coalesce(shortTitle, title),\n  "slug": slug.current,\n  context,\n  year,\n  lead,\n  credits[]{ _key, name, note, kind },\n  "portfolioUrl": coalesce(portfolio.asset->url, portfolioUrl),\n  coverImage { asset->{ _id, metadata { dimensions { width, height } } }, crop, hotspot, alt },\n  content[]{\n    _key,\n    _type,\n    _type == "featureImage" => { asset->{ _id, metadata { dimensions { width, height } } }, crop, hotspot, alt },\n    _type == "imageGallery" => { layout, framing, images[]{ _key, asset->{ _id, metadata { dimensions { width, height } } }, crop, hotspot, alt } },\n    _type == "textSection" => { label, body }\n  }\n}': PROJECT_PAGES_QUERY_RESULT;
     '*[_type == "client" && defined(logo.asset)] | order(sortOrder asc, name asc) {\n  _id,\n  name,\n  logo { asset->{ _id, metadata { dimensions { width, height } } }, crop, hotspot }\n}': CLIENT_LOGOS_QUERY_RESULT;
+    '*[_id == "homePage"][0].hero {\n  headline,\n  slides[]{ _key, caption, photo { asset->{ _id, metadata { dimensions { width, height } } }, crop, hotspot }, background { asset->{ _id, metadata { dimensions { width, height } } }, crop, hotspot } },\n  primaryButton,\n  secondaryButton\n}': HOME_HERO_QUERY_RESULT;
   }
 }
 // Lets @sanity/client releases that predate the global registry read it too

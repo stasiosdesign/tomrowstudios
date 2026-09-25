@@ -6,6 +6,8 @@ export default defineCliConfig({
     dataset: 'production'
   },
   deployment: {
+    /** The hosted Studio, https://tomrowstudios.sanity.studio (`npm run deploy`) */
+    appId: 'hdannayea1d577om3omfn8cr',
     /**
      * Enable auto-updates for studios.
      * Learn more at https://www.sanity.io/docs/studio/latest-version-of-sanity#k47faf43faf56

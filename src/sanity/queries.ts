@@ -48,3 +48,12 @@ export const CLIENT_LOGOS_QUERY = defineQuery(`*[_type == "client" && defined(lo
   name,
   logo { ${IMAGE_ASSET} }
 }`);
+
+// The home page hero: the headline, the dial's five slides and the two button
+// labels, from the one Home page document.
+export const HOME_HERO_QUERY = defineQuery(`*[_id == "homePage"][0].hero {
+  headline,
+  slides[]{ _key, caption, photo { ${IMAGE_ASSET} }, background { ${IMAGE_ASSET} } },
+  primaryButton,
+  secondaryButton
+}`);

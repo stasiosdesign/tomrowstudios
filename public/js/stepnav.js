@@ -284,11 +284,13 @@ function initStepNavHero(container) {
   // A new page: whatever was open is closed, no animation
   api.close({ instant: true });
 
-  // The current page's panel
-  const here = (location.pathname.split('/').pop() || 'index.html').replace(/\.html$/, '');
+  // The current page's panel, compared by page name: /shop, /shop.html and
+  // shop.html all name "shop"; / is "index"
+  const pageName = (path) => path.replace(/[#?].*$/, '').replace(/\.html$/, '').split('/').pop() || 'index';
+  const here = pageName(location.pathname);
   panels.forEach((panel) => {
-    const target = (panel.getAttribute('href') || '').replace(/\.html$/, '').replace(/#.*$/, '');
-    if (target && target === here) panel.setAttribute('aria-current', 'page');
+    const href = panel.getAttribute('href');
+    if (href && pageName(href) === here) panel.setAttribute('aria-current', 'page');
     else panel.removeAttribute('aria-current');
   });
 

@@ -3,7 +3,23 @@ import {ProjectsIcon} from '@sanity/icons/Projects'
 import {altTextField} from '../shared/alt-text'
 
 // An architecture project: a card on the Architecture page's slider and its
-// own page at project-<slug>.html.
+// own page at /projects/<slug>.
+
+// A slug is the last part of the page's address, so it may only use lowercase
+// letters, numbers and single hyphens
+const SLUG_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/
+
+// What "Generate" makes from the title: "Trans[port]: Logistics Market" ->
+// "trans-port-logistics-market"
+const slugify = (input: string) =>
+  input
+    .normalize('NFKD')
+    .replace(/[̀-ͯ]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 96)
+    .replace(/-+$/, '')
 export const project = defineType({
   name: 'project',
   title: 'Project',
@@ -32,9 +48,15 @@ export const project = defineType({
       name: 'slug',
       type: 'slug',
       group: 'overview',
-      description: 'The page address: project-<slug>.html',
-      options: {source: 'title', maxLength: 96},
-      validation: (rule) => rule.required(),
+      description:
+        'The page address: /projects/<slug>. Lowercase letters, numbers and hyphens, e.g. “test-project”; “Generate” makes one from the title.',
+      options: {source: 'title', maxLength: 96, slugify},
+      validation: (rule) =>
+        rule.required().custom((slug) =>
+          !slug?.current || SLUG_PATTERN.test(slug.current)
+            ? true
+            : `Use lowercase letters, numbers and single hyphens only, e.g. “${slugify(slug.current) || 'test-project'}”`,
+        ),
     }),
     defineField({
       name: 'sortOrder',

@@ -14,8 +14,11 @@
     "studio": "npm --prefix studio run dev"
   },
   "dependencies": {
+    "@astrojs/vercel": "^11.0.11",
     "@sanity/client": "^8.7.0",
     "@sanity/image-url": "^2.1.1",
+    "@sanity/preview-url-secret": "^4.1.5",
+    "@sanity/visual-editing-standalone": "^2.0.1",
     "astro": "^7.3.3",
     "astro-portabletext": "^1.0.1",
     "groq": "^6.16.0"

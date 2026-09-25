@@ -6,27 +6,36 @@ import ContactPanel from '../components/ContactPanel.astro';
 import Button from '../components/Button.astro';
 import { sanityClient } from '../sanity/client';
 import { urlFor } from '../sanity/image';
-import { CLIENT_LOGOS_QUERY } from '../sanity/queries';
+import { CLIENT_LOGOS_QUERY, HOME_HERO_QUERY } from '../sanity/queries';
+import { clientFor, editable, isDraftMode, visualEditing } from '../sanity/visual-editing';
 
-// The logo wall's clients, from Sanity, in the order set in the Studio
-const clients = await sanityClient.fetch(CLIENT_LOGOS_QUERY);
+// Inside the Studio (draft mode) the page reads drafts and marks the hero
+// editable; everywhere else it is the published page. `visualEditing` is
+// checked first, so the static build never touches Astro.cookies.
+const draftMode = visualEditing && isDraftMode(Astro.cookies);
+const client = visualEditing ? clientFor(Astro.cookies) : sanityClient;
+
+// The hero (headline, the dial's five slides, the two button labels) and the
+// logo wall's clients, from Sanity, in the order set in the Studio
+const [hero, clients] = await Promise.all([client.fetch(HOME_HERO_QUERY), client.fetch(CLIENT_LOGOS_QUERY)]);
+if (!hero?.slides?.length) throw new Error('The Home page hero is missing in Sanity (Home page document)');
+
+// The hero's editable parts, for the Studio's click-to-edit; nothing outside it
+const heroField = (...path: (string | { _key: string })[]) => editable('homePage', 'homePage', ['hero', ...path]);
 ---
-<BaseLayout title="Tomrow Studios" namespace="index" pageName="Home">
+<BaseLayout title="Tomrow Studios" namespace="index" pageName="Home" visualEditing={draftMode}>
 <!-- Home hero, in the reveal-parallax wrapper: the section after it slides
      up over it (footer.js) -->
 <div data-hero-parallax class="home-hero-wrap">
 <section data-hero-parallax-inner class="home-hero">
   <!-- The hero's backgrounds, one per line of the dial. hero-dial.js
        crossfades them as the dial moves — the layered-slider treatment, on
-       the dial's own index. Two photographs, alternated across the five
-       states, so every move changes the picture except the wrap from the
-       last state back to the first. -->
+       the dial's own index. Each is its slide's background photo in the
+       Studio (Home page → Dial slides). -->
   <div class="hero-slides" data-hero-slides aria-hidden="true">
-    <div data-hero-slide-bg class="hero-slides__item"><img src="assets/photos/backgrounds/background-01.jpg" class="hero-slides__img" alt=""></div>
-    <div data-hero-slide-bg class="hero-slides__item"><img src="assets/photos/backgrounds/background-02.jpg" class="hero-slides__img" alt=""></div>
-    <div data-hero-slide-bg class="hero-slides__item"><img src="assets/photos/backgrounds/background-01.jpg" class="hero-slides__img" alt=""></div>
-    <div data-hero-slide-bg class="hero-slides__item"><img src="assets/photos/backgrounds/background-02.jpg" class="hero-slides__img" alt=""></div>
-    <div data-hero-slide-bg class="hero-slides__item"><img src="assets/photos/backgrounds/background-01.jpg" class="hero-slides__img" alt=""></div>
+    {hero.slides.map((slide) => (
+    <div data-hero-slide-bg class="hero-slides__item">{slide.background && <img src={urlFor(slide.background).width(2500).url()} class="hero-slides__img" alt="">}</div>
+    ))}
     <!-- A flat darkening over whichever photograph is up, so the grid, the
          dial and the copy stand off it. Over the photographs in the stack. -->
     <div class="hero-slides__dark"></div>
@@ -45,17 +54,15 @@ const clients = await sanityClient.fetch(CLIENT_LOGOS_QUERY);
          on to the next of its five states, whose photographs the hero and
          the dial's centre change to; the pointer over the dial holds the
          clock. One caption per state, in column order, swapped with the
-         photographs; placeholder copy. -->
+         photographs; captions and photographs are the Studio's Dial slides. -->
     <div class="hero-dial" data-hero-dial>
       <!-- The centre: a round frame with one photograph per column line,
            slid across it by hero-dial.js in step with the backgrounds. Before
            the face in the markup so the face's pointer circle sits over it. -->
       <div data-hero-dial-mask class="hero-dial__mask">
-        <div data-hero-dial-mask-item class="hero-dial__mask-item"><img src="assets/photos/portraits/portrait-01.jpg" draggable="false" class="hero-dial__mask-img" alt=""></div>
-        <div data-hero-dial-mask-item class="hero-dial__mask-item"><img src="assets/photos/verticals/vertical-01.jpg" draggable="false" class="hero-dial__mask-img" alt=""></div>
-        <div data-hero-dial-mask-item class="hero-dial__mask-item"><img src="assets/photos/portraits/portrait-02.jpg" draggable="false" class="hero-dial__mask-img" alt=""></div>
-        <div data-hero-dial-mask-item class="hero-dial__mask-item"><img src="assets/photos/studio/studio-02.jpg" draggable="false" class="hero-dial__mask-img" alt=""></div>
-        <div data-hero-dial-mask-item class="hero-dial__mask-item"><img src="assets/photos/verticals/vertical-02.jpg" draggable="false" class="hero-dial__mask-img" alt=""></div>
+        {hero.slides.map((slide) => (
+        <div data-hero-dial-mask-item class="hero-dial__mask-item" {...heroField('slides', { _key: slide._key })}>{slide.photo && <img src={urlFor(slide.photo).width(800).url()} draggable="false" class="hero-dial__mask-img" alt="">}</div>
+        ))}
       </div>
       <svg class="hero-dial__face" viewBox="-250 -250 500 500" aria-hidden="true" focusable="false">
         <g class="hero-dial__ticks">
@@ -68,14 +75,8 @@ const clients = await sanityClient.fetch(CLIENT_LOGOS_QUERY);
       <div class="hero-dial__note">
         <span class="hero-dial__note-marker"></span>
         <div class="hero-dial__captions">
-          {[
-            "Architecture drawn by hand.",
-            "Content made to be shared.",
-            "Education in the studio.",
-            "Design for a global audience.",
-            "Work that travels."
-          ].map((caption) => (
-            <p data-hero-dial-caption>{caption}</p>
+          {hero.slides.map((slide) => (
+            <p data-hero-dial-caption {...heroField('slides', { _key: slide._key })}>{slide.caption}</p>
           ))}
         </div>
       </div>
@@ -84,7 +85,7 @@ const clients = await sanityClient.fetch(CLIENT_LOGOS_QUERY);
       <div class="home-hero__copy">
         <div class="home-hero__col">
           <div class="home-hero__reveal-mask" data-hero-parallax-lead="0.5">
-            <h1 class="home-hero__title home-hero__reveal">Architecture, content Education for a global audience.</h1>
+            <h1 class="home-hero__title home-hero__reveal" {...heroField('headline')}>{hero.headline}</h1>
           </div>
         </div>
         <!-- The CTAs take the right-hand half of the grid: one site column
@@ -94,8 +95,8 @@ const clients = await sanityClient.fetch(CLIENT_LOGOS_QUERY);
         <div class="home-hero__col is--end">
           <div class="home-hero__reveal-mask is--actions">
             <div class="actions home-hero__reveal">
-              <Button href="#contact" data-panel-open="contact" data-barba-prevent="self" label="Collaborate" />
-              <Button href="influence.html" label="About" />
+              <Button href="#contact" data-panel-open="contact" data-barba-prevent="self" label={hero.primaryButton ?? 'Collaborate'} {...heroField('primaryButton')} />
+              <Button href="/influence" label={hero.secondaryButton ?? 'About'} {...heroField('secondaryButton')} />
             </div>
           </div>
         </div>
@@ -146,16 +147,16 @@ const clients = await sanityClient.fetch(CLIENT_LOGOS_QUERY);
   <div class="container">
     <div data-slideshow="wrap" class="img-slider">
       <div class="img-slider__list">
-        <div data-slideshow="slide" class="img-slide is--current"><img data-slideshow="parallax" alt="" src="assets/photos/thumbnails/thumb-04.jpg" draggable="false" class="img-slide__inner"></div>
-        <div data-slideshow="slide" class="img-slide"><img data-slideshow="parallax" alt="" src="assets/photos/thumbnails/thumb-05.jpg" draggable="false" class="img-slide__inner"></div>
-        <div data-slideshow="slide" class="img-slide"><img data-slideshow="parallax" alt="" src="assets/photos/thumbnails/thumb-06.jpg" draggable="false" class="img-slide__inner"></div>
-        <div data-slideshow="slide" class="img-slide"><img data-slideshow="parallax" alt="" src="assets/photos/thumbnails/thumb-07.jpg" draggable="false" class="img-slide__inner"></div>
+        <div data-slideshow="slide" class="img-slide is--current"><img data-slideshow="parallax" alt="" src="/assets/photos/thumbnails/thumb-04.jpg" draggable="false" class="img-slide__inner"></div>
+        <div data-slideshow="slide" class="img-slide"><img data-slideshow="parallax" alt="" src="/assets/photos/thumbnails/thumb-05.jpg" draggable="false" class="img-slide__inner"></div>
+        <div data-slideshow="slide" class="img-slide"><img data-slideshow="parallax" alt="" src="/assets/photos/thumbnails/thumb-06.jpg" draggable="false" class="img-slide__inner"></div>
+        <div data-slideshow="slide" class="img-slide"><img data-slideshow="parallax" alt="" src="/assets/photos/thumbnails/thumb-07.jpg" draggable="false" class="img-slide__inner"></div>
       </div>
       <div class="img-slider__nav">
-        <div data-slideshow="thumb" class="img-slider__thumb is--current"><img src="assets/photos/thumbnails/thumb-04.jpg" class="slider-thumb__img"></div>
-        <div data-slideshow="thumb" class="img-slider__thumb"><img src="assets/photos/thumbnails/thumb-05.jpg" class="slider-thumb__img"></div>
-        <div data-slideshow="thumb" class="img-slider__thumb"><img src="assets/photos/thumbnails/thumb-06.jpg" class="slider-thumb__img"></div>
-        <div data-slideshow="thumb" class="img-slider__thumb"><img src="assets/photos/thumbnails/thumb-07.jpg" class="slider-thumb__img"></div>
+        <div data-slideshow="thumb" class="img-slider__thumb is--current"><img src="/assets/photos/thumbnails/thumb-04.jpg" class="slider-thumb__img"></div>
+        <div data-slideshow="thumb" class="img-slider__thumb"><img src="/assets/photos/thumbnails/thumb-05.jpg" class="slider-thumb__img"></div>
+        <div data-slideshow="thumb" class="img-slider__thumb"><img src="/assets/photos/thumbnails/thumb-06.jpg" class="slider-thumb__img"></div>
+        <div data-slideshow="thumb" class="img-slider__thumb"><img src="/assets/photos/thumbnails/thumb-07.jpg" class="slider-thumb__img"></div>
       </div>
     </div>
   </div>
@@ -172,24 +173,24 @@ const clients = await sanityClient.fetch(CLIENT_LOGOS_QUERY);
       <div class="two-col-offset">
         <p class="lead">Shortlisted by RIBA and the AJ. Published by RIBA Publishing and selected for the Dezeen School Shows. An audience of over 180,000 follows the conversation across platforms.</p>
         <div class="actions">
-          <Button href="influence.html" label="About" />
+          <Button href="/influence" label="About" />
         </div>
       </div>
     </div>
 
     <div class="cards">
       <div class="card">
-        <img class="card-img" src="assets/photos/thumbnails/thumb-01.jpg" alt="">
+        <img class="card-img" src="/assets/photos/thumbnails/thumb-01.jpg" alt="">
         <h3>Awards and nominations</h3>
         <p>RIBA and AJ recognition for projects that value clarity over spectacle.</p>
       </div>
       <div class="card card-offset-1">
-        <img class="card-img" src="assets/photos/thumbnails/thumb-02.jpg" alt="">
+        <img class="card-img" src="/assets/photos/thumbnails/thumb-02.jpg" alt="">
         <h3>Publishing and exhibitions</h3>
         <p>A book with RIBA Publishing and selection for the Dezeen School Shows.</p>
       </div>
       <div class="card card-offset-2">
-        <img class="card-img" src="assets/photos/thumbnails/thumb-03.jpg" alt="">
+        <img class="card-img" src="/assets/photos/thumbnails/thumb-03.jpg" alt="">
         <h3>Speaking and collaboration</h3>
         <p>Talks and partnerships with leading architecture, design, and technology organisations.</p>
       </div>
@@ -205,13 +206,13 @@ const clients = await sanityClient.fetch(CLIENT_LOGOS_QUERY);
       <p class="lead">Architecture travels further when it is shared with clarity.</p>
     </div>
     <div class="gallery">
-      <img src="assets/photos/events/event-01.jpg" alt="">
-      <img src="assets/photos/events/event-02.jpg" alt="">
-      <img src="assets/photos/events/event-03.jpg" alt="">
-      <img src="assets/photos/events/event-04.jpg" alt="">
+      <img src="/assets/photos/events/event-01.jpg" alt="">
+      <img src="/assets/photos/events/event-02.jpg" alt="">
+      <img src="/assets/photos/events/event-03.jpg" alt="">
+      <img src="/assets/photos/events/event-04.jpg" alt="">
     </div>
     <div class="actions actions-end">
-      <Button href="influence.html" label="Explore Influence" />
+      <Button href="/influence" label="Explore Influence" />
     </div>
   </div>
 </section>
@@ -224,13 +225,13 @@ const clients = await sanityClient.fetch(CLIENT_LOGOS_QUERY);
       <p class="lead">Strategic work with organisations that shape the built environment.</p>
     </div>
     <div class="gallery">
-      <img src="assets/photos/studio/studio-01.jpg" alt="">
-      <img src="assets/photos/studio/studio-02.jpg" alt="">
-      <img src="assets/photos/studio/studio-03.jpg" alt="">
-      <img src="assets/photos/studio/studio-04.jpg" alt="">
+      <img src="/assets/photos/studio/studio-01.jpg" alt="">
+      <img src="/assets/photos/studio/studio-02.jpg" alt="">
+      <img src="/assets/photos/studio/studio-03.jpg" alt="">
+      <img src="/assets/photos/studio/studio-04.jpg" alt="">
     </div>
     <div class="actions actions-end">
-      <Button href="partner.html" label="View Partners" />
+      <Button href="/partner" label="View Partners" />
     </div>
   </div>
 </section>
@@ -243,13 +244,13 @@ const clients = await sanityClient.fetch(CLIENT_LOGOS_QUERY);
       <p class="lead">Drawings, models, and spaces that earned their place in the conversation.</p>
     </div>
     <div class="gallery">
-      <img src="assets/photos/lifestyle/lifestyle-01.jpg" alt="">
-      <img src="assets/photos/lifestyle/lifestyle-02.jpg" alt="">
-      <img src="assets/photos/lifestyle/lifestyle-03.jpg" alt="">
-      <img src="assets/photos/lifestyle/lifestyle-04.jpg" alt="">
+      <img src="/assets/photos/lifestyle/lifestyle-01.jpg" alt="">
+      <img src="/assets/photos/lifestyle/lifestyle-02.jpg" alt="">
+      <img src="/assets/photos/lifestyle/lifestyle-03.jpg" alt="">
+      <img src="/assets/photos/lifestyle/lifestyle-04.jpg" alt="">
     </div>
     <div class="actions actions-end">
-      <Button href="architecture.html" label="View Architecture" />
+      <Button href="/architecture" label="View Architecture" />
     </div>
   </div>
 </section>
@@ -262,13 +263,13 @@ const clients = await sanityClient.fetch(CLIENT_LOGOS_QUERY);
       <p class="lead">A visual index of work, influence, and the spaces between.</p>
     </div>
     <div class="gallery">
-      <img src="assets/photos/talks/talk-03.jpg" alt="">
-      <img src="assets/photos/talks/talk-04.jpg" alt="">
-      <img src="assets/photos/talks/talk-05.jpg" alt="">
-      <img src="assets/photos/talks/talk-06.jpg" alt="">
+      <img src="/assets/photos/talks/talk-03.jpg" alt="">
+      <img src="/assets/photos/talks/talk-04.jpg" alt="">
+      <img src="/assets/photos/talks/talk-05.jpg" alt="">
+      <img src="/assets/photos/talks/talk-06.jpg" alt="">
     </div>
     <div class="actions actions-end">
-      <Button href="shop.html" label="Visit the Shop" />
+      <Button href="/shop" label="Visit the Shop" />
     </div>
   </div>
 </section>
@@ -279,7 +280,7 @@ const clients = await sanityClient.fetch(CLIENT_LOGOS_QUERY);
     <div class="final-cta__inner">
       <p class="tagline final-cta__eyebrow">Get in touch</p>
       <h2 class="final-cta__title">Talk to Tom</h2>
-      <span class="final-cta__portrait"><img src="assets/photos/portraits/portrait-01.jpg" width="1200" height="1200" loading="lazy" decoding="async" alt="Tom Rowntree"></span>
+      <span class="final-cta__portrait"><img src="/assets/photos/portraits/portrait-01.jpg" width="1200" height="1200" loading="lazy" decoding="async" alt="Tom Rowntree"></span>
       <div class="final-cta__foot">
         <p class="lead final-cta__lead">Speaking, partnerships, teaching or a project you are still working out — start the conversation and Tom will come back to you himself.</p>
         <div class="actions">

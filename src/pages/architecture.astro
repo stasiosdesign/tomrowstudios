@@ -31,7 +31,7 @@ const pad = (n: number) => String(n).padStart(2, '0');
 
           {projects.map((project, i) => (
           <div class="parallax-slider__item">
-            <a href={`project-${project.slug}.html`} class="parallax-slider__item-link">
+            <a href={`/projects/${project.slug}`} class="parallax-slider__item-link">
               <div class="parallax-slider__item-inner">
                 <div data-parallax-inner class="parallax-slider__item-visual">
                   {project.coverImage && <img {...imageAttrs(project.coverImage)} draggable="false" alt={project.coverImage.alt || project.name || ''} class="parallax-slider__item-img">}

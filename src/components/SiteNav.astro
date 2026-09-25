@@ -4,21 +4,22 @@
    `overHero` starts it transparent over the home hero on the first paint. */
 interface Props { overHero?: boolean }
 const { overHero } = Astro.props;
-// The page being built, as the links name it, so its link carries aria-current
-const page = Astro.url.pathname.split('/').pop() || 'index.html';
+// The page being built, as the links name it, so its link carries aria-current.
+// The build sees /shop.html and /index.html (build.format 'file'); dev sees /shop and /.
+const page = Astro.url.pathname.replace(/\.html$/, '').replace(/\/index$/, '') || '/';
 const links = [
-  ['index.html', 'Home'],
-  ['influence.html', 'Influence'],
-  ['architecture.html', 'Architecture'],
-  ['shop.html', 'Shop'],
-  ['partner.html', 'Partner']
+  ['/', 'Home'],
+  ['/influence', 'Influence'],
+  ['/architecture', 'Architecture'],
+  ['/shop', 'Shop'],
+  ['/partner', 'Partner']
 ];
 ---
 <!-- Navbar -->
 <header class={overHero ? "site-nav is--over-hero" : "site-nav"}>
   <nav class="site-nav__inner">
     <div class="site-nav__start">
-      <a href="index.html" data-scramble-hover="link" class="site-nav__link">tomrowstudios ©</a>
+      <a href="/" data-scramble-hover="link" class="site-nav__link">tomrowstudios ©</a>
     </div>
     <div class="site-nav__end">
       <div class="site-nav__links">

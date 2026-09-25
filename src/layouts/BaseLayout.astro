@@ -11,6 +11,7 @@
    navigation, so they must not be bundled into modules. */
 import '../styles/style.css';
 import StepNav from '../components/StepNav.astro';
+import VisualEditing from '../components/VisualEditing.astro';
 
 interface Props {
   title: string;
@@ -20,9 +21,11 @@ interface Props {
   pageName: string;
   /** Optional extra class on the <main> container. */
   mainClass?: string;
+  /** Load the Studio's click-to-edit outlines (the page is in draft mode). */
+  visualEditing?: boolean;
 }
 
-const { title, namespace, pageName, mainClass } = Astro.props;
+const { title, namespace, pageName, mainClass, visualEditing = false } = Astro.props;
 ---
 <!DOCTYPE html>
 <html lang="en">
@@ -127,6 +130,7 @@ const { title, namespace, pageName, mainClass } = Astro.props;
 <script is:inline src="/js/lightbox.js"></script>
 <!-- Temporary development grid overlay -->
 <script is:inline src="/js/grid-overlay.js"></script>
+{visualEditing && <VisualEditing />}
 
 </body>
 </html>

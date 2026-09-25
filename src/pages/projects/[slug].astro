@@ -1,17 +1,18 @@
 ---
-/* One page per architecture project, built from Sanity at project-<slug>.html,
-   the URLs the hand-written project pages had. The markup is those pages'
-   own, section for section; which sections a project has, their order, and
-   which project comes next are set in the Studio. */
+/* One page per architecture project, built from Sanity at /projects/<slug>
+   (the old /project-<slug>.html addresses redirect here; see vercel.json).
+   The markup is the hand-written project pages' own, section for section;
+   which sections a project has, their order, and which project comes next
+   are set in the Studio. */
 import type { GetStaticPaths, InferGetStaticPropsType } from 'astro';
 import { PortableText } from 'astro-portabletext';
-import BaseLayout from '../layouts/BaseLayout.astro';
-import SiteNav from '../components/SiteNav.astro';
-import ContactPanel from '../components/ContactPanel.astro';
-import Button from '../components/Button.astro';
-import { sanityClient } from '../sanity/client';
-import { imageAttrs } from '../sanity/image';
-import { PROJECT_PAGES_QUERY } from '../sanity/queries';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import SiteNav from '../../components/SiteNav.astro';
+import ContactPanel from '../../components/ContactPanel.astro';
+import Button from '../../components/Button.astro';
+import { sanityClient } from '../../sanity/client';
+import { imageAttrs } from '../../sanity/image';
+import { PROJECT_PAGES_QUERY } from '../../sanity/queries';
 
 export const getStaticPaths = (async () => {
   const projects = await sanityClient.fetch(PROJECT_PAGES_QUERY);
@@ -52,7 +53,7 @@ const framingClass = { wide: 'is--wide', square: 'is--square', tall: 'is--tall',
     ) : null}
       <div class="actions project-hero__actions">
         {project.portfolioUrl && <Button href={project.portfolioUrl} target="_blank" rel="noopener" label="Download Portfolio" />}
-        <Button href="architecture.html" label="All projects" secondary />
+        <Button href="/architecture" label="All projects" secondary />
       </div>
     </div>
   </div>
@@ -111,7 +112,7 @@ const framingClass = { wide: 'is--wide', square: 'is--square', tall: 'is--tall',
      closes, the link is taken and the next project loads. -->
 {next && (
 <section data-scroll-next-wrap data-scroll-start="top top" data-scroll-end="bottom bottom" class="scroll-next">
-  <a data-scroll-next-link href={`project-${next.slug}.html`} class="scroll-next__inner">
+  <a data-scroll-next-link href={`/projects/${next.slug}`} class="scroll-next__inner">
     <div class="scroll-next__bg">
       {next.coverImage && <img {...imageAttrs(next.coverImage)} data-scroll-next-bg alt="" class="scroll-next__bg-img">}
       <div data-scroll-next-overlay class="scroll-next__bg-overlay"></div>
