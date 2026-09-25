@@ -2,9 +2,10 @@
    website's call to action rather than Sanity's small grey button: the site's
    one red (--cta-accent-color in src/styles/style.css), the mono uppercase
    label its CTAs wear, and a bigger target. It is red only while there is
-   something to publish. Once everything is live Sanity disables the button,
-   and it drops back to a quiet outline, so the colour alone says whether the
-   site is up to date.
+   something to publish. Once everything is on staging Sanity disables the
+   button, and it drops back to a quiet outline, so the colour alone says
+   whether staging is up to date. (The label reads "Publish to staging":
+   sanity.config.ts. The live site is updated from the Go live tool.)
 
    The rule takes the document footer's main action whatever it reads at the
    moment (Publish, Validating document…, Publishing…, Published, or Restore

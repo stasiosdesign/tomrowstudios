@@ -27,7 +27,7 @@ The Vercel project is `tomrowstudios`, in the `stasiosdesign` team.
 |                    | Production (`main`)                    | Staging (`staging`)                               |
 | ------------------ | -------------------------------------- | ------------------------------------------------- |
 | Built              | static, at deploy time                 | on each request, by a Vercel Function             |
-| Sanity content     | published only                         | published; drafts in draft mode                   |
+| Sanity content     | published, as of the last **Go live**  | published; drafts in draft mode                   |
 | Visual editor      | never                                  | the Studio's Visual editor shows staging          |
 | Search engines     | indexed: robots.txt, sitemap           | never: `noindex, nofollow` on every response      |
 | Access             | public                                 | Vercel Authentication (and the Studio's bypass)   |
@@ -39,9 +39,29 @@ behaves like staging, on your machine.
 
 ## Workflow
 
+Content and code each reach the live site in their own two steps.
+
+**Content, in the Studio:**
+
+```
+edit (a draft)  →  Publish to staging  →  Go live: Publish to live site
+```
+
+1. **Edit.** Changes save themselves as drafts, seen only in the Visual editor.
+2. **Publish to staging** (the button on every page). The staging site shows it
+   at once; the live site doesn't change.
+3. **Go live** (in the Studio's top bar) lists everything published to staging
+   but not live yet. **Publish to live site** rebuilds the live site with all
+   of it, in about a minute. Like Webflow's publish, it takes the whole site.
+
+**Code, in Git:**
+
 ```
 local (npm run dev, npm run studio)  →  staging  →  review  →  main
 ```
+
+A code release rebuilds the live site too, so it also takes live everything
+published to staging by then; Go live's list shows what that is.
 
 1. **Work locally.** Nothing is deployed until you push.
 2. **Send changes to staging**, when you want them online:
@@ -83,8 +103,9 @@ Visual editor still shows edits to the home page live.
 ## Content: published and drafts
 
 - **Production** reads published content only, once, while it is built
-  (`src/sanity/client.ts`, no token, no drafts, no edit markers). Its build
-  has no draft-mode routes and no visual-editing code at all.
+  (`src/sanity/client.ts`, no token, no drafts, no edit markers), so it shows
+  what was published when it was last built: the last Go live or code
+  release. Its build has no draft-mode routes and no visual-editing code at all.
 - **Staging** reads Sanity on every request: published content for anyone,
   drafts for a browser in **draft mode**. The Studio's Visual editor switches
   draft mode on: it opens staging at `/api/draft-mode/enable` with a secret it
@@ -98,13 +119,17 @@ Visual editor still shows edits to the home page live.
 - The Studio's **Share** menu in the Visual editor can make a link to the
   current preview for someone without a Studio or Vercel login.
 
-### Publishing
+### Publishing: staging, then live
 
-A Sanity webhook, **Rebuild the site on publish**, calls a Vercel deploy hook
-that rebuilds `main`. It fires when a published Home page, Project or Client
-is created, changed or deleted, never for drafts, so editing never deploys
-anything. Production shows a publish about a minute later. Staging needs no
-rebuild: it reads Sanity on every request.
+**Publish to staging** is Sanity's own Publish (relabelled in
+`studio/sanity.config.ts`): staging, which reads Sanity on every request, shows
+it at once, and nothing is rebuilt.
+
+**Go live** (`studio/components/GoLiveTool.tsx`) writes one document,
+`liveSite` (when, and by whom). A Sanity webhook, **Publish to live site**,
+fires on that document alone and calls a Vercel deploy hook that rebuilds
+`main`, so the live site shows everything published about a minute later.
+Publishing, editing drafts and anything else never calls it.
 
 ## Search engines
 
@@ -131,9 +156,11 @@ The site's, set in Vercel (Settings → Environment Variables) and locally in
 | `SITE_URL`                         | the production URL  | the same production URL  | optional                       |
 | `SANITY_API_READ_TOKEN` (secret)   | not set             | Git branch `staging` only | optional, for drafts          |
 
-The Studio's, in committed files: `SANITY_STUDIO_PREVIEW_ORIGIN`, the site its
-Visual editor shows: staging's URL in `studio/.env.production` (the hosted
-Studio), http://localhost:8766 in `studio/.env.development` (`npm run studio`).
+The Studio's, in committed files, `studio/.env.production` (the hosted Studio)
+and `studio/.env.development` (`npm run studio`):
+`SANITY_STUDIO_PREVIEW_ORIGIN`, the site its Visual editor shows (staging's
+URL; http://localhost:8766 locally), and `SANITY_STUDIO_SITE_URL`, the live
+site the Go live tool links to (the same as `SITE_URL`).
 
 - `SITE_URL` falls back to Vercel's production domain when unset.
 - `SANITY_API_READ_TOKEN` is a Sanity API token with the **Viewer** role. It is
@@ -156,7 +183,8 @@ Studio), http://localhost:8766 in `studio/.env.development` (`npm run studio`).
   *Protection Bypass for Automation* secret, saved once in the Studio's
   **Vercel Protection Bypass** tool.
 - **Deploy hook** "Sanity publish" on `main`, called by the Sanity webhook
-  above. Its URL is a secret: it lives only in the webhook.
+  **Publish to live site** (the Go live button). Its URL is a secret: it
+  lives only in the webhook.
 - **Environment variables:** `SITE_URL` (Production and Preview) and
   `SANITY_API_READ_TOKEN` (Preview, branch `staging`); see below.
 
@@ -170,8 +198,10 @@ No code changes:
    Vercel Authentication protects it like any preview domain.
 3. Vercel → Environment Variables: set `SITE_URL` to the production domain,
    e.g. `https://www.example.com`, for Production and Preview.
-4. `studio/.env.production`: set `SANITY_STUDIO_PREVIEW_ORIGIN` to
-   `https://staging.example.com`; commit it, then `npm run studio:deploy`.
+4. `studio/.env.production` (and `.env.development`): set
+   `SANITY_STUDIO_PREVIEW_ORIGIN` to `https://staging.example.com` and
+   `SANITY_STUDIO_SITE_URL` to the production domain; commit, then
+   `npm run studio:deploy`.
 5. Sanity (sanity.io/manage → API → CORS origins, or
    `npx sanity cors add https://staging.example.com --no-credentials` in
    `studio/`): add the staging domain.
@@ -197,10 +227,12 @@ src/
     live-preview.ts        click-to-edit inside the Studio's Visual editor (staging and local only)
   styles/style.css         global stylesheet, imported once by the layout
 studio/                    Sanity Studio, with its own package.json
-  schemaTypes/             documents/ (homePage, project, client), objects/, shared/
-  sanity.config.ts         project, plugins (Visual editor, Content, Vision, Vercel bypass), sidebar
+  schemaTypes/             documents/ (homePage, project, client, liveSite), objects/, shared/
+  components/GoLiveTool.tsx  the Go live tool: Publish to live site
+  sanity.config.ts         project, tools (Visual editor, Content, Go live, Vision, Vercel bypass),
+                           the "Publish to staging" label, sidebar
   sanity.cli.ts            CLI settings, including TypeGen
-  .env.development/.production  which site the Visual editor shows (public)
+  .env.development/.production  the site the Visual editor shows, the live site (public)
 astro.config.mjs           production static / staging on request, by deployment
 vercel.ts                  Vercel: build, clean URLs, redirects, staging's noindex header
 ```
@@ -222,10 +254,12 @@ vercel.ts                  Vercel: build, clean URLs, redirects, staging's noind
    Editors must be members of the Sanity project (sanity.io/manage → Members).
 2. The **Visual editor** shows staging with your drafts; **Content** has the
    same documents as plain forms.
-3. **Publish**. Production has it about a minute later. A new project gets
+3. **Publish to staging**: the staging site has it at once. A new project gets
    its page, `/projects/<slug>`, and its slider card automatically; its
    **Order** field sets its place on the slider and which project its "Next
    project" link goes to.
+4. **Go live → Publish to live site** when staging is right: the live site has
+   everything published about a minute later.
 
 After changing Studio code or the schema, deploy the Studio
 (`npm run studio:deploy`). It serves both environments from the one dataset, so

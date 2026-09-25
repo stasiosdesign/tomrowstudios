@@ -1,5 +1,6 @@
 import {client} from './documents/client'
 import {homePage} from './documents/home-page'
+import {liveSite} from './documents/live-site'
 import {project} from './documents/project'
 import {featureImage} from './objects/feature-image'
 import {heroSlide} from './objects/hero-slide'
@@ -13,6 +14,7 @@ export const schemaTypes = [
   homePage,
   project,
   client,
+  liveSite,
   heroSlide,
   homeGallery,
   homeCard,

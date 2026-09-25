@@ -19,7 +19,9 @@ The README explains the system; these are the working rules.
 3. Never push unfinished work to `main`.
 4. Merge `staging` into `main` (and push) only when the user explicitly
    approves a production deployment. Run `npm run build` and `npm run check`
-   first; afterwards confirm the Vercel status on the commit.
+   first; afterwards confirm the Vercel status on the commit. A production
+   build also takes live everything published in Sanity by then, so tell the
+   user first if the Studio's Go live tool lists content waiting.
 5. After a production merge, bring `staging` level with `main` (fast-forward
    or merge `main` into `staging`) so the branches don't drift apart.
 6. No force-pushes, history rewrites or new long-lived branches.
@@ -40,6 +42,11 @@ The README explains the system; these are the working rules.
 
 ## Sanity
 
+- Content goes live in two steps: the Studio's Publish button ("Publish to
+  staging") updates staging only; the Go live tool's "Publish to live site"
+  rebuilds production (it writes the `liveSite` document, the only thing the
+  Sanity webhook "Publish to live site" fires on). Don't make publishing
+  rebuild production again.
 - Every query lives in `src/sanity/queries.ts`. After changing a query or the
   schema, run `npm run typegen`.
 - The hosted Studio is deployed by hand (`npm run studio:deploy`), from
