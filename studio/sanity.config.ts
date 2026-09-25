@@ -1,4 +1,4 @@
-import {defineConfig, type DocumentActionComponent} from 'sanity'
+import {defineConfig} from 'sanity'
 import {structureTool} from 'sanity/structure'
 import {defineDocuments, defineLocations, presentationTool} from 'sanity/presentation'
 import {visionTool} from '@sanity/vision'
@@ -6,7 +6,6 @@ import {vercelProtectionBypassTool} from '@sanity/vercel-protection-bypass'
 import {DesktopIcon} from '@sanity/icons/Desktop'
 import './page'
 import './publish-button.css'
-import {goLiveTool} from './components/GoLiveTool'
 import {schemaTypes} from './schemaTypes'
 import {structure} from './structure'
 import {theme} from './theme'
@@ -23,26 +22,7 @@ if (!previewOrigin) {
 }
 
 // One fixed document each: never created from the menu, duplicated or deleted
-const SINGLETONS = new Set(['homePage', 'liveSite'])
-
-// A change goes live in two steps. Publish puts it on the staging site, which
-// reads Sanity on every visit; the Go live tool (components/GoLiveTool.tsx)
-// then rebuilds the live site with everything published. The Publish button
-// says so. (Sanity's English labels; the red style is publish-button.css.)
-const STAGING_LABELS: Record<string, string> = {
-  'Publish': 'Publish to staging',
-  'Publishing…': 'Publishing to staging…',
-  'Published': 'Published to staging',
-}
-function publishToStaging(publish: DocumentActionComponent): DocumentActionComponent {
-  const PublishToStaging: DocumentActionComponent = (props) => {
-    const description = publish(props)
-    const label = typeof description?.label === 'string' ? STAGING_LABELS[description.label] : undefined
-    return description && label ? {...description, label} : description
-  }
-  PublishToStaging.action = publish.action
-  return PublishToStaging
-}
+const SINGLETONS = new Set(['homePage'])
 
 export default defineConfig({
   name: 'default',
@@ -93,12 +73,6 @@ export default defineConfig({
     vercelProtectionBypassTool(),
   ],
 
-  // Go live sits after Content: the step that follows editing
-  tools: (tools) => {
-    const content = tools.findIndex((tool) => tool.name === 'structure')
-    return [...tools.slice(0, content + 1), goLiveTool, ...tools.slice(content + 1)]
-  },
-
   schema: {
     types: schemaTypes,
     templates: (templates) => templates.filter(({schemaType}) => !SINGLETONS.has(schemaType)),
@@ -106,9 +80,8 @@ export default defineConfig({
 
   document: {
     actions: (actions, {schemaType}) =>
-      (SINGLETONS.has(schemaType)
+      SINGLETONS.has(schemaType)
         ? actions.filter(({action}) => action && ['publish', 'discardChanges', 'restore'].includes(action))
-        : actions
-      ).map((action) => (action.action === 'publish' ? publishToStaging(action) : action)),
+        : actions,
   },
 })

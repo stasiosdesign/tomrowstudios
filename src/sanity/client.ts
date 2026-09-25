@@ -3,8 +3,7 @@
    Production is fully static, so it reads content once, at build time: straight
    from the API rather than the CDN, so a build always sees the latest publish,
    and published documents only, never drafts. Something published in the
-   Studio reaches production on its next build, which the Studio's Go live
-   tool starts (or a code release).
+   Studio reaches production on its next build (the publish webhook starts one).
    Staging renders every request, with this client or, in draft mode, a copy
    that reads drafts with the server-side token (./draft-mode). Pages take the
    right one from Astro.locals.sanity (src/middleware.ts).

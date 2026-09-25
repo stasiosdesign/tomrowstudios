@@ -125,16 +125,6 @@ export type HeroSlide = {
   };
 };
 
-export type LiveSite = {
-  _id: string;
-  _type: "liveSite";
-  _createdAt: string;
-  _updatedAt: string;
-  _rev: string;
-  publishedAt?: string;
-  publishedBy?: string;
-};
-
 export type Client = {
   _id: string;
   _type: "client";
@@ -406,7 +396,6 @@ export type AllSanitySchemaTypes =
   | HomeCard
   | HomeGallery
   | HeroSlide
-  | LiveSite
   | Client
   | SanityImageCrop
   | SanityImageHotspot
