@@ -285,7 +285,7 @@ export type AllSanitySchemaTypes =
   | SanityImageAsset
   | Geopoint;
 
-// Source: ../TOMROWSTUDIOS/src/sanity/queries.ts
+// Source: ../src/sanity/queries.ts
 // Variable: PROJECT_INDEX_QUERY
 // Query: *[_type == "project" && defined(slug.current)] | order(sortOrder asc, _createdAt asc) {  _id,  "name": coalesce(shortTitle, title),  "slug": slug.current,  context,  year,  coverImage { asset->{ _id, metadata { dimensions { width, height } } }, crop, hotspot, alt }}
 export type PROJECT_INDEX_QUERY_RESULT = Array<{
@@ -310,7 +310,7 @@ export type PROJECT_INDEX_QUERY_RESULT = Array<{
   } | null;
 }>;
 
-// Source: ../TOMROWSTUDIOS/src/sanity/queries.ts
+// Source: ../src/sanity/queries.ts
 // Variable: PROJECT_PAGES_QUERY
 // Query: *[_type == "project" && defined(slug.current)] | order(sortOrder asc, _createdAt asc) {  _id,  title,  "name": coalesce(shortTitle, title),  "slug": slug.current,  context,  year,  lead,  credits[]{ _key, name, note, kind },  "portfolioUrl": coalesce(portfolio.asset->url, portfolioUrl),  coverImage { asset->{ _id, metadata { dimensions { width, height } } }, crop, hotspot, alt },  content[]{    _key,    _type,    _type == "featureImage" => { asset->{ _id, metadata { dimensions { width, height } } }, crop, hotspot, alt },    _type == "imageGallery" => { layout, framing, images[]{ _key, asset->{ _id, metadata { dimensions { width, height } } }, crop, hotspot, alt } },    _type == "textSection" => { label, body }  }}
 export type PROJECT_PAGES_QUERY_RESULT = Array<{
@@ -406,7 +406,7 @@ export type PROJECT_PAGES_QUERY_RESULT = Array<{
   > | null;
 }>;
 
-// Source: ../TOMROWSTUDIOS/src/sanity/queries.ts
+// Source: ../src/sanity/queries.ts
 // Variable: CLIENT_LOGOS_QUERY
 // Query: *[_type == "client" && defined(logo.asset)] | order(sortOrder asc, name asc) {  _id,  name,  logo { asset->{ _id, metadata { dimensions { width, height } } }, crop, hotspot }}
 export type CLIENT_LOGOS_QUERY_RESULT = Array<{

@@ -12,6 +12,13 @@
       "runtimeExecutable": "C:/Users/Anast/AppData/Local/OpenAI/Codex/runtimes/cua_node/6f12e0ef1c6e5061/bin/node.exe",
       "runtimeArgs": ["node_modules/astro/bin/astro.mjs", "dev", "--host", "127.0.0.1", "--port", "8766"],
       "port": 8766
+    },
+    {
+      "name": "sanity-studio",
+      "runtimeExecutable": "C:/Users/Anast/AppData/Local/OpenAI/Codex/runtimes/cua_node/6f12e0ef1c6e5061/bin/node.exe",
+      "runtimeArgs": ["node_modules/sanity/bin/sanity", "dev"],
+      "cwd": "studio",
+      "port": 3333
     }
   ]
 }
