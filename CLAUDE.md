@@ -41,13 +41,13 @@ The README explains the system; these are the working rules.
 ## Sanity
 
 - Content has three states in the one dataset: draft (`drafts.<id>`),
-  staging (the published document) and live (`live.<id>`, a copy made by
+  staging (the published document) and live (`live-<id>`, a copy made by
   **Publish live**). Production is built from live copies only; staging reads
   published documents. The publishing bar (`studio/components/PublishBar.tsx`)
   and `studio/lib/live.ts` implement it; every site query takes `$live`
   (`src/sanity/content.ts`). Keep that separation: never make production read
   published documents, never edit live copies by hand, and keep the webhook
-  filtered on `_id in path("live.*")`. (This replaced the earlier one-step
+  filtered on `string::startsWith(_id, "live-")`. (This replaced the earlier one-step
   publish on 2026-09-25, at the user's request for a Webflow-like
   staging/live workflow.)
 - Dataset writes from here (scripts, `sanity dataset create`) are blocked by

@@ -16,8 +16,8 @@ const all = process.argv.includes('--all')
 
 async function main() {
   const {published, live} = await client.fetch<{published: SanityDocument[]; live: SanityDocument[]}>(`{
-    "published": *[!(_id in path("drafts.**")) && !(_id in path("live.*")) && !(_type match "system.*") && !(_type match "sanity.*")],
-    "live": *[_id in path("live.*")]
+    "published": *[count(string::split(_id, ".")) == 1 && !(string::startsWith(_id, "live-")) && !(_type match "system.*") && !(_type match "sanity.*")],
+    "live": *[string::startsWith(_id, "live-")]
   }`)
   const liveById = new Map(live.map((doc) => [doc._id, doc]))
   let created = 0

@@ -4,7 +4,7 @@
    `npm run typegen` in the Studio.
 
    Every query takes $live (src/sanity/content.ts): true on production, which
-   reads the live copies (live.<id>) alone; false on staging and in
+   reads the live copies (live-<id>) alone; false on staging and in
    development, which read the published documents (and drafts in draft
    mode). Pass contentParams with every fetch. */
 import { defineQuery } from 'groq';
@@ -15,7 +15,7 @@ const IMAGE_ASSET = `asset->{ _id, metadata { dimensions { width, height } } }, 
 const IMAGE = `${IMAGE_ASSET}, alt`;
 
 // One side of the dataset: the live copies on production, everything else off it
-const SIDE = `(_id in path("live.*")) == $live`;
+const SIDE = `string::startsWith(_id, "live-") == $live`;
 
 // Projects in their Architecture-page order: the slider on that page, the
 // project pages to build, and each page's next project (the one after it,
@@ -63,7 +63,7 @@ const HOME_GALLERY = `heading, lead, images[]{ _key, ${IMAGE} }, button`;
 // live copy on production). The logos in its logo wall are
 // CLIENT_LOGOS_QUERY; the Get in touch block that closes it is
 // GET_IN_TOUCH_QUERY, as on every other page that ends with it.
-export const HOME_PAGE_QUERY = defineQuery(`*[_id == select($live => "live.homePage", "homePage")][0] {
+export const HOME_PAGE_QUERY = defineQuery(`*[_id == select($live => "live-homePage", "homePage")][0] {
   hero {
     headline,
     slides[]{ _key, caption, photo { ${IMAGE_ASSET} }, background { ${IMAGE_ASSET} } },
@@ -82,7 +82,7 @@ export const HOME_PAGE_QUERY = defineQuery(`*[_id == select($live => "live.homeP
 
 // The closing Get in touch block, the same on every page that ends with it:
 // one copy, kept in the Home page document.
-export const GET_IN_TOUCH_QUERY = defineQuery(`*[_id == select($live => "live.homePage", "homePage")][0].getInTouch {
+export const GET_IN_TOUCH_QUERY = defineQuery(`*[_id == select($live => "live-homePage", "homePage")][0].getInTouch {
   label,
   title,
   portrait { ${IMAGE} },
@@ -95,11 +95,11 @@ export const GET_IN_TOUCH_QUERY = defineQuery(`*[_id == select($live => "live.ho
 // standfirsts, the main pictures and the words on buttons. Everything else on
 // them stays in src/pages/*.astro, which fall back to the same words
 // (src/sanity/page-defaults.ts) for any field that is empty.
-export const ARCHITECTURE_PAGE_QUERY = defineQuery(`*[_id == select($live => "live.architecturePage", "architecturePage")][0] {
+export const ARCHITECTURE_PAGE_QUERY = defineQuery(`*[_id == select($live => "live-architecturePage", "architecturePage")][0] {
   header { label, heading }
 }`);
 
-export const INFLUENCE_PAGE_QUERY = defineQuery(`*[_id == select($live => "live.influencePage", "influencePage")][0] {
+export const INFLUENCE_PAGE_QUERY = defineQuery(`*[_id == select($live => "live-influencePage", "influencePage")][0] {
   hero { label, heading, lead, image { ${IMAGE} } },
   reach { label, number, text },
   approach { label, statement },
@@ -109,14 +109,14 @@ export const INFLUENCE_PAGE_QUERY = defineQuery(`*[_id == select($live => "live.
   book { label, heading, lead, button }
 }`);
 
-export const SHOP_PAGE_QUERY = defineQuery(`*[_id == select($live => "live.shopPage", "shopPage")][0] {
+export const SHOP_PAGE_QUERY = defineQuery(`*[_id == select($live => "live-shopPage", "shopPage")][0] {
   hero { label, heading, lead, image { ${IMAGE} }, primaryButton, secondaryButton },
   catalogue { label, heading },
   testimonials { heading, lead },
   faq { label, heading, note, helpHeading, helpLead, helpButton }
 }`);
 
-export const BOOK_PAGE_QUERY = defineQuery(`*[_id == select($live => "live.bookPage", "bookPage")][0] {
+export const BOOK_PAGE_QUERY = defineQuery(`*[_id == select($live => "live-bookPage", "bookPage")][0] {
   header { image { ${IMAGE} }, heading, lead },
   overview { heading, image { ${IMAGE} } },
   inside { heading },
@@ -128,19 +128,19 @@ const COURSE_PAGE = `header { image { ${IMAGE} }, heading, lead },
   overview { heading, image { ${IMAGE} } },
   details { heading, image { ${IMAGE} } }`;
 
-export const PRODUCT_PAGE_QUERY = defineQuery(`*[_id == select($live => "live.productPage", "productPage")][0] {
+export const PRODUCT_PAGE_QUERY = defineQuery(`*[_id == select($live => "live-productPage", "productPage")][0] {
   ${COURSE_PAGE}
 }`);
 
-export const COURSE_COMMUNICATION_PAGE_QUERY = defineQuery(`*[_id == select($live => "live.courseCommunicationPage", "courseCommunicationPage")][0] {
+export const COURSE_COMMUNICATION_PAGE_QUERY = defineQuery(`*[_id == select($live => "live-courseCommunicationPage", "courseCommunicationPage")][0] {
   ${COURSE_PAGE}
 }`);
 
-export const COURSE_SKETCHBOOK_PAGE_QUERY = defineQuery(`*[_id == select($live => "live.courseSketchbookPage", "courseSketchbookPage")][0] {
+export const COURSE_SKETCHBOOK_PAGE_QUERY = defineQuery(`*[_id == select($live => "live-courseSketchbookPage", "courseSketchbookPage")][0] {
   ${COURSE_PAGE}
 }`);
 
-export const PARTNERS_PAGE_QUERY = defineQuery(`*[_id == select($live => "live.partnersPage", "partnersPage")][0] {
+export const PARTNERS_PAGE_QUERY = defineQuery(`*[_id == select($live => "live-partnersPage", "partnersPage")][0] {
   intro { heading, lead, button },
   clients { label, heading, note },
   statement { heading, image { ${IMAGE} }, lead, button },
@@ -149,16 +149,16 @@ export const PARTNERS_PAGE_QUERY = defineQuery(`*[_id == select($live => "live.p
   enquire { label, heading, lead }
 }`);
 
-export const PARTNERS_ARCHIVE_PAGE_QUERY = defineQuery(`*[_id == select($live => "live.partnersArchivePage", "partnersArchivePage")][0] {
+export const PARTNERS_ARCHIVE_PAGE_QUERY = defineQuery(`*[_id == select($live => "live-partnersArchivePage", "partnersArchivePage")][0] {
   intro { heading, lead }
 }`);
 
-export const PRIVACY_PAGE_QUERY = defineQuery(`*[_id == select($live => "live.privacyPage", "privacyPage")][0] {
+export const PRIVACY_PAGE_QUERY = defineQuery(`*[_id == select($live => "live-privacyPage", "privacyPage")][0] {
   header { heading },
   body
 }`);
 
-export const TERMS_PAGE_QUERY = defineQuery(`*[_id == select($live => "live.termsPage", "termsPage")][0] {
+export const TERMS_PAGE_QUERY = defineQuery(`*[_id == select($live => "live-termsPage", "termsPage")][0] {
   header { heading },
   body
 }`);

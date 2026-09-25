@@ -27,7 +27,7 @@ The Vercel project is `tomrowstudios`, in the `stasiosdesign` team.
 |                    | Production (`main`)                    | Staging (`staging`)                               |
 | ------------------ | -------------------------------------- | ------------------------------------------------- |
 | Built              | static, at deploy time                 | on each request, by a Vercel Function             |
-| Sanity content     | live copies only (`live.<id>`)         | published documents; drafts in draft mode         |
+| Sanity content     | live copies only (`live-<id>`)         | published documents; drafts in draft mode         |
 | Visual editor      | never                                  | the Studio's Visual editor shows staging          |
 | Search engines     | indexed: robots.txt, sitemap           | never: `noindex, nofollow` on every response      |
 | Access             | public                                 | Vercel Authentication (and the Studio's bypass)   |
@@ -89,7 +89,7 @@ them (`src/sanity/content.ts`, `studio/lib/live.ts`):
 | --------- | ------------- | ----------------------------- | ------------------------------------------ |
 | Draft     | `drafts.<id>` | typing in the Studio (autosave) | staging, in draft mode only              |
 | Staging   | `<id>`        | **Publish to staging**        | staging, to everyone                       |
-| Live      | `live.<id>`   | **Publish live**              | production, at its next build              |
+| Live      | `live-<id>`   | **Publish live**              | production, at its next build              |
 
 - **Production** is built from the live copies alone, once, at build time
   (`src/sanity/client.ts`, no token, no drafts, no edit markers; every query
@@ -120,7 +120,7 @@ staging, live) and holds the actions:
   published document; staging shows it on its next request. Production does
   not change, even for an item that is already live.
 - **Publish live**: copies the published document to its live copy
-  (`live.<id>`), publishing the draft to staging first if there is one. The
+  (`live-<id>`), publishing the draft to staging first if there is one. The
   dialog names the item and the site. Only that item changes; a reference to
   something not yet live is refused, with the missing items named. Production
   then rebuilds (below); the bar watches the site's build stamp
@@ -136,7 +136,7 @@ staging, live) and holds the actions:
 
 A Sanity webhook, **Rebuild the site on publish**, calls a Vercel deploy hook
 that rebuilds `main`. It should fire on changes to live copies alone: filter
-`_id in path("live.*")` (sanity.io/manage → API → Webhooks). It never fires
+`string::startsWith(_id, "live-")` (sanity.io/manage → API → Webhooks). It never fires
 for drafts, so editing never deploys anything, and staging needs no rebuild:
 it reads Sanity on every request.
 
@@ -200,7 +200,7 @@ links and the build stamp it watches.
   *Protection Bypass for Automation* secret, saved once in the Studio's
   **Vercel Protection Bypass** tool.
 - **Deploy hook** "Sanity publish" on `main`, called by the Sanity webhook
-  above (which should filter on `_id in path("live.*")`, so only a live
+  above (which should filter on `string::startsWith(_id, "live-")`, so only a live
   publish or unpublish rebuilds the site). Its URL is a secret: it lives only
   in the webhook.
 - **`/build.json`** is served with `Access-Control-Allow-Origin: *` and

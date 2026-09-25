@@ -11,7 +11,7 @@ const client = getCliClient({apiVersion: '2025-02-19'})
 async function main() {
   const docs = await client
     .withConfig({perspective: 'raw'})
-    .fetch<SanityDocument[]>(`*[!(_type match "system.*") && !(_type match "sanity.*")] | order(_type asc, _id asc)`)
+    .fetch<SanityDocument[]>(`*[!(_type match "system.*") && !(_type match "sanity.*") && (count(string::split(_id, ".")) == 1 || _id in path("drafts.**"))] | order(_type asc, _id asc)`)
   const groups = new Map<string, {type: string; draft?: SanityDocument; published?: SanityDocument; live?: SanityDocument}>()
   for (const doc of docs) {
     const id = publishedId(doc._id)

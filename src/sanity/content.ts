@@ -6,12 +6,12 @@
      draft mode only;
    - the published document (<id>): what "Publish to staging" releases;
      staging shows it to everyone;
-   - the live copy (live.<id>): what "Publish live" releases, a copy of the
+   - the live copy (live-<id>): what "Publish live" releases, a copy of the
      published document taken at that moment. Production is built from live
      copies only, so nothing reaches the public site until it is put there
      on purpose, and a code release never sweeps staged content along.
 
-   Every query takes $live and picks one side: `(_id in path("live.*")) ==
+   Every query takes $live and picks one side: `(string::startsWith(_id, "live-")) ==
    $live`. Production passes true, staging and development false. */
 export const LIVE = __DEPLOYMENT__ === 'production';
 

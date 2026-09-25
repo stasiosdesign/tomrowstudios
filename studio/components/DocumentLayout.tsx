@@ -10,7 +10,7 @@ import {PublishBar} from './PublishBar'
    (sanity.config.ts, document.components.unstable_layout). Sanity's footer
    would sit under the bar saying the same thing, so it is hidden here.
 
-   A live copy (live.<id>) is never edited: production is built from it, so
+   A live copy (live-<id>) is never edited: production is built from it, so
    opening one, from a search result say, shows a note and the way to the
    real document instead. */
 export function DocumentLayout(props: DocumentLayoutProps) {

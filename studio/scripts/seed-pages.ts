@@ -1,7 +1,7 @@
 /* Makes the static pages' documents in Sanity, once, from the words and
    pictures the pages were built with (src/sanity/page-defaults.ts, at the
    repository root): for every page there, the published document (<type>)
-   and its live copy (live.<type>), each with the same content. Every picture
+   and its live copy (live-<type>), each with the same content. Every picture
    is uploaded from public/ first; Sanity keeps one copy of identical files,
    so running this again uploads nothing new.
 
@@ -50,7 +50,7 @@ async function uploadImage(image: ImageDefault) {
 }
 
 async function seed(type: string, defaults: Record<string, Record<string, string | ImageDefault>>) {
-  const ids = [type, `live.${type}`]
+  const ids = [type, `live-${type}`]
   const existing: string[] = await client.fetch('*[_id in $ids]._id', {ids})
   if (existing.length === ids.length) {
     for (const id of ids) console.log(`kept ${id}`)

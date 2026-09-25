@@ -7,7 +7,7 @@ import type {SanityClient, SanityDocument} from 'sanity'
    - drafts.<id>   the draft: what is being edited
    - <id>          published: what "Publish to staging" releases; staging
                    shows it to everyone
-   - live.<id>     the live copy: a copy of the published document taken when
+   - live-<id>     the live copy: a copy of the published document taken when
                    "Publish live" is pressed. Production is built from live
                    copies alone, so nothing reaches the public site until it is
                    put there on purpose.
@@ -15,7 +15,9 @@ import type {SanityClient, SanityDocument} from 'sanity'
    Everything here is a plain function of a client, so the same code serves
    the publishing bar and the scripts in scripts/. */
 
-export const LIVE_PREFIX = 'live.'
+// A dash, not a dot: Sanity keeps any document whose ID contains a dot private
+// (readable with a token only), and production is built without one
+export const LIVE_PREFIX = 'live-'
 const DRAFTS_PREFIX = 'drafts.'
 
 /** The live copy's ID for any form of a document's ID */
@@ -127,8 +129,8 @@ export async function unpublishLive(client: SanityClient, id: string): Promise<v
 export async function pendingLive(client: SanityClient, types: string[]): Promise<{id: string; type: string; title: string; live: boolean}[]> {
   const rows: {published: SanityDocument[]; live: SanityDocument[]} = await client.fetch(
     `{
-      "published": *[_type in $types && !(_id in path("drafts.**")) && !(_id in path("live.*"))],
-      "live": *[_type in $types && _id in path("live.*")]
+      "published": *[_type in $types && count(string::split(_id, ".")) == 1 && !(string::startsWith(_id, "live-"))],
+      "live": *[_type in $types && string::startsWith(_id, "live-")]
     }`,
     {types},
   )

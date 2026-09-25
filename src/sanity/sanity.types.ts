@@ -806,7 +806,7 @@ export type AllSanitySchemaTypes =
 
 // Source: ../src/sanity/queries.ts
 // Variable: PROJECT_INDEX_QUERY
-// Query: *[_type == "project" && (_id in path("live.*")) == $live && defined(slug.current)] | order(sortOrder asc, _createdAt asc) {  _id,  "name": coalesce(shortTitle, title),  "slug": slug.current,  context,  year,  coverImage { asset->{ _id, metadata { dimensions { width, height } } }, crop, hotspot, alt }}
+// Query: *[_type == "project" && string::startsWith(_id, "live-") == $live && defined(slug.current)] | order(sortOrder asc, _createdAt asc) {  _id,  "name": coalesce(shortTitle, title),  "slug": slug.current,  context,  year,  coverImage { asset->{ _id, metadata { dimensions { width, height } } }, crop, hotspot, alt }}
 export type PROJECT_INDEX_QUERY_RESULT = Array<{
   _id: string;
   name: string | null;
@@ -831,7 +831,7 @@ export type PROJECT_INDEX_QUERY_RESULT = Array<{
 
 // Source: ../src/sanity/queries.ts
 // Variable: PROJECT_PAGE_QUERY
-// Query: *[_type == "project" && (_id in path("live.*")) == $live && slug.current == $slug][0] {  _id,  title,  "name": coalesce(shortTitle, title),  "slug": slug.current,  context,  year,  lead,  credits[]{ _key, name, note, kind },  "portfolioUrl": coalesce(portfolio.asset->url, portfolioUrl),  content[]{    _key,    _type,    _type == "featureImage" => { asset->{ _id, metadata { dimensions { width, height } } }, crop, hotspot, alt },    _type == "imageGallery" => { layout, framing, images[]{ _key, asset->{ _id, metadata { dimensions { width, height } } }, crop, hotspot, alt } },    _type == "textSection" => { label, body }  }}
+// Query: *[_type == "project" && string::startsWith(_id, "live-") == $live && slug.current == $slug][0] {  _id,  title,  "name": coalesce(shortTitle, title),  "slug": slug.current,  context,  year,  lead,  credits[]{ _key, name, note, kind },  "portfolioUrl": coalesce(portfolio.asset->url, portfolioUrl),  content[]{    _key,    _type,    _type == "featureImage" => { asset->{ _id, metadata { dimensions { width, height } } }, crop, hotspot, alt },    _type == "imageGallery" => { layout, framing, images[]{ _key, asset->{ _id, metadata { dimensions { width, height } } }, crop, hotspot, alt } },    _type == "textSection" => { label, body }  }}
 export type PROJECT_PAGE_QUERY_RESULT = {
   _id: string;
   title: string | null;
@@ -913,7 +913,7 @@ export type PROJECT_PAGE_QUERY_RESULT = {
 
 // Source: ../src/sanity/queries.ts
 // Variable: CLIENT_LOGOS_QUERY
-// Query: *[_type == "client" && (_id in path("live.*")) == $live && defined(logo.asset)] | order(sortOrder asc, name asc) {  _id,  name,  logo { asset->{ _id, metadata { dimensions { width, height } } }, crop, hotspot }}
+// Query: *[_type == "client" && string::startsWith(_id, "live-") == $live && defined(logo.asset)] | order(sortOrder asc, name asc) {  _id,  name,  logo { asset->{ _id, metadata { dimensions { width, height } } }, crop, hotspot }}
 export type CLIENT_LOGOS_QUERY_RESULT = Array<{
   _id: string;
   name: string | null;
@@ -934,7 +934,7 @@ export type CLIENT_LOGOS_QUERY_RESULT = Array<{
 
 // Source: ../src/sanity/queries.ts
 // Variable: HOME_PAGE_QUERY
-// Query: *[_id == select($live => "live.homePage", "homePage")][0] {  hero {    headline,    slides[]{ _key, caption, photo { asset->{ _id, metadata { dimensions { width, height } } }, crop, hotspot }, background { asset->{ _id, metadata { dimensions { width, height } } }, crop, hotspot } },    primaryButton,    secondaryButton  },  logoWall { label },  practice { label, statement },  slider { images[]{ _key, asset->{ _id, metadata { dimensions { width, height } } }, crop, hotspot, alt } },  recognition { label, heading, lead, button, cards[]{ _key, title, text, image { asset->{ _id, metadata { dimensions { width, height } } }, crop, hotspot, alt } } },  influence { heading, lead, images[]{ _key, asset->{ _id, metadata { dimensions { width, height } } }, crop, hotspot, alt }, button },  partners { heading, lead, images[]{ _key, asset->{ _id, metadata { dimensions { width, height } } }, crop, hotspot, alt }, button },  projects { heading, lead, images[]{ _key, asset->{ _id, metadata { dimensions { width, height } } }, crop, hotspot, alt }, button },  courses { heading, lead, images[]{ _key, asset->{ _id, metadata { dimensions { width, height } } }, crop, hotspot, alt }, button }}
+// Query: *[_id == select($live => "live-homePage", "homePage")][0] {  hero {    headline,    slides[]{ _key, caption, photo { asset->{ _id, metadata { dimensions { width, height } } }, crop, hotspot }, background { asset->{ _id, metadata { dimensions { width, height } } }, crop, hotspot } },    primaryButton,    secondaryButton  },  logoWall { label },  practice { label, statement },  slider { images[]{ _key, asset->{ _id, metadata { dimensions { width, height } } }, crop, hotspot, alt } },  recognition { label, heading, lead, button, cards[]{ _key, title, text, image { asset->{ _id, metadata { dimensions { width, height } } }, crop, hotspot, alt } } },  influence { heading, lead, images[]{ _key, asset->{ _id, metadata { dimensions { width, height } } }, crop, hotspot, alt }, button },  partners { heading, lead, images[]{ _key, asset->{ _id, metadata { dimensions { width, height } } }, crop, hotspot, alt }, button },  projects { heading, lead, images[]{ _key, asset->{ _id, metadata { dimensions { width, height } } }, crop, hotspot, alt }, button },  courses { heading, lead, images[]{ _key, asset->{ _id, metadata { dimensions { width, height } } }, crop, hotspot, alt }, button }}
 export type HOME_PAGE_QUERY_RESULT =
   | {
       hero: null;
@@ -1149,7 +1149,7 @@ export type HOME_PAGE_QUERY_RESULT =
 
 // Source: ../src/sanity/queries.ts
 // Variable: GET_IN_TOUCH_QUERY
-// Query: *[_id == select($live => "live.homePage", "homePage")][0].getInTouch {  label,  title,  portrait { asset->{ _id, metadata { dimensions { width, height } } }, crop, hotspot, alt },  lead,  button}
+// Query: *[_id == select($live => "live-homePage", "homePage")][0].getInTouch {  label,  title,  portrait { asset->{ _id, metadata { dimensions { width, height } } }, crop, hotspot, alt },  lead,  button}
 export type GET_IN_TOUCH_QUERY_RESULT = null | {
   label: string | null;
   title: string | null;
@@ -1173,7 +1173,7 @@ export type GET_IN_TOUCH_QUERY_RESULT = null | {
 
 // Source: ../src/sanity/queries.ts
 // Variable: ARCHITECTURE_PAGE_QUERY
-// Query: *[_id == select($live => "live.architecturePage", "architecturePage")][0] {  header { label, heading }}
+// Query: *[_id == select($live => "live-architecturePage", "architecturePage")][0] {  header { label, heading }}
 export type ARCHITECTURE_PAGE_QUERY_RESULT =
   | {
       header: null;
@@ -1194,7 +1194,7 @@ export type ARCHITECTURE_PAGE_QUERY_RESULT =
 
 // Source: ../src/sanity/queries.ts
 // Variable: INFLUENCE_PAGE_QUERY
-// Query: *[_id == select($live => "live.influencePage", "influencePage")][0] {  hero { label, heading, lead, image { asset->{ _id, metadata { dimensions { width, height } } }, crop, hotspot, alt } },  reach { label, number, text },  approach { label, statement },  origins { label, heading },  insights { label, heading, lead },  atlas { label, heading },  book { label, heading, lead, button }}
+// Query: *[_id == select($live => "live-influencePage", "influencePage")][0] {  hero { label, heading, lead, image { asset->{ _id, metadata { dimensions { width, height } } }, crop, hotspot, alt } },  reach { label, number, text },  approach { label, statement },  origins { label, heading },  insights { label, heading, lead },  atlas { label, heading },  book { label, heading, lead, button }}
 export type INFLUENCE_PAGE_QUERY_RESULT =
   | {
       hero: null;
@@ -1311,7 +1311,7 @@ export type INFLUENCE_PAGE_QUERY_RESULT =
 
 // Source: ../src/sanity/queries.ts
 // Variable: SHOP_PAGE_QUERY
-// Query: *[_id == select($live => "live.shopPage", "shopPage")][0] {  hero { label, heading, lead, image { asset->{ _id, metadata { dimensions { width, height } } }, crop, hotspot, alt }, primaryButton, secondaryButton },  catalogue { label, heading },  testimonials { heading, lead },  faq { label, heading, note, helpHeading, helpLead, helpButton }}
+// Query: *[_id == select($live => "live-shopPage", "shopPage")][0] {  hero { label, heading, lead, image { asset->{ _id, metadata { dimensions { width, height } } }, crop, hotspot, alt }, primaryButton, secondaryButton },  catalogue { label, heading },  testimonials { heading, lead },  faq { label, heading, note, helpHeading, helpLead, helpButton }}
 export type SHOP_PAGE_QUERY_RESULT =
   | {
       hero: null;
@@ -1401,7 +1401,7 @@ export type SHOP_PAGE_QUERY_RESULT =
 
 // Source: ../src/sanity/queries.ts
 // Variable: BOOK_PAGE_QUERY
-// Query: *[_id == select($live => "live.bookPage", "bookPage")][0] {  header { image { asset->{ _id, metadata { dimensions { width, height } } }, crop, hotspot, alt }, heading, lead },  overview { heading, image { asset->{ _id, metadata { dimensions { width, height } } }, crop, hotspot, alt } },  inside { heading },  atlas { caption, primaryButton, secondaryButton }}
+// Query: *[_id == select($live => "live-bookPage", "bookPage")][0] {  header { image { asset->{ _id, metadata { dimensions { width, height } } }, crop, hotspot, alt }, heading, lead },  overview { heading, image { asset->{ _id, metadata { dimensions { width, height } } }, crop, hotspot, alt } },  inside { heading },  atlas { caption, primaryButton, secondaryButton }}
 export type BOOK_PAGE_QUERY_RESULT =
   | {
       header: null;
@@ -1517,7 +1517,7 @@ export type BOOK_PAGE_QUERY_RESULT =
 
 // Source: ../src/sanity/queries.ts
 // Variable: PRODUCT_PAGE_QUERY
-// Query: *[_id == select($live => "live.productPage", "productPage")][0] {  header { image { asset->{ _id, metadata { dimensions { width, height } } }, crop, hotspot, alt }, heading, lead },  overview { heading, image { asset->{ _id, metadata { dimensions { width, height } } }, crop, hotspot, alt } },  details { heading, image { asset->{ _id, metadata { dimensions { width, height } } }, crop, hotspot, alt } }}
+// Query: *[_id == select($live => "live-productPage", "productPage")][0] {  header { image { asset->{ _id, metadata { dimensions { width, height } } }, crop, hotspot, alt }, heading, lead },  overview { heading, image { asset->{ _id, metadata { dimensions { width, height } } }, crop, hotspot, alt } },  details { heading, image { asset->{ _id, metadata { dimensions { width, height } } }, crop, hotspot, alt } }}
 export type PRODUCT_PAGE_QUERY_RESULT =
   | {
       header: null;
@@ -1629,7 +1629,7 @@ export type PRODUCT_PAGE_QUERY_RESULT =
 
 // Source: ../src/sanity/queries.ts
 // Variable: COURSE_COMMUNICATION_PAGE_QUERY
-// Query: *[_id == select($live => "live.courseCommunicationPage", "courseCommunicationPage")][0] {  header { image { asset->{ _id, metadata { dimensions { width, height } } }, crop, hotspot, alt }, heading, lead },  overview { heading, image { asset->{ _id, metadata { dimensions { width, height } } }, crop, hotspot, alt } },  details { heading, image { asset->{ _id, metadata { dimensions { width, height } } }, crop, hotspot, alt } }}
+// Query: *[_id == select($live => "live-courseCommunicationPage", "courseCommunicationPage")][0] {  header { image { asset->{ _id, metadata { dimensions { width, height } } }, crop, hotspot, alt }, heading, lead },  overview { heading, image { asset->{ _id, metadata { dimensions { width, height } } }, crop, hotspot, alt } },  details { heading, image { asset->{ _id, metadata { dimensions { width, height } } }, crop, hotspot, alt } }}
 export type COURSE_COMMUNICATION_PAGE_QUERY_RESULT =
   | {
       header: null;
@@ -1741,7 +1741,7 @@ export type COURSE_COMMUNICATION_PAGE_QUERY_RESULT =
 
 // Source: ../src/sanity/queries.ts
 // Variable: COURSE_SKETCHBOOK_PAGE_QUERY
-// Query: *[_id == select($live => "live.courseSketchbookPage", "courseSketchbookPage")][0] {  header { image { asset->{ _id, metadata { dimensions { width, height } } }, crop, hotspot, alt }, heading, lead },  overview { heading, image { asset->{ _id, metadata { dimensions { width, height } } }, crop, hotspot, alt } },  details { heading, image { asset->{ _id, metadata { dimensions { width, height } } }, crop, hotspot, alt } }}
+// Query: *[_id == select($live => "live-courseSketchbookPage", "courseSketchbookPage")][0] {  header { image { asset->{ _id, metadata { dimensions { width, height } } }, crop, hotspot, alt }, heading, lead },  overview { heading, image { asset->{ _id, metadata { dimensions { width, height } } }, crop, hotspot, alt } },  details { heading, image { asset->{ _id, metadata { dimensions { width, height } } }, crop, hotspot, alt } }}
 export type COURSE_SKETCHBOOK_PAGE_QUERY_RESULT =
   | {
       header: null;
@@ -1853,7 +1853,7 @@ export type COURSE_SKETCHBOOK_PAGE_QUERY_RESULT =
 
 // Source: ../src/sanity/queries.ts
 // Variable: PARTNERS_PAGE_QUERY
-// Query: *[_id == select($live => "live.partnersPage", "partnersPage")][0] {  intro { heading, lead, button },  clients { label, heading, note },  statement { heading, image { asset->{ _id, metadata { dimensions { width, height } } }, crop, hotspot, alt }, lead, button },  services { label, lead },  results { label, heading, note },  enquire { label, heading, lead }}
+// Query: *[_id == select($live => "live-partnersPage", "partnersPage")][0] {  intro { heading, lead, button },  clients { label, heading, note },  statement { heading, image { asset->{ _id, metadata { dimensions { width, height } } }, crop, hotspot, alt }, lead, button },  services { label, lead },  results { label, heading, note },  enquire { label, heading, lead }}
 export type PARTNERS_PAGE_QUERY_RESULT =
   | {
       intro: null;
@@ -1924,7 +1924,7 @@ export type PARTNERS_PAGE_QUERY_RESULT =
 
 // Source: ../src/sanity/queries.ts
 // Variable: PARTNERS_ARCHIVE_PAGE_QUERY
-// Query: *[_id == select($live => "live.partnersArchivePage", "partnersArchivePage")][0] {  intro { heading, lead }}
+// Query: *[_id == select($live => "live-partnersArchivePage", "partnersArchivePage")][0] {  intro { heading, lead }}
 export type PARTNERS_ARCHIVE_PAGE_QUERY_RESULT =
   | {
       intro: null;
@@ -1939,7 +1939,7 @@ export type PARTNERS_ARCHIVE_PAGE_QUERY_RESULT =
 
 // Source: ../src/sanity/queries.ts
 // Variable: PRIVACY_PAGE_QUERY
-// Query: *[_id == select($live => "live.privacyPage", "privacyPage")][0] {  header { heading },  body}
+// Query: *[_id == select($live => "live-privacyPage", "privacyPage")][0] {  header { heading },  body}
 export type PRIVACY_PAGE_QUERY_RESULT =
   | {
       header: null;
@@ -1978,7 +1978,7 @@ export type PRIVACY_PAGE_QUERY_RESULT =
 
 // Source: ../src/sanity/queries.ts
 // Variable: TERMS_PAGE_QUERY
-// Query: *[_id == select($live => "live.termsPage", "termsPage")][0] {  header { heading },  body}
+// Query: *[_id == select($live => "live-termsPage", "termsPage")][0] {  header { heading },  body}
 export type TERMS_PAGE_QUERY_RESULT =
   | {
       header: null;
@@ -2568,22 +2568,22 @@ export type PAGE_LIVE_QUERY_RESULT =
 // Query TypeMap
 declare global {
   interface SanityQueries {
-    '*[_type == "project" && (_id in path("live.*")) == $live && defined(slug.current)] | order(sortOrder asc, _createdAt asc) {\n  _id,\n  "name": coalesce(shortTitle, title),\n  "slug": slug.current,\n  context,\n  year,\n  coverImage { asset->{ _id, metadata { dimensions { width, height } } }, crop, hotspot, alt }\n}': PROJECT_INDEX_QUERY_RESULT;
-    '*[_type == "project" && (_id in path("live.*")) == $live && slug.current == $slug][0] {\n  _id,\n  title,\n  "name": coalesce(shortTitle, title),\n  "slug": slug.current,\n  context,\n  year,\n  lead,\n  credits[]{ _key, name, note, kind },\n  "portfolioUrl": coalesce(portfolio.asset->url, portfolioUrl),\n  content[]{\n    _key,\n    _type,\n    _type == "featureImage" => { asset->{ _id, metadata { dimensions { width, height } } }, crop, hotspot, alt },\n    _type == "imageGallery" => { layout, framing, images[]{ _key, asset->{ _id, metadata { dimensions { width, height } } }, crop, hotspot, alt } },\n    _type == "textSection" => { label, body }\n  }\n}': PROJECT_PAGE_QUERY_RESULT;
-    '*[_type == "client" && (_id in path("live.*")) == $live && defined(logo.asset)] | order(sortOrder asc, name asc) {\n  _id,\n  name,\n  logo { asset->{ _id, metadata { dimensions { width, height } } }, crop, hotspot }\n}': CLIENT_LOGOS_QUERY_RESULT;
-    '*[_id == select($live => "live.homePage", "homePage")][0] {\n  hero {\n    headline,\n    slides[]{ _key, caption, photo { asset->{ _id, metadata { dimensions { width, height } } }, crop, hotspot }, background { asset->{ _id, metadata { dimensions { width, height } } }, crop, hotspot } },\n    primaryButton,\n    secondaryButton\n  },\n  logoWall { label },\n  practice { label, statement },\n  slider { images[]{ _key, asset->{ _id, metadata { dimensions { width, height } } }, crop, hotspot, alt } },\n  recognition { label, heading, lead, button, cards[]{ _key, title, text, image { asset->{ _id, metadata { dimensions { width, height } } }, crop, hotspot, alt } } },\n  influence { heading, lead, images[]{ _key, asset->{ _id, metadata { dimensions { width, height } } }, crop, hotspot, alt }, button },\n  partners { heading, lead, images[]{ _key, asset->{ _id, metadata { dimensions { width, height } } }, crop, hotspot, alt }, button },\n  projects { heading, lead, images[]{ _key, asset->{ _id, metadata { dimensions { width, height } } }, crop, hotspot, alt }, button },\n  courses { heading, lead, images[]{ _key, asset->{ _id, metadata { dimensions { width, height } } }, crop, hotspot, alt }, button }\n}': HOME_PAGE_QUERY_RESULT;
-    '*[_id == select($live => "live.homePage", "homePage")][0].getInTouch {\n  label,\n  title,\n  portrait { asset->{ _id, metadata { dimensions { width, height } } }, crop, hotspot, alt },\n  lead,\n  button\n}': GET_IN_TOUCH_QUERY_RESULT;
-    '*[_id == select($live => "live.architecturePage", "architecturePage")][0] {\n  header { label, heading }\n}': ARCHITECTURE_PAGE_QUERY_RESULT;
-    '*[_id == select($live => "live.influencePage", "influencePage")][0] {\n  hero { label, heading, lead, image { asset->{ _id, metadata { dimensions { width, height } } }, crop, hotspot, alt } },\n  reach { label, number, text },\n  approach { label, statement },\n  origins { label, heading },\n  insights { label, heading, lead },\n  atlas { label, heading },\n  book { label, heading, lead, button }\n}': INFLUENCE_PAGE_QUERY_RESULT;
-    '*[_id == select($live => "live.shopPage", "shopPage")][0] {\n  hero { label, heading, lead, image { asset->{ _id, metadata { dimensions { width, height } } }, crop, hotspot, alt }, primaryButton, secondaryButton },\n  catalogue { label, heading },\n  testimonials { heading, lead },\n  faq { label, heading, note, helpHeading, helpLead, helpButton }\n}': SHOP_PAGE_QUERY_RESULT;
-    '*[_id == select($live => "live.bookPage", "bookPage")][0] {\n  header { image { asset->{ _id, metadata { dimensions { width, height } } }, crop, hotspot, alt }, heading, lead },\n  overview { heading, image { asset->{ _id, metadata { dimensions { width, height } } }, crop, hotspot, alt } },\n  inside { heading },\n  atlas { caption, primaryButton, secondaryButton }\n}': BOOK_PAGE_QUERY_RESULT;
-    '*[_id == select($live => "live.productPage", "productPage")][0] {\n  header { image { asset->{ _id, metadata { dimensions { width, height } } }, crop, hotspot, alt }, heading, lead },\n  overview { heading, image { asset->{ _id, metadata { dimensions { width, height } } }, crop, hotspot, alt } },\n  details { heading, image { asset->{ _id, metadata { dimensions { width, height } } }, crop, hotspot, alt } }\n}': PRODUCT_PAGE_QUERY_RESULT;
-    '*[_id == select($live => "live.courseCommunicationPage", "courseCommunicationPage")][0] {\n  header { image { asset->{ _id, metadata { dimensions { width, height } } }, crop, hotspot, alt }, heading, lead },\n  overview { heading, image { asset->{ _id, metadata { dimensions { width, height } } }, crop, hotspot, alt } },\n  details { heading, image { asset->{ _id, metadata { dimensions { width, height } } }, crop, hotspot, alt } }\n}': COURSE_COMMUNICATION_PAGE_QUERY_RESULT;
-    '*[_id == select($live => "live.courseSketchbookPage", "courseSketchbookPage")][0] {\n  header { image { asset->{ _id, metadata { dimensions { width, height } } }, crop, hotspot, alt }, heading, lead },\n  overview { heading, image { asset->{ _id, metadata { dimensions { width, height } } }, crop, hotspot, alt } },\n  details { heading, image { asset->{ _id, metadata { dimensions { width, height } } }, crop, hotspot, alt } }\n}': COURSE_SKETCHBOOK_PAGE_QUERY_RESULT;
-    '*[_id == select($live => "live.partnersPage", "partnersPage")][0] {\n  intro { heading, lead, button },\n  clients { label, heading, note },\n  statement { heading, image { asset->{ _id, metadata { dimensions { width, height } } }, crop, hotspot, alt }, lead, button },\n  services { label, lead },\n  results { label, heading, note },\n  enquire { label, heading, lead }\n}': PARTNERS_PAGE_QUERY_RESULT;
-    '*[_id == select($live => "live.partnersArchivePage", "partnersArchivePage")][0] {\n  intro { heading, lead }\n}': PARTNERS_ARCHIVE_PAGE_QUERY_RESULT;
-    '*[_id == select($live => "live.privacyPage", "privacyPage")][0] {\n  header { heading },\n  body\n}': PRIVACY_PAGE_QUERY_RESULT;
-    '*[_id == select($live => "live.termsPage", "termsPage")][0] {\n  header { heading },\n  body\n}': TERMS_PAGE_QUERY_RESULT;
+    '*[_type == "project" && string::startsWith(_id, "live-") == $live && defined(slug.current)] | order(sortOrder asc, _createdAt asc) {\n  _id,\n  "name": coalesce(shortTitle, title),\n  "slug": slug.current,\n  context,\n  year,\n  coverImage { asset->{ _id, metadata { dimensions { width, height } } }, crop, hotspot, alt }\n}': PROJECT_INDEX_QUERY_RESULT;
+    '*[_type == "project" && string::startsWith(_id, "live-") == $live && slug.current == $slug][0] {\n  _id,\n  title,\n  "name": coalesce(shortTitle, title),\n  "slug": slug.current,\n  context,\n  year,\n  lead,\n  credits[]{ _key, name, note, kind },\n  "portfolioUrl": coalesce(portfolio.asset->url, portfolioUrl),\n  content[]{\n    _key,\n    _type,\n    _type == "featureImage" => { asset->{ _id, metadata { dimensions { width, height } } }, crop, hotspot, alt },\n    _type == "imageGallery" => { layout, framing, images[]{ _key, asset->{ _id, metadata { dimensions { width, height } } }, crop, hotspot, alt } },\n    _type == "textSection" => { label, body }\n  }\n}': PROJECT_PAGE_QUERY_RESULT;
+    '*[_type == "client" && string::startsWith(_id, "live-") == $live && defined(logo.asset)] | order(sortOrder asc, name asc) {\n  _id,\n  name,\n  logo { asset->{ _id, metadata { dimensions { width, height } } }, crop, hotspot }\n}': CLIENT_LOGOS_QUERY_RESULT;
+    '*[_id == select($live => "live-homePage", "homePage")][0] {\n  hero {\n    headline,\n    slides[]{ _key, caption, photo { asset->{ _id, metadata { dimensions { width, height } } }, crop, hotspot }, background { asset->{ _id, metadata { dimensions { width, height } } }, crop, hotspot } },\n    primaryButton,\n    secondaryButton\n  },\n  logoWall { label },\n  practice { label, statement },\n  slider { images[]{ _key, asset->{ _id, metadata { dimensions { width, height } } }, crop, hotspot, alt } },\n  recognition { label, heading, lead, button, cards[]{ _key, title, text, image { asset->{ _id, metadata { dimensions { width, height } } }, crop, hotspot, alt } } },\n  influence { heading, lead, images[]{ _key, asset->{ _id, metadata { dimensions { width, height } } }, crop, hotspot, alt }, button },\n  partners { heading, lead, images[]{ _key, asset->{ _id, metadata { dimensions { width, height } } }, crop, hotspot, alt }, button },\n  projects { heading, lead, images[]{ _key, asset->{ _id, metadata { dimensions { width, height } } }, crop, hotspot, alt }, button },\n  courses { heading, lead, images[]{ _key, asset->{ _id, metadata { dimensions { width, height } } }, crop, hotspot, alt }, button }\n}': HOME_PAGE_QUERY_RESULT;
+    '*[_id == select($live => "live-homePage", "homePage")][0].getInTouch {\n  label,\n  title,\n  portrait { asset->{ _id, metadata { dimensions { width, height } } }, crop, hotspot, alt },\n  lead,\n  button\n}': GET_IN_TOUCH_QUERY_RESULT;
+    '*[_id == select($live => "live-architecturePage", "architecturePage")][0] {\n  header { label, heading }\n}': ARCHITECTURE_PAGE_QUERY_RESULT;
+    '*[_id == select($live => "live-influencePage", "influencePage")][0] {\n  hero { label, heading, lead, image { asset->{ _id, metadata { dimensions { width, height } } }, crop, hotspot, alt } },\n  reach { label, number, text },\n  approach { label, statement },\n  origins { label, heading },\n  insights { label, heading, lead },\n  atlas { label, heading },\n  book { label, heading, lead, button }\n}': INFLUENCE_PAGE_QUERY_RESULT;
+    '*[_id == select($live => "live-shopPage", "shopPage")][0] {\n  hero { label, heading, lead, image { asset->{ _id, metadata { dimensions { width, height } } }, crop, hotspot, alt }, primaryButton, secondaryButton },\n  catalogue { label, heading },\n  testimonials { heading, lead },\n  faq { label, heading, note, helpHeading, helpLead, helpButton }\n}': SHOP_PAGE_QUERY_RESULT;
+    '*[_id == select($live => "live-bookPage", "bookPage")][0] {\n  header { image { asset->{ _id, metadata { dimensions { width, height } } }, crop, hotspot, alt }, heading, lead },\n  overview { heading, image { asset->{ _id, metadata { dimensions { width, height } } }, crop, hotspot, alt } },\n  inside { heading },\n  atlas { caption, primaryButton, secondaryButton }\n}': BOOK_PAGE_QUERY_RESULT;
+    '*[_id == select($live => "live-productPage", "productPage")][0] {\n  header { image { asset->{ _id, metadata { dimensions { width, height } } }, crop, hotspot, alt }, heading, lead },\n  overview { heading, image { asset->{ _id, metadata { dimensions { width, height } } }, crop, hotspot, alt } },\n  details { heading, image { asset->{ _id, metadata { dimensions { width, height } } }, crop, hotspot, alt } }\n}': PRODUCT_PAGE_QUERY_RESULT;
+    '*[_id == select($live => "live-courseCommunicationPage", "courseCommunicationPage")][0] {\n  header { image { asset->{ _id, metadata { dimensions { width, height } } }, crop, hotspot, alt }, heading, lead },\n  overview { heading, image { asset->{ _id, metadata { dimensions { width, height } } }, crop, hotspot, alt } },\n  details { heading, image { asset->{ _id, metadata { dimensions { width, height } } }, crop, hotspot, alt } }\n}': COURSE_COMMUNICATION_PAGE_QUERY_RESULT;
+    '*[_id == select($live => "live-courseSketchbookPage", "courseSketchbookPage")][0] {\n  header { image { asset->{ _id, metadata { dimensions { width, height } } }, crop, hotspot, alt }, heading, lead },\n  overview { heading, image { asset->{ _id, metadata { dimensions { width, height } } }, crop, hotspot, alt } },\n  details { heading, image { asset->{ _id, metadata { dimensions { width, height } } }, crop, hotspot, alt } }\n}': COURSE_SKETCHBOOK_PAGE_QUERY_RESULT;
+    '*[_id == select($live => "live-partnersPage", "partnersPage")][0] {\n  intro { heading, lead, button },\n  clients { label, heading, note },\n  statement { heading, image { asset->{ _id, metadata { dimensions { width, height } } }, crop, hotspot, alt }, lead, button },\n  services { label, lead },\n  results { label, heading, note },\n  enquire { label, heading, lead }\n}': PARTNERS_PAGE_QUERY_RESULT;
+    '*[_id == select($live => "live-partnersArchivePage", "partnersArchivePage")][0] {\n  intro { heading, lead }\n}': PARTNERS_ARCHIVE_PAGE_QUERY_RESULT;
+    '*[_id == select($live => "live-privacyPage", "privacyPage")][0] {\n  header { heading },\n  body\n}': PRIVACY_PAGE_QUERY_RESULT;
+    '*[_id == select($live => "live-termsPage", "termsPage")][0] {\n  header { heading },\n  body\n}': TERMS_PAGE_QUERY_RESULT;
     "*[_id == $id][0]": PAGE_LIVE_QUERY_RESULT;
   }
 }

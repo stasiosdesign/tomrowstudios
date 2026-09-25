@@ -128,7 +128,8 @@ export function CollectionPane(props: {options?: Record<string, unknown>; childI
     const raw = client.withConfig({perspective: 'raw'})
     const load = () =>
       raw
-        .fetch<SanityDocument[]>(`*[_type == $type]`, {type})
+        // Drafts, published documents and live copies; never a dotted ID (private to Sanity)
+        .fetch<SanityDocument[]>(`*[_type == $type && (count(string::split(_id, ".")) == 1 || _id in path("drafts.**"))]`, {type})
         .then((result) => {
           if (!cancelled) setDocuments(result)
         })
