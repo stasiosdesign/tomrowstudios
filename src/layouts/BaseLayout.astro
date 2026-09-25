@@ -11,7 +11,6 @@
    navigation, so they must not be bundled into modules. */
 import '../styles/style.css';
 import StepNav from '../components/StepNav.astro';
-import VisualEditing from '../components/VisualEditing.astro';
 
 interface Props {
   title: string;
@@ -21,11 +20,9 @@ interface Props {
   pageName: string;
   /** Optional extra class on the <main> container. */
   mainClass?: string;
-  /** Load the Studio's click-to-edit outlines (the page is in draft mode). */
-  visualEditing?: boolean;
 }
 
-const { title, namespace, pageName, mainClass, visualEditing = false } = Astro.props;
+const { title, namespace, pageName, mainClass } = Astro.props;
 ---
 <!DOCTYPE html>
 <html lang="en">
@@ -130,7 +127,11 @@ const { title, namespace, pageName, mainClass, visualEditing = false } = Astro.p
 <script is:inline src="/js/lightbox.js"></script>
 <!-- Temporary development grid overlay -->
 <script is:inline src="/js/grid-overlay.js"></script>
-{visualEditing && <VisualEditing />}
+<!-- Inside the Studio's Presentation tool (the page in a frame), load the
+     click-to-edit layer and live drafts; visitors never download it -->
+<script>
+  if (window.self !== window.top) import('../sanity/live-preview');
+</script>
 
 </body>
 </html>

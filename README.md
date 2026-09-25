@@ -21,7 +21,7 @@ src/
   pages/                   one .astro file per page -> /<name>
     projects/[slug].astro  one page per Sanity project -> /projects/<slug>
   sanity/                  the site's Sanity code: client, image URLs, queries, generated types,
-                           visual-editing.ts and draft-mode/ (the Studio's click-to-edit preview)
+                           live-preview.ts (click-to-edit inside the Studio)
   styles/style.css         global stylesheet, imported once by the layout
 studio/                    Sanity Studio, with its own package.json
   schemaTypes/             documents/ (homePage, project, client), objects/ (hero slide, page blocks), shared/
@@ -66,28 +66,27 @@ npm run dev        # or, from the root: npm run studio
 **Environment variables:** none are required. The dataset is public, so the
 site needs no token, and the project ID and dataset have defaults;
 `PUBLIC_SANITY_PROJECT_ID` / `PUBLIC_SANITY_DATASET` override them, e.g. to
-build against another dataset. Visual editing (below) adds two, only where it
-runs. `.env` files are git-ignored; never commit secrets.
+build against another dataset. `.env` files are git-ignored; never commit
+secrets.
 
 ## Visual editing (pilot: the home page hero)
 
-In the Studio's **Presentation** tab the site appears with click-to-edit
+In the Studio's **Presentation** tab the live site appears with click-to-edit
 outlines on the home hero: the headline, the dial's five slides (caption, dial
-photo, background) and the two button labels. Edits show in the preview as
-drafts; **Publish** makes them live. Layout stays in code, so only those
-fields can change.
+photo, background) and the two button labels. Edits show in the page as they
+are typed, as drafts; **Publish** makes them live. Layout stays in code, so
+only those fields can change.
 
-- It runs against your own dev server for now. `.env.development.local`
-  (git-ignored, read only by `npm run dev`) sets `SANITY_VISUAL_EDITING=true`
-  and holds `SANITY_API_READ_TOKEN`, a Sanity **Viewer** token, which lets the
-  preview read drafts. Then run `npm run dev -- --port 8766` and
-  `npm run studio`, and open http://localhost:3333 → Presentation.
-- The production build never turns it on (`astro.config.mjs`), so the public
-  site has no draft routes, editing markup or overlay code.
-- Letting clients use it from the hosted Studio needs the preview hosted too:
-  a second deployment built with those two variables (plus an adapter for its
-  per-request home page), and the Studio redeployed with
-  `SANITY_STUDIO_PREVIEW_ORIGIN` set to its address.
+- The hosted Studio shows the live site; a local Studio (`npm run studio`)
+  shows your dev server on port 8766 (`studio/sanity.config.ts`).
+- Only inside the Studio's frame does a page load `src/sanity/live-preview.ts`
+  (the check is in `BaseLayout.astro`, so visitors never download it). It
+  connects the outlines and takes drafts from the Studio in live mode: the
+  Studio runs the query with the editor's own login, so no token, preview
+  deployment or server is needed. The first query is made from the browser,
+  which is why the site's origins are allowed in the project's CORS settings.
+- To make more of the site editable: add the fields to the Studio schema, read
+  them in the page, and mark and fill the elements in `live-preview.ts`.
 
 ## Deployment
 
