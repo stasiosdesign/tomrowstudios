@@ -1,10 +1,14 @@
 ---
-/* One page per architecture project, built from Sanity at /projects/<slug>
-   (the old /project-<slug>.html addresses redirect here; see vercel.json).
-   The markup is the hand-written project pages' own, section for section;
-   which sections a project has, their order, and which project comes next
-   are set in the Studio. */
-import type { GetStaticPaths, InferGetStaticPropsType } from 'astro';
+/* One page per architecture project, from Sanity at /projects/<slug> (the
+   old /project-<slug>.html addresses redirect here; see vercel.ts). The
+   markup is the hand-written project pages' own, section for section; which
+   sections a project has, their order, and which project comes next are set
+   in the Studio.
+
+   Production builds a page for each published project. Staging renders the
+   page on request, where Astro has no use for getStaticPaths, so there it is
+   left out; a project that is still a draft has a page there in draft mode. */
+import type { GetStaticPaths } from 'astro';
 import { PortableText } from 'astro-portabletext';
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import SiteNav from '../../components/SiteNav.astro';
@@ -12,18 +16,26 @@ import ContactPanel from '../../components/ContactPanel.astro';
 import Button from '../../components/Button.astro';
 import { sanityClient } from '../../sanity/client';
 import { imageAttrs } from '../../sanity/image';
-import { PROJECT_PAGES_QUERY } from '../../sanity/queries';
+import { PROJECT_INDEX_QUERY, PROJECT_PAGE_QUERY } from '../../sanity/queries';
 
-export const getStaticPaths = (async () => {
-  const projects = await sanityClient.fetch(PROJECT_PAGES_QUERY);
-  return projects.map((project, i) => ({
-    params: { slug: project.slug as string },
-    props: { project, next: projects.length > 1 ? projects[(i + 1) % projects.length] : null },
-  }));
-}) satisfies GetStaticPaths;
+export const getStaticPaths = __DEPLOYMENT__ === 'production'
+  ? ((async () => {
+      const projects = await sanityClient.fetch(PROJECT_INDEX_QUERY);
+      return projects.map((project) => ({ params: { slug: project.slug as string } }));
+    }) satisfies GetStaticPaths)
+  : undefined;
 
-type Props = InferGetStaticPropsType<typeof getStaticPaths>;
-const { project, next } = Astro.props;
+// (Typed here: Astro can't infer the params from a getStaticPaths only production has)
+const { slug = '' } = Astro.params as { slug?: string };
+const { sanity } = Astro.locals;
+const [project, projects] = await Promise.all([
+  sanity.fetch(PROJECT_PAGE_QUERY, { slug }),
+  sanity.fetch(PROJECT_INDEX_QUERY),
+]);
+if (!project) return new Response('Not found', { status: 404 });
+
+// The next project on the Architecture slider, wrapping round at the end
+const next = projects.length > 1 ? projects[(projects.findIndex((p) => p._id === project._id) + 1) % projects.length] : null;
 
 const eyebrow = ['Architecture', project.context, project.year].filter(Boolean).join(' — ');
 // The award label's variant for each kind of credit
@@ -122,7 +134,7 @@ const framingClass = { wide: 'is--wide', square: 'is--square', tall: 'is--tall',
       <h2 class="scroll-next__h">{next.name}</h2>
     </div>
     <div class="scroll-next__progres">
-      <svg xmlns="http://www.w3.org/2000/svg" width="100%" viewbox="0 0 480 480" fill="none" class="scroll-next__progres-svg"><circle opacity="0.4" cx="240" cy="240" r="240" stroke="currentColor" stroke-width="3"></circle><circle opacity="1" cx="240" cy="240" r="240" stroke="currentColor" stroke-width="3" data-scroll-next-path></circle></svg>
+      <svg xmlns="http://www.w3.org/2000/svg" width="100%" viewBox="0 0 480 480" fill="none" class="scroll-next__progres-svg"><circle opacity="0.4" cx="240" cy="240" r="240" stroke="currentColor" stroke-width="3"></circle><circle opacity="1" cx="240" cy="240" r="240" stroke="currentColor" stroke-width="3" data-scroll-next-path></circle></svg>
     </div>
   </a>
 </section>

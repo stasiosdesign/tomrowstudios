@@ -9,7 +9,9 @@ import { defineQuery } from 'groq';
 const IMAGE_ASSET = `asset->{ _id, metadata { dimensions { width, height } } }, crop, hotspot`;
 const IMAGE = `${IMAGE_ASSET}, alt`;
 
-// Projects in their Architecture-page order: the slider on that page.
+// Projects in their Architecture-page order: the slider on that page, the
+// project pages to build, and each page's next project (the one after it,
+// wrapping round at the end, as the hand-written pages did).
 export const PROJECT_INDEX_QUERY = defineQuery(`*[_type == "project" && defined(slug.current)] | order(sortOrder asc, _createdAt asc) {
   _id,
   "name": coalesce(shortTitle, title),
@@ -19,10 +21,8 @@ export const PROJECT_INDEX_QUERY = defineQuery(`*[_type == "project" && defined(
   coverImage { ${IMAGE} }
 }`);
 
-// The same projects in the same order, with everything a project page renders.
-// One query builds every page; each page's next project is the one after it,
-// wrapping round at the end, as the hand-written pages did.
-export const PROJECT_PAGES_QUERY = defineQuery(`*[_type == "project" && defined(slug.current)] | order(sortOrder asc, _createdAt asc) {
+// One project, with everything its page renders.
+export const PROJECT_PAGE_QUERY = defineQuery(`*[_type == "project" && slug.current == $slug][0] {
   _id,
   title,
   "name": coalesce(shortTitle, title),
@@ -32,7 +32,6 @@ export const PROJECT_PAGES_QUERY = defineQuery(`*[_type == "project" && defined(
   lead,
   credits[]{ _key, name, note, kind },
   "portfolioUrl": coalesce(portfolio.asset->url, portfolioUrl),
-  coverImage { ${IMAGE} },
   content[]{
     _key,
     _type,

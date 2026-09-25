@@ -1,18 +1,19 @@
-/* Visual editing in the Studio's Presentation tool.
+/* Visual editing in the Studio's Visual editor (Sanity's Presentation tool).
 
-   Loaded only when the page is open in a frame (see BaseLayout.astro), so
-   visitors never download it. With a Studio as the parent it:
+   Staging and development only: production builds leave it out, and even
+   there it loads only when the page is open in a frame (see BaseLayout.astro),
+   so visitors never download it. With a Studio as the parent it:
    - connects the click-to-edit outlines (enableVisualEditing);
    - asks the Studio for the page's content in live mode (enableLiveMode): the
      Studio runs the queries with the editor's own login, drafts included, and
-     sends every change as it is typed, so the page needs no token and no
-     server;
+     sends every change as it is typed, so no token reaches the browser;
    - marks the parts it edits with data-sanity attributes and writes the drafts
      into them, and again whenever Barba brings a page in.
    That covers every section of the home page, its logos (each opens its
    client), and the Get in touch block on every page that ends with it. The
-   static page underneath stays the published one; a photo, card or client
-   added or removed shows once it is published and the site rebuilt. */
+   page underneath is rendered by staging in draft mode (src/sanity/draft-mode/),
+   so everything else a draft changes, a photo, card, client or whole project
+   added or removed, shows when the page is reloaded. */
 import { createQueryStore } from '@sanity/core-loader';
 import { createDataAttribute, enableVisualEditing } from '@sanity/visual-editing-standalone';
 import { sanityClient } from './client';

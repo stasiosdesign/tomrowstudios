@@ -17,14 +17,18 @@ studio/schema.json
 # public/assets/photos/
 source-assets/
 
-# Environment files and keys. None are needed today; if one is added,
-# commit only .env.example, never real values
+# Environment files and keys: real values never go in Git. .env.example lists
+# the site's variables. The Studio's two committed files hold only public
+# settings (every SANITY_STUDIO_ value is compiled into the public Studio);
+# overrides for one machine go in the git-ignored .env*.local files.
 .env
 .env.*
 !.env.example
+!studio/.env.development
+!studio/.env.production
 *.pem
 
-# Local tool state
+# Local tool state, and the Vercel adapter's build output (.vercel/output)
 .vercel/
 .claude/settings.local.json
 *.tsbuildinfo

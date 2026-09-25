@@ -281,6 +281,15 @@ export type HomePage = {
   };
 };
 
+export type SanityVercelProtectionBypass = {
+  _id: string;
+  _type: "sanity.vercelProtectionBypass";
+  _createdAt: string;
+  _updatedAt: string;
+  _rev: string;
+  secret?: string;
+};
+
 export type SanityImagePaletteSwatch = {
   _type: "sanity.imagePaletteSwatch";
   background?: string;
@@ -394,6 +403,7 @@ export type AllSanitySchemaTypes =
   | Project
   | Slug
   | HomePage
+  | SanityVercelProtectionBypass
   | SanityImagePaletteSwatch
   | SanityImagePalette
   | SanityImageDimensions
@@ -429,9 +439,9 @@ export type PROJECT_INDEX_QUERY_RESULT = Array<{
 }>;
 
 // Source: ../src/sanity/queries.ts
-// Variable: PROJECT_PAGES_QUERY
-// Query: *[_type == "project" && defined(slug.current)] | order(sortOrder asc, _createdAt asc) {  _id,  title,  "name": coalesce(shortTitle, title),  "slug": slug.current,  context,  year,  lead,  credits[]{ _key, name, note, kind },  "portfolioUrl": coalesce(portfolio.asset->url, portfolioUrl),  coverImage { asset->{ _id, metadata { dimensions { width, height } } }, crop, hotspot, alt },  content[]{    _key,    _type,    _type == "featureImage" => { asset->{ _id, metadata { dimensions { width, height } } }, crop, hotspot, alt },    _type == "imageGallery" => { layout, framing, images[]{ _key, asset->{ _id, metadata { dimensions { width, height } } }, crop, hotspot, alt } },    _type == "textSection" => { label, body }  }}
-export type PROJECT_PAGES_QUERY_RESULT = Array<{
+// Variable: PROJECT_PAGE_QUERY
+// Query: *[_type == "project" && slug.current == $slug][0] {  _id,  title,  "name": coalesce(shortTitle, title),  "slug": slug.current,  context,  year,  lead,  credits[]{ _key, name, note, kind },  "portfolioUrl": coalesce(portfolio.asset->url, portfolioUrl),  content[]{    _key,    _type,    _type == "featureImage" => { asset->{ _id, metadata { dimensions { width, height } } }, crop, hotspot, alt },    _type == "imageGallery" => { layout, framing, images[]{ _key, asset->{ _id, metadata { dimensions { width, height } } }, crop, hotspot, alt } },    _type == "textSection" => { label, body }  }}
+export type PROJECT_PAGE_QUERY_RESULT = {
   _id: string;
   title: string | null;
   name: string | null;
@@ -446,20 +456,6 @@ export type PROJECT_PAGES_QUERY_RESULT = Array<{
     kind: "award" | "detail" | "won" | null;
   }> | null;
   portfolioUrl: string | null;
-  coverImage: {
-    asset: {
-      _id: string;
-      metadata: {
-        dimensions: {
-          width: number | null;
-          height: number | null;
-        } | null;
-      } | null;
-    } | null;
-    crop: SanityImageCrop | null;
-    hotspot: SanityImageHotspot | null;
-    alt: string | null;
-  } | null;
   content: Array<
     | {
         _key: string;
@@ -522,7 +518,7 @@ export type PROJECT_PAGES_QUERY_RESULT = Array<{
         }> | null;
       }
   > | null;
-}>;
+} | null;
 
 // Source: ../src/sanity/queries.ts
 // Variable: CLIENT_LOGOS_QUERY
@@ -756,7 +752,7 @@ export type GET_IN_TOUCH_QUERY_RESULT = null | {
 declare global {
   interface SanityQueries {
     '*[_type == "project" && defined(slug.current)] | order(sortOrder asc, _createdAt asc) {\n  _id,\n  "name": coalesce(shortTitle, title),\n  "slug": slug.current,\n  context,\n  year,\n  coverImage { asset->{ _id, metadata { dimensions { width, height } } }, crop, hotspot, alt }\n}': PROJECT_INDEX_QUERY_RESULT;
-    '*[_type == "project" && defined(slug.current)] | order(sortOrder asc, _createdAt asc) {\n  _id,\n  title,\n  "name": coalesce(shortTitle, title),\n  "slug": slug.current,\n  context,\n  year,\n  lead,\n  credits[]{ _key, name, note, kind },\n  "portfolioUrl": coalesce(portfolio.asset->url, portfolioUrl),\n  coverImage { asset->{ _id, metadata { dimensions { width, height } } }, crop, hotspot, alt },\n  content[]{\n    _key,\n    _type,\n    _type == "featureImage" => { asset->{ _id, metadata { dimensions { width, height } } }, crop, hotspot, alt },\n    _type == "imageGallery" => { layout, framing, images[]{ _key, asset->{ _id, metadata { dimensions { width, height } } }, crop, hotspot, alt } },\n    _type == "textSection" => { label, body }\n  }\n}': PROJECT_PAGES_QUERY_RESULT;
+    '*[_type == "project" && slug.current == $slug][0] {\n  _id,\n  title,\n  "name": coalesce(shortTitle, title),\n  "slug": slug.current,\n  context,\n  year,\n  lead,\n  credits[]{ _key, name, note, kind },\n  "portfolioUrl": coalesce(portfolio.asset->url, portfolioUrl),\n  content[]{\n    _key,\n    _type,\n    _type == "featureImage" => { asset->{ _id, metadata { dimensions { width, height } } }, crop, hotspot, alt },\n    _type == "imageGallery" => { layout, framing, images[]{ _key, asset->{ _id, metadata { dimensions { width, height } } }, crop, hotspot, alt } },\n    _type == "textSection" => { label, body }\n  }\n}': PROJECT_PAGE_QUERY_RESULT;
     '*[_type == "client" && defined(logo.asset)] | order(sortOrder asc, name asc) {\n  _id,\n  name,\n  logo { asset->{ _id, metadata { dimensions { width, height } } }, crop, hotspot }\n}': CLIENT_LOGOS_QUERY_RESULT;
     '*[_id == "homePage"][0] {\n  hero {\n    headline,\n    slides[]{ _key, caption, photo { asset->{ _id, metadata { dimensions { width, height } } }, crop, hotspot }, background { asset->{ _id, metadata { dimensions { width, height } } }, crop, hotspot } },\n    primaryButton,\n    secondaryButton\n  },\n  logoWall { label },\n  practice { label, statement },\n  slider { images[]{ _key, asset->{ _id, metadata { dimensions { width, height } } }, crop, hotspot, alt } },\n  recognition { label, heading, lead, button, cards[]{ _key, title, text, image { asset->{ _id, metadata { dimensions { width, height } } }, crop, hotspot, alt } } },\n  influence { heading, lead, images[]{ _key, asset->{ _id, metadata { dimensions { width, height } } }, crop, hotspot, alt }, button },\n  partners { heading, lead, images[]{ _key, asset->{ _id, metadata { dimensions { width, height } } }, crop, hotspot, alt }, button },\n  projects { heading, lead, images[]{ _key, asset->{ _id, metadata { dimensions { width, height } } }, crop, hotspot, alt }, button },\n  courses { heading, lead, images[]{ _key, asset->{ _id, metadata { dimensions { width, height } } }, crop, hotspot, alt }, button }\n}': HOME_PAGE_QUERY_RESULT;
     '*[_id == "homePage"][0].getInTouch {\n  label,\n  title,\n  portrait { asset->{ _id, metadata { dimensions { width, height } } }, crop, hotspot, alt },\n  lead,\n  button\n}': GET_IN_TOUCH_QUERY_RESULT;

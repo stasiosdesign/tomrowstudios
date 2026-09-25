@@ -5,7 +5,6 @@ import SiteFooter from '../components/SiteFooter.astro';
 import ContactPanel from '../components/ContactPanel.astro';
 import GetInTouch from '../components/GetInTouch.astro';
 import Button from '../components/Button.astro';
-import { sanityClient } from '../sanity/client';
 import { urlFor } from '../sanity/image';
 import { CLIENT_LOGOS_QUERY, HOME_PAGE_QUERY } from '../sanity/queries';
 
@@ -16,7 +15,8 @@ import { CLIENT_LOGOS_QUERY, HOME_PAGE_QUERY } from '../sanity/queries';
 // the Studio's Presentation tool, src/sanity/live-preview.ts finds the
 // sections by it, marks their parts editable and swaps in drafts as they are
 // typed.
-const [home, clients] = await Promise.all([sanityClient.fetch(HOME_PAGE_QUERY), sanityClient.fetch(CLIENT_LOGOS_QUERY)]);
+const { sanity } = Astro.locals;
+const [home, clients] = await Promise.all([sanity.fetch(HOME_PAGE_QUERY), sanity.fetch(CLIENT_LOGOS_QUERY)]);
 if (!home) throw new Error('The Home page document is missing in Sanity');
 const { hero, logoWall, practice, slider, recognition, influence, partners, projects, courses } = home;
 if (!hero?.slides?.length || !logoWall || !practice || !slider?.images?.length || !recognition?.cards?.length || !influence || !partners || !projects || !courses) {

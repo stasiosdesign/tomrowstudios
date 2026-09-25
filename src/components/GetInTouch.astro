@@ -5,11 +5,10 @@
    document in Sanity, so one edit there changes every page that ends with it.
    The button always opens the contact panel. */
 import Button from './Button.astro';
-import { sanityClient } from '../sanity/client';
 import { imageAttrs } from '../sanity/image';
 import { GET_IN_TOUCH_QUERY } from '../sanity/queries';
 
-const cta = await sanityClient.fetch(GET_IN_TOUCH_QUERY);
+const cta = await Astro.locals.sanity.fetch(GET_IN_TOUCH_QUERY);
 if (!cta?.portrait?.asset) throw new Error('Get in touch is missing in Sanity (Home page document)');
 const portrait = imageAttrs(cta.portrait, 600);
 ---

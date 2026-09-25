@@ -11,6 +11,7 @@
    navigation, so they must not be bundled into modules. */
 import '../styles/style.css';
 import StepNav from '../components/StepNav.astro';
+import DraftModeLabel from '../components/DraftModeLabel.astro';
 
 interface Props {
   title: string;
@@ -23,6 +24,15 @@ interface Props {
 }
 
 const { title, namespace, pageName, mainClass } = Astro.props;
+
+// Production is the one canonical site: every build, staging included, names
+// production's address for the page (Astro.site, from SITE_URL), in its clean
+// form, /page rather than the page.html file the static build writes.
+const path = Astro.url.pathname.replace(/\.html$/, '').replace(/\/index$/, '/');
+const canonical = Astro.site && new URL(path, Astro.site).href;
+// Anything but production asks search engines to stay away (so does every
+// response header there: src/middleware.ts, vercel.ts)
+const noindex = __DEPLOYMENT__ !== 'production';
 ---
 <!DOCTYPE html>
 <html lang="en">
@@ -30,6 +40,12 @@ const { title, namespace, pageName, mainClass } = Astro.props;
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>{title}</title>
+{noindex && <meta name="robots" content="noindex, nofollow">}
+{canonical && <link rel="canonical" href={canonical}>}
+<meta property="og:site_name" content="Tomrow Studios">
+<meta property="og:type" content="website">
+<meta property="og:title" content={title}>
+{canonical && <meta property="og:url" content={canonical}>}
 <!-- Lenis smooth scroll -->
 <link rel="stylesheet" href="https://unpkg.com/lenis@1.3.17/dist/lenis.css">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@12/swiper-bundle.min.css"/>
@@ -127,11 +143,13 @@ const { title, namespace, pageName, mainClass } = Astro.props;
 <script is:inline src="/js/lightbox.js"></script>
 <!-- Temporary development grid overlay -->
 <script is:inline src="/js/grid-overlay.js"></script>
-<!-- Inside the Studio's Presentation tool (the page in a frame), load the
-     click-to-edit layer and live drafts; visitors never download it -->
+<!-- Staging and development only: inside the Studio's Visual editor (the page
+     in a frame), load the click-to-edit layer and live drafts. The deployment
+     is fixed at build time, so a production build leaves all of it out. -->
 <script>
-  if (window.self !== window.top) import('../sanity/live-preview');
+  if (__DEPLOYMENT__ !== 'production' && window.self !== window.top) import('../sanity/live-preview');
 </script>
+{Astro.locals.draftMode && <DraftModeLabel />}
 
 </body>
 </html>

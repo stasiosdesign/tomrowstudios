@@ -1,0 +1,34 @@
+---
+/* Rendered only on a page in draft mode (staging or development; production
+   never is): a small label saying the page shows unpublished drafts, with the
+   way out of draft mode. Shown in a normal browser tab only; inside the
+   Studio's Visual editor, which has its own controls, it stays hidden. Its
+   style and script are inline, so no build carries them unless it is shown. */
+---
+<aside class="draft-mode-label" data-draft-mode-label hidden>
+  <span>[&nbsp;Drafts&nbsp;]</span>
+  <a href="/api/draft-mode/disable" data-barba-prevent="self">Exit</a>
+</aside>
+<style is:inline>
+  .draft-mode-label {
+    position: fixed;
+    left: 1.6rem;
+    bottom: 1.6rem;
+    z-index: 1000; /* above the site's own layers (400 at most) */
+    display: flex;
+    gap: 1.6rem;
+    padding: 0.8rem 1.2rem;
+    border: 1px solid rgba(255, 255, 255, 0.24);
+    background: #000;
+    color: #fff;
+    font-family: var(--font-label);
+    font-size: var(--size-label);
+    letter-spacing: var(--track-label);
+    text-transform: uppercase;
+  }
+  .draft-mode-label[hidden] { display: none; }
+  .draft-mode-label a { color: #e6402a; }
+</style>
+<script is:inline>
+  if (window.self === window.top) document.querySelector('[data-draft-mode-label]').hidden = false;
+</script>

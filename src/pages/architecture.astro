@@ -2,12 +2,11 @@
 import BaseLayout from '../layouts/BaseLayout.astro';
 import SiteNav from '../components/SiteNav.astro';
 import ContactPanel from '../components/ContactPanel.astro';
-import { sanityClient } from '../sanity/client';
 import { imageAttrs } from '../sanity/image';
 import { PROJECT_INDEX_QUERY } from '../sanity/queries';
 
 // The projects from Sanity, in the order set in the Studio
-const projects = await sanityClient.fetch(PROJECT_INDEX_QUERY);
+const projects = await Astro.locals.sanity.fetch(PROJECT_INDEX_QUERY);
 const pad = (n: number) => String(n).padStart(2, '0');
 ---
 <BaseLayout title="Architecture — Tomrow Studios" namespace="architecture" pageName="Architecture" mainClass="arch-page">

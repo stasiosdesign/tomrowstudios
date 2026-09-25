@@ -2,6 +2,7 @@ import {defineConfig} from 'sanity'
 import {structureTool} from 'sanity/structure'
 import {defineDocuments, defineLocations, presentationTool} from 'sanity/presentation'
 import {visionTool} from '@sanity/vision'
+import {vercelProtectionBypassTool} from '@sanity/vercel-protection-bypass'
 import {DesktopIcon} from '@sanity/icons/Desktop'
 import './page'
 import './publish-button.css'
@@ -9,24 +10,23 @@ import {schemaTypes} from './schemaTypes'
 import {structure} from './structure'
 import {theme} from './theme'
 
-// The website the visual editor (Sanity's Presentation tool) shows: the live
-// site from the hosted Studio, your own dev server (npm run dev, port 8766)
-// from a local one; SANITY_STUDIO_PREVIEW_ORIGIN overrides both. Framed here,
-// the site loads its click-to-edit layer and takes drafts from the Studio in
-// live mode (src/sanity/live-preview.ts), so no preview deployment or token is
-// needed.
-const LIVE_SITE = 'https://tomrowstudios-final-wireframes.vercel.app'
-const LOCAL_SITE = 'http://localhost:8766'
-const previewOrigin = ({origin}: {origin: string}) =>
-  process.env.SANITY_STUDIO_PREVIEW_ORIGIN ||
-  (new URL(origin).hostname === 'localhost' ? LOCAL_SITE : LIVE_SITE)
+// The website the visual editor (Sanity's Presentation tool) shows, never
+// production: staging from the hosted Studio (.env.production beside this
+// file), your own dev server from `npm run studio` (.env.development). It opens
+// the site through its draft-mode route with a short-lived secret, so the site
+// renders drafts on the server (src/sanity/draft-mode/), and the click-to-edit
+// layer keeps them live as they are typed (src/sanity/live-preview.ts).
+const previewOrigin = process.env.SANITY_STUDIO_PREVIEW_ORIGIN
+if (!previewOrigin) {
+  throw new Error('SANITY_STUDIO_PREVIEW_ORIGIN is not set: see studio/.env.production and .env.development')
+}
 
 // One fixed document each: never created from the menu, duplicated or deleted
 const SINGLETONS = new Set(['homePage'])
 
 export default defineConfig({
   name: 'default',
-  title: 'tomrowstudios',
+  title: 'Tomrow Studios',
 
   projectId: '5cwu7mnl',
   dataset: 'production',
@@ -42,7 +42,10 @@ export default defineConfig({
     presentationTool({
       title: 'Visual editor',
       icon: DesktopIcon,
-      previewUrl: {initial: previewOrigin},
+      previewUrl: {
+        initial: previewOrigin,
+        previewMode: {enable: '/api/draft-mode/enable'},
+      },
       resolve: {
         mainDocuments: defineDocuments([{route: '/', filter: `_id == "homePage"`}]),
         // Where else a document shows, listed above its form. The Home page
@@ -63,6 +66,11 @@ export default defineConfig({
     }),
     structureTool({structure, title: 'Content'}),
     visionTool(),
+    // Staging sits behind Vercel Authentication. This tool stores Vercel's
+    // "Protection Bypass for Automation" secret in the dataset (a private
+    // document), and the visual editor then adds it to the staging URLs it
+    // opens. Only needed to set that secret; see the README.
+    vercelProtectionBypassTool(),
   ],
 
   schema: {
