@@ -2,17 +2,19 @@ import {defineConfig} from 'sanity'
 import {structureTool} from 'sanity/structure'
 import {defineDocuments, defineLocations, presentationTool} from 'sanity/presentation'
 import {visionTool} from '@sanity/vision'
+import {DesktopIcon} from '@sanity/icons/Desktop'
 import './page'
 import './publish-button.css'
 import {schemaTypes} from './schemaTypes'
 import {structure} from './structure'
 import {theme} from './theme'
 
-// The website the Presentation tool shows: the live site from the hosted Studio,
-// your own dev server (npm run dev, port 8766) from a local one;
-// SANITY_STUDIO_PREVIEW_ORIGIN overrides both. Framed here, the site loads its
-// click-to-edit layer and takes drafts from the Studio in live mode
-// (src/sanity/live-preview.ts), so no preview deployment or token is needed.
+// The website the visual editor (Sanity's Presentation tool) shows: the live
+// site from the hosted Studio, your own dev server (npm run dev, port 8766)
+// from a local one; SANITY_STUDIO_PREVIEW_ORIGIN overrides both. Framed here,
+// the site loads its click-to-edit layer and takes drafts from the Studio in
+// live mode (src/sanity/live-preview.ts), so no preview deployment or token is
+// needed.
 const LIVE_SITE = 'https://tomrowstudios-final-wireframes.vercel.app'
 const LOCAL_SITE = 'http://localhost:8766'
 const previewOrigin = ({origin}: {origin: string}) =>
@@ -21,19 +23,6 @@ const previewOrigin = ({origin}: {origin: string}) =>
 
 // One fixed document each: never created from the menu, duplicated or deleted
 const SINGLETONS = new Set(['homePage'])
-
-// The Home page document is the home page, and also the Get in touch block
-// that ends these pages (src/components/GetInTouch.astro)
-const GET_IN_TOUCH_PAGES = [
-  {title: 'Influence', href: '/influence'},
-  {title: 'Partners', href: '/partner'},
-  {title: 'Partners archive', href: '/partners-archive'},
-  {title: 'Shop', href: '/shop'},
-  {title: 'Book', href: '/book'},
-  {title: 'Presentation masterclass', href: '/product'},
-  {title: 'Communication package', href: '/course-communication'},
-  {title: 'Digital Sketchbook', href: '/course-sketchbook'},
-]
 
 export default defineConfig({
   name: 'default',
@@ -47,16 +36,18 @@ export default defineConfig({
   // the site's red call to action (publish-button.css).
   theme,
 
+  // The visual editor comes first, so the Studio opens on it: the home page,
+  // with its form beside it. Content is the same documents as plain forms.
   plugins: [
-    structureTool({structure}),
     presentationTool({
+      title: 'Visual editor',
+      icon: DesktopIcon,
       previewUrl: {initial: previewOrigin},
       resolve: {
         mainDocuments: defineDocuments([{route: '/', filter: `_id == "homePage"`}]),
+        // Where else a document shows, listed above its form. The Home page
+        // has none: it is the page the visual editor opens on.
         locations: {
-          homePage: defineLocations({
-            locations: [{title: 'Home', href: '/'}, ...GET_IN_TOUCH_PAGES],
-          }),
           project: defineLocations({
             select: {title: 'title', slug: 'slug.current'},
             resolve: (doc) => ({
@@ -70,6 +61,7 @@ export default defineConfig({
         },
       },
     }),
+    structureTool({structure, title: 'Content'}),
     visionTool(),
   ],
 

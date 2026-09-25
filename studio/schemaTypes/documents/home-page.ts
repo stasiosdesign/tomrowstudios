@@ -1,5 +1,7 @@
 import {defineArrayMember, defineField, defineType} from 'sanity'
 import {HomeIcon} from '@sanity/icons/Home'
+import {HomePageInput} from '../../components/HomePageInput'
+import {SectionField} from '../../components/SectionField'
 import {altTextField} from '../shared/alt-text'
 import {FIXED_LENGTH, fixedPhotosField} from '../shared/fixed-photos'
 
@@ -7,23 +9,28 @@ import {FIXED_LENGTH, fixedPhotosField} from '../shared/fixed-photos'
 // navigation, the footer and where every button leads stay in the site's code.
 // A singleton: structure.ts opens the one document with the fixed ID
 // "homePage", and sanity.config.ts stops copies being made or it being deleted.
+// Its form opens with a link to the visual editor (HomePageInput).
 
 // Every section starts folded, so the document reads as an outline of the
-// page. Clicking something in the Presentation tool's preview unfolds its
-// section.
-const SECTION = {collapsible: true, collapsed: true}
+// page, each one a bar that opens and closes on a click (SectionField).
+// Clicking something in the visual editor's preview opens its section.
+const SECTION = {
+  options: {collapsible: true, collapsed: true},
+  components: {field: SectionField},
+}
 
 export const homePage = defineType({
   name: 'homePage',
   title: 'Home page',
   type: 'document',
   icon: HomeIcon,
+  components: {input: HomePageInput},
   fields: [
     defineField({
       name: 'hero',
       type: 'object',
       description: 'The full-screen opening: the headline, the dial and its photos, and two buttons.',
-      options: SECTION,
+      ...SECTION,
       validation: (rule) => rule.required(),
       fields: [
         defineField({
@@ -63,7 +70,7 @@ export const homePage = defineType({
       title: 'Client logos',
       type: 'object',
       description: 'The red band under the hero. The logos themselves are the Clients list.',
-      options: SECTION,
+      ...SECTION,
       validation: (rule) => rule.required(),
       fields: [
         defineField({
@@ -78,7 +85,7 @@ export const homePage = defineType({
       name: 'practice',
       type: 'object',
       description: 'The statement under the logos.',
-      options: SECTION,
+      ...SECTION,
       validation: (rule) => rule.required(),
       fields: [
         defineField({
@@ -100,7 +107,7 @@ export const homePage = defineType({
       title: 'Photo slider',
       type: 'object',
       description: 'Full-width photos with a row of thumbnails; visitors click or swipe through them.',
-      options: SECTION,
+      ...SECTION,
       validation: (rule) => rule.required(),
       fields: [
         fixedPhotosField(4, 'Four photos, in the order the slider shows them. Each is also its own thumbnail.'),
@@ -110,7 +117,7 @@ export const homePage = defineType({
       name: 'recognition',
       type: 'object',
       description: 'Awards and achievements, with three stepped cards under them.',
-      options: SECTION,
+      ...SECTION,
       validation: (rule) => rule.required(),
       fields: [
         defineField({
@@ -153,7 +160,7 @@ export const homePage = defineType({
       title: 'Gallery: Influence',
       type: 'homeGallery',
       description: 'Four photos under a heading, with a button to the Influence page.',
-      options: SECTION,
+      ...SECTION,
       validation: (rule) => rule.required(),
     }),
     defineField({
@@ -161,7 +168,7 @@ export const homePage = defineType({
       title: 'Gallery: Partners',
       type: 'homeGallery',
       description: 'Four photos under a heading, with a button to the Partners page.',
-      options: SECTION,
+      ...SECTION,
       validation: (rule) => rule.required(),
     }),
     defineField({
@@ -169,7 +176,7 @@ export const homePage = defineType({
       title: 'Gallery: Architecture',
       type: 'homeGallery',
       description: 'Four photos under a heading, with a button to the Architecture page.',
-      options: SECTION,
+      ...SECTION,
       validation: (rule) => rule.required(),
     }),
     defineField({
@@ -177,7 +184,7 @@ export const homePage = defineType({
       title: 'Gallery: Shop',
       type: 'homeGallery',
       description: 'Four photos under a heading, with a button to the Shop.',
-      options: SECTION,
+      ...SECTION,
       validation: (rule) => rule.required(),
     }),
     defineField({
@@ -186,7 +193,7 @@ export const homePage = defineType({
       type: 'object',
       description:
         'The closing block with Tom’s portrait. It ends most pages of the site, not only this one, and a change here shows on all of them.',
-      options: SECTION,
+      ...SECTION,
       validation: (rule) => rule.required(),
       fields: [
         defineField({
