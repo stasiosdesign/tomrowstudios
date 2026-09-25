@@ -1,105 +1,206 @@
 # Tomrow Studios
 
-The Tomrow Studios website: a static [Astro](https://astro.build) site whose
-architecture projects and client logos are managed in
-[Sanity](https://www.sanity.io). One repository, two apps:
+The Tomrow Studios website: an [Astro](https://astro.build) site whose content
+is managed in [Sanity](https://www.sanity.io). One repository, two apps:
 
-- **the website**, at the root, built and deployed by Vercel from `main`
-- **the Sanity Studio**, in `studio/`, where that content is edited
+- **the website**, at the root, deployed by Vercel
+- **the Sanity Studio**, in `studio/`, where the content is edited
+
+and one of everything else: one Vercel project, one Sanity project
+(`5cwu7mnl`) with one dataset (`production`). Two deployments come out of it,
+like a Webflow site's live and staging domains.
+
+## Addresses
+
+|              | URL                                                                    | From                       |
+| ------------ | ---------------------------------------------------------------------- | -------------------------- |
+| Production   | https://tomrowstudios-final-wireframes.vercel.app                      | `main`                     |
+| Staging      | https://tomrowstudios-final-wireframes-git-staging-stasiosdesign.vercel.app | `staging`             |
+| Studio       | https://tomrowstudios.sanity.studio                                    | `studio/`, deployed by hand |
+
+Staging's URL is Vercel's alias for the `staging` branch: it always shows the
+branch's latest deployment. (Every deployment also has its own unique URL.)
+
+## Production and staging
+
+|                    | Production (`main`)                    | Staging (`staging`)                               |
+| ------------------ | -------------------------------------- | ------------------------------------------------- |
+| Built              | static, at deploy time                 | on each request, by a Vercel Function             |
+| Sanity content     | published only                         | published; drafts in draft mode                   |
+| Visual editor      | never                                  | the Studio's Visual editor shows staging          |
+| Search engines     | indexed: robots.txt, sitemap           | never: `noindex, nofollow` on every response      |
+| Access             | public                                 | Vercel Authentication (and the Studio's bypass)   |
+
+Which is which comes from Vercel itself (`VERCEL_ENV`: `production` for
+`main`, `preview` for every other branch), read in `astro.config.mjs`. Nothing
+depends on a hostname, so adding a domain changes no code. `npm run dev`
+behaves like staging, on your machine.
+
+## Workflow
+
+```
+local (npm run dev, npm run studio)  →  staging  →  review  →  main
+```
+
+1. **Work locally.** Nothing is deployed until you push.
+2. **Send changes to staging**, when you want them online:
+   `git switch staging`, commit, `git push`. Staging updates in about a minute.
+3. **Review** on the staging URL, or in the Studio's Visual editor, where
+   staging shows your unpublished drafts too.
+4. **Promote to production** once approved. `main` only ever fast-forwards to
+   `staging`, so after this the two branches are identical again:
+
+   ```
+   git switch main
+   git merge --ff-only staging
+   git push
+   git switch staging
+   ```
+
+   If the merge refuses, `main` has something staging lacks: `git merge main`
+   on `staging`, push, review, then promote.
+
+## Running it locally
+
+Node 22 (what Vercel uses). The two apps install their own dependencies:
+`npm install`, then `npm install` in `studio/`.
+
+| Command                 | What it does                                                     |
+| ----------------------- | ---------------------------------------------------------------- |
+| `npm run dev`           | the site's dev server (on this machine: `npm run dev -- --port 8766`) |
+| `npm run studio`        | the Studio at http://localhost:3333; its Visual editor shows http://localhost:8766 |
+| `npm run build`         | the production build, into `dist/`                               |
+| `npm run preview`       | serves that build                                                |
+| `npm run check`         | type-checks the site and the Studio, lints the Studio            |
+| `npm run typegen`       | regenerates the query types (`src/sanity/sanity.types.ts`) after a query or schema change |
+| `npm run studio:deploy` | deploys the hosted Studio                                        |
+
+To see drafts locally, put a Sanity read token in `.env.development.local`
+(see `.env.example`). Without one the site shows published content, and the
+Visual editor still shows edits to the home page live.
+
+## Content: published and drafts
+
+- **Production** reads published content only, once, while it is built
+  (`src/sanity/client.ts`, no token, no drafts, no edit markers). Its build
+  has no draft-mode routes and no visual-editing code at all.
+- **Staging** reads Sanity on every request: published content for anyone,
+  drafts for a browser in **draft mode**. The Studio's Visual editor switches
+  draft mode on: it opens staging at `/api/draft-mode/enable` with a secret it
+  has just written into the dataset (valid for an hour); the site checks the
+  secret with the read token, on the server, and sets a signed cookie that
+  lasts 12 hours. Pages in draft mode say **[ Drafts ]**, with an **Exit** link
+  (`/api/draft-mode/disable`). The token never reaches a browser.
+- In the Visual editor, edits to the home page and the Get in touch block
+  appear as you type (`src/sanity/live-preview.ts`); anything else a draft
+  changes (a new project, an added photo) appears when the preview reloads.
+- The Studio's **Share** menu in the Visual editor can make a link to the
+  current preview for someone without a Studio or Vercel login.
+
+### Publishing
+
+A Sanity webhook, **Rebuild the site on publish**, calls a Vercel deploy hook
+that rebuilds `main`. It fires when a published Home page, Project or Client
+is created, changed or deleted, never for drafts, so editing never deploys
+anything. Production shows a publish about a minute later. Staging needs no
+rebuild: it reads Sanity on every request.
+
+## Search engines
+
+Production is the only site search engines may index: it serves `robots.txt`
+and `sitemap-index.xml`, and every page names its production address in
+`<link rel="canonical">` and `og:url` (from `SITE_URL`).
+
+Staging can never compete with it. Every response, pages and files alike, is
+sent with `X-Robots-Tag: noindex, nofollow` (`vercel.ts` for everything,
+`src/middleware.ts` again for pages), every page has
+`<meta name="robots" content="noindex, nofollow">`, its canonical links point
+at production, and it has no sitemap. This is built into the site, not left to
+Vercel's own preview header, which a custom staging domain wouldn't get. Its
+`robots.txt` doesn't block crawling, on purpose: a crawler has to fetch a page
+to see its noindex. Vercel Authentication keeps crawlers out anyway.
+
+## Environment variables
+
+The site's, set in Vercel (Settings → Environment Variables) and locally in
+`.env.development.local` (see `.env.example`):
+
+| Variable                           | Production          | Preview                  | Local                          |
+| ---------------------------------- | ------------------- | ------------------------ | ------------------------------ |
+| `SITE_URL`                         | the production URL  | the same production URL  | optional                       |
+| `SANITY_API_READ_TOKEN` (secret)   | not set             | Git branch `staging` only | optional, for drafts          |
+
+The Studio's, in committed files: `SANITY_STUDIO_PREVIEW_ORIGIN`, the site its
+Visual editor shows: staging's URL in `studio/.env.production` (the hosted
+Studio), http://localhost:8766 in `studio/.env.development` (`npm run studio`).
+
+- `SITE_URL` falls back to Vercel's production domain when unset.
+- `SANITY_API_READ_TOKEN` is a Sanity API token with the **Viewer** role. It is
+  read on the server at request time and is never given a `PUBLIC_` prefix.
+- Vercel provides `VERCEL_ENV` and `VERCEL_PROJECT_PRODUCTION_URL` itself.
+- `PUBLIC_SANITY_PROJECT_ID` / `PUBLIC_SANITY_DATASET` can point a build at
+  another project or dataset; they default to this one.
+- Real values live in Vercel and in git-ignored `.env*.local` files. The two
+  Studio files are committed because they hold public settings only: every
+  `SANITY_STUDIO_` value is compiled into the public Studio.
+
+## Vercel
+
+- One project, connected to `stasiosdesign/tomrowstudios`; production branch
+  `main`. Build settings, clean URLs, redirects and staging's noindex header
+  are in `vercel.ts` (which replaced `vercel.json`: Vercel reads one or the
+  other).
+- **Deployment Protection:** Vercel Authentication protects every deployment
+  except the production domain. The Studio gets through with Vercel's
+  *Protection Bypass for Automation* secret, saved once in the Studio's
+  **Vercel Protection Bypass** tool.
+- **Deploy hook** on `main`, called by the Sanity webhook above. Its URL is a
+  secret: it lives only in the webhook.
+
+## Adding a custom domain
+
+No code changes:
+
+1. Vercel → Settings → Domains: add `example.com` and `www.example.com` for
+   Production (one redirecting to the other).
+2. Add `staging.example.com` and connect it to the Git branch `staging`.
+   Vercel Authentication protects it like any preview domain.
+3. Vercel → Environment Variables: set `SITE_URL` to the production domain,
+   e.g. `https://www.example.com`, for Production and Preview.
+4. `studio/.env.production`: set `SANITY_STUDIO_PREVIEW_ORIGIN` to
+   `https://staging.example.com`; commit it, then `npm run studio:deploy`.
+5. Sanity (sanity.io/manage → API → CORS origins, or
+   `npx sanity cors add https://staging.example.com --no-credentials` in
+   `studio/`): add the staging domain.
+6. Redeploy: push to `staging`, then promote to `main` (or redeploy
+   production in Vercel).
+7. Optionally redirect the old `vercel.app` domain to the new production
+   domain.
 
 ## Structure
 
 ```
 .claude/                   Claude Code: dev-server launchers, the Sanity skill
-public/
-  assets/                  images the pages use, served at /assets/...
-    brand/ graphics/ logos/ photos/<set>/ ui/
-  js/                      the page scripts (classic scripts, one global scope)
+public/                    images (assets/) and page scripts (js/), served as-is
 src/
-  layouts/BaseLayout.astro <head>, persistent overlays, Barba container, script tags
-  components/              SiteNav, SiteFooter, ContactPanel, Button, ...
+  layouts/BaseLayout.astro <head> (canonical, robots), persistent overlays, Barba container, scripts
+  components/              SiteNav, SiteFooter, ContactPanel, Button, DraftModeLabel, ...
   pages/                   one .astro file per page -> /<name>
     projects/[slug].astro  one page per Sanity project -> /projects/<slug>
-  sanity/                  the site's Sanity code: client, image URLs, queries, generated types,
-                           live-preview.ts (click-to-edit inside the Studio)
+    robots.txt.ts          robots.txt, per deployment
+  middleware.ts            each page's Sanity client (drafts in draft mode); staging's noindex header
+  sanity/                  client, image URLs, queries (every GROQ query), generated types,
+    draft-mode/            the draft-mode routes and cookie (staging and local only)
+    live-preview.ts        click-to-edit inside the Studio's Visual editor (staging and local only)
   styles/style.css         global stylesheet, imported once by the layout
 studio/                    Sanity Studio, with its own package.json
-  schemaTypes/             documents/ (homePage, project, client), objects/ (hero slide, page blocks), shared/
-  sanity.config.ts         project, dataset, plugins and the sidebar (structure.ts)
+  schemaTypes/             documents/ (homePage, project, client), objects/, shared/
+  sanity.config.ts         project, plugins (Visual editor, Content, Vision, Vercel bypass), sidebar
   sanity.cli.ts            CLI settings, including TypeGen
-astro.config.mjs           static output, build.format 'file' (page.html files), compressHTML off
-vercel.json                Vercel: Astro, `npm run build`, dist/, clean URLs, old-URL redirects
+  .env.development/.production  which site the Visual editor shows (public)
+astro.config.mjs           production static / staging on request, by deployment
+vercel.ts                  Vercel: build, clean URLs, redirects, staging's noindex header
 ```
-
-## Running it locally
-
-Node 22.12 or newer. The two apps install their own dependencies.
-
-```bash
-# Website
-npm install
-npm run dev        # dev server (on this machine 4321 is blocked: add -- --port 8766)
-npm run build      # production build -> dist/
-npm run preview    # serve the build
-
-# Studio, at http://localhost:3333 (log in with your Sanity account)
-cd studio
-npm install
-npm run dev        # or, from the root: npm run studio
-```
-
-## How the site gets its content
-
-- Content lives in Sanity's cloud: project `5cwu7mnl`, dataset `production`.
-  The Studio edits it; the website reads it.
-- The site reads it **at build time**, published documents only, with
-  `@sanity/client` (`src/sanity/client.ts`). Every query is in
-  `src/sanity/queries.ts`; images come from Sanity's image CDN
-  (`src/sanity/image.ts`).
-- Sanity drives the home page hero (the **Home page** document), the home
-  page's client logo wall, the Architecture slider and the project pages.
-  Everything else is written in the pages.
-- `src/sanity/sanity.types.ts` is generated: run `npm run typegen` in
-  `studio/` after changing the schema or a query (`npm run dev` there also
-  keeps it up to date).
-
-**Environment variables:** none are required. The dataset is public, so the
-site needs no token, and the project ID and dataset have defaults;
-`PUBLIC_SANITY_PROJECT_ID` / `PUBLIC_SANITY_DATASET` override them, e.g. to
-build against another dataset. `.env` files are git-ignored; never commit
-secrets.
-
-## Visual editing (pilot: the home page hero)
-
-In the Studio's **Presentation** tab the live site appears with click-to-edit
-outlines on the home hero: the headline, the dial's five slides (caption, dial
-photo, background) and the two button labels. Edits show in the page as they
-are typed, as drafts; **Publish** makes them live. Layout stays in code, so
-only those fields can change.
-
-- The hosted Studio shows the live site; a local Studio (`npm run studio`)
-  shows your dev server on port 8766 (`studio/sanity.config.ts`).
-- Only inside the Studio's frame does a page load `src/sanity/live-preview.ts`
-  (the check is in `BaseLayout.astro`, so visitors never download it). It
-  connects the outlines and takes drafts from the Studio in live mode: the
-  Studio runs the query with the editor's own login, so no token, preview
-  deployment or server is needed. The first query is made from the browser,
-  which is why the site's origins are allowed in the project's CORS settings.
-- To make more of the site editable: add the fields to the Studio schema, read
-  them in the page, and mark and fill the elements in `live-preview.ts`.
-
-## Deployment
-
-- Vercel builds the repository root on every push to `main`
-  (`vercel.json`: `npm run build` -> `dist/`). `studio/` is not part of that
-  build.
-- The site is static, so every publish rebuilds it: a Sanity webhook
-  ("Rebuild the site on publish", for the Home page, Projects and Clients)
-  calls a Vercel deploy hook, and the change is live in about a minute.
-- The Studio is hosted at **https://tomrowstudios.sanity.studio**. Editors
-  must be members of the Sanity project (invite them under Members at
-  sanity.io/manage). After changing Studio code, `npm run deploy` in
-  `studio/` updates the hosted copy.
 
 ## Assets
 
@@ -114,13 +215,18 @@ only those fields can change.
 
 ## Editing content
 
-1. Open https://tomrowstudios.sanity.studio (or run it locally with
-   `npm run studio`) and log in.
-2. Edit or add a **Project** or **Client**, then **Publish**.
-3. It is live about a minute later. A new project gets its page,
-   `/projects/<slug>`, and its slider card automatically; its **Order**
-   field sets its place on the slider and which project its "Next project"
-   link goes to.
+1. Open https://tomrowstudios.sanity.studio (or `npm run studio`) and log in.
+   Editors must be members of the Sanity project (sanity.io/manage → Members).
+2. The **Visual editor** shows staging with your drafts; **Content** has the
+   same documents as plain forms.
+3. **Publish**. Production has it about a minute later. A new project gets
+   its page, `/projects/<slug>`, and its slider card automatically; its
+   **Order** field sets its place on the slider and which project its "Next
+   project" link goes to.
+
+After changing Studio code or the schema, deploy the Studio
+(`npm run studio:deploy`). It serves both environments from the one dataset, so
+keep schema changes compatible with the code on `main`.
 
 ## Notes
 
@@ -130,8 +236,11 @@ only those fields can change.
 - The scripts in `public/js` deliberately stay as classic `<script src>` tags
   (`is:inline`): `transitions.js` calls each file's `init…` function by global
   name after every navigation, so they must not be bundled into ES modules.
-- URLs are clean: Astro emits `page.html` files (`build.format: 'file'`) and
-  Vercel serves them as `/page` (`cleanUrls`), redirecting the old `.html`
-  addresses and the old `/project-<slug>` pages. Internal links and asset
-  paths start at the root (`/shop`, `/assets/...`) so they work from any
-  depth, including `/projects/<slug>`.
+- URLs are clean: production's static build emits `page.html` files
+  (`build.format: 'file'`) and Vercel serves them as `/page` (`cleanUrls`),
+  redirecting the old `.html` addresses and the old `/project-<slug>` pages.
+  Internal links and asset paths start at the root (`/shop`, `/assets/...`) so
+  they work from any depth, including `/projects/<slug>`.
+- Stega (Sanity's invisible edit markers in strings) is off everywhere: the
+  Visual editor marks the editable parts itself, and the markers would break
+  the text animations.
