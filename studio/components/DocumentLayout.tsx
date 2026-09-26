@@ -19,7 +19,12 @@ export function DocumentLayout(props: DocumentLayoutProps) {
   )
 }
 
+/* This element sits directly in Sanity's row of panes, beside the sidebar:
+   it takes all the width left, or the editor stays as narrow as its content */
 const Root = styled(Flex)`
+  flex: 1 1 0;
+  min-width: 0;
+
   & [data-testid='pane-footer'] {
     display: none;
   }
