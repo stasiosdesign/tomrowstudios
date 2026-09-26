@@ -145,6 +145,7 @@ button.tomrow-cta--arrow > span {
    the status beside Publish Live says where the document stands. Drafts
    stay off the ordinary staging and live sites regardless. */
 [data-testid='document-perspective-list'],
+[data-ui='ReleasesNav'],
 [data-testid='global-perspective-menu-button'],
 [data-testid='studio-navbar'] .sc-ws7kvy-0,
 [data-testid='studio-navbar'] [data-ui='Card']:has([data-testid='global-perspective-menu-button']) {
