@@ -201,7 +201,8 @@ export function CollectionPane(props: {options?: Record<string, unknown>; childI
   const [sort, setSort] = useState<{name: string; direction: 'asc' | 'desc'} | null>(null)
 
   const shown = useMemo(() => {
-    const needle = search.trim().toLowerCase()
+    // The compact list has no search box: it always lists every item
+    const needle = selectedId ? '' : search.trim().toLowerCase()
     const matching = needle
       ? rows.filter((row) =>
           [row.title, STAGING_LABEL[row.staging], LIVE_LABEL[row.live], ...columns.map((column) => textOf(row.doc[column.name], column))]
@@ -230,7 +231,7 @@ export function CollectionPane(props: {options?: Record<string, unknown>; childI
       return a.title.localeCompare(b.title)
     }
     return [...matching].sort(compare)
-  }, [rows, search, columns, allColumns, sort, orderField])
+  }, [rows, search, selectedId, columns, allColumns, sort, orderField])
 
   // Opening an item: its ID as this pane's child, so the item opens beside the list
   const open = useCallback(
@@ -269,18 +270,20 @@ export function CollectionPane(props: {options?: Record<string, unknown>; childI
               </Text>
             </Box>
           )}
-          <Box flex={1} style={{minWidth: compact ? 120 : 200}}>
-            <TextInput
-              icon={SearchIcon}
-              fontSize={1}
-              padding={2}
-              placeholder={`Search ${lowerTitle}…`}
-              value={search}
-              onChange={(event) => setSearch(event.currentTarget.value)}
-              clearButton={search.length > 0}
-              onClear={() => setSearch('')}
-              aria-label={`Search ${lowerTitle}`}
-            />
+          <Box flex={1} style={{minWidth: compact ? 0 : 200}}>
+            {!compact && (
+              <TextInput
+                icon={SearchIcon}
+                fontSize={1}
+                padding={2}
+                placeholder={`Search ${lowerTitle}…`}
+                value={search}
+                onChange={(event) => setSearch(event.currentTarget.value)}
+                clearButton={search.length > 0}
+                onClear={() => setSearch('')}
+                aria-label={`Search ${lowerTitle}`}
+              />
+            )}
           </Box>
           {!compact && <ColumnChooser columns={allColumns} visible={visible} onToggle={toggleColumn} />}
           <Button
@@ -509,7 +512,6 @@ const CompactLink = styled.a<{$selected: boolean}>`
   color: inherit;
   text-decoration: none;
   background: ${({$selected}) => ($selected ? 'var(--tomrow-selected)' : 'transparent')};
-  box-shadow: ${({$selected}) => ($selected ? 'inset 3px 0 0 #dd341d' : 'none')};
 
   &:hover {
     background: ${({$selected}) => ($selected ? 'var(--tomrow-selected)' : 'var(--tomrow-hover)')};
