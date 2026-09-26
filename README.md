@@ -149,8 +149,8 @@ staging only, else Live; hover it for each page's own. They have no Unpublish
 of their own. CMS items are never part of it: they publish one at a time, or
 in bulk only when selected.
 
-Each static page's form is its sections as one ruled list, like a collection
-table (`PageInput`, `SectionField`): a row opens beneath its title. The page
+Each static page's form fills its pane, its sections one full-width ruled list
+like a collection table (`DocumentLayout`, `PageInput`, `SectionField`): a row opens beneath its title. The page
 editor's header keeps Show more and focus mode only (no Copy, Comments or
 close), and the top bar has no Tasks, Help or trial countdown.
 

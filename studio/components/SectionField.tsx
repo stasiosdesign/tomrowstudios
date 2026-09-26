@@ -41,7 +41,7 @@ export function SectionField(props: ObjectFieldProps) {
       </RowButton>
       {open && (
         <Fields id={`${id}-fields`} role="region" aria-labelledby={`${id}-row`}>
-          {children}
+          <div className="section-row__fields">{children}</div>
         </Fields>
       )}
     </Row>
@@ -59,7 +59,9 @@ const RowButton = styled.button`
   display: block;
   width: 100%;
   box-sizing: border-box;
-  padding: 12px 14px;
+  /* The table's 43px rows: Sanity's Text trims its line box to the
+     letters, so it needs more padding than a table cell for the same height */
+  padding: 17px 14px;
   cursor: pointer;
 
   &:hover {
@@ -82,6 +84,13 @@ const RowButton = styled.button`
   }
 `
 
+/* The opened section: the row's full width, its fields inset like the
+   table's cells, and held to a width that reads well however wide the pane */
 const Fields = styled.div`
-  padding: 20px 14px 28px;
+  padding: 24px 14px 36px;
+  border-top: 1px solid var(--card-border-color);
+
+  & > .section-row__fields {
+    max-width: 880px;
+  }
 `

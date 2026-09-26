@@ -30,4 +30,22 @@ const Root = styled(Flex)`
   & [data-testid='pane-footer'] {
     display: none;
   }
+
+  /* A static page's form fills its pane, edge to edge like a collection's
+     table (CollectionPane), instead of Sanity's centred 640px reading column:
+     its sections are the rows (PageInput, SectionField). The title keeps the
+     table cells' 14px inset. */
+  &[data-tomrow-page] [data-testid='document-panel-scroller'] > div {
+    max-width: none;
+    margin: 0;
+    padding: 24px 0 160px;
+  }
+
+  &[data-tomrow-page] [data-testid='document-panel-document-title'] {
+    padding-inline: 14px;
+  }
+
+  &[data-tomrow-page] :has(> [data-testid='document-panel-document-title']) {
+    margin-bottom: 24px;
+  }
 `
