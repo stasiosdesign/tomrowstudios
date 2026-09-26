@@ -1,3 +1,4 @@
+import {ArrowLeftIcon} from '@sanity/icons/ArrowLeft'
 import {ChevronDownIcon} from '@sanity/icons/ChevronDown'
 import {LaunchIcon} from '@sanity/icons/Launch'
 import {Box, Button, Dialog, Flex, Stack, Text} from '@sanity/ui'
@@ -15,6 +16,8 @@ import {
   useValidationStatus,
   type SanityDocument,
 } from 'sanity'
+import {useRouter} from 'sanity/router'
+import {usePaneRouter} from 'sanity/structure'
 import {styled} from 'styled-components'
 import {liveHas, logId, PRODUCTION_DATASET, PublishError, publishLive, sameContent, unpublishLive, type PublishLog} from '../lib/publish'
 import {fetchBuildStamp, isPageType, LIVE_ORIGIN, routeFor, STAGING_ORIGIN, type BuildStamp} from '../lib/site'
@@ -131,6 +134,7 @@ export function PublishControls({documentId, documentType}: {documentId: string;
   const client = useClient({apiVersion: API_VERSION})
   const documentStore = useDocumentStore()
   const toast = useToast()
+  const collection = useCollectionParent()
 
   const {draft, published, ready} = useEditState(documentId, documentType)
   const {isSyncing} = useSyncState(documentId, documentType)
@@ -261,6 +265,7 @@ export function PublishControls({documentId, documentType}: {documentId: string;
   return (
     <Bar data-tomrow-publish>
       <Flex align="center" gap={3} wrap="wrap">
+        {collection && <Button icon={ArrowLeftIcon} mode="bleed" fontSize={1} padding={2} text={collection.title} onClick={collection.back} aria-label={`Back to ${collection.title}`} />}
         <Flex flex={1} align="center" gap={3} wrap="wrap" style={{minWidth: 160}}>
           <Chip $tone={status.tone} title={details.join('\n') || undefined}>
             {status.text}
@@ -311,6 +316,19 @@ export function PublishControls({documentId, documentType}: {documentId: string;
       )}
     </Bar>
   )
+}
+
+// When the document was opened from a collection, the way back to its list:
+// the collection pane gives way to the editor (studio.css), so the bar holds
+// the link
+function useCollectionParent(): {title: string; back: () => void} | null {
+  const router = useRouter()
+  const {groupIndex, routerPanesState} = usePaneRouter()
+  const parent = routerPanesState[groupIndex - 1]?.[0]
+  if (!parent || !parent.id.startsWith('collection-')) return null
+  const type = parent.id.slice('collection-'.length)
+  const title = type === 'shopItem' ? 'Shop' : type === 'partner' ? 'Partners' : type === 'project' ? 'Projects' : 'Back'
+  return {title, back: () => router.navigate({panes: routerPanesState.slice(0, groupIndex)})}
 }
 
 const Bar = styled.div`

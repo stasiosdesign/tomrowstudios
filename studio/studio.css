@@ -1,21 +1,22 @@
 /* The Studio's own styles, on top of the theme (theme.ts): the website's red
-   call to action for Publish, quieter hover and selection, forms that use
-   their pane, the collection tables and the sidebar.
+   Publish button, quiet hover and selection, panes that use the window, the
+   collection tables and the sidebar, and the parts of Sanity's own interface
+   this Studio does without.
 
    Sanity paints its surfaces through card variables, so colours are set
    there. Where a rule touches Sanity's markup it goes by the data attributes
-   and test IDs its own tests use, and falls back to Sanity's look if an
-   update renames them. */
+   and test IDs its own tests use; a pane's width is an inline style, which
+   the !important rules below outrank. */
 
 :root {
-  /* Hover: a faint grey wash; selection: a little more; both well short of
-     the white the theme derives from black-and-white */
+  /* Hover: a faint grey wash; selection: a little more */
   --tomrow-hover: rgb(255 255 255 / 0.06);
   --tomrow-selected: rgb(255 255 255 / 0.1);
+  --tomrow-sidebar-width: 248px;
 }
 
-/* Sanity's hovered and selected states, on menus, lists, buttons and cards:
-   the theme's white-derived tones give way to the two washes above */
+/* Hovered and selected states on menus, lists, buttons and cards: the
+   theme's white-derived tones give way to the two washes above */
 [data-ui='Card'][data-hovered],
 [data-ui='Card']:is(a, button):hover,
 [data-ui='MenuItem']:hover,
@@ -46,20 +47,12 @@
   outline-offset: -2px;
 }
 
-/* The site's one red (--cta-accent-color in src/styles/style.css), the mono
-   uppercase label its calls to action wear. Red only while it can be pressed:
-   disabled, it drops back to a quiet outline. */
+/* The site's one red (--cta-accent-color in src/styles/style.css). Red only
+   while it can be pressed: disabled, it drops back to a quiet outline. */
 button.tomrow-cta {
   transition:
     background-color 0.2s ease,
     box-shadow 0.2s ease;
-
-  & [data-ui='Text'] {
-    font-family: 'chivo-mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-    font-weight: 300;
-    letter-spacing: 0.01em;
-    text-transform: uppercase;
-  }
 
   &:enabled {
     --card-bg-color: #dd341d;
@@ -104,71 +97,56 @@ button.tomrow-cta--arrow > span {
   padding-right: 6px;
 }
 
-/* Forms use their pane. Sanity caps a document's form at a reading width
-   and leaves the rest of a wide pane empty; here the form follows the pane,
-   with a little more side room on wide ones. */
-[data-tomrow-document] [data-testid='document-panel-scroller'] > div,
-[data-tomrow-document] [data-testid='document-panel-portal'] ~ div > div,
-[data-tomrow-document] [data-testid='form-view'] > div {
-  max-width: none;
+/* The workspace. Sanity lays panes out left to right and sizes each with an
+   inline flex, min-width and max-width (a dragged divider fixes a max-width
+   for good). Here the first pane, the Content sidebar, is one narrow column,
+   a collection's item list gives way once an item is open, and the last
+   pane, the editor, always takes everything that is left. */
+[data-ui='Pane']:has([data-tomrow-sidebar]) {
+  flex: 0 0 var(--tomrow-sidebar-width) !important;
+  width: var(--tomrow-sidebar-width) !important;
+  min-width: var(--tomrow-sidebar-width) !important;
+  max-width: var(--tomrow-sidebar-width) !important;
+}
+
+[data-ui='Pane']:has([data-tomrow-collection='compact']) {
+  display: none !important;
+}
+
+[data-ui='Pane']:last-child:not([data-pane-index='0']),
+[data-ui='Pane']:has([data-tomrow-document]),
+[data-ui='Pane']:has([data-tomrow-collection='table']) {
+  flex: 1 1 0 !important;
+  width: auto !important;
+  max-width: none !important;
+}
+
+/* A collapsed pane (a narrow window) keeps Sanity's 51px strip */
+[data-ui='Pane'][data-pane-collapsed] {
+  flex: 0 0 51px !important;
+  width: 51px !important;
+  min-width: 51px !important;
+  max-width: 51px !important;
+}
+
+/* The document form uses the whole pane: Sanity's reading-width container
+   is let go, with a little side room */
+[data-tomrow-document] [data-ui='Container'] {
+  max-width: none !important;
 }
 
 [data-tomrow-document] [data-testid='document-panel-scroller'] {
   scrollbar-gutter: stable;
 }
 
-/* The visual editor: the preview is the canvas. Its address input goes;
-   the controls beside it (viewport, perspective, share, open) stay. */
-[data-testid='presentation-tool'] [data-testid='preview-location'],
-[data-testid='presentation-tool'] input[data-testid='preview-location-input'],
-[data-testid='presentation-tool'] [data-testid='preview-url-input'] {
-  display: none;
-}
-
-/* The workspace: the Content sidebar is one compact column (its pane spec
-   fixes its width, structure.ts), an open collection's item list is another
-   when an item is open beside it, and the editor takes all the rest. Sanity
-   sizes panes inline, so these outrank that. */
-[data-ui='Pane']:has(> * > [data-tomrow-sidebar]),
-[data-ui='Pane']:has([data-tomrow-sidebar]) {
-  flex: 0 0 248px !important;
-  width: 248px !important;
-  min-width: 248px !important;
-  max-width: 248px !important;
-}
-
-[data-ui='Pane']:has([data-tomrow-collection='compact']) {
-  flex: 0 0 240px !important;
-  width: 240px !important;
-  min-width: 240px !important;
-  max-width: 240px !important;
-}
-
-[data-ui='Pane']:has([data-tomrow-document]),
-[data-ui='Pane']:has([data-tomrow-collection='table']) {
-  flex: 1 1 auto !important;
-  max-width: none !important;
-}
-
-/* A collection: the table fills its pane; the compact list keeps to a narrow
-   column beside the item */
-[data-tomrow-collection] {
-  min-height: 0;
-}
-
-/* The document form uses the whole pane: Sanity's reading-width container
-   is let go */
-[data-tomrow-document] [data-testid='document-panel-scroller'] [data-ui='Container'],
-[data-tomrow-document] [data-testid='form-view'] [data-ui='Container'] {
-  max-width: none !important;
-}
-
-/* Editing always means the working draft; the Published / Drafts switch in
-   the top bar is one decision fewer. The site's drafts stay off the ordinary
-   staging and live sites (they are drafts; publishing is the control above
-   the form). */
-[data-ui='Navbar'] [data-ui='Card']:has([data-testid='global-perspective-menu-button']),
-[data-testid='global-perspective-menu-button'] {
+/* Editing always means the working draft. The Published / Draft chips above
+   a document, and the Drafts menu in the top bar, are one decision fewer;
+   the status beside Publish Live says where the document stands. Drafts
+   stay off the ordinary staging and live sites regardless. */
+[data-testid='document-perspective-list'],
+[data-testid='global-perspective-menu-button'],
+[data-testid='studio-navbar'] .sc-ws7kvy-0,
+[data-testid='studio-navbar'] [data-ui='Card']:has([data-testid='global-perspective-menu-button']) {
   display: none !important;
 }
 
@@ -176,6 +154,11 @@ button.tomrow-cta--arrow > span {
    beside it (open, viewport, share) stay. */
 [data-testid='presentation-root'] [data-ui='Card']:has([data-testid='preview-viewport-toggle']) [data-ui='TextInput'] {
   display: none !important;
+}
+
+/* A collection: the table fills its pane */
+[data-tomrow-collection] {
+  min-height: 0;
 }
 
 /* Small screens: the publishing control wraps under the status */

@@ -113,8 +113,7 @@ const GroupButton = styled.button`
 `
 
 const GroupTitle = styled.span`
-  font-family: 'chivo-mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-  font-weight: 300;
+  font-weight: 500;
   font-size: 11px;
   letter-spacing: 0.06em;
   text-transform: uppercase;

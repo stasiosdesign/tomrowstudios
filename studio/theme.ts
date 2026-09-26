@@ -3,7 +3,7 @@ import {buildLegacyTheme, type StudioTheme} from 'sanity'
 // The website's look: its two Adobe Fonts (loaded by page.ts) and its pure
 // black ground with white type (src/styles/style.css).
 const TEXT = '"inter-tight-variable", sans-serif'
-const MONO = '"chivo-mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace'
+const MONO = 'ui-monospace, SFMono-Regular, Menlo, Consolas, monospace' // code fields only
 const BLACK = '#000000'
 const WHITE = '#ffffff'
 
@@ -28,15 +28,11 @@ const base = buildLegacyTheme({
 // The builder always returns all four fonts (text, heading, label, code)
 const fonts = base.fonts as NonNullable<StudioTheme['fonts']>
 
-// Labels in the site's mono, as on the website, at the one weight the kit has
+// One typeface throughout: the site's Inter Tight, for labels too
 export const theme: StudioTheme = {
   ...base,
   fonts: {
     ...fonts,
-    label: {
-      ...fonts.label,
-      family: MONO,
-      weights: {regular: 300, medium: 300, semibold: 300, bold: 300},
-    },
+    label: {...fonts.label, family: TEXT},
   },
 }
