@@ -5,7 +5,7 @@ import {ChevronUpIcon} from '@sanity/icons/ChevronUp'
 import {ControlsIcon} from '@sanity/icons/Controls'
 import {SearchIcon} from '@sanity/icons/Search'
 import {TrashIcon} from '@sanity/icons/Trash'
-import {Box, Button, Card, Checkbox, Flex, Stack, Text, TextInput, useClickOutsideEvent} from '@sanity/ui'
+import {Box, Button, Card, Checkbox, Flex, Heading, Stack, Text, TextInput, useClickOutsideEvent} from '@sanity/ui'
 import {useToast} from '@sanity/ui/toast'
 import {Popover} from '@sanity/ui/popover'
 import {useCallback, useEffect, useMemo, useRef, useState, type KeyboardEvent, type MouseEvent} from 'react'
@@ -339,17 +339,16 @@ export function CollectionPane(props: {options?: Record<string, unknown>; childI
               aria-label={`Back to all ${lowerTitle}`}
             />
           ) : (
-            <Box paddingX={2} paddingY={1}>
-              <Text size={1} weight="medium">
+            <Box flex={1} paddingX={2} style={{minWidth: 120}}>
+              <Heading as="h2" size={1}>
                 {title}
-                {documents && (
-                  <span style={{color: 'var(--card-muted-fg-color)'}}> · {rows.length}</span>
-                )}
-              </Text>
+                {documents && <span style={{color: 'var(--card-muted-fg-color)', fontWeight: 'normal'}}> ({rows.length})</span>}
+              </Heading>
             </Box>
           )}
-          <Box flex={1} style={{minWidth: compact ? 0 : 200}}>
-            {!compact && (
+          {compact && <Box flex={1} />}
+          {!compact && (
+            <Box style={{width: 220, maxWidth: '100%'}}>
               <TextInput
                 icon={SearchIcon}
                 fontSize={1}
@@ -361,8 +360,8 @@ export function CollectionPane(props: {options?: Record<string, unknown>; childI
                 onClear={() => setSearch('')}
                 aria-label={`Search ${lowerTitle}`}
               />
-            )}
-          </Box>
+            </Box>
+          )}
           {!compact && (
             <Button
               text={selecting ? 'Done' : 'Select'}
@@ -379,7 +378,7 @@ export function CollectionPane(props: {options?: Record<string, unknown>; childI
             icon={AddIcon}
             text={compact ? undefined : `New ${singular}`}
             aria-label={`New ${singular}`}
-            tone="primary"
+            className="tomrow-white"
             fontSize={1}
             padding={2}
             onClick={createNew}
@@ -767,7 +766,8 @@ function ColumnChooser({columns, visible, onToggle}: {columns: Column[]; visible
       <Button
         ref={buttonRef}
         icon={ControlsIcon}
-        text="Columns"
+        aria-label="Columns"
+        title="Choose the columns"
         mode="ghost"
         fontSize={1}
         padding={2}

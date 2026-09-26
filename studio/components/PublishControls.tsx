@@ -314,11 +314,6 @@ export function PublishControls({documentId, documentType}: {documentId: string;
           ) : (
             <StatusChip status={status} title={details.join('\n') || undefined} />
           )}
-          {isSite && (
-            <Chip $tone="muted" title="All pages publish together. CMS items are published on their own.">
-              All pages
-            </Chip>
-          )}
           {status === 'live' && siteBehind && <Chip $tone="muted">{waitedLong ? 'Live site not rebuilt yet' : 'Live site rebuilding…'}</Chip>}
           {saving && (
             <Chip $tone={errors.length > 0 ? 'critical' : 'muted'} title={errors.length > 0 ? 'Publishing waits until the form is valid' : undefined}>

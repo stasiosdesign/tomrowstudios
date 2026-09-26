@@ -151,8 +151,17 @@ in bulk only when selected.
 
 Each static page's form fills its pane, its sections one full-width ruled list
 like a collection table (`DocumentLayout`, `PageInput`, `SectionField`): a row opens beneath its title. The page
-editor's header keeps Show more and focus mode only (no Copy, Comments or
-close), and the top bar has no Tasks, Help or trial countdown.
+editor's header is one row: the page's large title (`PaneTitle`) opposite
+Show more (no Copy, Comments, focus mode, presence or close).
+
+In the Visual editor there is no bar above the preview: its Edit switch and
+phone view sit in the side panel's header row with Open in Content and Show
+more (`PreviewControls`, through the Presentation tool's header option and
+the document header's control slot). Collections name themselves once, as
+`Projects (5)`, with a compact search, an icon-only Columns button and a white
+New button. The top bar has no New document, search, Tasks, Help or trial
+countdown, and Favorites is hidden throughout. The theme (`theme.ts`) keeps
+text and icons white on hover, press and selection.
 
 Publishing, unpublishing and deleting are for Administrators, Editors and
 Developers (the route checks; the Studio checks first). Anyone else can click

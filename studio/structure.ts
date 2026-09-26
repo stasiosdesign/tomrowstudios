@@ -71,10 +71,11 @@ const collectionId = (type: string) => `collection-${type}`
 /** The sidebar's width: a compact column, like the reference's CMS Collections list */
 export const SIDEBAR_WIDTH = 248
 
+// No pane title: Sanity then leaves out the pane's own header, and the
+// collection names itself once, with its count (CollectionPane)
 const collectionPane = (S: StructureBuilder, {icon: _icon, ...options}: (typeof COLLECTIONS)[number]) =>
   S.component(CollectionPane)
     .id(collectionId(options.type))
-    .title(options.title)
     .options(options)
     .canHandleIntent((intent, params) => (intent === 'edit' || intent === 'create') && params.type === options.type)
     .child((documentId: string) => S.document().documentId(documentId).schemaType(options.type))

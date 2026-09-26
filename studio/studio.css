@@ -200,13 +200,52 @@ button.tomrow-cta--arrow > span {
   display: none !important;
 }
 
-/* A static page's header (the page editor, marked by DocumentLayout) keeps
-   Show more and focus mode, and drops Copy and the pane's close button (the
-   link-button with a close icon beside them): Comments are switched off for
-   the pages in sanity.config.ts. CMS items keep all of them. */
-[data-tomrow-page] [data-testid='copy-document-actions-button'],
-[data-tomrow-page] :has(> :is([data-testid='focus-pane-button-focus'], [data-testid='focus-pane-button-collapse'])) ~ :has(> a[data-ui='Button'] [data-sanity-icon='close']) {
+/* The top bar's New document button and search, beside the Studio's name.
+   Each CMS collection keeps its own New button and search (CollectionPane). */
+[data-testid='studio-navbar'] [data-testid='new-document-button'],
+[data-testid='studio-navbar'] [data-testid='studio-search'] {
   display: none !important;
+}
+
+/* Favorites: the star beside a document's title (Sanity's favourite toggle,
+   shown when the Studio runs in the Sanity dashboard). The header rows
+   themselves are shaped in components/DocumentLayout.tsx. */
+[data-testid='pane-header'] button:has([data-sanity-icon='star'], [data-sanity-icon='star-filled']) {
+  display: none !important;
+}
+
+/* The Visual editor's bar above the preview is empty (PreviewControls.tsx
+   moved its controls to the side panel): folded away, the website gets the
+   height */
+[data-ui='Card']:has(> [data-ui='Flex'] > [data-tomrow-preview-header]) {
+  display: none !important;
+}
+
+/* Solid white buttons (a collection's New button): black text and icon */
+button.tomrow-white {
+  &:enabled {
+    --card-bg-color: #ffffff;
+    --card-fg-color: #000000 !important;
+    --card-icon-color: #000000 !important;
+    color: #000000 !important;
+    background-color: var(--card-bg-color);
+    box-shadow: none;
+  }
+
+  @media (hover: hover) {
+    &:enabled:hover {
+      --card-bg-color: #e6e6e6;
+    }
+  }
+
+  &:enabled:active {
+    --card-bg-color: #d4d4d4;
+  }
+
+  &:focus-visible {
+    outline: 2px solid #ffffff;
+    outline-offset: 2px;
+  }
 }
 
 /* The visual editor's address input: the preview is the canvas. The buttons

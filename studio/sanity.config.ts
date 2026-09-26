@@ -7,6 +7,8 @@ import './page'
 import './studio.css'
 import {DocumentLayout} from './components/DocumentLayout'
 import {PageInput} from './components/PageInput'
+import {PaneTitle} from './components/PaneTitle'
+import {PreviewControls, PreviewHeaderBridge} from './components/PreviewControls'
 import {schemaTypes} from './schemaTypes'
 import {PAGES} from './schemaTypes/pages'
 import {structure} from './structure'
@@ -57,6 +59,10 @@ export default defineConfig({
     presentationTool({
       title: 'Visual editor',
       icon: DesktopIcon,
+      // No bar above the preview: its Edit switch and phone view move into
+      // the side panel's header row (components/PreviewControls.tsx), and the
+      // website gets the height
+      components: {unstable_header: {component: PreviewHeaderBridge}},
       previewUrl: {
         initial: previewOrigin,
         previewMode: {enable: '/api/draft-mode/enable'},
@@ -130,6 +136,10 @@ export default defineConfig({
     // The static pages publish as one site from the page editor; comments
     // stay on the CMS items
     comments: {enabled: ({documentType}) => !SINGLETONS.has(documentType)},
+    // Sanity's slot for controls in a document's header row: a static page's
+    // title in the page editor, the preview's Edit switch and phone view in
+    // the Visual editor. Each draws nothing elsewhere.
+    unstable_languageFilter: (prev) => [...prev, PaneTitle, PreviewControls],
     components: {
       unstable_layout: DocumentLayout,
     },
