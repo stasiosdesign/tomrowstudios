@@ -88,7 +88,7 @@ deployment), and Sanity's own drafts in the one the Studio edits:
 | State   | Where                                | Made by                         | Shown by                                        |
 | ------- | ------------------------------------ | ------------------------------- | ----------------------------------------------- |
 | Draft   | `staging`, `drafts.<id>`             | typing in the Studio (autosave) | staging, in draft mode only (the Visual editor) |
-| Staging | `staging`, the published document    | **Publish to Staging**          | staging, to everyone                            |
+| Staging | `staging`, the published document    | **Publish staging only**       | staging, to everyone                            |
 | Live    | `production`, the published document | **Publish Live**                | production, at its next build                   |
 
 - **Production** is built from the `production` dataset alone, once, at build
@@ -260,7 +260,7 @@ src/
     page-defaults.ts       every page's words and photos as the code had them: the fallbacks and the seed
     draft-mode/            the draft-mode routes and cookie (staging and local only)
     live-preview.ts        click-to-edit inside the Studio's Visual editor (staging and local only)
-    publish/               /api/publish: Publish Live and Unpublish from Live, on the server (staging only)
+    publish/               /api/publish: every publishing action, on the server (staging only)
   styles/style.css         global stylesheet, imported once by the layout
 studio/                    Sanity Studio, with its own package.json
   schemaTypes/             documents/ (homePage, project, client), pages/ (one per fixed page), objects/, shared/
@@ -309,8 +309,8 @@ vercel.ts                  Vercel: build, clean URLs, redirects, staging's noind
      (`studio/components/CollectionPane.tsx`) with search, a **New** button
      and a **Columns** chooser (kept per collection in the browser). A row
      opens the item beside a compact list of the others.
-3. **Publish to Staging**, review on staging or in the Visual editor, then
-   **Publish Live**. The status says when the live site has it.
+3. **Publish staging only**, review on staging or in the Visual editor, then
+   **Publish live**. The status says where the latest version is.
 
 After changing Studio code or the schema, deploy the Studio
 (`npm run studio:deploy`). Both datasets share the schema, so keep changes
