@@ -156,7 +156,7 @@ Show more (no Copy, Comments, focus mode, presence or close).
 
 In the Visual editor there is no bar above the preview: its Edit switch and
 three views, Phone, Laptop (a fitted 16:9 frame) and Fill (the default), sit
-in the side panel's header row with Open in Content and Show more
+in the side panel's header row with Show more (Sanity's Open in Content is removed there)
 (`PreviewControls`, through the Presentation tool's header option and the
 document header's control slot); switching views only resizes the frame.
 Collections name themselves once, as `Projects (5)`, in the same heading as a

@@ -139,6 +139,9 @@ export default defineConfig({
     // title in the page editor, the preview's Edit switch and phone view in
     // the Visual editor. Each draws nothing elsewhere.
     unstable_languageFilter: (prev) => [...prev, PaneTitle, PreviewControls],
+    // No "Open in Content" in the Visual editor's header row: the Presentation
+    // tool's own action, which shows nowhere else. Content keeps its navigation.
+    unstable_fieldActions: (prev) => prev.filter((action) => action.name !== 'presentation/openInStructure'),
     components: {
       unstable_layout: DocumentLayout,
     },

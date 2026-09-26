@@ -10,7 +10,7 @@ import {usePresentationParams, type PreviewHeaderProps} from 'sanity/presentatio
 export const useInVisualEditor = (): boolean => !!usePresentationParams(false)
 
 /* The Visual editor's own controls, moved from the bar above the preview into
-   the side panel's header row, beside Open in Content and Show more:
+   the side panel's header row, beside Show more:
 
    - PreviewHeaderBridge takes the preview bar's place (sanity.config.ts,
      presentationTool components.unstable_header). It shows nothing, so the

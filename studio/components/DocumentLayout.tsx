@@ -22,7 +22,7 @@ import {PublishControls} from './PublishControls'
      the form, no focus mode, no presence avatar, no Copy. The form fills the
      pane, its sections full-width rows like a collection's table.
    - The Visual editor: the header row holds the preview's Edit switch and
-     phone view (PreviewControls), Open in Content and Show more; the smaller
+     phone view (PreviewControls) and Show more; the smaller
      label row goes, so the form's title names the document once.
 
    Everything is matched by Sanity's test IDs, its icons' names or this
