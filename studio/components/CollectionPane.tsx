@@ -27,6 +27,7 @@ import {
 } from '../lib/publish'
 import {columnsFor, renderValue, textOf, type Column} from './format'
 import {isPermissionError, usePermissionGate, type RestrictedAction} from './PermissionDialog'
+import {useAnimatedOpen} from './AnimatedMenuButton'
 import {ConfirmDialog, failText} from './PublishControls'
 import {PANE_HEADING_PADDING_Y, PaneHeading} from './PaneHeading'
 import {StatusChip} from './Status'
@@ -726,27 +727,25 @@ function CompactItem({row, selected, ChildLink}: {row: Row; selected: boolean; C
 /* The column chooser: a checklist of the type's fields that stays open while
    several are ticked. Escape or a click outside closes it. */
 function ColumnChooser({columns, visible, onToggle}: {columns: Column[]; visible: string[]; onToggle: (name: string) => void}) {
-  const [open, setOpen] = useState(false)
+  // Opens and closes smoothly (AnimatedMenuButton.tsx, useAnimatedOpen)
+  const {mounted, isOpen, closing, show, hide} = useAnimatedOpen()
   const buttonRef = useRef<HTMLButtonElement | null>(null)
   const [popoverEl, setPopoverEl] = useState<HTMLDivElement | null>(null)
-  useClickOutsideEvent(
-    () => setOpen(false),
-    () => [buttonRef.current, popoverEl],
-  )
+  useClickOutsideEvent(hide, () => [buttonRef.current, popoverEl])
   const onKeyDown = (event: KeyboardEvent) => {
     if (event.key === 'Escape') {
-      setOpen(false)
+      hide()
       buttonRef.current?.focus()
     }
   }
   return (
     <Popover
-      open={open}
+      open={mounted}
       portal
       placement="bottom-end"
       ref={setPopoverEl}
       content={
-        <Card data-tomrow-pop padding={2} onKeyDown={onKeyDown} style={{maxHeight: '60vh', overflow: 'auto', minWidth: 200}}>
+        <Card data-tomrow-pop data-tomrow-pop-closing={closing ? '' : undefined} padding={2} onKeyDown={onKeyDown} style={{maxHeight: '60vh', overflow: 'auto', minWidth: 200}}>
           <Stack gap={1}>
             {columns.map((column) => (
               <Flex key={column.name} as="label" align="center" gap={3} padding={2} style={{cursor: 'pointer', borderRadius: 3}}>
@@ -766,10 +765,10 @@ function ColumnChooser({columns, visible, onToggle}: {columns: Column[]; visible
         mode="ghost"
         fontSize={1}
         padding={2}
-        selected={open}
-        onClick={() => setOpen((value) => !value)}
+        selected={isOpen}
+        onClick={() => (isOpen ? hide() : show())}
         aria-haspopup="dialog"
-        aria-expanded={open}
+        aria-expanded={isOpen}
       />
     </Popover>
   )

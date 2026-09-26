@@ -1,7 +1,7 @@
 import {ChevronDownIcon} from '@sanity/icons/ChevronDown'
 import {LaunchIcon} from '@sanity/icons/Launch'
 import {Box, Button, Dialog, Flex, Stack, Text} from '@sanity/ui'
-import {Menu, MenuButton, MenuDivider, MenuItem} from '@sanity/ui/menu'
+import {Menu, MenuDivider, MenuItem} from '@sanity/ui/menu'
 import {useToast} from '@sanity/ui/toast'
 import {useCallback, useEffect, useMemo, useRef, useState, type ReactNode} from 'react'
 import {useClient, useEditState, useSchema, useSyncState, useValidationStatus, type SanityDocument} from 'sanity'
@@ -23,6 +23,7 @@ import {
 import {PAGES} from '../schemaTypes/pages'
 import {fetchBuildStamp, isPageType, LIVE_ORIGIN, routeFor, STAGING_ORIGIN, type BuildStamp} from '../lib/site'
 import {formatDate} from './format'
+import {AnimatedMenuButton} from './AnimatedMenuButton'
 import {isPermissionError, usePermissionGate} from './PermissionDialog'
 import {Chip, StatusChip} from './Status'
 
@@ -325,12 +326,12 @@ export function PublishControls({documentId, documentType}: {documentId: string;
               title={isSite ? 'Publish every page’s latest changes to the live site and staging' : `Publish ${versionLine} to the live site and staging`}
               onClick={doPublishLive}
             />
-            <MenuButton
+            <AnimatedMenuButton
               id={`tomrow-publish-${documentId}`}
               button={<Button className="tomrow-cta tomrow-cta--arrow" icon={ChevronDownIcon} aria-label="More publishing options" />}
               popover={{portal: true, placement: 'bottom-end'}}
               menu={
-                <Menu data-tomrow-publish-menu data-tomrow-pop>
+                <Menu data-tomrow-publish-menu>
                   <MenuItem text="Publish Live" title={isSite ? 'Every page, to staging and the live site' : 'Staging and the live site'} onClick={doPublishLive} />
                   <MenuItem text="Publish Staging Only" title={isSite ? 'Every page, to staging; the live site is not changed' : 'The live site is not changed'} onClick={doPublishStaging} />
                   {!isSite && (

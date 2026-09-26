@@ -245,6 +245,32 @@ button.tomrow-cta--arrow > span {
   }
 }
 
+/* And close by reversing it, a little quicker (EXIT_MS in
+   components/AnimatedMenuButton.tsx keeps the dropdown mounted this long);
+   it takes no clicks while it fades */
+@keyframes tomrow-pop-out {
+  from {
+    opacity: 1;
+    translate: 0 0;
+    scale: 1;
+  }
+
+  to {
+    opacity: 0;
+    translate: 0 -6px;
+    scale: 0.97;
+  }
+}
+
+:has(> [data-ui='Popover__wrapper'] [data-tomrow-pop-closing]) {
+  pointer-events: none;
+  animation: tomrow-pop-out 200ms cubic-bezier(0.4, 0, 0.2, 1) both;
+
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+  }
+}
+
 /* The Visual editor's Laptop view: the preview frame at 16:9, sized to fit by
    PreviewControls.tsx and centred by its own box; Phone and Fill are Sanity's */
 [data-tomrow-laptop] > iframe {
