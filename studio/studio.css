@@ -100,7 +100,8 @@ button.tomrow-cta--arrow > span {
 /* The workspace. Sanity lays panes out left to right and sizes each with an
    inline flex, min-width and max-width (a dragged divider fixes a max-width
    for good). Here the first pane, the Content sidebar, is one narrow column,
-   a collection's item list gives way once an item is open, and the last
+   a collection's item list narrows to the same width once an item is open
+   (titles only, CollectionPane), and the last
    pane, the editor, always takes everything that is left. */
 [data-pane-index]:has([data-tomrow-sidebar]),
 [data-pane-index='0']:has([data-tomrow-sidebar]) {
@@ -111,7 +112,10 @@ button.tomrow-cta--arrow > span {
 }
 
 [data-pane-index]:has([data-tomrow-collection='compact']) {
-  display: none !important;
+  flex: 0 0 var(--tomrow-sidebar-width) !important;
+  width: var(--tomrow-sidebar-width) !important;
+  min-width: var(--tomrow-sidebar-width) !important;
+  max-width: var(--tomrow-sidebar-width) !important;
 }
 
 [data-pane-index]:last-child:not([data-pane-index='0']),

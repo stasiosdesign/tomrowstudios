@@ -405,12 +405,9 @@ const Table = styled.table`
     cursor: pointer;
   }
 
-  tbody tr:hover td {
-    background: var(--card-code-bg-color);
-  }
-
+  tbody tr:hover td,
   tbody tr:focus-within td {
-    background: var(--card-code-bg-color);
+    background: var(--tomrow-hover);
   }
 
   td a {
@@ -511,11 +508,11 @@ const CompactLink = styled.a<{$selected: boolean}>`
   border-radius: 3px;
   color: inherit;
   text-decoration: none;
-  background: ${({$selected}) => ($selected ? 'var(--card-code-bg-color)' : 'transparent')};
+  background: ${({$selected}) => ($selected ? 'var(--tomrow-selected)' : 'transparent')};
   box-shadow: ${({$selected}) => ($selected ? 'inset 3px 0 0 #dd341d' : 'none')};
 
   &:hover {
-    background: var(--card-code-bg-color);
+    background: ${({$selected}) => ($selected ? 'var(--tomrow-selected)' : 'var(--tomrow-hover)')};
   }
 
   &:focus-visible {
@@ -527,14 +524,9 @@ const CompactLink = styled.a<{$selected: boolean}>`
 function CompactItem({row, selected, ChildLink}: {row: Row; selected: boolean; ChildLink: ChildLinkComponent}) {
   return (
     <CompactLink as={ChildLink} childId={row.id} childParameters={{type: row.doc._type}} $selected={selected} aria-current={selected ? 'page' : undefined}>
-      <Stack gap={2}>
-        <Text size={1} weight={selected ? 'medium' : 'regular'} textOverflow="ellipsis">
-          {row.title}
-        </Text>
-        <Text size={0}>
-          <StatusCell row={row} />
-        </Text>
-      </Stack>
+      <Text size={1} weight={selected ? 'medium' : 'regular'} textOverflow="ellipsis">
+        {row.title}
+      </Text>
     </CompactLink>
   )
 }

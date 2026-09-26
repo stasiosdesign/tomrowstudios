@@ -48,7 +48,8 @@ function layout() {
   // PaneLayout row, and the outer one does not grow (flex: 0 1 auto): that
   // is what left the editor short. Each column is sized by the pane it
   // holds: the first is the sidebar, the last takes everything left, and a
-  // collection's list between them steps aside once an item is open.
+  // collection's list between them narrows to the sidebar's width once an
+  // item is open.
   for (const row of document.querySelectorAll<HTMLElement>('[data-ui="PaneLayout"]')) {
     const columns = [...row.children].filter((c): c is HTMLElement => c instanceof HTMLElement && !!c.querySelector('[data-pane-index], [data-testid="pane"], [data-testid="document-pane"]'))
     if (columns.length < 2) continue
@@ -67,12 +68,10 @@ function layout() {
       }
       if (collapsed) {
         for (const item of chain) set(item, {flex: '0 0 51px', width: '51px', 'min-width': '51px', 'max-width': '51px', display: ''})
-      } else if (index === 0) {
+      } else if (index === 0 || pane.querySelector('[data-tomrow-collection="compact"]')) {
         for (const item of chain) set(item, {flex: `0 0 ${width}`, width, 'min-width': width, 'max-width': width, display: ''})
       } else if (last) {
         for (const item of chain) set(item, {flex: '1 1 0px', width: 'auto', 'min-width': '0px', 'max-width': 'none', display: ''})
-      } else if (pane.querySelector('[data-tomrow-collection="compact"]') || columns[index + 1]?.querySelector('[data-testid="document-pane"]')) {
-        set(column, {display: 'none'})
       }
     })
   }
