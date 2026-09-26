@@ -32,6 +32,10 @@ const SIDEBAR_WIDTH = 248
 
 function set(el: HTMLElement, styles: Record<string, string>) {
   for (const [property, value] of Object.entries(styles)) {
+    if (value === '') {
+      if (el.style.getPropertyValue(property)) el.style.removeProperty(property)
+      continue
+    }
     if (el.style.getPropertyValue(property) !== value || el.style.getPropertyPriority(property) !== 'important') {
       el.style.setProperty(property, value, 'important')
     }
@@ -40,36 +44,35 @@ function set(el: HTMLElement, styles: Record<string, string>) {
 
 function layout() {
   const width = `${SIDEBAR_WIDTH}px`
-  // Every row of panes: the pane elements carry data-pane-index (set by
-  // Sanity after its other attributes, so it survives), grouped by parent
-  const rows = new Map<HTMLElement, HTMLElement[]>()
-  for (const pane of document.querySelectorAll<HTMLElement>('[data-pane-index], [data-testid="pane"], [data-testid="document-pane"]')) {
-    const parent = pane.parentElement
-    if (!parent) continue
-    const list = rows.get(parent) ?? []
-    if (!list.includes(pane)) list.push(pane)
-    rows.set(parent, list)
-  }
-  for (const [row, panes] of rows) {
-    // One pane alone (the visual editor's form) is left to Sanity
-    if (panes.length < 2) continue
-    set(row, {width: '100%', 'max-width': 'none', flex: '1 1 auto'})
-    let parent: HTMLElement | null = row.parentElement
-    for (let depth = 0; parent && depth < 3; depth++, parent = parent.parentElement) {
-      set(parent, {width: '100%', 'max-width': 'none'})
-    }
-    panes.sort((x, y) => Number(x.dataset.paneIndex ?? 0) - Number(y.dataset.paneIndex ?? 0))
-    panes.forEach((pane, index) => {
+  // Sanity wraps each pane in a column of two Flex elements under the
+  // PaneLayout row, and the outer one does not grow (flex: 0 1 auto): that
+  // is what left the editor short. Each column is sized by the pane it
+  // holds: the first is the sidebar, the last takes everything left, and a
+  // collection's list between them steps aside once an item is open.
+  for (const row of document.querySelectorAll<HTMLElement>('[data-ui="PaneLayout"]')) {
+    const columns = [...row.children].filter((c): c is HTMLElement => c instanceof HTMLElement && !!c.querySelector('[data-pane-index], [data-testid="pane"], [data-testid="document-pane"]'))
+    if (columns.length < 2) continue
+    set(row, {width: '100%', 'max-width': 'none'})
+    columns.forEach((column, index) => {
+      const pane = column.querySelector<HTMLElement>('[data-pane-index], [data-testid="pane"], [data-testid="document-pane"]')
+      if (!pane) return
+      const last = index === columns.length - 1
       const collapsed = pane.hasAttribute('data-pane-collapsed')
-      const last = index === panes.length - 1
-      if (collapsed) return
-      if (index === 0) {
-        set(pane, {flex: `0 0 ${width}`, width, 'min-width': width, 'max-width': width})
+      // Everything between the column and the pane grows with it
+      const chain: HTMLElement[] = [column]
+      let el: HTMLElement | null = pane
+      while (el && el !== column) {
+        chain.push(el)
+        el = el.parentElement
+      }
+      if (collapsed) {
+        for (const item of chain) set(item, {flex: '0 0 51px', width: '51px', 'min-width': '51px', 'max-width': '51px', display: ''})
+      } else if (index === 0) {
+        for (const item of chain) set(item, {flex: `0 0 ${width}`, width, 'min-width': width, 'max-width': width, display: ''})
       } else if (last) {
-        set(pane, {flex: '1 1 0px', width: 'auto', 'max-width': 'none', display: 'flex'})
-      } else if (pane.querySelector('[data-tomrow-collection="compact"]') || panes[index + 1]?.querySelector('[data-tomrow-document], [data-testid="document-panel"]')) {
-        // A collection's list, with an item open beside it: it steps aside
-        set(pane, {display: 'none'})
+        for (const item of chain) set(item, {flex: '1 1 0px', width: 'auto', 'min-width': '0px', 'max-width': 'none', display: ''})
+      } else if (pane.querySelector('[data-tomrow-collection="compact"]') || columns[index + 1]?.querySelector('[data-testid="document-pane"]')) {
+        set(column, {display: 'none'})
       }
     })
   }
