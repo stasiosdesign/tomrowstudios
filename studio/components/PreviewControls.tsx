@@ -1,4 +1,5 @@
 import {DesktopIcon} from '@sanity/icons/Desktop'
+import {ExpandIcon} from '@sanity/icons/Expand'
 import {MobileDeviceIcon} from '@sanity/icons/MobileDevice'
 import {Button, Card, Flex, Switch, Text} from '@sanity/ui'
 import {Tooltip} from '@sanity/ui/tooltip'
@@ -13,13 +14,19 @@ export const useInVisualEditor = (): boolean => !!usePresentationParams(false)
 
    - PreviewHeaderBridge takes the preview bar's place (sanity.config.ts,
      presentationTool components.unstable_header). It shows nothing, so the
-     website gets that bar's height; it hands the Edit switch and the phone
-     view to the store below.
+     website gets that bar's height; it hands the Edit switch and the view
+     to the store below, and sizes the preview frame in Laptop view.
    - PreviewControls sits in each document's header row (sanity.config.ts,
      document.unstable_languageFilter, Sanity's slot for header controls) and
      draws them, in the Visual editor only.
 
-   Share preview and the address bar are gone with the bar. */
+   Three views: Phone (Sanity's own narrow preview), Laptop (a 16:9 frame,
+   fitted and centred in the canvas) and Fill (the whole canvas, the default).
+   Switching only resizes the frame: the page is not reloaded, and drafts and
+   visual editing carry on. Share preview and the address bar are gone with
+   the bar. */
+
+export type PreviewMode = 'phone' | 'laptop' | 'fill'
 
 type Controls = {
   overlaysEnabled: boolean
@@ -28,6 +35,23 @@ type Controls = {
   toggleOverlay: () => void
   viewport: 'desktop' | 'mobile'
   setViewport: (viewport: 'desktop' | 'mobile') => void
+}
+
+// Laptop view is this Studio's own: Sanity knows desktop and mobile only
+let laptop = false
+const laptopListeners = new Set<() => void>()
+const laptopStore = {
+  get: () => laptop,
+  set(next: boolean) {
+    laptop = next
+    laptopListeners.forEach((listener) => listener())
+  },
+  subscribe(listener: () => void) {
+    laptopListeners.add(listener)
+    return () => {
+      laptopListeners.delete(listener)
+    }
+  },
 }
 
 let current: Controls | null = null
@@ -67,6 +91,29 @@ export function PreviewHeaderBridge(props: PreviewHeaderProps) {
   }, [overlaysEnabled, overlaysReady, toggleOverlay, viewport, setViewport])
   useEffect(() => () => store.set(null), [])
 
+  // Laptop view: the frame at 16:9, as large as the canvas allows, centred
+  // (the frame's box already centres it), refitted as the canvas resizes
+  const inLaptop = useSyncExternalStore(laptopStore.subscribe, laptopStore.get) && viewport === 'desktop'
+  const {iframeRef} = props
+  useEffect(() => {
+    const box = iframeRef.current?.parentElement
+    if (!box || !inLaptop) return undefined
+    const fit = () => {
+      const {width, height} = box.getBoundingClientRect()
+      const frameWidth = Math.max(0, Math.min(width - LAPTOP_MARGIN * 2, ((height - LAPTOP_MARGIN * 2) * 16) / 9))
+      box.style.setProperty('--tomrow-frame-width', `${Math.floor(frameWidth)}px`)
+      box.style.setProperty('--tomrow-frame-height', `${Math.floor((frameWidth * 9) / 16)}px`)
+    }
+    fit()
+    box.setAttribute('data-tomrow-laptop', '')
+    const observer = new ResizeObserver(fit)
+    observer.observe(box)
+    return () => {
+      observer.disconnect()
+      box.removeAttribute('data-tomrow-laptop')
+    }
+  }, [inLaptop, iframeRef])
+
   // A marker only: studio.css folds the empty bar away
   return <span data-tomrow-preview-header hidden />
 }
@@ -74,8 +121,13 @@ export function PreviewHeaderBridge(props: PreviewHeaderProps) {
 export function PreviewControls() {
   const inVisualEditor = useInVisualEditor()
   const controls = useSyncExternalStore(store.subscribe, store.get)
+  const laptopOn = useSyncExternalStore(laptopStore.subscribe, laptopStore.get)
   if (!inVisualEditor || !controls) return null
-  const mobile = controls.viewport === 'mobile'
+  const mode: PreviewMode = controls.viewport === 'mobile' ? 'phone' : laptopOn ? 'laptop' : 'fill'
+  const choose = (next: PreviewMode) => {
+    laptopStore.set(next === 'laptop')
+    controls.setViewport(next === 'phone' ? 'mobile' : 'desktop')
+  }
   return (
     <Flex align="center" gap={1} data-tomrow-preview-controls>
       <Tooltip content={<Text size={1}>{controls.overlaysEnabled ? 'Turn off edit mode' : 'Click the page to edit it'}</Text>} placement="bottom" portal>
@@ -88,15 +140,29 @@ export function PreviewControls() {
           </Flex>
         </Card>
       </Tooltip>
-      <Tooltip content={<Text size={1}>{mobile ? 'Desktop view' : 'Phone view'}</Text>} placement="bottom" portal>
-        <Button
-          icon={mobile ? DesktopIcon : MobileDeviceIcon}
-          mode="bleed"
-          aria-label={mobile ? 'Show the page at desktop width' : 'Show the page at phone width'}
-          aria-pressed={mobile}
-          onClick={() => controls.setViewport(mobile ? 'desktop' : 'mobile')}
-        />
-      </Tooltip>
+      <Flex role="group" aria-label="Preview size" gap={1}>
+        {VIEWS.map((view) => (
+          <Tooltip key={view.mode} content={<Text size={1}>{view.label}</Text>} placement="bottom" portal>
+            <Button
+              icon={view.icon}
+              mode="bleed"
+              selected={mode === view.mode}
+              aria-label={view.label}
+              aria-pressed={mode === view.mode}
+              onClick={() => choose(view.mode)}
+            />
+          </Tooltip>
+        ))}
+      </Flex>
     </Flex>
   )
 }
+
+const VIEWS: {mode: PreviewMode; label: string; icon: typeof DesktopIcon}[] = [
+  {mode: 'phone', label: 'Phone view', icon: MobileDeviceIcon},
+  {mode: 'laptop', label: 'Laptop view (16:9)', icon: DesktopIcon},
+  {mode: 'fill', label: 'Fill the canvas', icon: ExpandIcon},
+]
+
+/** The room kept around the laptop frame, so its edge shows */
+const LAPTOP_MARGIN = 24

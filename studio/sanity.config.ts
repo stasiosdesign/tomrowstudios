@@ -133,9 +133,8 @@ export default defineConfig({
     // control (components/PublishControls.tsx), which knows about staging
     // and the live site
     actions: () => [],
-    // The static pages publish as one site from the page editor; comments
-    // stay on the CMS items
-    comments: {enabled: ({documentType}) => !SINGLETONS.has(documentType)},
+    // No comments: the pages and the CMS items are edited, not discussed here
+    comments: {enabled: false},
     // Sanity's slot for controls in a document's header row: a static page's
     // title in the page editor, the preview's Edit switch and phone view in
     // the Visual editor. Each draws nothing elsewhere.

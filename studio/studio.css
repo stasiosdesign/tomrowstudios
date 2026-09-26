@@ -175,10 +175,6 @@ button.tomrow-cta--arrow > span {
   max-width: none !important;
 }
 
-[data-tomrow-document] [data-testid='document-panel-scroller'] {
-  scrollbar-gutter: stable;
-}
-
 /* Editing always means the working draft. The Published / Draft chips above
    a document, and the Drafts menu in the top bar, are one decision fewer;
    the status beside Publish Live says where the document stands. Drafts
@@ -219,6 +215,22 @@ button.tomrow-cta--arrow > span {
    height */
 [data-ui='Card']:has(> [data-ui='Flex'] > [data-tomrow-preview-header]) {
   display: none !important;
+}
+
+/* The Visual editor's Laptop view: the preview frame at 16:9, sized to fit by
+   PreviewControls.tsx and centred by its own box; Phone and Fill are Sanity's */
+[data-tomrow-laptop] > iframe {
+  width: var(--tomrow-frame-width) !important;
+  height: var(--tomrow-frame-height) !important;
+  flex: none;
+  box-shadow: 0 0 0 1px var(--card-border-color);
+  transition:
+    width 200ms cubic-bezier(0.2, 0, 0, 1),
+    height 200ms cubic-bezier(0.2, 0, 0, 1);
+
+  @media (prefers-reduced-motion: reduce) {
+    transition: none;
+  }
 }
 
 /* Solid white buttons (a collection's New button): black text and icon */

@@ -5,7 +5,7 @@ import {ChevronUpIcon} from '@sanity/icons/ChevronUp'
 import {ControlsIcon} from '@sanity/icons/Controls'
 import {SearchIcon} from '@sanity/icons/Search'
 import {TrashIcon} from '@sanity/icons/Trash'
-import {Box, Button, Card, Checkbox, Flex, Heading, Stack, Text, TextInput, useClickOutsideEvent} from '@sanity/ui'
+import {Box, Button, Card, Checkbox, Flex, Stack, Text, TextInput, useClickOutsideEvent} from '@sanity/ui'
 import {useToast} from '@sanity/ui/toast'
 import {Popover} from '@sanity/ui/popover'
 import {useCallback, useEffect, useMemo, useRef, useState, type KeyboardEvent, type MouseEvent} from 'react'
@@ -28,6 +28,7 @@ import {
 import {columnsFor, renderValue, textOf, type Column} from './format'
 import {isPermissionError, usePermissionGate, type RestrictedAction} from './PermissionDialog'
 import {ConfirmDialog, failText} from './PublishControls'
+import {PANE_HEADING_PADDING_Y, PaneHeading} from './PaneHeading'
 import {StatusChip} from './Status'
 
 /* A collection: every document of one type as a table, one row per item,
@@ -328,22 +329,16 @@ export function CollectionPane(props: {options?: Record<string, unknown>; childI
 
   return (
     <Flex direction="column" height="fill" data-tomrow-collection={compact ? 'compact' : 'table'}>
-      <Card borderBottom paddingX={4} paddingY={3} style={{flexShrink: 0}}>
+      <Card borderBottom style={{flexShrink: 0, padding: compact ? '12px 8px 12px 6px' : `${PANE_HEADING_PADDING_Y}px 14px`}}>
         <Flex align="center" gap={2} wrap="wrap">
           {compact ? (
-            <Button
-              icon={ArrowLeftIcon}
-              mode="bleed"
-              text={`All ${lowerTitle}`}
-              onClick={showAll}
-              aria-label={`Back to all ${lowerTitle}`}
-            />
+            <Button icon={ArrowLeftIcon} mode="bleed" text={title} onClick={showAll} aria-label={`Back to all ${lowerTitle}`} />
           ) : (
-            <Box flex={1} paddingX={2} style={{minWidth: 120}}>
-              <Heading as="h2" size={1}>
+            <Box flex={1} style={{minWidth: 120}}>
+              <PaneHeading>
                 {title}
-                {documents && <span style={{color: 'var(--card-muted-fg-color)', fontWeight: 'normal'}}> ({rows.length})</span>}
-              </Heading>
+                {documents && <span className="pane-heading__count"> ({rows.length})</span>}
+              </PaneHeading>
             </Box>
           )}
           {compact && <Box flex={1} />}
@@ -747,6 +742,7 @@ function ColumnChooser({columns, visible, onToggle}: {columns: Column[]; visible
   return (
     <Popover
       open={open}
+      animate
       portal
       placement="bottom-end"
       ref={setPopoverEl}

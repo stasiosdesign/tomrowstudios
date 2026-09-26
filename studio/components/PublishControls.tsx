@@ -1,4 +1,3 @@
-import {ArrowLeftIcon} from '@sanity/icons/ArrowLeft'
 import {ChevronDownIcon} from '@sanity/icons/ChevronDown'
 import {LaunchIcon} from '@sanity/icons/Launch'
 import {Box, Button, Dialog, Flex, Stack, Text} from '@sanity/ui'
@@ -6,8 +5,6 @@ import {Menu, MenuButton, MenuDivider, MenuItem} from '@sanity/ui/menu'
 import {useToast} from '@sanity/ui/toast'
 import {useCallback, useEffect, useMemo, useRef, useState, type ReactNode} from 'react'
 import {useClient, useEditState, useSchema, useSyncState, useValidationStatus, type SanityDocument} from 'sanity'
-import {useRouter} from 'sanity/router'
-import {usePaneRouter} from 'sanity/structure'
 import {styled} from 'styled-components'
 import {
   logId,
@@ -183,7 +180,6 @@ export function PublishControls({documentId, documentType}: {documentId: string;
   const schemaType = schema.get(documentType)
   const client = useClient({apiVersion: API_VERSION})
   const toast = useToast()
-  const collection = useCollectionParent()
 
   const {draft, published, ready} = useEditState(documentId, documentType)
   const {isSyncing} = useSyncState(documentId, documentType)
@@ -305,7 +301,6 @@ export function PublishControls({documentId, documentType}: {documentId: string;
   return (
     <Bar data-tomrow-publish>
       <Flex align="center" gap={3} wrap="wrap">
-        {collection && <Button icon={ArrowLeftIcon} mode="bleed" fontSize={1} padding={2} text={collection.title} onClick={collection.back} aria-label={`Back to ${collection.title}`} />}
         <Flex flex={1} align="center" gap={3} wrap="wrap" style={{minWidth: 160}}>
           {!ready || (isSite && !siteGroup) ? (
             <Chip $tone="muted">Loading…</Chip>
@@ -333,11 +328,11 @@ export function PublishControls({documentId, documentType}: {documentId: string;
             <MenuButton
               id={`tomrow-publish-${documentId}`}
               button={<Button className="tomrow-cta tomrow-cta--arrow" icon={ChevronDownIcon} aria-label="More publishing options" />}
-              popover={{portal: true, placement: 'bottom-end'}}
+              popover={{portal: true, placement: 'bottom-end', animate: true}}
               menu={
                 <Menu data-tomrow-publish-menu>
-                  <MenuItem text={isSite ? 'Publish live · all pages' : 'Publish live'} title={isSite ? 'Every page, to staging and the live site' : 'Staging and the live site'} onClick={doPublishLive} />
-                  <MenuItem text={isSite ? 'Publish staging only · all pages' : 'Publish staging only'} title={isSite ? 'Every page, to staging; the live site is not changed' : 'The live site is not changed'} onClick={doPublishStaging} />
+                  <MenuItem text="Publish Live" title={isSite ? 'Every page, to staging and the live site' : 'Staging and the live site'} onClick={doPublishLive} />
+                  <MenuItem text="Publish Staging Only" title={isSite ? 'Every page, to staging; the live site is not changed' : 'The live site is not changed'} onClick={doPublishStaging} />
                   {!isSite && (
                     <MenuItem
                       text="Unpublish"
@@ -348,8 +343,8 @@ export function PublishControls({documentId, documentType}: {documentId: string;
                     />
                   )}
                   {route && (STAGING_ORIGIN || (LIVE_ORIGIN && live)) && <MenuDivider />}
-                  {route && STAGING_ORIGIN && <MenuItem as="a" href={`${STAGING_ORIGIN}${route}`} target="_blank" rel="noreferrer" icon={LaunchIcon} text="Staging link" />}
                   {route && LIVE_ORIGIN && live && <MenuItem as="a" href={`${LIVE_ORIGIN}${route}`} target="_blank" rel="noreferrer" icon={LaunchIcon} text="Live site link" />}
+                  {route && STAGING_ORIGIN && <MenuItem as="a" href={`${STAGING_ORIGIN}${route}`} target="_blank" rel="noreferrer" icon={LaunchIcon} text="Staging link" />}
                 </Menu>
               }
             />
@@ -365,17 +360,6 @@ export function PublishControls({documentId, documentType}: {documentId: string;
       )}
     </Bar>
   )
-}
-
-// When the document was opened from a collection, the way back to its list
-function useCollectionParent(): {title: string; back: () => void} | null {
-  const router = useRouter()
-  const {groupIndex, routerPanesState} = usePaneRouter()
-  const parent = routerPanesState[groupIndex - 1]?.[0]
-  if (!parent || !parent.id.startsWith('collection-')) return null
-  const type = parent.id.slice('collection-'.length)
-  const title = type === 'shopItem' ? 'Shop' : type === 'partner' ? 'Partners' : type === 'project' ? 'Projects' : 'Back'
-  return {title, back: () => router.navigate({panes: routerPanesState.slice(0, groupIndex)})}
 }
 
 const Bar = styled.div`

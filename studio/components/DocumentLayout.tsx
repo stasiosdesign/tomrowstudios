@@ -86,6 +86,12 @@ const Root = styled(Flex)`
       display: none;
     }
 
+    /* The title's own padding (PaneTitle) sets the row's height, the same as
+       a collection's header, so the row adds none of its own */
+    [data-ui='Flex']:has(> [data-ui='Box'] > [data-ui='Flex'] > [data-tomrow-pane-title]) {
+      padding-block: 0;
+    }
+
     [data-ui='Box']:has(> [data-ui='Flex'] > [data-tomrow-pane-title]) {
       flex: 1 1 auto;
       min-width: 0;
@@ -100,6 +106,16 @@ const Root = styled(Flex)`
     /* The form's own title: the header row names the page */
     :has(> [data-testid='document-panel-document-title']) {
       display: none;
+    }
+
+    /* The first section meets the title row at the row's own divider: no
+       room above the list, and no second rule on the first section */
+    [data-testid='document-panel-scroller'] > div {
+      padding-top: 0;
+    }
+
+    [data-tomrow-section]:first-child {
+      border-top: 0;
     }
   }
 

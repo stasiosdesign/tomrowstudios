@@ -155,11 +155,16 @@ editor's header is one row: the page's large title (`PaneTitle`) opposite
 Show more (no Copy, Comments, focus mode, presence or close).
 
 In the Visual editor there is no bar above the preview: its Edit switch and
-phone view sit in the side panel's header row with Open in Content and Show
-more (`PreviewControls`, through the Presentation tool's header option and
-the document header's control slot). Collections name themselves once, as
-`Projects (5)`, with a compact search, an icon-only Columns button and a white
-New button. The top bar has no New document, search, Tasks, Help or trial
+three views, Phone, Laptop (a fitted 16:9 frame) and Fill (the default), sit
+in the side panel's header row with Open in Content and Show more
+(`PreviewControls`, through the Presentation tool's header option and the
+document header's control slot); switching views only resizes the frame.
+Collections name themselves once, as `Projects (5)`, in the same heading as a
+static page's title (`PaneHeading`), with a compact search, an icon-only
+Columns button and a white New button; an opened item's list is headed
+"← Projects" and the item has no Comments. Page sections open and close with
+a short height transition (`Collapse`), menus with Sanity UI's popover
+motion, both off for anyone who prefers reduced motion. The top bar has no New document, search, Tasks, Help or trial
 countdown, and Favorites is hidden throughout. The theme (`theme.ts`) keeps
 text and icons white on hover, press and selection.
 

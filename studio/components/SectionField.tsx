@@ -3,12 +3,14 @@ import {Badge, Box, Flex, Text} from '@sanity/ui'
 import {useId} from 'react'
 import {type ObjectFieldProps} from 'sanity'
 import {styled} from 'styled-components'
+import {Collapse, MOTION_EASE, MOTION_MS} from './Collapse'
 
 /* One section of a page in the form: a row in a table-like list, in the
    page's order, that opens and closes on a click anywhere along it (or Enter
    and Space on the keyboard) to show the section's fields directly beneath.
    A problem anywhere inside shows on the row, so a folded section still says
-   when something in it needs fixing before the page can be published. */
+   when something in it needs fixing before the page can be published. The
+   fields open and close with a short height transition (Collapse). */
 export function SectionField(props: ObjectFieldProps) {
   const {children, collapsed, description, onCollapse, onExpand, title, validation} = props
   const open = !collapsed
@@ -35,15 +37,15 @@ export function SectionField(props: ObjectFieldProps) {
           {hasError && <Badge tone="critical">Needs fixing</Badge>}
           {hasWarning && <Badge tone="caution">Has a warning</Badge>}
           <Text size={1} muted>
-            <ChevronDownIcon style={{transform: open ? 'rotate(180deg)' : undefined, transition: 'transform 0.15s ease'}} />
+            <ChevronDownIcon style={{transform: open ? 'rotate(180deg)' : undefined, transition: `transform ${MOTION_MS}ms ${MOTION_EASE}`}} />
           </Text>
         </Flex>
       </RowButton>
-      {open && (
+      <Collapse open={open}>
         <Fields id={`${id}-fields`} role="region" aria-labelledby={`${id}-row`}>
           <div className="section-row__fields">{children}</div>
         </Fields>
-      )}
+      </Collapse>
     </Row>
   )
 }
