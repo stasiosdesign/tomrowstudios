@@ -12,6 +12,11 @@
                                          dataset: staging is never behind
      { action: "stage",     id, rev? }   publish it in the staging dataset
                                          only; the live site is not changed
+     either, with site: [ids]            the static site: every listed page
+                                         (singletons, ID = type) at its
+                                         latest saved version, the open one
+                                         (id) pinned by rev; all checked
+                                         before any is written
      { action: "unpublish", id }         take it off both sites: delete it
                                          from production, and in staging
                                          keep its content as a draft only
@@ -52,7 +57,7 @@ const ALLOWED_ORIGINS = new Set(['https://tomrowstudios.sanity.studio', 'http://
 
 const ACTIONS = ['publish', 'stage', 'unpublish', 'delete'] as const;
 type Action = (typeof ACTIONS)[number];
-type Body = { action?: Action; id?: string; rev?: string };
+type Body = { action?: Action; id?: string; rev?: string; site?: unknown };
 type Missing = { id: string; type?: string; title?: string };
 
 class PublishError extends Error {
@@ -94,7 +99,9 @@ export const POST: APIRoute = async ({ request }) => {
     const production = staging.withConfig({ dataset: PRODUCTION });
 
     const result =
-      body.action === 'publish' || body.action === 'stage'
+      (body.action === 'publish' || body.action === 'stage') && body.site !== undefined
+        ? await publishSite(staging, production, siteIds(body.site, body.id), body.id, body.rev, body.action === 'publish')
+        : body.action === 'publish' || body.action === 'stage'
         ? await publish(staging, production, body.id, body.rev, body.action === 'publish')
         : await takeDown(staging, production, body.id, body.action === 'delete');
     return json({ ok: true, by: user.id, ...result }, 200, origin);
@@ -119,12 +126,21 @@ async function authenticate(header: string | null): Promise<{ id: string; role: 
   return { id: me.id, role: [...roles].join(', ') };
 }
 
-/** Publishes the version in the editor to staging, and with `live` to the live site too */
-async function publish(staging: SanityClient, production: SanityClient, id: string, rev: string | undefined, live: boolean) {
-  // The current saved version: the draft when there is one, else the published document
+type Prepared = { id: string; draft: SanityDocument | null; source: SanityDocument };
+
+/**
+ * Everything a publish checks before it writes: the version to publish (the
+ * draft, or else the published document; `rev` pins the one the editor was
+ * looking at) and that everything it links to is published where it is
+ * going. Returns null when there is nothing saved and `optional` is set.
+ */
+async function prepare(staging: SanityClient, production: SanityClient, id: string, rev: string | undefined, live: boolean, optional = false): Promise<Prepared | null> {
   const [draft, published] = await Promise.all([staging.getDocument(`drafts.${id}`), staging.getDocument(id)]);
   const current = draft ?? published;
-  if (!current) throw new PublishError(404, 'There is nothing saved to publish yet.');
+  if (!current) {
+    if (optional) return null;
+    throw new PublishError(404, 'There is nothing saved to publish yet.');
+  }
 
   // Exactly the revision the editor was looking at, from the document's history
   let source = current;
@@ -135,7 +151,6 @@ async function publish(staging: SanityClient, production: SanityClient, id: stri
     source = revision;
   }
 
-  // Everything it links to must be published where it is going
   const references = documentReferences(source);
   const missingStaging = await missingIn(staging, staging, references);
   if (missingStaging.length > 0) {
@@ -145,8 +160,12 @@ async function publish(staging: SanityClient, production: SanityClient, id: stri
   if (missing.length > 0) {
     throw new PublishError(422, 'This links to content that is not on the live site yet. Publish that live first.', { missing });
   }
-  const renamed = live ? await carryAssets(staging, production, assetReferences(source)) : new Map<string, string>();
+  return { id, draft: draft ?? null, source };
+}
 
+/** Writes a prepared version to staging, and with `live` to the live site too */
+async function write(staging: SanityClient, production: SanityClient, { id, draft, source }: Prepared, live: boolean) {
+  const renamed = live ? await carryAssets(staging, production, assetReferences(source)) : new Map<string, string>();
   const { _rev: _r, _updatedAt: _u, _system: _s, ...content } = source as SanityDocument & { _system?: unknown };
 
   // Staging gets the version first, so it is never behind the live site. The
@@ -174,6 +193,47 @@ async function publish(staging: SanityClient, production: SanityClient, id: stri
     })
     .commit({ returnDocuments: true });
   return { rev: written[0]?._rev, sourceRev: source._rev, sourceId: source._id };
+}
+
+/** Publishes the version in the editor to staging, and with `live` to the live site too */
+async function publish(staging: SanityClient, production: SanityClient, id: string, rev: string | undefined, live: boolean) {
+  const prepared = await prepare(staging, production, id, rev, live);
+  return write(staging, production, prepared as Prepared, live);
+}
+
+/**
+ * Publishes the static site: every page in `site` (each a singleton whose ID
+ * is its type) at its latest saved version, the one open in the editor pinned
+ * by `rev`. Every page is checked before any is written, so a refusal names
+ * the page and changes nothing. Pages with nothing saved are skipped. CMS
+ * items are never touched: only the listed page IDs are.
+ */
+async function publishSite(staging: SanityClient, production: SanityClient, site: string[], openId: string, rev: string | undefined, live: boolean) {
+  const prepared: Prepared[] = [];
+  for (const id of site) {
+    try {
+      const page = await prepare(staging, production, id, id === openId ? rev : undefined, live, true);
+      if (page) prepared.push(page);
+    } catch (error) {
+      if (error instanceof PublishError) throw new PublishError(error.status, `${pageName(id)}: ${error.message}`, error.details);
+      throw error;
+    }
+  }
+  const pages: string[] = [];
+  for (const page of prepared) {
+    await write(staging, production, page, live);
+    pages.push(page.id);
+  }
+  return { pages };
+}
+
+const pageName = (id: string) => id.replace(/Page$/, '').replace(/^./, (c) => c.toUpperCase()) + ' page';
+
+/** The static pages a site-wide publish may touch: singleton documents named <name>Page, the open one among them */
+function siteIds(site: unknown, openId: string): string[] {
+  const isPageId = (id: unknown): id is string => typeof id === 'string' && /^[a-z]+Page$/.test(id);
+  if (!Array.isArray(site) || !site.every(isPageId) || !site.includes(openId)) throw new PublishError(400, 'A site-wide publish needs the list of static pages, including the open one.');
+  return [...new Set(site)];
 }
 
 /** The note kept beside each live document; a dotted ID, so it is private to the Studio */

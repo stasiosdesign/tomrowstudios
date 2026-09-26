@@ -27,8 +27,6 @@ export const PRODUCTION_DATASET = 'production'
 /** The Vercel protection-bypass secret the Visual editor also uses, kept in the dataset by its tool */
 const BYPASS_SECRET_ID = 'sanity-preview-url-secret.vercel-protection-bypass'
 
-export type PublishResult = {rev: string; sourceRev: string; sourceId: string}
-
 /** The note /api/publish keeps beside each live document: which content went live */
 export type PublishLog = {_id: string; document: string; sourceId: string; sourceRev: string; contentKey: string; publishedAt: string}
 
@@ -78,15 +76,18 @@ async function call(client: SanityClient, body: Record<string, unknown>): Promis
   return result
 }
 
-/** Puts the document's current saved version on staging and the live site. `rev` pins the exact revision. */
-export async function publishLive(client: SanityClient, id: string, rev?: string): Promise<PublishResult> {
-  const result = await call(client, {action: 'publish', id, rev})
-  return {rev: String(result.rev), sourceRev: String(result.sourceRev), sourceId: String(result.sourceId)}
+/**
+ * Puts the document's current saved version on staging and the live site. `rev` pins the exact
+ * revision. With `site` (the static pages' IDs, the open one among them), the whole static site
+ * is published instead: every listed page at its latest saved version.
+ */
+export async function publishLive(client: SanityClient, id: string, rev?: string, site?: string[]): Promise<void> {
+  await call(client, {action: 'publish', id, rev, site})
 }
 
-/** Puts the document's current saved version on staging only; the live site is not changed */
-export async function publishStaging(client: SanityClient, id: string, rev?: string): Promise<void> {
-  await call(client, {action: 'stage', id, rev})
+/** Puts the document's current saved version (or with `site`, every static page's) on staging only; the live site is not changed */
+export async function publishStaging(client: SanityClient, id: string, rev?: string, site?: string[]): Promise<void> {
+  await call(client, {action: 'stage', id, rev, site})
 }
 
 /** Takes the document off both sites; the Studio keeps its content as a draft */

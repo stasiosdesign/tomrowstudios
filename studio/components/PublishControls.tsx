@@ -20,6 +20,7 @@ import {
   type PublishLog,
   type UnpublishLog,
 } from '../lib/publish'
+import {PAGES} from '../schemaTypes/pages'
 import {fetchBuildStamp, isPageType, LIVE_ORIGIN, routeFor, STAGING_ORIGIN, type BuildStamp} from '../lib/site'
 import {formatDate} from './format'
 import {Chip, StatusChip} from './Status'
@@ -38,7 +39,16 @@ import {Chip, StatusChip} from './Status'
    staging and the live site, Publish staging only on staging alone, and
    Unpublish takes it off both (the Studio keeps it as a draft). Both publish
    actions stay available when nothing has changed: publishing again simply
-   runs again. Each action runs once at a time; Unpublish asks first. */
+   runs again. Each action runs once at a time; Unpublish asks first.
+
+   The static pages (the page editor's singletons) publish together, the way a
+   site builder publishes a site: on any of them, Publish live and Publish
+   staging only take every page's latest saved version, not just the open
+   one's, and the bar says so, with how many pages have changes. CMS items
+   publish one at a time and are never part of it. */
+
+/** The static site: every page's document ID (a singleton's ID is its type) */
+const SITE = PAGES.map((page) => page.type)
 
 const API_VERSION = '2025-02-19'
 
@@ -88,6 +98,55 @@ function useSiteState(id: string): SiteState {
   return state
 }
 
+// How many static pages have changes the live site doesn't have, kept current
+function useSitePending(enabled: boolean): number | null {
+  const client = useClient({apiVersion: API_VERSION})
+  const [pending, setPending] = useState<number | null>(null)
+  useEffect(() => {
+    if (!enabled) return undefined
+    const staging = client.withConfig({perspective: 'raw', useCdn: false})
+    const production = staging.withConfig({dataset: PRODUCTION_DATASET})
+    const params = {ids: SITE, drafts: SITE.map((id) => `drafts.${id}`), logs: SITE.map(logId)}
+    const query = `*[_id in $ids || _id in $drafts || _id in $logs]`
+    let cancelled = false
+    let timer: ReturnType<typeof setTimeout> | undefined
+    const load = () =>
+      Promise.all([staging.fetch<SanityDocument[]>(query, params), production.fetch<SanityDocument[]>(query, params)])
+        .then(([onStaging, onLive]) => {
+          if (cancelled) return
+          const find = <T,>(docs: SanityDocument[], id: string) => (docs.find((doc) => doc._id === id) ?? null) as T | null
+          const count = SITE.filter((id) => {
+            const status = publishStatus({
+              draft: find<SanityDocument>(onStaging, `drafts.${id}`),
+              published: find<SanityDocument>(onStaging, id),
+              live: find<SanityDocument>(onLive, id),
+              liveLog: find<PublishLog>(onLive, logId(id)),
+              stagingLog: find<UnpublishLog>(onStaging, logId(id)),
+            })
+            return status !== null && status !== 'live'
+          }).length
+          setPending(count)
+        })
+        .catch(() => undefined)
+    load()
+    const onChange = {
+      next: () => {
+        clearTimeout(timer)
+        timer = setTimeout(load, 300)
+      },
+      error: () => undefined,
+    }
+    const options = {visibility: 'query' as const, includeResult: false, events: ['mutation' as const]}
+    const subscriptions = [staging, production].map((source) => source.listen(query, params, options).subscribe(onChange))
+    return () => {
+      cancelled = true
+      clearTimeout(timer)
+      subscriptions.forEach((subscription) => subscription.unsubscribe())
+    }
+  }, [client, enabled])
+  return pending
+}
+
 // The live site's build stamp, asked for again every 15 seconds while a rebuild is awaited
 function useBuildStamp(waiting: boolean): BuildStamp | null | undefined {
   const [stamp, setStamp] = useState<BuildStamp | null | undefined>(undefined)
@@ -119,6 +178,8 @@ export function PublishControls({documentId, documentType}: {documentId: string;
   const {isSyncing} = useSyncState(documentId, documentType)
   const {validation, isValidating} = useValidationStatus(documentId, documentType, false)
   const {live, liveLog, stagingLog} = useSiteState(documentId)
+  const isSite = isPageType(documentType) && SITE.includes(documentId)
+  const sitePending = useSitePending(isSite)
 
   const current = draft ?? published
   const isPage = isPageType(documentType)
@@ -163,11 +224,28 @@ export function PublishControls({documentId, documentType}: {documentId: string;
     [busy, toast, fail],
   )
 
+  // On a static page, both publish actions take the whole static site
+  const site = isSite ? SITE : undefined
   const doPublishLive = () =>
     current &&
-    run('live', () => publishLive(client, documentId, current._rev), {title: `${itemTitle} published live`, description: 'Staging has it now; the live site rebuilds in about a minute.'}, 'Not published live')
+    run(
+      'live',
+      () => publishLive(client, documentId, current._rev, site),
+      isSite
+        ? {title: 'Site published live', description: 'Every page’s latest changes are on staging and going live; the live site rebuilds in about a minute.'}
+        : {title: `${itemTitle} published live`, description: 'Staging has it now; the live site rebuilds in about a minute.'},
+      'Not published live',
+    )
   const doPublishStaging = () =>
-    current && run('staging', () => publishStaging(client, documentId, current._rev), {title: `${itemTitle} published to staging`, description: 'The live site is not changed.'}, 'Not published to staging')
+    current &&
+    run(
+      'staging',
+      () => publishStaging(client, documentId, current._rev, site),
+      isSite
+        ? {title: 'Site published to staging', description: 'Every page’s latest changes are on staging. The live site is not changed.'}
+        : {title: `${itemTitle} published to staging`, description: 'The live site is not changed.'},
+      'Not published to staging',
+    )
   const doUnpublish = () => {
     setConfirmUnpublish(false)
     return run('unpublish', () => unpublish(client, documentId), {title: `${itemTitle} unpublished`, description: 'It is off staging and the live site, and stays here to edit.'}, 'Not unpublished')
@@ -200,6 +278,11 @@ export function PublishControls({documentId, documentType}: {documentId: string;
           ) : (
             <StatusChip status={status} title={details.join('\n') || undefined} />
           )}
+          {isSite && (
+            <Chip $tone="muted" title="Publishing from the page editor publishes every page of the site together. CMS items are published on their own.">
+              {sitePending === null ? 'Publishes all pages' : sitePending === 0 ? 'All pages live' : `Publishes all pages · ${sitePending} with changes`}
+            </Chip>
+          )}
           {status === 'live' && siteBehind && <Chip $tone="muted">{waitedLong ? 'Live site not rebuilt yet' : 'Live site rebuilding…'}</Chip>}
           {saving && (
             <Chip $tone={errors.length > 0 ? 'critical' : 'muted'} title={errors.length > 0 ? 'Publishing waits until the form is valid' : undefined}>
@@ -211,9 +294,9 @@ export function PublishControls({documentId, documentType}: {documentId: string;
           <Split>
             <Button
               className="tomrow-cta"
-              text={busy === 'live' ? 'Publishing…' : busy === 'staging' ? 'Publishing to staging…' : busy === 'unpublish' ? 'Unpublishing…' : 'Publish Live'}
+              text={busy === 'live' ? 'Publishing…' : busy === 'staging' ? 'Publishing to staging…' : busy === 'unpublish' ? 'Unpublishing…' : isSite ? 'Publish Site' : 'Publish Live'}
               disabled={!canPublish}
-              title={canPublish ? `Publish ${versionLine} to the live site and staging` : blockedReason}
+              title={canPublish ? (isSite ? 'Publish every page’s latest changes to the live site and staging' : `Publish ${versionLine} to the live site and staging`) : blockedReason}
               onClick={doPublishLive}
             />
             <MenuButton
@@ -222,9 +305,9 @@ export function PublishControls({documentId, documentType}: {documentId: string;
               popover={{portal: true, placement: 'bottom-end'}}
               menu={
                 <Menu>
-                  <MenuItem text="Publish live" title="Staging and the live site" disabled={!canPublish} onClick={doPublishLive} />
-                  <MenuItem text="Publish staging only" title="The live site is not changed" disabled={!canPublish} onClick={doPublishStaging} />
-                  <MenuItem text="Unpublish" title="Off staging and the live site; it stays here to edit" tone="critical" disabled={!canUnpublish} onClick={() => setConfirmUnpublish(true)} />
+                  <MenuItem text={isSite ? 'Publish live · all pages' : 'Publish live'} title={isSite ? 'Every page, to staging and the live site' : 'Staging and the live site'} disabled={!canPublish} onClick={doPublishLive} />
+                  <MenuItem text={isSite ? 'Publish staging only · all pages' : 'Publish staging only'} title={isSite ? 'Every page, to staging; the live site is not changed' : 'The live site is not changed'} disabled={!canPublish} onClick={doPublishStaging} />
+                  <MenuItem text={isSite ? 'Unpublish this page' : 'Unpublish'} title="Off staging and the live site; it stays here to edit" tone="critical" disabled={!canUnpublish} onClick={() => setConfirmUnpublish(true)} />
                   {route && (STAGING_ORIGIN || (LIVE_ORIGIN && live)) && <MenuDivider />}
                   {route && STAGING_ORIGIN && <MenuItem as="a" href={`${STAGING_ORIGIN}${route}`} target="_blank" rel="noreferrer" icon={LaunchIcon} text="Staging link" />}
                   {route && LIVE_ORIGIN && live && <MenuItem as="a" href={`${LIVE_ORIGIN}${route}`} target="_blank" rel="noreferrer" icon={LaunchIcon} text="Live site link" />}
