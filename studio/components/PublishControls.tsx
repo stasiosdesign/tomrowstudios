@@ -16,13 +16,17 @@ import {
   publishLive,
   publishStaging,
   publishStatus,
+  groupStatus,
+  STATUS_LABEL,
   unpublish,
   type PublishLog,
+  type PublishStatus,
   type UnpublishLog,
 } from '../lib/publish'
 import {PAGES} from '../schemaTypes/pages'
 import {fetchBuildStamp, isPageType, LIVE_ORIGIN, routeFor, STAGING_ORIGIN, type BuildStamp} from '../lib/site'
 import {formatDate} from './format'
+import {isPermissionError, usePermissionGate} from './PermissionDialog'
 import {Chip, StatusChip} from './Status'
 
 /* The publishing control at the top right of every document (DocumentLayout),
@@ -44,8 +48,13 @@ import {Chip, StatusChip} from './Status'
    The static pages (the page editor's singletons) publish together, the way a
    site builder publishes a site: on any of them, Publish live and Publish
    staging only take every page's latest saved version, not just the open
-   one's, and the bar says so, with how many pages have changes. CMS items
-   publish one at a time and are never part of it. */
+   one's. They share one status too (groupStatus), the same on every page,
+   and have no Unpublish of their own. CMS items publish one at a time and
+   are never part of it.
+
+   Publishing, unpublishing and deleting are for the roles that may write:
+   anyone else gets the permission dialog (PermissionDialog.tsx) on click,
+   and nothing is sent. */
 
 /** The static site: every page's document ID (a singleton's ID is its type) */
 const SITE = PAGES.map((page) => page.type)
@@ -98,10 +107,12 @@ function useSiteState(id: string): SiteState {
   return state
 }
 
-// How many static pages have changes the live site doesn't have, kept current
-function useSitePending(enabled: boolean): number | null {
+// The static site's one status (lib/publish.ts, groupStatus), from every
+// page's own, and each page's for the tooltip; kept current
+type SiteGroup = {status: PublishStatus | null; pages: {id: string; status: PublishStatus | null}[]}
+function useSiteGroup(enabled: boolean): SiteGroup | null {
   const client = useClient({apiVersion: API_VERSION})
-  const [pending, setPending] = useState<number | null>(null)
+  const [group, setGroup] = useState<SiteGroup | null>(null)
   useEffect(() => {
     if (!enabled) return undefined
     const staging = client.withConfig({perspective: 'raw', useCdn: false})
@@ -115,17 +126,17 @@ function useSitePending(enabled: boolean): number | null {
         .then(([onStaging, onLive]) => {
           if (cancelled) return
           const find = <T,>(docs: SanityDocument[], id: string) => (docs.find((doc) => doc._id === id) ?? null) as T | null
-          const count = SITE.filter((id) => {
-            const status = publishStatus({
+          const pages = SITE.map((id) => ({
+            id,
+            status: publishStatus({
               draft: find<SanityDocument>(onStaging, `drafts.${id}`),
               published: find<SanityDocument>(onStaging, id),
               live: find<SanityDocument>(onLive, id),
               liveLog: find<PublishLog>(onLive, logId(id)),
               stagingLog: find<UnpublishLog>(onStaging, logId(id)),
-            })
-            return status !== null && status !== 'live'
-          }).length
-          setPending(count)
+            }),
+          }))
+          setGroup({status: groupStatus(pages.map((page) => page.status)), pages})
         })
         .catch(() => undefined)
     load()
@@ -144,7 +155,7 @@ function useSitePending(enabled: boolean): number | null {
       subscriptions.forEach((subscription) => subscription.unsubscribe())
     }
   }, [client, enabled])
-  return pending
+  return group
 }
 
 // The live site's build stamp, asked for again every 15 seconds while a rebuild is awaited
@@ -179,7 +190,8 @@ export function PublishControls({documentId, documentType}: {documentId: string;
   const {validation} = useValidationStatus(documentId, documentType, false)
   const {live, liveLog, stagingLog} = useSiteState(documentId)
   const isSite = isPageType(documentType) && SITE.includes(documentId)
-  const sitePending = useSitePending(isSite)
+  const siteGroup = useSiteGroup(isSite)
+  const gate = usePermissionGate()
 
   const current = draft ?? published
   const isPage = isPageType(documentType)
@@ -189,7 +201,8 @@ export function PublishControls({documentId, documentType}: {documentId: string;
     : String((current as {title?: unknown})?.title ?? (current as {name?: unknown})?.name ?? '').trim() || `Untitled ${typeTitle.toLowerCase()}`
 
   const errors = useMemo(() => validation.filter((marker) => marker.level === 'error'), [validation])
-  const status = publishStatus({draft, published, live, liveLog, stagingLog})
+  // A static page shows the site's status, never its own: the pages publish together
+  const status = isSite ? (siteGroup?.status ?? null) : publishStatus({draft, published, live, liveLog, stagingLog})
 
   const liveUpdatedAt = live?._updatedAt
   const buildStamp = useBuildStamp(!!liveUpdatedAt)
@@ -214,19 +227,23 @@ export function PublishControls({documentId, documentType}: {documentId: string;
   const run = useCallback(
     async (kind: Exclude<Busy, null>, action: () => Promise<unknown>, success: {title: string; description?: string}, failure: string) => {
       if (running.current) return
+      // Only roles that may write run it; anyone else is told so, and nothing is sent
+      const restricted = kind === 'unpublish' ? 'unpublish' : 'publish'
+      if (!gate.allow(restricted)) return
       running.current = true
       setBusy(kind)
       try {
         await action()
         toast.push({status: 'success', closable: true, ...success})
       } catch (error) {
-        fail(failure, error)
+        if (isPermissionError(error)) gate.deny(restricted)
+        else fail(failure, error)
       } finally {
         running.current = false
         if (mounted.current) setBusy(null)
       }
     },
-    [toast, fail],
+    [toast, fail, gate],
   )
 
   // On a static page, both publish actions take the whole static site. They
@@ -265,16 +282,23 @@ export function PublishControls({documentId, documentType}: {documentId: string;
     return run('unpublish', () => unpublish(client, documentId), {title: `${itemTitle} unpublished`, description: 'It is off staging and the live site, and stays here to edit.'}, 'Not unpublished')
   }
 
-  // The detail behind the status (dates, the live site's rebuild) is in its tooltip
+  // The detail behind the status (dates, the live site's rebuild; for the
+  // static site, each page's own status) is in its tooltip
   const details: string[] = []
-  if (published) details.push(`Staging: published ${formatDate(published._updatedAt, true)}`)
+  if (isSite) {
+    details.push('All pages publish together. CMS items are published on their own.')
+    for (const page of siteGroup?.pages ?? []) {
+      if (page.status) details.push(`${PAGES.find((entry) => entry.type === page.id)?.title ?? page.id}: ${STATUS_LABEL[page.status]}`)
+    }
+  } else if (published) details.push(`Staging: published ${formatDate(published._updatedAt, true)}`)
   if (live) {
     details.push(`Live: published ${formatDate(live._updatedAt, true)}${buildStamp ? `, site built ${formatDate(buildStamp.builtAt, true)}` : ''}`)
     if (waitedLong) details.push('The live site has not rebuilt: check the Sanity webhook (README).')
   }
   const saving = isSyncing ? 'Saving…' : errors.length > 0 ? `${errors.length} ${errors.length === 1 ? 'problem' : 'problems'} to fix` : null
 
-  const canUnpublish = ready && (!!published || !!live) && busy === null
+  // Unpublishing is per CMS item: the static pages only publish, together
+  const canUnpublish = !isSite && ready && (!!published || !!live) && busy === null
   const route = routeFor(current as {_type?: string; slug?: {current?: string}} | null)
   const versionLine = current ? `the version saved ${formatDate(current._updatedAt, true)}` : ''
 
@@ -283,7 +307,7 @@ export function PublishControls({documentId, documentType}: {documentId: string;
       <Flex align="center" gap={3} wrap="wrap">
         {collection && <Button icon={ArrowLeftIcon} mode="bleed" fontSize={1} padding={2} text={collection.title} onClick={collection.back} aria-label={`Back to ${collection.title}`} />}
         <Flex flex={1} align="center" gap={3} wrap="wrap" style={{minWidth: 160}}>
-          {!ready ? (
+          {!ready || (isSite && !siteGroup) ? (
             <Chip $tone="muted">Loading…</Chip>
           ) : !status ? (
             <Chip $tone="muted">New: start typing to create it</Chip>
@@ -291,8 +315,8 @@ export function PublishControls({documentId, documentType}: {documentId: string;
             <StatusChip status={status} title={details.join('\n') || undefined} />
           )}
           {isSite && (
-            <Chip $tone="muted" title="Publishing from the page editor publishes every page of the site together. CMS items are published on their own.">
-              {sitePending === null ? 'Publishes all pages' : sitePending === 0 ? 'All pages live' : `Publishes all pages · ${sitePending} with changes`}
+            <Chip $tone="muted" title="All pages publish together. CMS items are published on their own.">
+              All pages
             </Chip>
           )}
           {status === 'live' && siteBehind && <Chip $tone="muted">{waitedLong ? 'Live site not rebuilt yet' : 'Live site rebuilding…'}</Chip>}
@@ -319,7 +343,15 @@ export function PublishControls({documentId, documentType}: {documentId: string;
                 <Menu data-tomrow-publish-menu>
                   <MenuItem text={isSite ? 'Publish live · all pages' : 'Publish live'} title={isSite ? 'Every page, to staging and the live site' : 'Staging and the live site'} onClick={doPublishLive} />
                   <MenuItem text={isSite ? 'Publish staging only · all pages' : 'Publish staging only'} title={isSite ? 'Every page, to staging; the live site is not changed' : 'The live site is not changed'} onClick={doPublishStaging} />
-                  <MenuItem text={isSite ? 'Unpublish this page' : 'Unpublish'} title="Off staging and the live site; it stays here to edit" tone="critical" disabled={!canUnpublish} onClick={() => setConfirmUnpublish(true)} />
+                  {!isSite && (
+                    <MenuItem
+                      text="Unpublish"
+                      title="Off staging and the live site; it stays here to edit"
+                      tone="critical"
+                      disabled={!canUnpublish}
+                      onClick={() => gate.allow('unpublish') && setConfirmUnpublish(true)}
+                    />
+                  )}
                   {route && (STAGING_ORIGIN || (LIVE_ORIGIN && live)) && <MenuDivider />}
                   {route && STAGING_ORIGIN && <MenuItem as="a" href={`${STAGING_ORIGIN}${route}`} target="_blank" rel="noreferrer" icon={LaunchIcon} text="Staging link" />}
                   {route && LIVE_ORIGIN && live && <MenuItem as="a" href={`${LIVE_ORIGIN}${route}`} target="_blank" rel="noreferrer" icon={LaunchIcon} text="Live site link" />}
@@ -330,6 +362,7 @@ export function PublishControls({documentId, documentType}: {documentId: string;
         )}
       </Flex>
 
+      {gate.dialog}
       {confirmUnpublish && (
         <ConfirmDialog id="tomrow-confirm-unpublish" title="Unpublish" action="Unpublish" tone="critical" onCancel={() => setConfirmUnpublish(false)} onConfirm={doUnpublish}>
           <b>{itemTitle}</b> comes off staging and the live site. It stays here to edit and publish again.

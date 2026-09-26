@@ -6,6 +6,7 @@ import {DesktopIcon} from '@sanity/icons/Desktop'
 import './page'
 import './studio.css'
 import {DocumentLayout} from './components/DocumentLayout'
+import {PageInput} from './components/PageInput'
 import {schemaTypes} from './schemaTypes'
 import {PAGES} from './schemaTypes/pages'
 import {structure} from './structure'
@@ -106,6 +107,16 @@ export default defineConfig({
   // datasets, not releases
   releases: {enabled: false},
 
+  // Nor are Sanity's tasks: the top bar drops its Tasks button
+  tasks: {enabled: false},
+
+  // The static pages' form: their sections as one ruled list (PageInput)
+  form: {
+    components: {
+      input: PageInput,
+    },
+  },
+
   schema: {
     types: schemaTypes,
     templates: (templates) => templates.filter(({schemaType}) => !HIDDEN_FROM_NEW.has(schemaType)),
@@ -116,6 +127,9 @@ export default defineConfig({
     // control (components/PublishControls.tsx), which knows about staging
     // and the live site
     actions: () => [],
+    // The static pages publish as one site from the page editor; comments
+    // stay on the CMS items
+    comments: {enabled: ({documentType}) => !SINGLETONS.has(documentType)},
     components: {
       unstable_layout: DocumentLayout,
     },

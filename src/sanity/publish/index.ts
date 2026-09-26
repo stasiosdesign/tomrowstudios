@@ -121,7 +121,7 @@ async function authenticate(header: string | null): Promise<{ id: string; role: 
   const me = (await response.json()) as { id?: string; role?: string; roles?: { name: string }[] };
   const roles = new Set([me.role, ...(me.roles ?? []).map((role) => role.name)].filter((role): role is string => !!role));
   if (!me.id || ![...roles].some((role) => PUBLISHING_ROLES.has(role))) {
-    throw new PublishError(403, 'Your role in the Sanity project does not allow publishing. Ask an administrator.');
+    throw new PublishError(403, 'Your role in the Sanity project does not allow publishing. Ask an administrator.', { reason: 'permission' });
   }
   return { id: me.id, role: [...roles].join(', ') };
 }

@@ -40,7 +40,7 @@ export class PublishError extends Error {
   constructor(
     message: string,
     public status: number,
-    public details?: {missing?: {id: string; type?: string; title?: string}[]; referrers?: {_id: string; _type: string; title?: string}[]},
+    public details?: {reason?: string; missing?: {id: string; type?: string; title?: string}[]; referrers?: {_id: string; _type: string; title?: string}[]},
   ) {
     super(message)
   }
@@ -128,6 +128,26 @@ export const STATUS_TONE: Record<PublishStatus, 'positive' | 'caution' | 'muted'
 
 /** The note the route leaves in staging when it unpublishes a document */
 export type UnpublishLog = {_id: string; document: string; state: 'unpublished'; contentKey: string; unpublishedAt: string}
+
+/* The static pages publish as one site, so they share one status, worked out
+   from every page's own: Changes in draft while any page has edits neither
+   site has, else Staging while any page's latest version is on staging only,
+   else Unpublished when every page is, else Live. Pages with nothing saved
+   don't count. */
+export function groupStatus(statuses: (PublishStatus | null)[]): PublishStatus | null {
+  const known = statuses.filter((status): status is PublishStatus => status !== null)
+  if (known.length === 0) return null
+  if (known.includes('draft')) return 'draft'
+  if (known.includes('staging')) return 'staging'
+  if (known.every((status) => status === 'unpublished')) return 'unpublished'
+  return 'live'
+}
+
+/* The project roles that may publish, unpublish and delete: the same set the
+   server route checks (src/sanity/publish/index.ts, PUBLISHING_ROLES). The
+   Studio checks first, so a Contributor is told plainly instead of the
+   action being sent; the route still refuses on its own. */
+export const PUBLISHING_ROLES = new Set(['administrator', 'editor', 'developer'])
 
 export function publishStatus(state: {
   draft?: SanityDocument | null

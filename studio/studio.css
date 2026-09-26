@@ -191,6 +191,24 @@ button.tomrow-cta--arrow > span {
   display: none !important;
 }
 
+/* The top bar without Help and resources or the trial countdown (Tasks is
+   switched off in sanity.config.ts). Sanity has no setting for these two, so
+   they go by their own markers: the Help menu's test ID, and the trial
+   button's bolt icon, which nothing else in the top bar uses. */
+[data-testid='studio-navbar'] [data-testid='button-resources-menu'],
+[data-testid='studio-navbar'] button:has(> span [data-sanity-icon='bolt']) {
+  display: none !important;
+}
+
+/* A static page's header (the page editor, marked by DocumentLayout) keeps
+   Show more and focus mode, and drops Copy and the pane's close button (the
+   link-button with a close icon beside them): Comments are switched off for
+   the pages in sanity.config.ts. CMS items keep all of them. */
+[data-tomrow-page] [data-testid='copy-document-actions-button'],
+[data-tomrow-page] :has(> :is([data-testid='focus-pane-button-focus'], [data-testid='focus-pane-button-collapse'])) ~ :has(> a[data-ui='Button'] [data-sanity-icon='close']) {
+  display: none !important;
+}
+
 /* The visual editor's address input: the preview is the canvas. The buttons
    beside it (open, viewport, share) stay. */
 [data-testid='presentation-root'] [data-ui='Card']:has([data-testid='preview-viewport-toggle']) [data-ui='TextInput'] {

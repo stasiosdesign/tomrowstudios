@@ -26,6 +26,7 @@ import {
   type UnpublishLog,
 } from '../lib/publish'
 import {columnsFor, renderValue, textOf, type Column} from './format'
+import {isPermissionError, usePermissionGate, type RestrictedAction} from './PermissionDialog'
 import {ConfirmDialog, failText} from './PublishControls'
 import {StatusChip} from './Status'
 
@@ -263,6 +264,7 @@ export function CollectionPane(props: {options?: Record<string, unknown>; childI
 
   // Select mode: tick items, then one action for them all
   const toast = useToast()
+  const gate = usePermissionGate()
   const [selecting, setSelecting] = useState(false)
   const [picked, setPicked] = useState<Set<string>>(() => new Set())
   const [bulkBusy, setBulkBusy] = useState(false)
@@ -289,14 +291,16 @@ export function CollectionPane(props: {options?: Record<string, unknown>; childI
     async (action: BulkAction, ids: string[]) => {
       if (bulkBusy || ids.length === 0) return
       setConfirm(null)
+      // Only roles that may write run it; anyone else is told so, and nothing is sent
+      if (!gate.allow(RESTRICTED[action])) return
       setBulkBusy(true)
       const run = {live: publishLive, staging: publishStaging, unpublish, delete: deleteDocument}[action]
-      const failed: {id: string; title: string; reason: string}[] = []
+      const failed: {id: string; title: string; reason: string; denied: boolean}[] = []
       for (const id of ids) {
         try {
           await run(client, id)
         } catch (err) {
-          failed.push({id, title: rows.find((row) => row.id === id)?.title ?? id, reason: failText(err)})
+          failed.push({id, title: rows.find((row) => row.id === id)?.title ?? id, reason: failText(err), denied: isPermissionError(err)})
         }
       }
       setBulkBusy(false)
@@ -304,6 +308,9 @@ export function CollectionPane(props: {options?: Record<string, unknown>; childI
       if (action === 'delete' && selectedId && ids.includes(selectedId) && !failed.some((item) => item.id === selectedId)) showAll()
       const done = ids.length - failed.length
       const what = (count: number) => (count === 1 ? singular : lowerTitle)
+      // A refusal because of the user's role is the dialog, not a technical list
+      if (failed.some((item) => item.denied)) gate.deny(RESTRICTED[action])
+      if (failed.length > 0 && failed.every((item) => item.denied)) return
       if (failed.length === 0) {
         toast.push({status: 'success', closable: true, title: `${ids.length} ${what(ids.length)} ${BULK_DONE[action]}`})
       } else {
@@ -312,11 +319,11 @@ export function CollectionPane(props: {options?: Record<string, unknown>; childI
           closable: true,
           duration: 15000,
           title: `${done} of ${ids.length} ${what(ids.length)} ${BULK_DONE[action]}`,
-          description: failed.map((item) => `${item.title}: ${item.reason}`).join('\n'),
+          description: failed.map((item) => `${item.title}: ${item.denied ? 'not permitted for your role' : item.reason}`).join('\n'),
         })
       }
     },
-    [bulkBusy, client, rows, selectedId, showAll, singular, lowerTitle, toast],
+    [bulkBusy, client, rows, selectedId, showAll, singular, lowerTitle, toast, gate],
   )
 
   return (
@@ -390,8 +397,8 @@ export function CollectionPane(props: {options?: Record<string, unknown>; childI
             </Box>
             <Button text="Publish live" className="tomrow-cta" fontSize={1} padding={2} disabled={bulkBusy || pickedIds.length === 0} onClick={() => runBulk('live', pickedIds)} />
             <Button text="Publish staging only" mode="ghost" fontSize={1} padding={2} disabled={bulkBusy || pickedIds.length === 0} onClick={() => runBulk('staging', pickedIds)} />
-            <Button text="Unpublish" mode="ghost" tone="critical" fontSize={1} padding={2} disabled={bulkBusy || pickedIds.length === 0} onClick={() => setConfirm({action: 'unpublish', ids: pickedIds})} />
-            <Button text="Delete" mode="ghost" tone="critical" icon={TrashIcon} fontSize={1} padding={2} disabled={bulkBusy || pickedIds.length === 0} onClick={() => setConfirm({action: 'delete', ids: pickedIds})} />
+            <Button text="Unpublish" mode="ghost" tone="critical" fontSize={1} padding={2} disabled={bulkBusy || pickedIds.length === 0} onClick={() => gate.allow('unpublish') && setConfirm({action: 'unpublish', ids: pickedIds})} />
+            <Button text="Delete" mode="ghost" tone="critical" icon={TrashIcon} fontSize={1} padding={2} disabled={bulkBusy || pickedIds.length === 0} onClick={() => gate.allow('delete') && setConfirm({action: 'delete', ids: pickedIds})} />
           </Flex>
         </Card>
       )}
@@ -454,7 +461,7 @@ export function CollectionPane(props: {options?: Record<string, unknown>; childI
                   picking={selecting}
                   picked={picked.has(row.id)}
                   onPick={bulkBusy ? undefined : togglePick}
-                  onDelete={bulkBusy ? undefined : (id) => setConfirm({action: 'delete', ids: [id]})}
+                  onDelete={bulkBusy ? undefined : (id) => gate.allow('delete') && setConfirm({action: 'delete', ids: [id]})}
                 />
               ))}
             </tbody>
@@ -479,6 +486,7 @@ export function CollectionPane(props: {options?: Record<string, unknown>; childI
         </Card>
       )}
 
+      {gate.dialog}
       {confirm && (
         <ConfirmDialog
           id="tomrow-confirm-bulk"
@@ -496,6 +504,8 @@ export function CollectionPane(props: {options?: Record<string, unknown>; childI
 }
 
 type BulkAction = 'live' | 'staging' | 'unpublish' | 'delete'
+
+const RESTRICTED: Record<BulkAction, RestrictedAction> = {live: 'publish', staging: 'publish', unpublish: 'unpublish', delete: 'delete'}
 
 const BULK_DONE: Record<BulkAction, string> = {
   live: 'published live',

@@ -143,9 +143,21 @@ The static pages (the page editor) publish together, like a site builder's
 site: on any of them the button reads **Publish Site**, and Publish live and
 Publish staging only take every page's latest saved version, not just the
 open one's (the route's site mode; every page is checked before any is
-written). The bar says **Publishes all pages** with how many have changes.
-CMS items are never part of it: they publish one at a time, or in bulk only
-when selected.
+written). They share one status, the same on every page (`groupStatus`):
+Changes in draft while any page has edits, else Staging while any page is on
+staging only, else Live; hover it for each page's own. They have no Unpublish
+of their own. CMS items are never part of it: they publish one at a time, or
+in bulk only when selected.
+
+Each static page's form is its sections as one ruled list, like a collection
+table (`PageInput`, `SectionField`): a row opens beneath its title. The page
+editor's header keeps Show more and focus mode only (no Copy, Comments or
+close), and the top bar has no Tasks, Help or trial countdown.
+
+Publishing, unpublishing and deleting are for Administrators, Editors and
+Developers (the route checks; the Studio checks first). Anyone else can click
+the controls and gets a dialog saying they don't have permission and to ask a
+project administrator; nothing is sent.
 
 Collections also have a **Select** mode: tick items for a bulk Publish live,
 Publish staging only, Unpublish or Delete; each item goes through the same

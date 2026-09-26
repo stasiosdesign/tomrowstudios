@@ -17,7 +17,7 @@ export function SectionField(props: ObjectFieldProps) {
   const id = useId()
 
   return (
-    <Row data-open={open ? '' : undefined}>
+    <Row data-open={open ? '' : undefined} data-tomrow-section>
       <RowButton type="button" id={`${id}-row`} aria-expanded={open} aria-controls={`${id}-fields`} onClick={open ? onCollapse : onExpand}>
         <Flex align="center" gap={3}>
           <Box flex={1}>
@@ -48,12 +48,10 @@ export function SectionField(props: ObjectFieldProps) {
   )
 }
 
+/* Ruled and spaced like a collection table's rows (CollectionPane): the page
+   form (PageInput) closes the gaps between them and rules the top of the list */
 const Row = styled.div`
   border-bottom: 1px solid var(--card-border-color);
-
-  &:first-child {
-    border-top: 1px solid var(--card-border-color);
-  }
 `
 
 const RowButton = styled.button`
@@ -61,7 +59,7 @@ const RowButton = styled.button`
   display: block;
   width: 100%;
   box-sizing: border-box;
-  padding: 12px 12px;
+  padding: 12px 14px;
   cursor: pointer;
 
   &:hover {
@@ -85,5 +83,5 @@ const RowButton = styled.button`
 `
 
 const Fields = styled.div`
-  padding: 16px 12px 24px;
+  padding: 20px 14px 28px;
 `
