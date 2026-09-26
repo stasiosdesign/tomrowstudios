@@ -102,27 +102,28 @@ button.tomrow-cta--arrow > span {
    for good). Here the first pane, the Content sidebar, is one narrow column,
    a collection's item list gives way once an item is open, and the last
    pane, the editor, always takes everything that is left. */
-[data-ui='Pane']:has([data-tomrow-sidebar]) {
+[data-pane-index]:has([data-tomrow-sidebar]),
+[data-pane-index='0']:has([data-tomrow-sidebar]) {
   flex: 0 0 var(--tomrow-sidebar-width) !important;
   width: var(--tomrow-sidebar-width) !important;
   min-width: var(--tomrow-sidebar-width) !important;
   max-width: var(--tomrow-sidebar-width) !important;
 }
 
-[data-ui='Pane']:has([data-tomrow-collection='compact']) {
+[data-pane-index]:has([data-tomrow-collection='compact']) {
   display: none !important;
 }
 
-[data-ui='Pane']:last-child:not([data-pane-index='0']),
-[data-ui='Pane']:has([data-tomrow-document]),
-[data-ui='Pane']:has([data-tomrow-collection='table']) {
+[data-pane-index]:last-child:not([data-pane-index='0']),
+[data-pane-index]:has([data-tomrow-document]),
+[data-pane-index]:has([data-tomrow-collection='table']) {
   flex: 1 1 0 !important;
   width: auto !important;
   max-width: none !important;
 }
 
 /* A collapsed pane (a narrow window) keeps Sanity's 51px strip */
-[data-ui='Pane'][data-pane-collapsed] {
+[data-pane-index][data-pane-collapsed] {
   flex: 0 0 51px !important;
   width: 51px !important;
   min-width: 51px !important;
