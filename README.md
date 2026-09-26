@@ -115,32 +115,41 @@ deployment), and Sanity's own drafts in the one the Studio edits:
 ### Publishing
 
 The publishing control at the top right of every document in the Studio, in
-Content and in the Visual editor alike (`studio/components/PublishControls.tsx`),
-shows one line of status and a **Publish Live** split button whose menu
-holds the four actions. Both publish actions are always available, even when
-nothing has changed. Publish Live runs at once; unpublishing asks first.
+Content, the page editor and the Visual editor alike
+(`studio/components/PublishControls.tsx`), shows the document's status and a
+**Publish Live** split button. Its menu holds **Publish live**, **Publish
+staging only** and **Unpublish**, then the **Staging link** and **Live site
+link**. Both publish actions are always available, even when nothing has
+changed; Unpublish asks first.
 
-- **Publish to Staging**: Sanity's own publish, in the `staging` dataset only;
-  the live site is not changed. The draft becomes the published document
-  (with no draft, the published version is written again); staging shows it
-  on its next request. Further edits make a new draft and leave that version alone.
-- **Publish Live**: sends the version in the editor (the draft, or else the
-  published document, pinned by its revision) to the site's server route,
-  `/api/publish` on staging (`src/sanity/publish/`). The route checks the
-  caller's Studio session with Sanity and their role, publishes that version
-  in `staging`, then writes the document into the `production` dataset with its own token,
-  `SANITY_API_WRITE_TOKEN`, carrying over the images and files it uses. It
-  refuses a document that refers to something not yet live, naming it.
-  Staging gets the same version first, so it never falls behind live.
-- **Unpublish from Live** deletes the document from `production` (refused
-  while something live still links to it); **Unpublish from Staging** is
-  Sanity's unpublish, which keeps the draft. Either way the document stays
-  in the Studio to edit and publish again.
+Every action goes to the site's server route, `/api/publish` on staging
+(`src/sanity/publish/`), which checks the caller's Studio session with Sanity
+and their role, then writes with its own token, `SANITY_API_WRITE_TOKEN`. All
+its checks run before the first write, so a refusal changes nothing.
 
-Status is derived from the datasets, not from what was clicked: **Not
-published yet**, **On staging**, **Live**, **Staging has an older version**,
-**Live site has an older version**, with **newer edits here** when there are
-edits since a site last got a version, and **site rebuilding…** while
+- **Publish live**: the version in the editor (the draft, or else the
+  published document, pinned by its revision) is published in `staging`,
+  then written into `production` with the images and files it uses. Staging
+  gets it first, so it never falls behind live. Refused while it links to
+  something not yet published there, naming it.
+- **Publish staging only**: the same in `staging` alone; live is not changed.
+- **Unpublish**: off both sites. The Studio keeps the content as a draft and
+  the route leaves a note (`publish-log.<id>` in staging) so the item reads
+  Unpublished until it is edited. Refused while something links to it.
+- **Delete** (collections only, on a row or in Select mode): gone from the
+  Studio and both sites, after a confirmation.
+
+Collections also have a **Select** mode: tick items for a bulk Publish live,
+Publish staging only, Unpublish or Delete; each item goes through the same
+route, and the ones that fail stay ticked and are named.
+
+The status (`publishStatus` in `studio/lib/publish.ts`, the same in the
+collection table and the publishing control) says where the latest saved
+version is: **Live** (green: staging and live both have it), **Staging**
+(yellow: staging has it, live doesn't, even if an older version is live),
+**Changes in draft** (yellow: newer edits neither site has) or **Unpublished**
+(grey: taken off both sites, not edited since). It is read from the datasets,
+not from what was clicked; **Live site rebuilding…** shows while
 production catches up. Hover the status for the dates. The Studio always
 edits the working draft: the Published / Drafts switch is hidden, since
 drafts never reach the ordinary sites anyway.
