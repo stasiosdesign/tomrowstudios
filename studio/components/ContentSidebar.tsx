@@ -127,7 +127,6 @@ const ItemLink = styled.a<{$selected: boolean}>`
   color: inherit;
   text-decoration: none;
   background: ${({$selected}) => ($selected ? 'var(--tomrow-selected)' : 'transparent')};
-  box-shadow: ${({$selected}) => ($selected ? 'inset 2px 0 0 #dd341d' : 'none')};
 
   &:hover {
     background: ${({$selected}) => ($selected ? 'var(--tomrow-selected)' : 'var(--tomrow-hover)')};
