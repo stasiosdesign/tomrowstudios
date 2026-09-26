@@ -461,7 +461,7 @@ export function CollectionPane(props: {options?: Record<string, unknown>; childI
           </Table>
         )}
         {documents !== null && shown.length > 0 && compact && (
-          <Stack as="ul" role="list" padding={2} gap={1} style={{listStyle: 'none', margin: 0}}>
+          <Stack as="ul" role="list" style={{listStyle: 'none', margin: 0, padding: 0}}>
             {shown.map((row) => (
               <li key={row.id}>
                 <CompactItem row={row} selected={row.id === selectedId} ChildLink={ChildLink} />
@@ -693,8 +693,8 @@ function ItemRow({
 
 const CompactLink = styled.a<{$selected: boolean}>`
   display: block;
-  padding: 8px 10px;
-  border-radius: 3px;
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--card-border-color);
   color: inherit;
   text-decoration: none;
   background: ${({$selected}) => ($selected ? 'var(--tomrow-selected)' : 'transparent')};
