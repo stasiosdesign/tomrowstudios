@@ -1,22 +1,35 @@
 import {ChevronDownIcon} from '@sanity/icons/ChevronDown'
 import {Badge, Box, Flex, Text} from '@sanity/ui'
-import {useId} from 'react'
+import {useContext, useEffect, useId, useRef} from 'react'
 import {type ObjectFieldProps} from 'sanity'
 import {styled} from 'styled-components'
 import {Collapse, MOTION_EASE, MOTION_MS} from './Collapse'
+import {SectionGroup} from './PageInput'
 
 /* One section of a page in the form: a row in a table-like list, in the
    page's order, that opens and closes on a click anywhere along it (or Enter
    and Space on the keyboard) to show the section's fields directly beneath.
    A problem anywhere inside shows on the row, so a folded section still says
    when something in it needs fixing before the page can be published. The
-   fields open and close with a short height transition (Collapse). */
+   fields open and close with a short height transition (Collapse). One
+   section of a page is open at a time: opening this one closes the others
+   (PageInput's section group), however it opened. */
 export function SectionField(props: ObjectFieldProps) {
   const {children, collapsed, description, onCollapse, onExpand, title, validation} = props
   const open = !collapsed
   const hasError = validation.some((marker) => marker.level === 'error')
   const hasWarning = !hasError && validation.some((marker) => marker.level === 'warning')
   const id = useId()
+
+  // One open at a time: when this section opens, the page's group closes
+  // the one that was open, and keeps this one's close until it shuts
+  const group = useContext(SectionGroup)
+  const collapseRef = useRef(onCollapse)
+  collapseRef.current = onCollapse
+  useEffect(() => {
+    if (!open || !group) return undefined
+    return group.open(id, () => collapseRef.current())
+  }, [open, group, id])
 
   return (
     <Row data-open={open ? '' : undefined} data-tomrow-section>
