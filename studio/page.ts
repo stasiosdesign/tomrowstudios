@@ -30,17 +30,6 @@ if (typeof document !== 'undefined') {
    else. It runs after every change to the page. */
 const SIDEBAR_WIDTH = 248
 
-function paneOf(marker: Element): HTMLElement | null {
-  const known = marker.closest<HTMLElement>('[data-pane-index], [data-testid="pane"], [data-testid="document-pane"]')
-  if (known) return known
-  // Otherwise: the nearest ancestor that is a flex item with an inline flex of its own
-  let el: HTMLElement | null = marker.parentElement
-  for (let depth = 0; el && depth < 14; depth++, el = el.parentElement) {
-    if (el.style.flex && el.parentElement && getComputedStyle(el.parentElement).display === 'flex') return el
-  }
-  return null
-}
-
 function set(el: HTMLElement, styles: Record<string, string>) {
   for (const [property, value] of Object.entries(styles)) {
     if (el.style.getPropertyValue(property) !== value || el.style.getPropertyPriority(property) !== 'important') {
@@ -51,24 +40,38 @@ function set(el: HTMLElement, styles: Record<string, string>) {
 
 function layout() {
   const width = `${SIDEBAR_WIDTH}px`
-  for (const marker of document.querySelectorAll('[data-tomrow-sidebar]')) {
-    const pane = paneOf(marker)
-    if (pane) {
-      set(pane, {flex: `0 0 ${width}`, width, 'min-width': width, 'max-width': width})
-      // The row of panes itself, and its parents up to the tool: full width
-      let row: HTMLElement | null = pane.parentElement
-      for (let depth = 0; row && depth < 3; depth++, row = row.parentElement) {
-        set(row, {width: '100%', 'max-width': 'none', flex: '1 1 auto'})
-      }
+  // Every row of panes: the pane elements carry data-pane-index (set by
+  // Sanity after its other attributes, so it survives), grouped by parent
+  const rows = new Map<HTMLElement, HTMLElement[]>()
+  for (const pane of document.querySelectorAll<HTMLElement>('[data-pane-index], [data-testid="pane"], [data-testid="document-pane"]')) {
+    const parent = pane.parentElement
+    if (!parent) continue
+    const list = rows.get(parent) ?? []
+    if (!list.includes(pane)) list.push(pane)
+    rows.set(parent, list)
+  }
+  for (const [row, panes] of rows) {
+    // One pane alone (the visual editor's form) is left to Sanity
+    if (panes.length < 2) continue
+    set(row, {width: '100%', 'max-width': 'none', flex: '1 1 auto'})
+    let parent: HTMLElement | null = row.parentElement
+    for (let depth = 0; parent && depth < 3; depth++, parent = parent.parentElement) {
+      set(parent, {width: '100%', 'max-width': 'none'})
     }
-  }
-  for (const marker of document.querySelectorAll('[data-tomrow-collection="compact"]')) {
-    const pane = paneOf(marker)
-    if (pane) set(pane, {display: 'none'})
-  }
-  for (const marker of document.querySelectorAll('[data-tomrow-document], [data-tomrow-collection="table"]')) {
-    const pane = paneOf(marker)
-    if (pane) set(pane, {flex: '1 1 0px', width: 'auto', 'max-width': 'none', display: 'flex'})
+    panes.sort((x, y) => Number(x.dataset.paneIndex ?? 0) - Number(y.dataset.paneIndex ?? 0))
+    panes.forEach((pane, index) => {
+      const collapsed = pane.hasAttribute('data-pane-collapsed')
+      const last = index === panes.length - 1
+      if (collapsed) return
+      if (index === 0) {
+        set(pane, {flex: `0 0 ${width}`, width, 'min-width': width, 'max-width': width})
+      } else if (last) {
+        set(pane, {flex: '1 1 0px', width: 'auto', 'max-width': 'none', display: 'flex'})
+      } else if (pane.querySelector('[data-tomrow-collection="compact"]') || panes[index + 1]?.querySelector('[data-tomrow-document], [data-testid="document-panel"]')) {
+        // A collection's list, with an item open beside it: it steps aside
+        set(pane, {display: 'none'})
+      }
+    })
   }
   // Editing always means the working draft: the Published / Draft chips and
   // the top bar's Drafts menu go (the status beside Publish Live remains)
