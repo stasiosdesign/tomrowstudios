@@ -742,12 +742,11 @@ function ColumnChooser({columns, visible, onToggle}: {columns: Column[]; visible
   return (
     <Popover
       open={open}
-      animate
       portal
       placement="bottom-end"
       ref={setPopoverEl}
       content={
-        <Card padding={2} onKeyDown={onKeyDown} style={{maxHeight: '60vh', overflow: 'auto', minWidth: 200}}>
+        <Card data-tomrow-pop padding={2} onKeyDown={onKeyDown} style={{maxHeight: '60vh', overflow: 'auto', minWidth: 200}}>
           <Stack gap={1}>
             {columns.map((column) => (
               <Flex key={column.name} as="label" align="center" gap={3} padding={2} style={{cursor: 'pointer', borderRadius: 3}}>

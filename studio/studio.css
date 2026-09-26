@@ -217,6 +217,34 @@ button.tomrow-cta--arrow > span {
   display: none !important;
 }
 
+/* Dropdowns (the publishing menu, the Columns chooser: content marked
+   data-tomrow-pop) open with a gentle fade, drop and scale, slower and
+   softer than Sanity UI's own popover motion (which has fixed timings).
+   The separate translate and scale properties leave Sanity's positioning
+   transform alone. None for anyone who prefers reduced motion. */
+@keyframes tomrow-pop-in {
+  from {
+    opacity: 0;
+    translate: 0 -6px;
+    scale: 0.97;
+  }
+
+  to {
+    opacity: 1;
+    translate: 0 0;
+    scale: 1;
+  }
+}
+
+:has(> [data-ui='Popover__wrapper'] [data-tomrow-pop]) {
+  transform-origin: top right;
+  animation: tomrow-pop-in 280ms cubic-bezier(0.16, 1, 0.3, 1) both;
+
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+  }
+}
+
 /* The Visual editor's Laptop view: the preview frame at 16:9, sized to fit by
    PreviewControls.tsx and centred by its own box; Phone and Fill are Sanity's */
 [data-tomrow-laptop] > iframe {

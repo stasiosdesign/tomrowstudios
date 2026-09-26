@@ -328,9 +328,9 @@ export function PublishControls({documentId, documentType}: {documentId: string;
             <MenuButton
               id={`tomrow-publish-${documentId}`}
               button={<Button className="tomrow-cta tomrow-cta--arrow" icon={ChevronDownIcon} aria-label="More publishing options" />}
-              popover={{portal: true, placement: 'bottom-end', animate: true}}
+              popover={{portal: true, placement: 'bottom-end'}}
               menu={
-                <Menu data-tomrow-publish-menu>
+                <Menu data-tomrow-publish-menu data-tomrow-pop>
                   <MenuItem text="Publish Live" title={isSite ? 'Every page, to staging and the live site' : 'Staging and the live site'} onClick={doPublishLive} />
                   <MenuItem text="Publish Staging Only" title={isSite ? 'Every page, to staging; the live site is not changed' : 'The live site is not changed'} onClick={doPublishStaging} />
                   {!isSite && (
