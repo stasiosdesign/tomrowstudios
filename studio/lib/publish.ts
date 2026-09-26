@@ -6,23 +6,20 @@ import {STAGING_ORIGIN} from './site'
    Two datasets: `staging`, which the Studio edits, and `production`, which
    only the live site reads.
 
-   - Publish to Staging   Sanity's own publish, in the staging dataset only:
-                          the draft becomes the published document, which the
-                          staging site shows to everyone (with no draft, the
-                          published document is written again).
-   - Publish Live         asks the site's server route, /api/publish, to
-                          publish the current saved version (the draft, or
-                          else the published document) in staging and copy it
-                          into the production dataset: staging never falls
-                          behind the live site.
-                          The route checks who is asking with Sanity and
-                          writes with its own token; the browser never holds
-                          one that can write to production.
-   - Unpublish from …     Sanity's unpublish in staging; the route's delete
-                          in production.
+   Every action goes through the site's server route, /api/publish, which
+   checks who is asking with Sanity and writes with its own token; the
+   browser never holds one that can write to production.
 
-   The functions here only talk to the route; the status of a document on
-   each site is read straight from the datasets (useLiveStatus). */
+   - Publish live           the current saved version (the draft, or else the
+                            published document) is published in staging and
+                            copied into the production dataset: staging never
+                            falls behind the live site.
+   - Publish staging only   the same, in staging only; live is not changed.
+   - Unpublish              off both sites; the Studio keeps it as a draft.
+   - Delete                 gone everywhere.
+
+   The status of a document (publishStatus) is read straight from the
+   datasets. */
 
 export const STAGING_DATASET = 'staging'
 export const PRODUCTION_DATASET = 'production'
@@ -81,15 +78,71 @@ async function call(client: SanityClient, body: Record<string, unknown>): Promis
   return result
 }
 
-/** Puts the document's current saved version on the live site. `rev` pins the exact revision. */
+/** Puts the document's current saved version on staging and the live site. `rev` pins the exact revision. */
 export async function publishLive(client: SanityClient, id: string, rev?: string): Promise<PublishResult> {
   const result = await call(client, {action: 'publish', id, rev})
   return {rev: String(result.rev), sourceRev: String(result.sourceRev), sourceId: String(result.sourceId)}
 }
 
-/** Takes the document off the live site; the Studio keeps it */
-export async function unpublishLive(client: SanityClient, id: string): Promise<void> {
+/** Puts the document's current saved version on staging only; the live site is not changed */
+export async function publishStaging(client: SanityClient, id: string, rev?: string): Promise<void> {
+  await call(client, {action: 'stage', id, rev})
+}
+
+/** Takes the document off both sites; the Studio keeps its content as a draft */
+export async function unpublish(client: SanityClient, id: string): Promise<void> {
   await call(client, {action: 'unpublish', id})
+}
+
+/** Deletes the document everywhere: both sites and the Studio */
+export async function deleteDocument(client: SanityClient, id: string): Promise<void> {
+  await call(client, {action: 'delete', id})
+}
+
+/* The status of an item: where its latest saved version (the draft, or else
+   the published document) is published. One function, used by every place
+   that shows it (the collection table, the publishing control).
+
+     live         staging and the live site both have the latest version
+     staging      staging has it and the live site doesn't (an older version
+                  may still be live)
+     draft        newer edits that neither site has
+     unpublished  taken off both sites, and not edited since: the draft still
+                  holds what the route's unpublish note says was taken off */
+export type PublishStatus = 'live' | 'staging' | 'draft' | 'unpublished'
+
+export const STATUS_LABEL: Record<PublishStatus, string> = {
+  live: 'Live',
+  staging: 'Staging',
+  draft: 'Changes in draft',
+  unpublished: 'Unpublished',
+}
+
+export const STATUS_TONE: Record<PublishStatus, 'positive' | 'caution' | 'muted'> = {
+  live: 'positive',
+  staging: 'caution',
+  draft: 'caution',
+  unpublished: 'muted',
+}
+
+/** The note the route leaves in staging when it unpublishes a document */
+export type UnpublishLog = {_id: string; document: string; state: 'unpublished'; contentKey: string; unpublishedAt: string}
+
+export function publishStatus(state: {
+  draft?: SanityDocument | null
+  published?: SanityDocument | null
+  live?: SanityDocument | null
+  liveLog?: PublishLog | null
+  stagingLog?: UnpublishLog | null
+}): PublishStatus | null {
+  const {draft, published, live, liveLog, stagingLog} = state
+  const current = draft ?? published
+  if (!current) return null
+  const onStaging = !!published && sameContent(published, current)
+  const onLive = !!live && (liveHas(liveLog, current) || sameContent(live, current))
+  if (onStaging) return onLive ? 'live' : 'staging'
+  if (!published && !live && stagingLog?.state === 'unpublished' && stagingLog.contentKey === contentKey(current)) return 'unpublished'
+  return 'draft'
 }
 
 /* What is compared to say whether a site has the version in the editor: the

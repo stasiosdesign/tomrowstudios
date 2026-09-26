@@ -2,15 +2,24 @@
 
    Staging and development only (astro.config.mjs injects the route where
    the site renders on request; production, being static, has nothing of
-   the kind). The Studio's publishing control calls it (studio/lib/publish.ts)
-   to put one document on the live site, or take it off:
+   the kind). The Studio's publishing controls call it (studio/lib/publish.ts),
+   one document at a time, for every publishing action:
 
      { action: "publish",   id, rev? }   publish the document's current saved
                                          version (its draft, or its published
                                          document) in the staging dataset,
                                          then copy it to the production
                                          dataset: staging is never behind
-     { action: "unpublish", id }         delete it from the production dataset
+     { action: "stage",     id, rev? }   publish it in the staging dataset
+                                         only; the live site is not changed
+     { action: "unpublish", id }         take it off both sites: delete it
+                                         from production, and in staging
+                                         keep its content as a draft only
+     { action: "delete",    id }         delete it everywhere, draft included
+
+   Unpublishing leaves a note in the staging dataset, publish-log.<id>, with
+   the content that was taken off: the Studio shows the item as Unpublished
+   (not as Changes in draft) while its draft still holds that content.
 
    The caller sends the Sanity session token the Studio holds. The route
    checks that token against the project (who is this, and what role), and
@@ -23,8 +32,9 @@
    under another ID is re-pointed). Each publish leaves a note beside the
    document, publish-log.<id>, saying which revision and content went live:
    the Studio compares the editor's version with that, since the copy on the
-   live site may hold other asset IDs. Unpublishing refuses while something
-   live still refers to the document. */
+   live site may hold other asset IDs. Unpublishing and deleting refuse while
+   something else still refers to the document, and every check runs before
+   the first write, so a refusal changes nothing. */
 import type { APIRoute } from 'astro';
 import { createClient, type SanityClient, type SanityDocument } from '@sanity/client';
 import { SANITY_API_WRITE_TOKEN } from 'astro:env/server';
@@ -40,7 +50,8 @@ const PUBLISHING_ROLES = new Set(['administrator', 'editor', 'developer']);
 /** The Studios that may call this route */
 const ALLOWED_ORIGINS = new Set(['https://tomrowstudios.sanity.studio', 'http://localhost:3333']);
 
-type Action = 'publish' | 'unpublish';
+const ACTIONS = ['publish', 'stage', 'unpublish', 'delete'] as const;
+type Action = (typeof ACTIONS)[number];
 type Body = { action?: Action; id?: string; rev?: string };
 type Missing = { id: string; type?: string; title?: string };
 
@@ -77,12 +88,15 @@ export const POST: APIRoute = async ({ request }) => {
     const user = await authenticate(request.headers.get('authorization'));
     const body = (await request.json().catch(() => ({}))) as Body;
     if (!body.id || typeof body.id !== 'string' || body.id.startsWith('drafts.')) throw new PublishError(400, 'A document ID is needed.');
-    if (body.action !== 'publish' && body.action !== 'unpublish') throw new PublishError(400, 'The action must be "publish" or "unpublish".');
+    if (!body.action || !ACTIONS.includes(body.action)) throw new PublishError(400, `The action must be one of: ${ACTIONS.join(', ')}.`);
 
     const staging = createClient({ projectId, dataset: STAGING, apiVersion: API_VERSION, token: SANITY_API_WRITE_TOKEN, useCdn: false, perspective: 'raw' });
     const production = staging.withConfig({ dataset: PRODUCTION });
 
-    const result = body.action === 'publish' ? await publish(staging, production, body.id, body.rev) : await unpublish(production, body.id);
+    const result =
+      body.action === 'publish' || body.action === 'stage'
+        ? await publish(staging, production, body.id, body.rev, body.action === 'publish')
+        : await takeDown(staging, production, body.id, body.action === 'delete');
     return json({ ok: true, by: user.id, ...result }, 200, origin);
   } catch (error) {
     if (error instanceof PublishError) return json({ ok: false, error: error.message, details: error.details }, error.status, origin);
@@ -105,7 +119,8 @@ async function authenticate(header: string | null): Promise<{ id: string; role: 
   return { id: me.id, role: [...roles].join(', ') };
 }
 
-async function publish(staging: SanityClient, production: SanityClient, id: string, rev?: string) {
+/** Publishes the version in the editor to staging, and with `live` to the live site too */
+async function publish(staging: SanityClient, production: SanityClient, id: string, rev: string | undefined, live: boolean) {
   // The current saved version: the draft when there is one, else the published document
   const [draft, published] = await Promise.all([staging.getDocument(`drafts.${id}`), staging.getDocument(id)]);
   const current = draft ?? published;
@@ -120,20 +135,30 @@ async function publish(staging: SanityClient, production: SanityClient, id: stri
     source = revision;
   }
 
+  // Everything it links to must be published where it is going
   const references = documentReferences(source);
-  const missing = await missingLive(staging, production, references);
+  const missingStaging = await missingIn(staging, staging, references);
+  if (missingStaging.length > 0) {
+    throw new PublishError(422, 'This links to content that is not published on staging yet. Publish that first.', { missing: missingStaging });
+  }
+  const missing = live ? await missingIn(staging, production, references) : [];
   if (missing.length > 0) {
     throw new PublishError(422, 'This links to content that is not on the live site yet. Publish that live first.', { missing });
   }
-  const renamed = await carryAssets(staging, production, assetReferences(source));
+  const renamed = live ? await carryAssets(staging, production, assetReferences(source)) : new Map<string, string>();
 
   const { _rev: _r, _updatedAt: _u, _system: _s, ...content } = source as SanityDocument & { _system?: unknown };
 
-  // Staging gets the same version first, so it is never behind the live site.
-  // The draft goes too when it is the version published; newer edits stay.
-  const toStaging = staging.transaction().createOrReplace({ ...content, _id: id } as SanityDocument);
+  // Staging gets the version first, so it is never behind the live site. The
+  // draft goes too when it is the version published (newer edits stay), and
+  // so does any note of an earlier unpublish.
+  const toStaging = staging
+    .transaction()
+    .createOrReplace({ ...content, _id: id } as SanityDocument)
+    .delete(logId(id));
   if (draft && draft._rev === source._rev) toStaging.delete(draft._id);
-  await toStaging.commit();
+  const staged = await toStaging.commit({ returnDocuments: true });
+  if (!live) return { rev: staged[0]?._rev, sourceRev: source._rev, sourceId: source._id };
 
   const written = await production
     .transaction()
@@ -179,14 +204,47 @@ function remapRefs<T>(value: T, renamed: Map<string, string>): T {
   return value;
 }
 
-async function unpublish(production: SanityClient, id: string) {
-  const referrers: { _id: string; _type: string; title?: string }[] = await production.fetch(`*[references($id)]{_id, _type, "title": coalesce(title, name, _id)}`, { id });
-  if (referrers.length > 0) {
-    throw new PublishError(409, 'Something on the live site still links to this. Unpublish or change that first.', { referrers });
+type Referrer = { _id: string; _type: string; title?: string };
+
+/**
+ * Unpublish (both sites; staging keeps the content as a draft) or delete
+ * (everywhere). Both check first that nothing else links to the document, on
+ * either site, so a refusal changes nothing; the live site goes first, so a
+ * failure part-way leaves it off the live site at least.
+ */
+async function takeDown(staging: SanityClient, production: SanityClient, id: string, remove: boolean) {
+  const referrersQuery = `*[references($id) && !(_id in [$id, $draftId])]{_id, _type, "title": coalesce(title, name, _id)}`;
+  const params = { id, draftId: `drafts.${id}` };
+  const [live, onStaging]: Referrer[][] = await Promise.all([production.fetch(referrersQuery, params), staging.fetch(referrersQuery, params)]);
+  if (live.length > 0) {
+    throw new PublishError(409, 'Something on the live site still links to this. Unpublish or change that first.', { referrers: live });
   }
-  const existed = !!(await production.getDocument(id));
+  if (onStaging.length > 0) {
+    throw new PublishError(409, 'Something in the Studio still links to this. Remove that link first.', {
+      referrers: onStaging.map((item) => ({ ...item, _id: item._id.replace(/^drafts\./, '') })),
+    });
+  }
+
   await production.transaction().delete(id).delete(logId(id)).commit();
-  return { existed };
+
+  const [draft, published] = await Promise.all([staging.getDocument(`drafts.${id}`), staging.getDocument(id)]);
+  const toStaging = staging.transaction().delete(id);
+  if (remove) {
+    toStaging.delete(`drafts.${id}`).delete(logId(id));
+  } else {
+    // Sanity's own unpublish: the content stays as the draft, with a note of
+    // what was taken off, so the Studio can tell Unpublished from new edits
+    const kept = draft ?? published;
+    if (!draft && published) {
+      const { _rev: _r, _updatedAt: _u, ...content } = published;
+      toStaging.create({ ...content, _id: `drafts.${id}` } as SanityDocument);
+    }
+    if (kept) {
+      toStaging.createOrReplace({ _id: logId(id), _type: 'publishLog', document: id, state: 'unpublished', contentKey: contentKey(kept), unpublishedAt: new Date().toISOString() });
+    }
+  }
+  await toStaging.commit();
+  return { existed: !!(draft ?? published) };
 }
 
 const isAssetRef = (ref: string) => ref.startsWith('image-') || ref.startsWith('file-');
@@ -204,13 +262,16 @@ function collectRefs(value: unknown, found = new Set<string>()): Set<string> {
 const documentReferences = (doc: unknown) => [...collectRefs(doc)].filter((ref) => !isAssetRef(ref));
 const assetReferences = (doc: unknown) => [...collectRefs(doc)].filter(isAssetRef);
 
-/** Referenced documents that are not published on the live site */
-async function missingLive(staging: SanityClient, production: SanityClient, ids: string[]): Promise<Missing[]> {
+/** Referenced documents that are not published in the target dataset (staging or production), named from staging */
+async function missingIn(staging: SanityClient, target: SanityClient, ids: string[]): Promise<Missing[]> {
   if (ids.length === 0) return [];
-  const live: string[] = await production.fetch(`*[_id in $ids]._id`, { ids });
-  const missingIds = ids.filter((id) => !live.includes(id));
+  const present: string[] = await target.fetch(`*[_id in $ids]._id`, { ids });
+  const missingIds = ids.filter((id) => !present.includes(id));
   if (missingIds.length === 0) return [];
-  const named: Missing[] = await staging.fetch(`*[_id in $ids]{"id": _id, "type": _type, "title": coalesce(title, name, _id)}`, { ids: missingIds });
+  const named: Missing[] = await staging.fetch(`*[_id in $ids || _id in $draftIds]{"id": string::split(_id, "drafts.")[-1], "type": _type, "title": coalesce(title, name, _id)}`, {
+    ids: missingIds,
+    draftIds: missingIds.map((id) => `drafts.${id}`),
+  });
   return missingIds.map((id) => named.find((item) => item.id === id) ?? { id, title: id });
 }
 

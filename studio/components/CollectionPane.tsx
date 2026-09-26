@@ -4,27 +4,45 @@ import {ChevronDownIcon} from '@sanity/icons/ChevronDown'
 import {ChevronUpIcon} from '@sanity/icons/ChevronUp'
 import {ControlsIcon} from '@sanity/icons/Controls'
 import {SearchIcon} from '@sanity/icons/Search'
+import {TrashIcon} from '@sanity/icons/Trash'
 import {Box, Button, Card, Checkbox, Flex, Stack, Text, TextInput, useClickOutsideEvent} from '@sanity/ui'
+import {useToast} from '@sanity/ui/toast'
 import {Popover} from '@sanity/ui/popover'
 import {useCallback, useEffect, useMemo, useRef, useState, type KeyboardEvent, type MouseEvent} from 'react'
 import {useClient, useSchema, type SanityDocument} from 'sanity'
 import {useRouter} from 'sanity/router'
 import {usePaneRouter} from 'sanity/structure'
 import {styled} from 'styled-components'
-import {liveHas, PRODUCTION_DATASET, sameContent, type PublishLog} from '../lib/publish'
+import {
+  deleteDocument,
+  PRODUCTION_DATASET,
+  publishLive,
+  publishStaging,
+  publishStatus,
+  STATUS_LABEL,
+  unpublish,
+  type PublishLog,
+  type PublishStatus,
+  type UnpublishLog,
+} from '../lib/publish'
 import {columnsFor, renderValue, textOf, type Column} from './format'
+import {ConfirmDialog, failText} from './PublishControls'
+import {StatusChip} from './Status'
 
 /* A collection: every document of one type as a table, one row per item,
-   with the columns the editor chooses (kept per collection in this browser),
-   a search box and a New button. Clicking a row opens the item in the pane
+   with its status (always shown) and the columns the editor chooses (none at
+   first; the choice is kept per collection in this browser), a search box and
+   a New button. Select mode ticks several items for one action on them all:
+   Publish live, Publish staging only, Unpublish or Delete, each item through
+   the same route as the publishing control, failures reported by name. Clicking a row opens the item in the pane
    to the right; the table then folds into a compact list of the items, so the
    editor switches between them without going back. "All <items>" (or closing
    the item) brings the full table back, with its columns and search kept.
 
    The pane is a structure component pane (structure.ts) and takes its
    options from there. Rows come straight from the dataset: drafts,
-   published documents and live copies, joined by ID, so each row can say
-   where the item stands (see lib/live.ts). */
+   published documents, live copies and the publishing notes, joined by ID,
+   so each row can say where the item stands (lib/publish.ts, publishStatus). */
 
 export type CollectionOptions = {
   /** The document type */
@@ -35,28 +53,19 @@ export type CollectionOptions = {
   singular: string
   /** The field that names an item: title or name */
   nameField: string
-  /** The columns shown until the editor picks their own */
-  defaultColumns: string[]
   /** The field the collection is ordered by, if it has one */
   orderField?: string
 }
-
-type StagingState = 'draft' | 'staged' | 'changed'
-type LiveState = 'none' | 'live' | 'behind'
 
 type Row = {
   id: string
   /** The latest content: the draft if there is one, else the published document */
   doc: SanityDocument
   title: string
-  staging: StagingState
-  live: LiveState
+  status: PublishStatus
 }
 
 const API_VERSION = '2025-02-19'
-
-const STAGING_LABEL: Record<StagingState, string> = {draft: 'Unpublished', staged: 'Staging', changed: 'Staging · older'}
-const LIVE_LABEL: Record<LiveState, string> = {none: 'Not live', live: 'Live', behind: 'Live · older'}
 
 const columnsKey = (type: string) => `tomrow.columns.${type}`
 const searchKey = (type: string) => `tomrow.search.${type}`
@@ -84,9 +93,12 @@ const session = () => (typeof window === 'undefined' ? undefined : window.sessio
 const publishedId = (id: string) => (id.startsWith('drafts.') ? id.slice(7) : id)
 
 // Every document of the type: drafts and published documents from staging,
-// the live site's documents from production, joined by ID
-function toRows(staging: SanityDocument[], production: SanityDocument[], logs: PublishLog[], nameField: string): Row[] {
-  const groups = new Map<string, {draft?: SanityDocument; published?: SanityDocument; live?: SanityDocument; log?: PublishLog}>()
+// the live site's documents from production, and each site's publishing
+// notes, joined by ID
+type Documents = {staging: SanityDocument[]; production: SanityDocument[]; logs: PublishLog[]; stagingLogs: UnpublishLog[]}
+
+function toRows({staging, production, logs, stagingLogs}: Documents, nameField: string): Row[] {
+  const groups = new Map<string, {draft?: SanityDocument; published?: SanityDocument; live?: SanityDocument; liveLog?: PublishLog; stagingLog?: UnpublishLog}>()
   for (const doc of staging) {
     const id = publishedId(doc._id)
     const group = groups.get(id) ?? {}
@@ -101,27 +113,26 @@ function toRows(staging: SanityDocument[], production: SanityDocument[], logs: P
   }
   for (const log of logs) {
     const group = groups.get(log.document)
-    if (group) group.log = log
+    if (group) group.liveLog = log
+  }
+  for (const log of stagingLogs) {
+    const group = groups.get(log.document)
+    if (group) group.stagingLog = log
   }
   const rows: Row[] = []
-  for (const [id, {draft, published, live, log}] of groups) {
-    const doc = draft ?? published
-    if (!doc) continue // live only: nothing here to edit
+  for (const [id, group] of groups) {
+    const doc = group.draft ?? group.published
+    const status = publishStatus(group)
+    if (!doc || !status) continue // live only: nothing here to edit
     const name = (doc as Record<string, unknown>)[nameField]
-    rows.push({
-      id,
-      doc,
-      title: typeof name === 'string' && name.trim() ? name : 'Untitled',
-      staging: !published ? 'draft' : sameContent(published, doc) ? 'staged' : 'changed',
-      live: !live ? 'none' : liveHas(log, doc) || sameContent(live, doc) ? 'live' : 'behind',
-    })
+    rows.push({id, doc, title: typeof name === 'string' && name.trim() ? name : 'Untitled', status})
   }
   return rows
 }
 
 export function CollectionPane(props: {options?: Record<string, unknown>; childItemId?: string; paneKey: string}) {
   const options = props.options as CollectionOptions
-  const {type, title, singular, nameField, defaultColumns, orderField} = options
+  const {type, title, singular, nameField, orderField} = options
   const schema = useSchema()
   const schemaType = schema.get(type)
   const client = useClient({apiVersion: API_VERSION})
@@ -131,7 +142,7 @@ export function CollectionPane(props: {options?: Record<string, unknown>; childI
   const selectedId = props.childItemId
 
   // The rows, kept current: both datasets are read again after each change to the type
-  const [documents, setDocuments] = useState<{staging: SanityDocument[]; production: SanityDocument[]; logs: PublishLog[]} | null>(null)
+  const [documents, setDocuments] = useState<Documents | null>(null)
   const [error, setError] = useState<string | null>(null)
   useEffect(() => {
     let cancelled = false
@@ -145,9 +156,10 @@ export function CollectionPane(props: {options?: Record<string, unknown>; childI
         staging.fetch<SanityDocument[]>(query, {type}),
         production.fetch<SanityDocument[]>(query, {type}),
         production.fetch<PublishLog[]>(`*[_type == "publishLog" && document in *[_type == $type]._id]`, {type}),
+        staging.fetch<UnpublishLog[]>(`*[_type == "publishLog" && state == "unpublished"]`),
       ])
-        .then(([stagingDocs, productionDocs, logs]) => {
-          if (!cancelled) setDocuments({staging: stagingDocs, production: productionDocs, logs})
+        .then(([stagingDocs, productionDocs, logs, stagingLogs]) => {
+          if (!cancelled) setDocuments({staging: stagingDocs, production: productionDocs, logs, stagingLogs})
         })
         .catch((err: Error) => {
           if (!cancelled) setError(err.message)
@@ -169,11 +181,12 @@ export function CollectionPane(props: {options?: Record<string, unknown>; childI
     }
   }, [client, type])
 
-  const rows = useMemo(() => (documents ? toRows(documents.staging, documents.production, documents.logs, nameField) : []), [documents, nameField])
+  const rows = useMemo(() => (documents ? toRows(documents, nameField) : []), [documents, nameField])
 
-  // The columns: every field of the type, with the chosen ones shown
+  // The columns: every field of the type, with the chosen ones shown (none
+  // until the editor picks some; the name and the status are always there)
   const allColumns = useMemo(() => columnsFor(schemaType).filter((column) => column.name !== nameField), [schemaType, nameField])
-  const [visible, setVisible] = useState<string[]>(() => readStored(local(), columnsKey(type), defaultColumns))
+  const [visible, setVisible] = useState<string[]>(() => readStored<string[]>(local(), columnsKey(type), []))
   const toggleColumn = useCallback(
     (name: string) => {
       setVisible((current) => {
@@ -205,7 +218,7 @@ export function CollectionPane(props: {options?: Record<string, unknown>; childI
     const needle = selectedId ? '' : search.trim().toLowerCase()
     const matching = needle
       ? rows.filter((row) =>
-          [row.title, STAGING_LABEL[row.staging], LIVE_LABEL[row.live], ...columns.map((column) => textOf(row.doc[column.name], column))]
+          [row.title, STATUS_LABEL[row.status], ...columns.map((column) => textOf(row.doc[column.name], column))]
             .join(' ')
             .toLowerCase()
             .includes(needle),
@@ -248,9 +261,67 @@ export function CollectionPane(props: {options?: Record<string, unknown>; childI
   const compact = Boolean(selectedId)
   const lowerTitle = title.toLowerCase()
 
+  // Select mode: tick items, then one action for them all
+  const toast = useToast()
+  const [selecting, setSelecting] = useState(false)
+  const [picked, setPicked] = useState<Set<string>>(() => new Set())
+  const [bulkBusy, setBulkBusy] = useState(false)
+  const [confirm, setConfirm] = useState<{action: 'unpublish' | 'delete'; ids: string[]} | null>(null)
+  const togglePick = useCallback((id: string) => {
+    setPicked((current) => {
+      const next = new Set(current)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
+  }, [])
+  const stopSelecting = useCallback(() => {
+    setSelecting(false)
+    setPicked(new Set())
+  }, [])
+  // Items that no longer exist drop out of the selection
+  const pickedIds = useMemo(() => shown.filter((row) => picked.has(row.id)).map((row) => row.id), [shown, picked])
+  const allPicked = shown.length > 0 && pickedIds.length === shown.length
+
+  // One action over several items, one at a time through the same route as
+  // the publishing control; the items that fail stay selected and are named
+  const runBulk = useCallback(
+    async (action: BulkAction, ids: string[]) => {
+      if (bulkBusy || ids.length === 0) return
+      setConfirm(null)
+      setBulkBusy(true)
+      const run = {live: publishLive, staging: publishStaging, unpublish, delete: deleteDocument}[action]
+      const failed: {id: string; title: string; reason: string}[] = []
+      for (const id of ids) {
+        try {
+          await run(client, id)
+        } catch (err) {
+          failed.push({id, title: rows.find((row) => row.id === id)?.title ?? id, reason: failText(err)})
+        }
+      }
+      setBulkBusy(false)
+      setPicked(new Set(failed.map((item) => item.id)))
+      if (action === 'delete' && selectedId && ids.includes(selectedId) && !failed.some((item) => item.id === selectedId)) showAll()
+      const done = ids.length - failed.length
+      const what = (count: number) => (count === 1 ? singular : lowerTitle)
+      if (failed.length === 0) {
+        toast.push({status: 'success', closable: true, title: `${ids.length} ${what(ids.length)} ${BULK_DONE[action]}`})
+      } else {
+        toast.push({
+          status: done > 0 ? 'warning' : 'error',
+          closable: true,
+          duration: 15000,
+          title: `${done} of ${ids.length} ${what(ids.length)} ${BULK_DONE[action]}`,
+          description: failed.map((item) => `${item.title}: ${item.reason}`).join('\n'),
+        })
+      }
+    },
+    [bulkBusy, client, rows, selectedId, showAll, singular, lowerTitle, toast],
+  )
+
   return (
     <Flex direction="column" height="fill" data-tomrow-collection={compact ? 'compact' : 'table'}>
-      <Card borderBottom padding={3} style={{flexShrink: 0}}>
+      <Card borderBottom paddingX={4} paddingY={3} style={{flexShrink: 0}}>
         <Flex align="center" gap={2} wrap="wrap">
           {compact ? (
             <Button
@@ -285,6 +356,17 @@ export function CollectionPane(props: {options?: Record<string, unknown>; childI
               />
             )}
           </Box>
+          {!compact && (
+            <Button
+              text={selecting ? 'Done' : 'Select'}
+              mode="ghost"
+              fontSize={1}
+              padding={2}
+              selected={selecting}
+              disabled={bulkBusy}
+              onClick={() => (selecting ? stopSelecting() : setSelecting(true))}
+            />
+          )}
           {!compact && <ColumnChooser columns={allColumns} visible={visible} onToggle={toggleColumn} />}
           <Button
             icon={AddIcon}
@@ -297,6 +379,22 @@ export function CollectionPane(props: {options?: Record<string, unknown>; childI
           />
         </Flex>
       </Card>
+
+      {!compact && selecting && (
+        <Card borderBottom paddingX={4} paddingY={2} style={{flexShrink: 0}}>
+          <Flex align="center" gap={2} wrap="wrap">
+            <Box flex={1} paddingX={2}>
+              <Text size={1} muted={pickedIds.length === 0}>
+                {bulkBusy ? 'Working…' : pickedIds.length === 0 ? `Tick the ${lowerTitle} to act on` : `${pickedIds.length} selected`}
+              </Text>
+            </Box>
+            <Button text="Publish live" className="tomrow-cta" fontSize={1} padding={2} disabled={bulkBusy || pickedIds.length === 0} onClick={() => runBulk('live', pickedIds)} />
+            <Button text="Publish staging only" mode="ghost" fontSize={1} padding={2} disabled={bulkBusy || pickedIds.length === 0} onClick={() => runBulk('staging', pickedIds)} />
+            <Button text="Unpublish" mode="ghost" tone="critical" fontSize={1} padding={2} disabled={bulkBusy || pickedIds.length === 0} onClick={() => setConfirm({action: 'unpublish', ids: pickedIds})} />
+            <Button text="Delete" mode="ghost" tone="critical" icon={TrashIcon} fontSize={1} padding={2} disabled={bulkBusy || pickedIds.length === 0} onClick={() => setConfirm({action: 'delete', ids: pickedIds})} />
+          </Flex>
+        </Card>
+      )}
 
       <Box flex={1} overflow="auto">
         {error && (
@@ -322,16 +420,42 @@ export function CollectionPane(props: {options?: Record<string, unknown>; childI
           <Table>
             <thead>
               <tr>
+                {selecting && (
+                  <th scope="col" className="pick">
+                    <Checkbox
+                      checked={allPicked}
+                      indeterminate={pickedIds.length > 0 && !allPicked}
+                      disabled={bulkBusy}
+                      onChange={() => setPicked(allPicked ? new Set() : new Set(shown.map((row) => row.id)))}
+                      aria-label={`Select all ${lowerTitle}`}
+                    />
+                  </th>
+                )}
                 <SortableHeader column={{name: nameField, title: 'Name'}} sort={sort} onSort={setSort} />
                 <th scope="col">Status</th>
                 {columns.map((column) => (
                   <SortableHeader key={column.name} column={column} sort={sort} onSort={setSort} />
                 ))}
+                <th scope="col" className="actions">
+                  <span hidden>Actions</span>
+                </th>
               </tr>
             </thead>
             <tbody>
               {shown.map((row) => (
-                <ItemRow key={row.id} row={row} columns={columns} projectId={projectId} dataset={dataset} ChildLink={ChildLink} onOpen={open} />
+                <ItemRow
+                  key={row.id}
+                  row={row}
+                  columns={columns}
+                  projectId={projectId}
+                  dataset={dataset}
+                  ChildLink={ChildLink}
+                  onOpen={open}
+                  picking={selecting}
+                  picked={picked.has(row.id)}
+                  onPick={bulkBusy ? undefined : togglePick}
+                  onDelete={bulkBusy ? undefined : (id) => setConfirm({action: 'delete', ids: [id]})}
+                />
               ))}
             </tbody>
           </Table>
@@ -348,19 +472,56 @@ export function CollectionPane(props: {options?: Record<string, unknown>; childI
       </Box>
 
       {!compact && documents !== null && rows.length > 0 && (
-        <Card borderTop padding={3} style={{flexShrink: 0}}>
+        <Card borderTop paddingX={4} paddingY={3} style={{flexShrink: 0}}>
           <Text size={0} muted>
             Showing {shown.length} of {rows.length}
           </Text>
         </Card>
       )}
+
+      {confirm && (
+        <ConfirmDialog
+          id="tomrow-confirm-bulk"
+          title={confirm.action === 'delete' ? 'Delete' : 'Unpublish'}
+          action={confirm.action === 'delete' ? 'Delete' : 'Unpublish'}
+          tone="critical"
+          onCancel={() => setConfirm(null)}
+          onConfirm={() => runBulk(confirm.action, confirm.ids)}
+        >
+          {confirmText(confirm, rows, singular, lowerTitle)}
+        </ConfirmDialog>
+      )}
     </Flex>
   )
 }
 
-/* The table itself. Compact rows, hairline separators, the row under the
-   pointer and the selected row picked out by tone; the name is the link, and
-   the whole row takes the click for it. */
+type BulkAction = 'live' | 'staging' | 'unpublish' | 'delete'
+
+const BULK_DONE: Record<BulkAction, string> = {
+  live: 'published live',
+  staging: 'published to staging',
+  unpublish: 'unpublished',
+  delete: 'deleted',
+}
+
+function confirmText(confirm: {action: 'unpublish' | 'delete'; ids: string[]}, rows: Row[], singular: string, plural: string) {
+  const names = confirm.ids.map((id) => rows.find((row) => row.id === id)?.title ?? id)
+  const which = names.length === 1 ? <b>{names[0]}</b> : <b>{`${names.length} ${plural}`}</b>
+  return confirm.action === 'delete' ? (
+    <>
+      {which} will be deleted from the Studio, staging and the live site. This cannot be undone.
+    </>
+  ) : (
+    <>
+      {which} will come off staging and the live site, and {names.length === 1 ? `the ${singular} stays` : 'they stay'} here to edit and publish again.
+    </>
+  )
+}
+
+/* The table itself. Hairline separators, the row under the pointer picked out
+   by tone; the name is the link, and the whole row takes the click for it (in
+   Select mode, the click ticks it). The last cell holds the row's Delete,
+   shown on hover. */
 const Table = styled.table`
   width: 100%;
   border-collapse: collapse;
@@ -370,7 +531,7 @@ const Table = styled.table`
   th,
   td {
     text-align: left;
-    padding: 9px 12px;
+    padding: 12px 14px;
     border-bottom: 1px solid var(--card-border-color);
     white-space: nowrap;
     max-width: 320px;
@@ -424,23 +585,30 @@ const Table = styled.table`
     outline-offset: 2px;
     border-radius: 2px;
   }
-`
 
-const Status = styled.span<{$tone: 'positive' | 'caution' | 'muted'}>`
-  color: ${({$tone}) =>
-    $tone === 'positive' ? 'var(--card-badge-positive-fg-color)' : $tone === 'caution' ? 'var(--card-badge-caution-fg-color)' : 'var(--card-muted-fg-color)'};
-`
+  th.pick,
+  td.pick {
+    width: 1px;
+    padding-right: 0;
+  }
 
-function StatusCell({row}: {row: Row}) {
-  return (
-    <Flex gap={3}>
-      <Status $tone={row.staging === 'staged' ? 'positive' : row.staging === 'changed' ? 'caution' : 'muted'}>
-        {STAGING_LABEL[row.staging]}
-      </Status>
-      <Status $tone={row.live === 'live' ? 'positive' : row.live === 'behind' ? 'caution' : 'muted'}>{LIVE_LABEL[row.live]}</Status>
-    </Flex>
-  )
-}
+  th.actions,
+  td.actions {
+    width: 1px;
+    padding-top: 0;
+    padding-bottom: 0;
+    text-align: right;
+  }
+
+  td.actions button {
+    opacity: 0;
+  }
+
+  tbody tr:hover td.actions button,
+  td.actions button:focus-visible {
+    opacity: 1;
+  }
+`
 
 function SortableHeader({
   column,
@@ -472,6 +640,10 @@ function ItemRow({
   dataset,
   ChildLink,
   onOpen,
+  picking,
+  picked,
+  onPick,
+  onDelete,
 }: {
   row: Row
   columns: Column[]
@@ -479,28 +651,42 @@ function ItemRow({
   dataset: string
   ChildLink: ChildLinkComponent
   onOpen: (id: string) => void
+  picking: boolean
+  picked: boolean
+  onPick?: (id: string) => void
+  onDelete?: (id: string) => void
 }) {
-  // The name is a real link (keyboard, middle-click); a click elsewhere on the row follows it
+  // The name is a real link (keyboard, middle-click); a click elsewhere on the
+  // row follows it, or in Select mode ticks the row
   const onRowClick = (event: MouseEvent<HTMLTableRowElement>) => {
-    if ((event.target as HTMLElement).closest('a')) return
+    if ((event.target as HTMLElement).closest('a, button, input, label')) return
     if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey) return
-    onOpen(row.id)
+    if (picking) onPick?.(row.id)
+    else onOpen(row.id)
   }
   return (
-    <tr onClick={onRowClick}>
+    <tr onClick={onRowClick} aria-selected={picking ? picked : undefined}>
+      {picking && (
+        <td className="pick">
+          <Checkbox checked={picked} disabled={!onPick} onChange={() => onPick?.(row.id)} aria-label={`Select ${row.title}`} />
+        </td>
+      )}
       <td>
         <ChildLink childId={row.id} childParameters={{type: row.doc._type}}>
           {row.title}
         </ChildLink>
       </td>
       <td>
-        <StatusCell row={row} />
+        <StatusChip status={row.status} />
       </td>
       {columns.map((column) => (
         <td key={column.name} title={textOf(row.doc[column.name], column) || undefined}>
           {renderValue(row.doc[column.name], column, projectId, dataset)}
         </td>
       ))}
+      <td className="actions">
+        <Button icon={TrashIcon} mode="bleed" tone="critical" fontSize={1} padding={2} disabled={!onDelete} onClick={() => onDelete?.(row.id)} aria-label={`Delete ${row.title}`} title="Delete" />
+      </td>
     </tr>
   )
 }
