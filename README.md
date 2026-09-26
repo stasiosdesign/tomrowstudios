@@ -139,6 +139,14 @@ its checks run before the first write, so a refusal changes nothing.
 - **Delete** (collections only, on a row or in Select mode): gone from the
   Studio and both sites, after a confirmation.
 
+The static pages (the page editor) publish together, like a site builder's
+site: on any of them the button reads **Publish Site**, and Publish live and
+Publish staging only take every page's latest saved version, not just the
+open one's (the route's site mode; every page is checked before any is
+written). The bar says **Publishes all pages** with how many have changes.
+CMS items are never part of it: they publish one at a time, or in bulk only
+when selected.
+
 Collections also have a **Select** mode: tick items for a bulk Publish live,
 Publish staging only, Unpublish or Delete; each item goes through the same
 route, and the ones that fail stay ticked and are named.
