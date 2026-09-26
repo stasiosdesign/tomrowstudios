@@ -176,7 +176,7 @@ export function PublishControls({documentId, documentType}: {documentId: string;
 
   const {draft, published, ready} = useEditState(documentId, documentType)
   const {isSyncing} = useSyncState(documentId, documentType)
-  const {validation, isValidating} = useValidationStatus(documentId, documentType, false)
+  const {validation} = useValidationStatus(documentId, documentType, false)
   const {live, liveLog, stagingLog} = useSiteState(documentId)
   const isSite = isPageType(documentType) && SITE.includes(documentId)
   const sitePending = useSitePending(isSite)
@@ -207,10 +207,14 @@ export function PublishControls({documentId, documentType}: {documentId: string;
   }, [])
   const fail = useCallback((title: string, error: unknown) => toast.push({status: 'error', title, description: failText(error), closable: true, duration: 9000}), [toast])
 
-  // One action at a time: the buttons lock while it runs, and the result is a toast
+  // One action at a time (a ref, so a quick second click can't slip past a
+  // stale state), the result a toast. The buttons never lock: a click while
+  // one runs is ignored, and busy is cleared however the action ends.
+  const running = useRef(false)
   const run = useCallback(
     async (kind: Exclude<Busy, null>, action: () => Promise<unknown>, success: {title: string; description?: string}, failure: string) => {
-      if (busy) return
+      if (running.current) return
+      running.current = true
       setBusy(kind)
       try {
         await action()
@@ -218,16 +222,25 @@ export function PublishControls({documentId, documentType}: {documentId: string;
       } catch (error) {
         fail(failure, error)
       } finally {
+        running.current = false
         if (mounted.current) setBusy(null)
       }
     },
-    [busy, toast, fail],
+    [toast, fail],
   )
 
-  // On a static page, both publish actions take the whole static site
+  // On a static page, both publish actions take the whole static site. They
+  // are always available, even with nothing to publish (it runs again); only
+  // problems in the open form stop them, with a message saying so.
   const site = isSite ? SITE : undefined
+  const blocked = () => {
+    if (errors.length === 0) return false
+    toast.push({status: 'warning', closable: true, title: 'Fix the problems in the form first', description: `${errors.length} ${errors.length === 1 ? 'field needs' : 'fields need'} attention before publishing.`})
+    return true
+  }
   const doPublishLive = () =>
     current &&
+    !blocked() &&
     run(
       'live',
       () => publishLive(client, documentId, current._rev, site),
@@ -238,6 +251,7 @@ export function PublishControls({documentId, documentType}: {documentId: string;
     )
   const doPublishStaging = () =>
     current &&
+    !blocked() &&
     run(
       'staging',
       () => publishStaging(client, documentId, current._rev, site),
@@ -260,9 +274,7 @@ export function PublishControls({documentId, documentType}: {documentId: string;
   }
   const saving = isSyncing ? 'Saving…' : errors.length > 0 ? `${errors.length} ${errors.length === 1 ? 'problem' : 'problems'} to fix` : null
 
-  const canPublish = ready && !!current && errors.length === 0 && !isValidating && busy === null
   const canUnpublish = ready && (!!published || !!live) && busy === null
-  const blockedReason = errors.length > 0 ? 'Fix the problems in the form first' : !current ? 'Nothing saved yet' : undefined
   const route = routeFor(current as {_type?: string; slug?: {current?: string}} | null)
   const versionLine = current ? `the version saved ${formatDate(current._updatedAt, true)}` : ''
 
@@ -295,18 +307,18 @@ export function PublishControls({documentId, documentType}: {documentId: string;
             <Button
               className="tomrow-cta"
               text={busy === 'live' ? 'Publishing…' : busy === 'staging' ? 'Publishing to staging…' : busy === 'unpublish' ? 'Unpublishing…' : isSite ? 'Publish Site' : 'Publish Live'}
-              disabled={!canPublish}
-              title={canPublish ? (isSite ? 'Publish every page’s latest changes to the live site and staging' : `Publish ${versionLine} to the live site and staging`) : blockedReason}
+              aria-busy={busy !== null}
+              title={isSite ? 'Publish every page’s latest changes to the live site and staging' : `Publish ${versionLine} to the live site and staging`}
               onClick={doPublishLive}
             />
             <MenuButton
               id={`tomrow-publish-${documentId}`}
-              button={<Button className="tomrow-cta tomrow-cta--arrow" icon={ChevronDownIcon} aria-label="More publishing options" disabled={busy !== null} />}
+              button={<Button className="tomrow-cta tomrow-cta--arrow" icon={ChevronDownIcon} aria-label="More publishing options" />}
               popover={{portal: true, placement: 'bottom-end'}}
               menu={
-                <Menu>
-                  <MenuItem text={isSite ? 'Publish live · all pages' : 'Publish live'} title={isSite ? 'Every page, to staging and the live site' : 'Staging and the live site'} disabled={!canPublish} onClick={doPublishLive} />
-                  <MenuItem text={isSite ? 'Publish staging only · all pages' : 'Publish staging only'} title={isSite ? 'Every page, to staging; the live site is not changed' : 'The live site is not changed'} disabled={!canPublish} onClick={doPublishStaging} />
+                <Menu data-tomrow-publish-menu>
+                  <MenuItem text={isSite ? 'Publish live · all pages' : 'Publish live'} title={isSite ? 'Every page, to staging and the live site' : 'Staging and the live site'} onClick={doPublishLive} />
+                  <MenuItem text={isSite ? 'Publish staging only · all pages' : 'Publish staging only'} title={isSite ? 'Every page, to staging; the live site is not changed' : 'The live site is not changed'} onClick={doPublishStaging} />
                   <MenuItem text={isSite ? 'Unpublish this page' : 'Unpublish'} title="Off staging and the live site; it stays here to edit" tone="critical" disabled={!canUnpublish} onClick={() => setConfirmUnpublish(true)} />
                   {route && (STAGING_ORIGIN || (LIVE_ORIGIN && live)) && <MenuDivider />}
                   {route && STAGING_ORIGIN && <MenuItem as="a" href={`${STAGING_ORIGIN}${route}`} target="_blank" rel="noreferrer" icon={LaunchIcon} text="Staging link" />}

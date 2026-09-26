@@ -12,11 +12,19 @@ import { defineQuery } from 'groq';
 const IMAGE_ASSET = `asset->{ _id, metadata { dimensions { width, height } } }, crop, hotspot`;
 const IMAGE = `${IMAGE_ASSET}, alt`;
 
+// A CMS item the editor has unpublished and not edited since: left out of
+// every collection query. Only the Visual editor (drafts perspective) can see
+// such an item at all, as its kept draft; the note the publish route leaves
+// (publish-log.<id>, staging only) names the draft revision it left, so the
+// first edit brings the item back, as Changes in draft. Published content
+// never matches, so the live site and ordinary staging are unaffected.
+const VISIBLE = `count(*[_id == "publish-log." + ^._id && state == "unpublished" && draftRev == ^._rev]) == 0`;
+
 
 // Projects in their Architecture-page order: the slider on that page, the
 // project pages to build, and each page's next project (the one after it,
 // wrapping round at the end, as the hand-written pages did).
-export const PROJECT_INDEX_QUERY = defineQuery(`*[_type == "project" && defined(slug.current)] | order(sortOrder asc, _createdAt asc) {
+export const PROJECT_INDEX_QUERY = defineQuery(`*[_type == "project" && defined(slug.current) && ${VISIBLE}] | order(sortOrder asc, _createdAt asc) {
   _id,
   "name": coalesce(shortTitle, title),
   "slug": slug.current,
@@ -26,7 +34,7 @@ export const PROJECT_INDEX_QUERY = defineQuery(`*[_type == "project" && defined(
 }`);
 
 // One project, with everything its page renders.
-export const PROJECT_PAGE_QUERY = defineQuery(`*[_type == "project" && slug.current == $slug][0] {
+export const PROJECT_PAGE_QUERY = defineQuery(`*[_type == "project" && slug.current == $slug && ${VISIBLE}][0] {
   _id,
   title,
   "name": coalesce(shortTitle, title),
@@ -47,7 +55,7 @@ export const PROJECT_PAGE_QUERY = defineQuery(`*[_type == "project" && slug.curr
 
 // The shop's items in their grid order: the cards on the Shop page, the
 // item pages to build, and each page's "Related" row (the other items).
-export const SHOP_ITEMS_QUERY = defineQuery(`*[_type == "shopItem" && defined(slug.current)] | order(sortOrder asc, title asc) {
+export const SHOP_ITEMS_QUERY = defineQuery(`*[_type == "shopItem" && defined(slug.current) && ${VISIBLE}] | order(sortOrder asc, title asc) {
   _id,
   title,
   "slug": slug.current,
@@ -56,7 +64,7 @@ export const SHOP_ITEMS_QUERY = defineQuery(`*[_type == "shopItem" && defined(sl
 }`);
 
 // One shop item, with everything its page renders.
-export const SHOP_ITEM_QUERY = defineQuery(`*[_type == "shopItem" && slug.current == $slug][0] {
+export const SHOP_ITEM_QUERY = defineQuery(`*[_type == "shopItem" && slug.current == $slug && ${VISIBLE}][0] {
   _id,
   title,
   "slug": slug.current,
@@ -173,7 +181,7 @@ export const PAGE_LIVE_QUERY = defineQuery(`*[_id == $id][0]`);
 // The partners, in their slider order: a slide on the Partners page, a
 // picture in the Partners archive grid and, when one has a case study, the
 // drawer both open; a logo, when set, for the Partners page's marquee.
-export const PARTNERS_QUERY = defineQuery(`*[_type == "partner" && defined(slug.current)] | order(sortOrder asc, name asc) {
+export const PARTNERS_QUERY = defineQuery(`*[_type == "partner" && defined(slug.current) && ${VISIBLE}] | order(sortOrder asc, name asc) {
   _id,
   name,
   "slug": slug.current,

@@ -299,9 +299,22 @@ async function takeDown(staging: SanityClient, production: SanityClient, id: str
       const { _rev: _r, _updatedAt: _u, ...content } = published;
       toStaging.create({ ...content, _id: `drafts.${id}` } as SanityDocument);
     }
-    if (kept) {
-      toStaging.createOrReplace({ _id: logId(id), _type: 'publishLog', document: id, state: 'unpublished', contentKey: contentKey(kept), unpublishedAt: new Date().toISOString() });
+    await toStaging.commit();
+    // The note names the draft revision left behind: the site's queries hide
+    // the item while its draft is still that revision (src/sanity/queries.ts)
+    const left = kept ? await staging.getDocument(`drafts.${id}`) : null;
+    if (kept && left) {
+      await staging.createOrReplace({
+        _id: logId(id),
+        _type: 'publishLog',
+        document: id,
+        state: 'unpublished',
+        contentKey: contentKey(kept),
+        draftRev: left._rev,
+        unpublishedAt: new Date().toISOString(),
+      });
     }
+    return { existed: !!kept };
   }
   await toStaging.commit();
   return { existed: !!(draft ?? published) };

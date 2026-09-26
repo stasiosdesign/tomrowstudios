@@ -47,17 +47,27 @@
   outline-offset: -2px;
 }
 
-/* The site's one red (--cta-accent-color in src/styles/style.css). Red only
-   while it can be pressed: disabled, it drops back to a quiet outline. */
+/* The site's one red (--cta-accent-color in src/styles/style.css), with
+   white text in every state: Sanity's own hover and pressed styles would
+   swap the text colour, so it is set on each. Red while it can be pressed:
+   disabled (the confirm dialogs' buttons, while they run), it drops back to
+   a quiet outline. The Publish Live button itself is never disabled. */
 button.tomrow-cta {
   transition:
     background-color 0.2s ease,
     box-shadow 0.2s ease;
 
-  &:enabled {
+  &:enabled,
+  &:enabled:hover,
+  &:enabled:active,
+  &:enabled:focus-visible,
+  &:enabled[data-hovered],
+  &:enabled[data-selected] {
     --card-bg-color: #dd341d;
-    --card-fg-color: #ffffff;
-    --card-icon-color: #ffffff;
+    --card-fg-color: #ffffff !important;
+    --card-icon-color: #ffffff !important;
+    --card-muted-fg-color: #ffffff !important;
+    color: #ffffff !important;
     background-color: var(--card-bg-color);
     box-shadow: none;
   }
@@ -71,6 +81,10 @@ button.tomrow-cta {
 
   &:enabled:active {
     --card-bg-color: color-mix(in srgb, #dd341d 88%, #000000);
+  }
+
+  &[aria-busy='true'] {
+    cursor: progress;
   }
 
   &:disabled {
@@ -89,6 +103,27 @@ button.tomrow-cta {
   @media (prefers-reduced-motion: reduce) {
     transition: none;
   }
+}
+
+/* The publishing menu: white text on every item in every state (hover,
+   keyboard focus, pressed), the hovered or focused item picked out by the
+   subtle grey wash alone */
+[data-tomrow-publish-menu] [data-ui='MenuItem'],
+[data-tomrow-publish-menu] [data-ui='MenuItem']:is(:hover, :focus, :focus-visible, :active, [data-hovered], [data-selected], [data-pressed]) {
+  --card-fg-color: #ffffff;
+  --card-icon-color: #ffffff;
+  --card-muted-fg-color: rgb(255 255 255 / 0.7);
+  color: #ffffff;
+}
+
+[data-tomrow-publish-menu] [data-ui='MenuItem']:is(:hover, :focus, :focus-visible, :active, [data-hovered], [data-selected], [data-pressed]) {
+  --card-bg-color: var(--tomrow-hover);
+  --card-hover-bg-color: var(--tomrow-hover);
+  background-color: var(--tomrow-hover);
+}
+
+[data-tomrow-publish-menu] [data-ui='MenuItem'] * {
+  color: inherit;
 }
 
 /* The split button's arrow half */
