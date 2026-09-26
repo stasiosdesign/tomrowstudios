@@ -42,6 +42,8 @@ const draftModeRoutes = () => ({
     'astro:config:setup': ({ injectRoute }) => {
       injectRoute({ pattern: '/api/draft-mode/enable', entrypoint: './src/sanity/draft-mode/enable.ts', prerender: false });
       injectRoute({ pattern: '/api/draft-mode/disable', entrypoint: './src/sanity/draft-mode/disable.ts', prerender: false });
+      // The Studio's live publishing, done on the server (src/sanity/publish/)
+      injectRoute({ pattern: '/api/publish', entrypoint: './src/sanity/publish/index.ts', prerender: false });
     },
   },
 });
@@ -80,6 +82,9 @@ export default defineConfig({
       // A Sanity Viewer token, for draft mode on staging and in development.
       // Secret: read on the server at request time, never sent to a browser.
       SANITY_API_READ_TOKEN: envField.string({ context: 'server', access: 'secret', optional: true }),
+      // A Sanity Editor token, for /api/publish: writes to the production
+      // dataset on the Studio's behalf. Secret, server-side, staging only.
+      SANITY_API_WRITE_TOKEN: envField.string({ context: 'server', access: 'secret', optional: true }),
     },
   },
 

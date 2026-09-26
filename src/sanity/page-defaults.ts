@@ -76,72 +76,6 @@ export const PAGE_DEFAULTS = {
     },
   },
 
-  bookPage: {
-    header: {
-      image: { path: '/assets/photos/lifestyle/lifestyle-10.jpg', alt: '' },
-      heading: 'Architectural Influence',
-      lead: 'A precedent analysis of the top 21 social media creators in the architecture profession, across the globe',
-    },
-    overview: {
-      heading: 'How architecture travels beyond the building',
-      image: { path: '/assets/photos/thumbnails/thumb-01.jpg', alt: '' },
-    },
-    inside: { heading: 'Inside the book' },
-    atlas: {
-      caption: 'Twenty-one creators, mapped across thirteen countries — from Vancouver and Bogotá to London, Jaipur and Sydney.',
-      primaryButton: 'Explore Influence',
-      secondaryButton: 'Back to Shop',
-    },
-  },
-
-  productPage: {
-    header: {
-      image: { path: '/assets/photos/lifestyle/lifestyle-06.jpg', alt: '', width: 1200, height: 1500 },
-      heading: 'Architectural presentation masterclass',
-      lead: 'Learn how to structure, design and deliver clear architecture presentations',
-    },
-    overview: {
-      heading: 'Present your work clearly and confidently',
-      image: { path: '/assets/photos/lifestyle/lifestyle-08.jpg', alt: 'An architecture studio mid-review', width: 1200, height: 1500 },
-    },
-    details: {
-      heading: 'What you will learn',
-      image: { path: '/assets/photos/lifestyle/lifestyle-02.jpg', alt: 'Drawings under review', width: 1200, height: 1500 },
-    },
-  },
-
-  courseCommunicationPage: {
-    header: {
-      image: { path: '/assets/photos/lifestyle/lifestyle-08.jpg', alt: '', width: 1200, height: 1500 },
-      heading: 'Architecture communication package',
-      lead: 'Templates, guides and frameworks for writing about and presenting architectural work',
-    },
-    overview: {
-      heading: 'Write about the work as clearly as you draw it',
-      image: { path: '/assets/photos/lifestyle/lifestyle-03.jpg', alt: 'Working drawings and notes on a studio desk', width: 1200, height: 1500 },
-    },
-    details: {
-      heading: 'What is included',
-      image: { path: '/assets/photos/lifestyle/lifestyle-06.jpg', alt: 'An architect talking through a drawing on screen', width: 1200, height: 1500 },
-    },
-  },
-
-  courseSketchbookPage: {
-    header: {
-      image: { path: '/assets/photos/products/sketchbook.jpg', alt: '', width: 1600, height: 1600 },
-      heading: 'An Architect’s Digital Sketchbook',
-      lead: 'Sketch, layer and compose on an iPad in Morpholio Trace, ready for the portfolio',
-    },
-    overview: {
-      heading: 'Six tips for sketching digitally',
-      image: { path: '/assets/photos/lifestyle/lifestyle-04.jpg', alt: 'Sketching over a drawing in the studio', width: 1200, height: 1500 },
-    },
-    details: {
-      heading: 'What it covers',
-      image: { path: '/assets/photos/lifestyle/lifestyle-09.jpg', alt: 'A drawing pinned up in the studio', width: 1200, height: 1500 },
-    },
-  },
-
   partnersPage: {
     intro: {
       heading: 'Partners',
@@ -170,10 +104,7 @@ export const PAGE_DEFAULTS = {
       heading: 'Send your enquiry',
       lead: 'Tell Tom about your organisation, what you are planning and the support you need.',
     },
-  },
-
-  partnersArchivePage: {
-    intro: {
+    archive: {
       heading: 'The record',
       lead: 'A complete directory of collaborations, talks, and industry work',
     },

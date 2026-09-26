@@ -3,7 +3,9 @@ import {defineCliConfig} from 'sanity/cli'
 export default defineCliConfig({
   api: {
     projectId: '5cwu7mnl',
-    dataset: 'production'
+    // The dataset the Studio edits. The live site's is `production`, written
+    // only by the Studio's Publish Live (see the README, "Content").
+    dataset: 'staging',
   },
   deployment: {
     /** The hosted Studio, https://tomrowstudios.sanity.studio (`npm run deploy`) */

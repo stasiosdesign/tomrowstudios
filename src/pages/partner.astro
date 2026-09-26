@@ -5,16 +5,32 @@ import SiteFooter from '../components/SiteFooter.astro';
 import ContactPanel from '../components/ContactPanel.astro';
 import Button from '../components/Button.astro';
 import GetInTouch from '../components/GetInTouch.astro';
-import { imageAttrs, type SanityImage } from '../sanity/image';
-import { PARTNERS_PAGE_QUERY } from '../sanity/queries';
-import { contentParams } from '../sanity/content';
+import CaseStudyPanel from '../components/CaseStudyPanel.astro';
+import { imageAttrs, urlFor, type SanityImage } from '../sanity/image';
+import { PARTNERS_PAGE_QUERY, PARTNERS_QUERY } from '../sanity/queries';
 import { PAGE_DEFAULTS, type ImageDefault } from '../sanity/page-defaults';
+import type { PARTNERS_QUERY_RESULT } from '../sanity/sanity.types';
 
 // The page's words and portrait, from the Partners page document (or the
-// page's defaults); the case studies, the logos, the services, the
-// testimonials, the results and the form stay here
-const page = await Astro.locals.sanity.fetch(PARTNERS_PAGE_QUERY, contentParams);
+// page's defaults), and the partners: the case-study slider, the drawers it
+// opens and the logo marquee. The services, the testimonials, the results
+// and the form stay here
+const [page, allPartners] = await Promise.all([
+  Astro.locals.sanity.fetch(PARTNERS_PAGE_QUERY),
+  Astro.locals.sanity.fetch(PARTNERS_QUERY),
+]);
 const D = PAGE_DEFAULTS.partnersPage;
+// The partners the page can show: those with a cover image
+type Partner = PARTNERS_QUERY_RESULT[number];
+type Shown = Partner & { coverImage: NonNullable<Partner['coverImage']> };
+const partners = allPartners.filter((partner): partner is Shown => Boolean(partner.coverImage?.asset));
+// A partner with a case study to open: one with a title
+const hasCaseStudy = (partner: Partner) => Boolean(partner.caseStudy?.title);
+// The logos for the marquee: the partners that have one. An even count keeps
+// the row alternating across the loop seam, so an odd list runs twice.
+type Logo = { name: string; logo: NonNullable<Partner['logo']> };
+const withLogo = partners.flatMap((partner): Logo[] => (partner.logo?.asset ? [{ name: partner.name ?? '', logo: partner.logo }] : []));
+const logos = withLogo.length % 2 ? [...withLogo, ...withLogo] : withLogo;
 // An <img>'s src, size and alt: the photo set in the Studio, or the page's own file
 const img = (image: SanityImage | null | undefined, fallback: ImageDefault, width: number) =>
   image?.asset ? { ...imageAttrs(image, width), alt: image.alt ?? fallback.alt } : { src: fallback.path, width: fallback.width, height: fallback.height, alt: fallback.alt };
@@ -37,90 +53,20 @@ const img = (image: SanityImage | null | undefined, fallback: ImageDefault, widt
     <div data-swiper-group class="swiper-group">
       <div data-swiper-wrap class="swiper">
         <div class="swiper-wrapper">
-          <div class="swiper-slide">
-            <a class="slide-card" href="#case-rayon" data-panel-open="case-rayon" data-barba-prevent="self">
-              <img src="/assets/photos/talks/talk-13.jpg" draggable="false" alt="Case study — Intel">
-              <span class="slide-card__index">01</span>
-              <span class="slide-card__name">Intel</span>
-            </a>
-          </div>
-          <div class="swiper-slide">
-            <a class="slide-card" href="#case-rayon" data-panel-open="case-rayon" data-barba-prevent="self">
-              <img src="/assets/photos/talks/talk-14.jpg" draggable="false" alt="Case study — Epic Games">
-              <span class="slide-card__index">02</span>
-              <span class="slide-card__name">Epic Games</span>
-            </a>
-          </div>
-          <div class="swiper-slide">
-            <a class="slide-card" href="#case-rayon" data-panel-open="case-rayon" data-barba-prevent="self">
-              <img src="/assets/photos/talks/talk-15.jpg" draggable="false" alt="Case study — Speckle">
-              <span class="slide-card__index">03</span>
-              <span class="slide-card__name">Speckle</span>
-            </a>
-          </div>
-          <div class="swiper-slide">
-            <a class="slide-card" href="#case-rayon" data-panel-open="case-rayon" data-barba-prevent="self">
-              <img src="/assets/photos/talks/talk-17.jpg" draggable="false" alt="Case study — D5 Render">
-              <span class="slide-card__index">04</span>
-              <span class="slide-card__name">D5 Render</span>
-            </a>
-          </div>
-          <div class="swiper-slide">
-            <a class="slide-card" href="#case-rayon" data-panel-open="case-rayon" data-barba-prevent="self">
-              <img src="/assets/photos/talks/talk-16.jpg" draggable="false" alt="Case study — Gendo">
-              <span class="slide-card__index">05</span>
-              <span class="slide-card__name">Gendo</span>
-            </a>
-          </div>
-          <div class="swiper-slide">
-            <a class="slide-card" href="#case-rayon" data-panel-open="case-rayon" data-barba-prevent="self">
-              <img src="/assets/photos/events/event-09.jpg" draggable="false" alt="Case study — Material Bank">
-              <span class="slide-card__index">06</span>
-              <span class="slide-card__name">Material Bank</span>
-            </a>
-          </div>
-          <div class="swiper-slide">
-            <a class="slide-card" href="#case-rayon" data-panel-open="case-rayon" data-barba-prevent="self">
-              <img src="/assets/photos/events/event-10.jpg" draggable="false" alt="Case study — Qonic">
-              <span class="slide-card__index">07</span>
-              <span class="slide-card__name">Qonic</span>
-            </a>
-          </div>
-          <div class="swiper-slide">
-            <a class="slide-card" href="#case-rayon" data-panel-open="case-rayon" data-barba-prevent="self">
-              <img src="/assets/photos/events/event-11.jpg" draggable="false" alt="Case study — Motif">
-              <span class="slide-card__index">08</span>
-              <span class="slide-card__name">Motif</span>
-            </a>
-          </div>
-          <div class="swiper-slide">
-            <a class="slide-card" href="#case-rayon" data-panel-open="case-rayon" data-barba-prevent="self">
-              <img src="/assets/photos/events/event-12.jpg" draggable="false" alt="Case study — Giraffe">
-              <span class="slide-card__index">09</span>
-              <span class="slide-card__name">Giraffe</span>
-            </a>
-          </div>
-          <div class="swiper-slide">
-            <a class="slide-card" href="#case-rayon" data-panel-open="case-rayon" data-barba-prevent="self">
-              <img src="/assets/photos/studio/studio-03.jpg" draggable="false" alt="Case study — Finch">
-              <span class="slide-card__index">10</span>
-              <span class="slide-card__name">Finch</span>
-            </a>
-          </div>
-          <div class="swiper-slide">
-            <a class="slide-card" href="#case-rayon" data-panel-open="case-rayon" data-barba-prevent="self">
-              <img src="/assets/photos/talks/talk-18.jpg" draggable="false" alt="Case study — Krea">
-              <span class="slide-card__index">11</span>
-              <span class="slide-card__name">Krea</span>
-            </a>
-          </div>
-          <div class="swiper-slide">
-            <a class="slide-card" href="#case-rayon" data-panel-open="case-rayon" data-barba-prevent="self">
-              <img src="/assets/photos/events/event-13.jpg" draggable="false" alt="Case study — Architypes">
-              <span class="slide-card__index">12</span>
-              <span class="slide-card__name">Architypes</span>
-            </a>
-          </div>
+          {partners.map((partner, i) => {
+            const index = String(i + 1).padStart(2, '0');
+            const picture = <img {...imageAttrs(partner.coverImage, 1200)} draggable="false" alt={partner.coverImage.alt ?? `Case study — ${partner.name}`} loading="lazy" decoding="async">;
+            const details = <><span class="slide-card__index">{index}</span><span class="slide-card__name">{partner.name}</span></>;
+            return (
+              <div class="swiper-slide">
+                {hasCaseStudy(partner) ? (
+                  <a class="slide-card" href={`#case-${partner.slug}`} data-panel-open={`case-${partner.slug}`} data-barba-prevent="self">{picture}{details}</a>
+                ) : (
+                  <div class="slide-card">{picture}{details}</div>
+                )}
+              </div>
+            );
+          })}
         </div>
       </div>
       <div class="swiper-navigation">
@@ -149,21 +95,27 @@ const img = (image: SanityImage | null | undefined, fallback: ImageDefault, widt
   <div data-marquee-duplicate="2" data-marquee-scroll-direction-target data-marquee-direction="right" data-marquee-status="normal" data-marquee-speed="15" data-marquee-scroll-speed="10" class="marquee-advanced">
     <div data-marquee-scroll-target class="marquee-advanced__scroll">
       <div data-marquee-collection-target class="marquee-advanced__collection">
-        <!-- Placeholder strip: the two supplied marks alternating. An even
-             count so the pair still alternates across the loop seam. Swap these
-             rows for the real set when the rest of the logos arrive. -->
-        <div class="marquee-advanced__item-width"><img src="/assets/logos/finch-logo.png" loading="lazy" alt="Finch"></div>
-        <div class="marquee-advanced__item-width"><img src="/assets/logos/Gendo-Logo-White.png" loading="lazy" alt="Gendo"></div>
-        <div class="marquee-advanced__item-width"><img src="/assets/logos/finch-logo.png" loading="lazy" alt="Finch"></div>
-        <div class="marquee-advanced__item-width"><img src="/assets/logos/Gendo-Logo-White.png" loading="lazy" alt="Gendo"></div>
-        <div class="marquee-advanced__item-width"><img src="/assets/logos/finch-logo.png" loading="lazy" alt="Finch"></div>
-        <div class="marquee-advanced__item-width"><img src="/assets/logos/Gendo-Logo-White.png" loading="lazy" alt="Gendo"></div>
-        <div class="marquee-advanced__item-width"><img src="/assets/logos/finch-logo.png" loading="lazy" alt="Finch"></div>
-        <div class="marquee-advanced__item-width"><img src="/assets/logos/Gendo-Logo-White.png" loading="lazy" alt="Gendo"></div>
-        <div class="marquee-advanced__item-width"><img src="/assets/logos/finch-logo.png" loading="lazy" alt="Finch"></div>
-        <div class="marquee-advanced__item-width"><img src="/assets/logos/Gendo-Logo-White.png" loading="lazy" alt="Gendo"></div>
-        <div class="marquee-advanced__item-width"><img src="/assets/logos/finch-logo.png" loading="lazy" alt="Finch"></div>
-        <div class="marquee-advanced__item-width"><img src="/assets/logos/Gendo-Logo-White.png" loading="lazy" alt="Gendo"></div>
+        {logos.length > 0 ? logos.map((partner) => (
+          <div class="marquee-advanced__item-width"><img src={urlFor(partner.logo).ignoreImageParams().width(600).height(240).url()} loading="lazy" alt={partner.name}></div>
+        )) : (
+          <>
+            {/* Placeholder strip while no partner has a logo: the two supplied
+                marks alternating. An even count so the pair still alternates
+                across the loop seam. */}
+            <div class="marquee-advanced__item-width"><img src="/assets/logos/finch-logo.png" loading="lazy" alt="Finch"></div>
+            <div class="marquee-advanced__item-width"><img src="/assets/logos/Gendo-Logo-White.png" loading="lazy" alt="Gendo"></div>
+            <div class="marquee-advanced__item-width"><img src="/assets/logos/finch-logo.png" loading="lazy" alt="Finch"></div>
+            <div class="marquee-advanced__item-width"><img src="/assets/logos/Gendo-Logo-White.png" loading="lazy" alt="Gendo"></div>
+            <div class="marquee-advanced__item-width"><img src="/assets/logos/finch-logo.png" loading="lazy" alt="Finch"></div>
+            <div class="marquee-advanced__item-width"><img src="/assets/logos/Gendo-Logo-White.png" loading="lazy" alt="Gendo"></div>
+            <div class="marquee-advanced__item-width"><img src="/assets/logos/finch-logo.png" loading="lazy" alt="Finch"></div>
+            <div class="marquee-advanced__item-width"><img src="/assets/logos/Gendo-Logo-White.png" loading="lazy" alt="Gendo"></div>
+            <div class="marquee-advanced__item-width"><img src="/assets/logos/finch-logo.png" loading="lazy" alt="Finch"></div>
+            <div class="marquee-advanced__item-width"><img src="/assets/logos/Gendo-Logo-White.png" loading="lazy" alt="Gendo"></div>
+            <div class="marquee-advanced__item-width"><img src="/assets/logos/finch-logo.png" loading="lazy" alt="Finch"></div>
+            <div class="marquee-advanced__item-width"><img src="/assets/logos/Gendo-Logo-White.png" loading="lazy" alt="Gendo"></div>
+          </>
+        )}
       </div>
     </div>
   </div>
@@ -468,98 +420,8 @@ const img = (image: SanityImage | null | undefined, fallback: ImageDefault, widt
 
 <SiteFooter />
 
-<!-- Case study side panel (slide-out drawer) -->
-<div class="panel" id="case-rayon" data-panel data-panel-state="closed">
-  <a class="panel-backdrop" data-panel-backdrop data-panel-close href="#" aria-label="Close case study"></a>
-  <div class="panel-dialog" data-panel-dialog>
-    <div class="panel-bg">
-      <div class="panel-bg-sheet is--first" data-panel-bg></div>
-      <div class="panel-bg-sheet is--second" data-panel-bg></div>
-      <div class="panel-bg-sheet" data-panel-bg></div>
-    </div>
-        <button type="button" class="panel-close" data-panel-close aria-label="Close">&times;</button>
-    <div class="panel-inner" data-panel-inner data-lenis-prevent>
-
-    <section class="section panel-section">
-      <div class="container">
-        <div class="case-intro">
-          <p class="tagline">Case study</p>
-          <h2 class="case-intro__title">Rayon tutorials</h2>
-          <p class="case-intro__standfirst">A series of tutorial films and product walkthroughs showing how architects use Rayon to draw, share and collaborate on real projects.</p>
-
-          <dl class="case-facts">
-            <div><dt>Client</dt><dd>Rayon Design</dd></div>
-            <div><dt>Date</dt><dd>October 2024</dd></div>
-            <div><dt>Services</dt><dd>Planning, direction, production, edit</dd></div>
-            <div><dt>Output</dt><dd>Six tutorial films</dd></div>
-            <div><dt>Website</dt><dd><a href="https://www.rayon.design" target="_blank" rel="noopener" data-scramble-hover="link">rayon.design</a></dd></div>
-          </dl>
-
-          <div class="case-intro__body">
-            <p>Rayon needed a way to show architects and interior designers exactly how the software works — not through feature lists, but through real demonstration. Tom planned the tutorial structure around one workflow per film: drawing a floor plan, sharing a file, building a library of details.</p>
-            <p>Filming took place in working studios rather than a showroom, so the software is seen where it is actually used. The edit strips anything that does not serve the lesson — no music, no slow pans, just the interface and the steps to follow.</p>
-          </div>
-        </div>
-        <img class="panel-wide-img" src="/assets/photos/thumbnails/thumb-03.jpg" alt="">
-      </div>
-    </section>
-
-    <section class="section panel-section">
-      <div class="container">
-        <div class="section-title">
-          <h2>The films</h2>
-          <p class="lead">Six tutorials, each built around one workflow an architect actually has to get through</p>
-        </div>
-        <div data-swiper-group data-swiper-per-view="1.8" class="swiper-group">
-          <div data-swiper-wrap class="swiper">
-            <div class="swiper-wrapper">
-              <div class="swiper-slide">
-                <div class="slide-card">
-                  <img src="/assets/photos/events/event-15.jpg" draggable="false" alt="">
-                </div>
-              </div>
-              <div class="swiper-slide">
-                <div class="slide-card">
-                  <img src="/assets/photos/events/event-16.jpg" draggable="false" alt="">
-                </div>
-              </div>
-              <div class="swiper-slide">
-                <div class="slide-card">
-                  <img src="/assets/photos/events/event-01.jpg" draggable="false" alt="">
-                </div>
-              </div>
-              <div class="swiper-slide">
-                <div class="slide-card">
-                  <img src="/assets/photos/studio/studio-09.jpg" draggable="false" alt="">
-                </div>
-              </div>
-              <div class="swiper-slide">
-                <div class="slide-card">
-                  <img src="/assets/photos/studio/studio-10.jpg" draggable="false" alt="">
-                </div>
-              </div>
-              <div class="swiper-slide">
-                <div class="slide-card">
-                  <img src="/assets/photos/events/event-14.jpg" draggable="false" alt="">
-                </div>
-              </div>
-            </div>
-          </div>
-          <div class="swiper-navigation">
-            <button data-swiper-prev class="swiper-navigation__button">
-              <svg xmlns="http://www.w3.org/2000/svg" width="100%" viewBox="0 0 24 24" fill="none" class="swiper-navigation__button-arorw is--prev"><path d="M14 19L21 12L14 5" stroke="currentColor" stroke-miterlimit="10" stroke-width="2"></path><path d="M21 12H2" stroke="currentColor" stroke-miterlimit="10" stroke-width="2"></path></svg>
-            </button>
-            <div class="swiper-pagination"></div>
-            <button data-swiper-next class="swiper-navigation__button">
-              <svg xmlns="http://www.w3.org/2000/svg" width="100%" viewBox="0 0 24 24" fill="none" class="swiper-navigation__button-arorw"><path d="M14 19L21 12L14 5" stroke="currentColor" stroke-miterlimit="10" stroke-width="2"></path><path d="M21 12H2" stroke="currentColor" stroke-miterlimit="10" stroke-width="2"></path></svg>
-            </button>
-          </div>
-        </div>
-      </div>
-    </section>
-    </div>
-  </div>
-</div>
+<!-- Case study side panels (slide-out drawers), one per partner with a case study -->
+{partners.filter(hasCaseStudy).map((partner) => <CaseStudyPanel partner={partner} />)}
 
 <ContactPanel />
 </BaseLayout>

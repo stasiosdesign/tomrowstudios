@@ -11,7 +11,7 @@ import {useClient, useSchema, type SanityDocument} from 'sanity'
 import {useRouter} from 'sanity/router'
 import {usePaneRouter} from 'sanity/structure'
 import {styled} from 'styled-components'
-import {isLiveId, publishedId, sameContent} from '../lib/live'
+import {liveHas, PRODUCTION_DATASET, sameContent, type PublishLog} from '../lib/publish'
 import {columnsFor, renderValue, textOf, type Column} from './format'
 
 /* A collection: every document of one type as a table, one row per item,
@@ -55,8 +55,8 @@ type Row = {
 
 const API_VERSION = '2025-02-19'
 
-const STAGING_LABEL: Record<StagingState, string> = {draft: 'Draft', staged: 'Staged', changed: 'Staged · edited'}
-const LIVE_LABEL: Record<LiveState, string> = {none: 'Not live', live: 'Live', behind: 'Live · behind'}
+const STAGING_LABEL: Record<StagingState, string> = {draft: 'Unpublished', staged: 'Staging', changed: 'Staging · older'}
+const LIVE_LABEL: Record<LiveState, string> = {none: 'Not live', live: 'Live', behind: 'Live · older'}
 
 const columnsKey = (type: string) => `tomrow.columns.${type}`
 const searchKey = (type: string) => `tomrow.search.${type}`
@@ -81,28 +81,39 @@ function writeStored(storage: Storage | undefined, key: string, value: unknown) 
 const local = () => (typeof window === 'undefined' ? undefined : window.localStorage)
 const session = () => (typeof window === 'undefined' ? undefined : window.sessionStorage)
 
-// Every document of the type, in all three states, joined by ID
-function toRows(documents: SanityDocument[], nameField: string): Row[] {
-  const groups = new Map<string, {draft?: SanityDocument; published?: SanityDocument; live?: SanityDocument}>()
-  for (const doc of documents) {
+const publishedId = (id: string) => (id.startsWith('drafts.') ? id.slice(7) : id)
+
+// Every document of the type: drafts and published documents from staging,
+// the live site's documents from production, joined by ID
+function toRows(staging: SanityDocument[], production: SanityDocument[], logs: PublishLog[], nameField: string): Row[] {
+  const groups = new Map<string, {draft?: SanityDocument; published?: SanityDocument; live?: SanityDocument; log?: PublishLog}>()
+  for (const doc of staging) {
     const id = publishedId(doc._id)
     const group = groups.get(id) ?? {}
     if (doc._id.startsWith('drafts.')) group.draft = doc
-    else if (isLiveId(doc._id)) group.live = doc
     else group.published = doc
     groups.set(id, group)
   }
+  for (const doc of production) {
+    const group = groups.get(doc._id) ?? {}
+    group.live = doc
+    groups.set(doc._id, group)
+  }
+  for (const log of logs) {
+    const group = groups.get(log.document)
+    if (group) group.log = log
+  }
   const rows: Row[] = []
-  for (const [id, {draft, published, live}] of groups) {
+  for (const [id, {draft, published, live, log}] of groups) {
     const doc = draft ?? published
-    if (!doc) continue // a live copy on its own: nothing to edit
+    if (!doc) continue // live only: nothing here to edit
     const name = (doc as Record<string, unknown>)[nameField]
     rows.push({
       id,
       doc,
       title: typeof name === 'string' && name.trim() ? name : 'Untitled',
-      staging: !published ? 'draft' : draft ? 'changed' : 'staged',
-      live: !live || !published ? 'none' : sameContent(published, live) ? 'live' : 'behind',
+      staging: !published ? 'draft' : sameContent(published, doc) ? 'staged' : 'changed',
+      live: !live ? 'none' : liveHas(log, doc) || sameContent(live, doc) ? 'live' : 'behind',
     })
   }
   return rows
@@ -119,41 +130,46 @@ export function CollectionPane(props: {options?: Record<string, unknown>; childI
   const {ChildLink, groupIndex, routerPanesState} = usePaneRouter()
   const selectedId = props.childItemId
 
-  // The rows, kept current: the dataset is fetched again after each change to the type
-  const [documents, setDocuments] = useState<SanityDocument[] | null>(null)
+  // The rows, kept current: both datasets are read again after each change to the type
+  const [documents, setDocuments] = useState<{staging: SanityDocument[]; production: SanityDocument[]; logs: PublishLog[]} | null>(null)
   const [error, setError] = useState<string | null>(null)
   useEffect(() => {
     let cancelled = false
     let timer: ReturnType<typeof setTimeout> | undefined
-    const raw = client.withConfig({perspective: 'raw'})
+    const staging = client.withConfig({perspective: 'raw', useCdn: false})
+    const production = staging.withConfig({dataset: PRODUCTION_DATASET})
+    // Drafts and published documents; never a dotted ID, which Sanity keeps private
+    const query = `*[_type == $type && (count(string::split(_id, ".")) == 1 || _id in path("drafts.**"))]`
     const load = () =>
-      raw
-        // Drafts, published documents and live copies; never a dotted ID (private to Sanity)
-        .fetch<SanityDocument[]>(`*[_type == $type && (count(string::split(_id, ".")) == 1 || _id in path("drafts.**"))]`, {type})
-        .then((result) => {
-          if (!cancelled) setDocuments(result)
+      Promise.all([
+        staging.fetch<SanityDocument[]>(query, {type}),
+        production.fetch<SanityDocument[]>(query, {type}),
+        production.fetch<PublishLog[]>(`*[_type == "publishLog" && document in *[_type == $type]._id]`, {type}),
+      ])
+        .then(([stagingDocs, productionDocs, logs]) => {
+          if (!cancelled) setDocuments({staging: stagingDocs, production: productionDocs, logs})
         })
         .catch((err: Error) => {
           if (!cancelled) setError(err.message)
         })
     load()
-    const subscription = client
-      .listen(`*[_type == $type]`, {type}, {visibility: 'query', includeResult: false, events: ['mutation']})
-      .subscribe({
-        next: () => {
-          clearTimeout(timer)
-          timer = setTimeout(load, 300)
-        },
-        error: (err: Error) => setError(err.message),
-      })
+    const onChange = {
+      next: () => {
+        clearTimeout(timer)
+        timer = setTimeout(load, 300)
+      },
+      error: (err: Error) => setError(err.message),
+    }
+    const options = {visibility: 'query' as const, includeResult: false, events: ['mutation' as const]}
+    const subscriptions = [staging, production].map((source) => source.listen(`*[_type == $type || _type == "publishLog"]`, {type}, options).subscribe(onChange))
     return () => {
       cancelled = true
       clearTimeout(timer)
-      subscription.unsubscribe()
+      subscriptions.forEach((subscription) => subscription.unsubscribe())
     }
   }, [client, type])
 
-  const rows = useMemo(() => (documents ? toRows(documents, nameField) : []), [documents, nameField])
+  const rows = useMemo(() => (documents ? toRows(documents.staging, documents.production, documents.logs, nameField) : []), [documents, nameField])
 
   // The columns: every field of the type, with the chosen ones shown
   const allColumns = useMemo(() => columnsFor(schemaType).filter((column) => column.name !== nameField), [schemaType, nameField])

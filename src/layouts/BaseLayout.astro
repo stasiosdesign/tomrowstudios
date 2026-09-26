@@ -23,9 +23,11 @@ interface Props {
   mainClass?: string;
   /** The page's Sanity document type (data-page-doc), for the Visual editor's live drafts (src/sanity/live-preview.ts). */
   pageDoc?: string;
+  /** The document's _type when it is not its ID (a collection item, such as a shop item): data-page-type. */
+  pageType?: string;
 }
 
-const { title, namespace, pageName, mainClass, pageDoc } = Astro.props;
+const { title, namespace, pageName, mainClass, pageDoc, pageType } = Astro.props;
 
 // Production is the one canonical site: every build, staging included, names
 // production's address for the page (Astro.site, from SITE_URL), in its clean
@@ -99,7 +101,7 @@ const noindex = __DEPLOYMENT__ !== 'production';
 <!-- Click-to-zoom target (outside the Barba container so it persists) -->
 <div data-click-zoom-lightbox class="click-zoom__lightbox"></div>
 
-<main data-barba="container" data-barba-namespace={namespace} data-page-name={pageName} data-page-doc={pageDoc} class={mainClass}>
+<main data-barba="container" data-barba-namespace={namespace} data-page-name={pageName} data-page-doc={pageDoc} data-page-type={pageType} class={mainClass}>
 <slot />
 </main>
 

@@ -69,7 +69,7 @@ export const homePage = defineType({
       name: 'logoWall',
       title: 'Client logos',
       type: 'object',
-      description: 'The red band under the hero. The logos themselves are the Clients list.',
+      description: 'The red band under the hero: its label and the logos, in order.',
       ...SECTION,
       validation: (rule) => rule.required(),
       fields: [
@@ -78,6 +78,15 @@ export const homePage = defineType({
           type: 'string',
           description: 'Shown in brackets above the logos.',
           validation: (rule) => rule.required(),
+        }),
+        defineField({
+          name: 'clients',
+          title: 'Logos',
+          type: 'array',
+          description:
+            'The logos in the wall, in order. Each opens the client to change its name or artwork.',
+          of: [defineArrayMember({type: 'reference', to: [{type: 'client'}]})],
+          options: {sortable: true},
         }),
       ],
     }),

@@ -5,12 +5,11 @@ import SiteNav from '../components/SiteNav.astro';
 import SiteFooter from '../components/SiteFooter.astro';
 import ContactPanel from '../components/ContactPanel.astro';
 import { TERMS_PAGE_QUERY } from '../sanity/queries';
-import { contentParams } from '../sanity/content';
 import { PAGE_DEFAULTS } from '../sanity/page-defaults';
 
 // The page's title, and its text once it is written, from the Terms page
 // document (or the page's defaults)
-const page = await Astro.locals.sanity.fetch(TERMS_PAGE_QUERY, contentParams);
+const page = await Astro.locals.sanity.fetch(TERMS_PAGE_QUERY);
 const D = PAGE_DEFAULTS.termsPage;
 ---
 <BaseLayout title="Terms — Tomrow Studios" namespace="terms" pageName="Terms" pageDoc="termsPage">

@@ -3,9 +3,10 @@ import {UsersIcon} from '@sanity/icons/Users'
 import {buttonField, headingField, imageField, labelField, leadField, pageSection} from '../shared/page-section'
 
 // The Partners page, one section per part, in the order the page shows them.
-// The case studies, the logos, the services, the testimonials, the results
-// cards and the enquiry form stay in the site's code. A singleton with the
-// fixed ID "partnersPage".
+// The logos, the services, the testimonials, the results cards and the
+// enquiry form stay in the site's code; the case studies are the Partner
+// documents. Its last section is the Partners archive page's heading and
+// standfirst. A singleton with the fixed ID "partnersPage".
 export const partnersPage = defineType({
   name: 'partnersPage',
   title: 'Partners page',
@@ -39,6 +40,10 @@ export const partnersPage = defineType({
     ]),
     pageSection('enquire', 'Enquiry', 'The words beside the enquiry form. The form and the contact details stay in the site’s code.', [
       labelField(),
+      headingField(),
+      leadField(),
+    ]),
+    pageSection('archive', 'Archive', 'The title and the standfirst above the grid on the Partners archive page. The grid is the Partners list.', [
       headingField(),
       leadField(),
     ]),

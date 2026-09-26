@@ -1,19 +1,55 @@
 /* The Studio's own styles, on top of the theme (theme.ts): the website's red
-   call to action for "Publish live", the collection tables, and the two
-   labelled parts of the Content sidebar.
+   call to action for Publish, quieter hover and selection, forms that use
+   their pane, the collection tables and the sidebar.
 
-   Sanity paints its buttons through card variables, so colours are set
-   there. The selectors go by the classes and data attributes this Studio's
-   own components set; where they touch Sanity's markup (the sidebar's
-   dividers) they go by the test IDs its own tests use, and simply fall back
-   to Sanity's look if an update renames them. */
+   Sanity paints its surfaces through card variables, so colours are set
+   there. Where a rule touches Sanity's markup it goes by the data attributes
+   and test IDs its own tests use, and falls back to Sanity's look if an
+   update renames them. */
+
+:root {
+  /* Hover: a faint grey wash; selection: a little more; both well short of
+     the white the theme derives from black-and-white */
+  --tomrow-hover: rgb(255 255 255 / 0.06);
+  --tomrow-selected: rgb(255 255 255 / 0.1);
+}
+
+/* Sanity's hovered and selected states, on menus, lists, buttons and cards:
+   the theme's white-derived tones give way to the two washes above */
+[data-ui='Card'][data-hovered],
+[data-ui='Card']:is(a, button):hover,
+[data-ui='MenuItem']:hover,
+[data-ui='MenuItem'][data-hovered],
+[data-ui='Button'][data-ui-mode='bleed']:hover,
+[data-ui='Button'][data-ui-mode='ghost']:hover,
+[data-ui='PaneItem']:hover,
+[data-ui='PreviewCard']:hover {
+  --card-bg-color: var(--tomrow-hover);
+  --card-hover-bg-color: var(--tomrow-hover);
+  background-color: var(--tomrow-hover);
+}
+
+[data-ui='Card'][data-selected],
+[data-ui='Card'][data-pressed],
+[data-ui='MenuItem'][data-selected],
+[data-ui='MenuItem'][aria-pressed='true'],
+[data-ui='PaneItem'][data-selected],
+[data-ui='PreviewCard'][data-selected] {
+  --card-bg-color: var(--tomrow-selected);
+  --card-hover-bg-color: var(--tomrow-selected);
+  background-color: var(--tomrow-selected);
+}
+
+/* Keyboard focus keeps its own ring, distinct from hover and selection */
+:where([data-ui='Card'], [data-ui='MenuItem'], [data-ui='Button'], a, button):focus-visible {
+  outline: 2px solid var(--card-focus-ring-color);
+  outline-offset: -2px;
+}
 
 /* The site's one red (--cta-accent-color in src/styles/style.css), the mono
    uppercase label its calls to action wear. Red only while it can be pressed:
-   disabled, it drops back to a quiet outline, so the colour alone says
-   whether the live site is up to date. */
+   disabled, it drops back to a quiet outline. */
 button.tomrow-cta {
-  min-width: 9rem;
   transition:
     background-color 0.2s ease,
     box-shadow 0.2s ease;
@@ -36,6 +72,7 @@ button.tomrow-cta {
   @media (hover: hover) {
     &:enabled:hover {
       --card-bg-color: color-mix(in srgb, #dd341d 88%, #ffffff);
+      background-color: var(--card-bg-color);
     }
   }
 
@@ -61,21 +98,31 @@ button.tomrow-cta {
   }
 }
 
-/* The Content sidebar's two headings, "Page editor" and "CMS collections":
-   the site's mono, small, uppercase, with room above */
-[data-testid='structure-tool-list-pane'] [data-ui='Stack'] > div:has(> hr) + div,
-[data-testid='structure-tool-list-pane'] hr + [data-ui='Text'],
-[data-testid='structure-tool-list-pane'] [data-testid^='divider-'] {
-  margin-top: 8px;
+/* The split button's arrow half */
+button.tomrow-cta--arrow > span {
+  padding-left: 6px;
+  padding-right: 6px;
 }
 
-[data-testid='structure-tool-list-pane'] [data-testid^='divider-'] [data-ui='Text'] {
-  font-family: 'chivo-mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-  font-weight: 300;
-  font-size: 11px;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: rgb(255 255 255 / 0.55);
+/* Forms use their pane. Sanity caps a document's form at a reading width
+   and leaves the rest of a wide pane empty; here the form follows the pane,
+   with a little more side room on wide ones. */
+[data-tomrow-document] [data-testid='document-panel-scroller'] > div,
+[data-tomrow-document] [data-testid='document-panel-portal'] ~ div > div,
+[data-tomrow-document] [data-testid='form-view'] > div {
+  max-width: none;
+}
+
+[data-tomrow-document] [data-testid='document-panel-scroller'] {
+  scrollbar-gutter: stable;
+}
+
+/* The visual editor: the preview is the canvas. Its address input goes;
+   the controls beside it (viewport, perspective, share, open) stay. */
+[data-testid='presentation-tool'] [data-testid='preview-location'],
+[data-testid='presentation-tool'] input[data-testid='preview-location-input'],
+[data-testid='presentation-tool'] [data-testid='preview-url-input'] {
+  display: none;
 }
 
 /* A collection: the table fills its pane; the compact list keeps to a narrow
@@ -84,9 +131,9 @@ button.tomrow-cta {
   min-height: 0;
 }
 
-/* Small screens: the publishing bar's actions wrap under the status */
+/* Small screens: the publishing control wraps under the status */
 @media (max-width: 640px) {
-  [data-tomrow-publish-bar] [data-ui='Flex'] {
+  [data-tomrow-publish] > [data-ui='Flex'] {
     row-gap: 8px;
   }
 }

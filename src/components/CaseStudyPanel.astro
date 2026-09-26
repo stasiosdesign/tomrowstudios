@@ -1,0 +1,105 @@
+---
+/* A partner's case study, in the slide-out drawer the Partners page's slider
+   and the Partners archive grid open (public/js/sidepanel.js): the intro
+   with its facts and text, the wide picture, and the films gallery when the
+   partner has one. Rendered once per partner with a case study, as
+   #case-<slug>, the id the slides and grid pictures name in
+   data-panel-open. */
+import { PortableText } from 'astro-portabletext';
+import { imageAttrs } from '../sanity/image';
+import type { PARTNERS_QUERY_RESULT } from '../sanity/sanity.types';
+
+interface Props {
+  partner: PARTNERS_QUERY_RESULT[number];
+}
+
+const { partner } = Astro.props;
+const study = partner.caseStudy;
+const facts = study?.facts;
+const factRows = [
+  ['Client', facts?.client],
+  ['Date', facts?.date],
+  ['Services', facts?.services],
+  ['Output', facts?.output],
+].filter((row): row is [string, string] => Boolean(row[1]));
+// The website, shown without its scheme and "www." as the pages always did
+const website = facts?.website;
+const websiteLabel = website?.replace(/^https?:\/\/(www\.)?/, '').replace(/\/$/, '');
+const gallery = (study?.gallery ?? []).filter((image) => image.asset);
+---
+<div class="panel" id={`case-${partner.slug}`} data-panel data-panel-state="closed">
+  <a class="panel-backdrop" data-panel-backdrop data-panel-close href="#" aria-label="Close case study"></a>
+  <div class="panel-dialog" data-panel-dialog>
+    <div class="panel-bg">
+      <div class="panel-bg-sheet is--first" data-panel-bg></div>
+      <div class="panel-bg-sheet is--second" data-panel-bg></div>
+      <div class="panel-bg-sheet" data-panel-bg></div>
+    </div>
+    <button type="button" class="panel-close" data-panel-close aria-label="Close">&times;</button>
+    <div class="panel-inner" data-panel-inner data-lenis-prevent>
+
+    <section class="section panel-section">
+      <div class="container">
+        <div class="case-intro">
+          <p class="tagline">Case study</p>
+          <h2 class="case-intro__title">{study?.title}</h2>
+          {study?.standfirst && <p class="case-intro__standfirst">{study.standfirst}</p>}
+
+          {(factRows.length > 0 || website) && (
+            <dl class="case-facts">
+              {factRows.map(([label, value]) => (
+                <div><dt>{label}</dt><dd>{value}</dd></div>
+              ))}
+              {website && (
+                <div><dt>Website</dt><dd><a href={website} target="_blank" rel="noopener" data-scramble-hover="link">{websiteLabel}</a></dd></div>
+              )}
+            </dl>
+          )}
+
+          {study?.body && study.body.length > 0 && (
+            <div class="case-intro__body"><PortableText value={study.body} /></div>
+          )}
+        </div>
+        {study?.image?.asset && (
+          <img class="panel-wide-img" {...imageAttrs(study.image, 1600)} alt={study.image.alt ?? ''} loading="lazy" decoding="async">
+        )}
+      </div>
+    </section>
+
+    {gallery.length > 0 && (
+      <section class="section panel-section">
+        <div class="container">
+          {(study?.filmsHeading || study?.filmsLead) && (
+            <div class="section-title">
+              {study?.filmsHeading && <h2>{study.filmsHeading}</h2>}
+              {study?.filmsLead && <p class="lead">{study.filmsLead}</p>}
+            </div>
+          )}
+          <div data-swiper-group data-swiper-per-view="1.8" class="swiper-group">
+            <div data-swiper-wrap class="swiper">
+              <div class="swiper-wrapper">
+                {gallery.map((image) => (
+                  <div class="swiper-slide">
+                    <div class="slide-card">
+                      <img {...imageAttrs(image, 1200)} draggable="false" alt={image.alt ?? ''} loading="lazy" decoding="async">
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div class="swiper-navigation">
+              <button data-swiper-prev class="swiper-navigation__button">
+                <svg xmlns="http://www.w3.org/2000/svg" width="100%" viewBox="0 0 24 24" fill="none" class="swiper-navigation__button-arorw is--prev"><path d="M14 19L21 12L14 5" stroke="currentColor" stroke-miterlimit="10" stroke-width="2"></path><path d="M21 12H2" stroke="currentColor" stroke-miterlimit="10" stroke-width="2"></path></svg>
+              </button>
+              <div class="swiper-pagination"></div>
+              <button data-swiper-next class="swiper-navigation__button">
+                <svg xmlns="http://www.w3.org/2000/svg" width="100%" viewBox="0 0 24 24" fill="none" class="swiper-navigation__button-arorw"><path d="M14 19L21 12L14 5" stroke="currentColor" stroke-miterlimit="10" stroke-width="2"></path><path d="M21 12H2" stroke="currentColor" stroke-miterlimit="10" stroke-width="2"></path></svg>
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+    )}
+    </div>
+  </div>
+</div>

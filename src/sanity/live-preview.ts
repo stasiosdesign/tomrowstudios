@@ -20,7 +20,6 @@
 import { createQueryStore } from '@sanity/core-loader';
 import { createDataAttribute, enableVisualEditing } from '@sanity/visual-editing-standalone';
 import { sanityClient } from './client';
-import { contentParams } from './content';
 import { urlFor, type SanityImage } from './image';
 import { CLIENT_LOGOS_QUERY, GET_IN_TOUCH_QUERY, HOME_PAGE_QUERY, PAGE_LIVE_QUERY } from './queries';
 import type { CLIENT_LOGOS_QUERY_RESULT, GET_IN_TOUCH_QUERY_RESULT, HOME_PAGE_QUERY_RESULT, PAGE_LIVE_QUERY_RESULT } from './sanity.types';
@@ -201,7 +200,8 @@ function renderGetInTouch(cta: NonNullable<GET_IN_TOUCH_QUERY_RESULT>) {
 }
 
 // Every other page: its <main> names its document (data-page-doc, the type,
-// which is also the ID), and each part it holds names its field as a path
+// which is also the ID; a collection item, such as a shop item, names its
+// type in data-page-type), and each part it holds names its field as a path
 // into the document (data-page-field="hero.heading"): a picture (an img, at
 // the width in data-page-width), a button (Button.astro's a.cta) or, for
 // anything else, the element's text. A field a draft leaves empty keeps the
@@ -223,7 +223,32 @@ function renderPage(doc: Doc, page: Record<string, unknown>) {
   });
 }
 
-enableVisualEditing({ zIndex: 10000 }); // above the site's own layers (400 at most)
+// The Studio's address bar follows the page: every page Barba brings in is
+// reported (so after /api/draft-mode/enable redirects here, the Studio sees
+// the page, not the activation route), and a page the Studio asks for is
+// opened through Barba, keeping its transitions. Same-page moves are ignored.
+type Barba = { hooks: { after: (hook: () => void) => void }; go?: (href: string) => Promise<void> };
+const getBarba = () => (window as unknown as { barba?: Barba }).barba;
+const samePage = (url: string) => new URL(url, location.href).pathname === location.pathname;
+enableVisualEditing({
+  zIndex: 10000, // above the site's own layers (400 at most)
+  history: {
+    subscribe: (navigate) => {
+      const report = () => navigate({ type: 'replace', url: `${location.pathname}${location.search}${location.hash}` });
+      report();
+      getBarba()?.hooks.after(report);
+      window.addEventListener('popstate', report);
+      return () => window.removeEventListener('popstate', report);
+    },
+    update: (update) => {
+      if (update.type === 'pop') return history.back();
+      if (samePage(update.url)) return;
+      const barba = getBarba();
+      if (barba?.go) barba.go(update.url);
+      else location.assign(update.url);
+    },
+  },
+});
 
 const { createFetcherStore, enableLiveMode } = createQueryStore({ client: sanityClient, ssr: false });
 enableLiveMode({ client: sanityClient });
@@ -231,7 +256,7 @@ enableLiveMode({ client: sanityClient });
 // A live query, asked for the first time a page needs it (so the Studio's
 // list of documents on a page only has the ones it shows); its latest result
 // is drawn in on arrival and again on every page Barba brings in after that
-function live<T>(query: string, render: (data: NonNullable<T>) => void, params: Record<string, unknown> = contentParams) {
+function live<T>(query: string, render: (data: NonNullable<T>) => void, params: Record<string, unknown> = {}) {
   let latest: NonNullable<T> | undefined;
   let asked = false;
   return () => {
@@ -251,13 +276,14 @@ const logos = live<CLIENT_LOGOS_QUERY_RESULT>(CLIENT_LOGOS_QUERY, renderLogos);
 const getInTouch = live<GET_IN_TOUCH_QUERY_RESULT>(GET_IN_TOUCH_QUERY, renderGetInTouch);
 
 // One live query per page document, made the first time its page is shown
+// (keyed by the document's ID; the type is the ID unless <main> says otherwise)
 const pages = new Map<string, () => void>();
-function page(type: string) {
-  let show = pages.get(type);
+function page(id: string, type = id) {
+  let show = pages.get(id);
   if (!show) {
-    const doc: Doc = { id: type, type };
-    show = live<PAGE_LIVE_QUERY_RESULT>(PAGE_LIVE_QUERY, (data) => renderPage(doc, data as Record<string, unknown>), { ...contentParams, id: type });
-    pages.set(type, show);
+    const doc: Doc = { id, type };
+    show = live<PAGE_LIVE_QUERY_RESULT>(PAGE_LIVE_QUERY, (data) => renderPage(doc, data as Record<string, unknown>), { id });
+    pages.set(id, show);
   }
   show();
 }
@@ -269,7 +295,7 @@ function update() {
   }
   if (document.querySelector('.final-cta')) getInTouch();
   const main = document.querySelector('main[data-page-doc]');
-  if (main instanceof HTMLElement && main.dataset.pageDoc) page(main.dataset.pageDoc);
+  if (main instanceof HTMLElement && main.dataset.pageDoc) page(main.dataset.pageDoc, main.dataset.pageType || undefined);
 }
 
 update();

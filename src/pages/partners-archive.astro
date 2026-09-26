@@ -4,16 +4,27 @@ import SiteNav from '../components/SiteNav.astro';
 import SiteFooter from '../components/SiteFooter.astro';
 import ContactPanel from '../components/ContactPanel.astro';
 import GetInTouch from '../components/GetInTouch.astro';
-import { PARTNERS_ARCHIVE_PAGE_QUERY } from '../sanity/queries';
-import { contentParams } from '../sanity/content';
+import CaseStudyPanel from '../components/CaseStudyPanel.astro';
+import { imageAttrs } from '../sanity/image';
+import { PARTNERS_PAGE_QUERY, PARTNERS_QUERY } from '../sanity/queries';
 import { PAGE_DEFAULTS } from '../sanity/page-defaults';
+import type { PARTNERS_QUERY_RESULT } from '../sanity/sanity.types';
 
-// The page's words, from the Partners archive page document (or the page's
-// defaults); the grid stays here
-const page = await Astro.locals.sanity.fetch(PARTNERS_ARCHIVE_PAGE_QUERY, contentParams);
-const D = PAGE_DEFAULTS.partnersArchivePage;
+// The page's words, from the Partners page document's archive section (or
+// the page's defaults), and the partners: the grid and the drawers it opens
+const [page, allPartners] = await Promise.all([
+  Astro.locals.sanity.fetch(PARTNERS_PAGE_QUERY),
+  Astro.locals.sanity.fetch(PARTNERS_QUERY),
+]);
+const D = PAGE_DEFAULTS.partnersPage;
+// The partners the page can show: those with a cover image
+type Partner = PARTNERS_QUERY_RESULT[number];
+type Shown = Partner & { coverImage: NonNullable<Partner['coverImage']> };
+const partners = allPartners.filter((partner): partner is Shown => Boolean(partner.coverImage?.asset));
+// A partner with a case study to open: one with a title
+const hasCaseStudy = (partner: Partner) => Boolean(partner.caseStudy?.title);
 ---
-<BaseLayout title="Archive — Tomrow Studios" namespace="partners-archive" pageName="Archive" pageDoc="partnersArchivePage">
+<BaseLayout title="Archive — Tomrow Studios" namespace="partners-archive" pageName="Archive" pageDoc="partnersPage">
 <SiteNav />
 
 <div class="theme-light">
@@ -21,19 +32,19 @@ const D = PAGE_DEFAULTS.partnersArchivePage;
 <section class="section">
   <div class="container">
     <div class="section-title">
-      <h2 data-page-field="intro.heading">{page?.intro?.heading ?? D.intro.heading}</h2>
-      <p class="lead" data-page-field="intro.lead">{page?.intro?.lead ?? D.intro.lead}</p>
+      <h2 data-page-field="archive.heading">{page?.archive?.heading ?? D.archive.heading}</h2>
+      <p class="lead" data-page-field="archive.lead">{page?.archive?.lead ?? D.archive.lead}</p>
     </div>
 
     <div class="archive-grid">
-      <a href="#case-rayon" data-panel-open="case-rayon" data-barba-prevent="self"><img src="/assets/photos/lifestyle/lifestyle-05.jpg" alt="Case study"></a>
-      <a href="#case-rayon" data-panel-open="case-rayon" data-barba-prevent="self"><img src="/assets/photos/lifestyle/lifestyle-06.jpg" alt="Case study"></a>
-      <a href="#case-rayon" data-panel-open="case-rayon" data-barba-prevent="self"><img src="/assets/photos/lifestyle/lifestyle-07.jpg" alt="Case study"></a>
-      <a href="#case-rayon" data-panel-open="case-rayon" data-barba-prevent="self"><img src="/assets/photos/lifestyle/lifestyle-08.jpg" alt="Case study"></a>
-      <a href="#case-rayon" data-panel-open="case-rayon" data-barba-prevent="self"><img src="/assets/photos/lifestyle/lifestyle-09.jpg" alt="Case study"></a>
-      <a href="#case-rayon" data-panel-open="case-rayon" data-barba-prevent="self"><img src="/assets/photos/lifestyle/lifestyle-11.jpg" alt="Case study"></a>
-      <a href="#case-rayon" data-panel-open="case-rayon" data-barba-prevent="self"><img src="/assets/photos/lifestyle/lifestyle-12.jpg" alt="Case study"></a>
-      <a href="#case-rayon" data-panel-open="case-rayon" data-barba-prevent="self"><img src="/assets/photos/lifestyle/lifestyle-13.jpg" alt="Case study"></a>
+      {partners.map((partner) => {
+        const picture = <img {...imageAttrs(partner.coverImage, 1200)} alt={partner.coverImage.alt ?? `Case study — ${partner.name}`} loading="lazy" decoding="async">;
+        return hasCaseStudy(partner) ? (
+          <a href={`#case-${partner.slug}`} data-panel-open={`case-${partner.slug}`} data-barba-prevent="self">{picture}</a>
+        ) : (
+          <div>{picture}</div>
+        );
+      })}
     </div>
   </div>
 </section>
@@ -45,103 +56,8 @@ const D = PAGE_DEFAULTS.partnersArchivePage;
 
 <SiteFooter />
 
-<!-- Case study side panel (slide-out drawer) -->
-<div class="panel" id="case-rayon" data-panel data-panel-state="closed">
-  <a class="panel-backdrop" data-panel-backdrop data-panel-close href="#" aria-label="Close case study"></a>
-  <div class="panel-dialog" data-panel-dialog>
-    <div class="panel-bg">
-      <div class="panel-bg-sheet is--first" data-panel-bg></div>
-      <div class="panel-bg-sheet is--second" data-panel-bg></div>
-      <div class="panel-bg-sheet" data-panel-bg></div>
-    </div>
-        <button type="button" class="panel-close" data-panel-close aria-label="Close">&times;</button>
-    <div class="panel-inner" data-panel-inner data-lenis-prevent>
-
-    <section class="section panel-section">
-      <div class="container">
-        <div class="case-intro">
-          <p class="tagline">Case study</p>
-          <h2 class="case-intro__title">Rayon tutorials</h2>
-
-          <div class="case-intro__body">
-            <aside class="case-facts">
-              <dl>
-                <div><dt>Client</dt><dd>Rayon Design</dd></div>
-                <div><dt>Date</dt><dd>October 2024</dd></div>
-                <div><dt>Services</dt><dd>Content planning, direction, production and edit</dd></div>
-                <div><dt>Output</dt><dd>Six tutorial films</dd></div>
-                <div><dt>Website</dt><dd><a href="https://www.rayon.design" target="_blank" rel="noopener" data-scramble-hover="link">rayon.design</a></dd></div>
-              </dl>
-            </aside>
-
-            <p class="case-intro__standfirst">A series of tutorial films and product walkthroughs showing how architects use Rayon to draw, share and collaborate on real projects.</p>
-            <p>Rayon needed a way to show architects and interior designers exactly how the software works. Not through abstract promises or feature lists. Through real demonstration. The brief was straightforward: create a series of tutorial films that communicate the tool's capabilities with precision and clarity.</p>
-            <p>Tom Rowntree managed the full production process from concept through to final delivery. This began with planning the tutorial structure. Each film was designed to address a specific workflow. Drawing a floor plan. Sharing a file with a collaborator. Building a library of reusable details. The goal was never to impress. It was to instruct.</p>
-            <p>Filming took place in working architectural studios. This was a deliberate choice. The software needed to be seen in the environment where it would actually be used, not in a sterile showroom. The camera captured real screens, real hands, and real design decisions as they happened. The result is content that feels honest and immediately useful.</p>
-            <p>Editing focused on removing anything that did not serve the lesson. No music. No slow-motion pans across empty desks. Just the software interface, a clear voiceover, and the steps an architect needs to follow. Each tutorial runs long enough to teach the skill and short enough to watch between meetings.</p>
-            <p>The finished films show Rayon functioning inside genuine design situations. An architect drawing over a scanned plan. A team commenting on a shared layout. A designer pulling together a mood board directly within the tool. The tutorials do not tell people the product works. They watch it work.</p>
-          </div>
-        </div>
-        <img class="panel-wide-img" src="/assets/photos/thumbnails/thumb-03.jpg" alt="">
-      </div>
-    </section>
-
-    <section class="section panel-section">
-      <div class="container">
-        <div class="section-title">
-          <h2>The films</h2>
-          <p class="lead">Six tutorials, each built around one workflow an architect actually has to get through</p>
-        </div>
-        <div data-swiper-group data-swiper-per-view="1.8" class="swiper-group">
-          <div data-swiper-wrap class="swiper">
-            <div class="swiper-wrapper">
-              <div class="swiper-slide">
-                <div class="slide-card">
-                  <img src="/assets/photos/events/event-15.jpg" draggable="false" alt="">
-                </div>
-              </div>
-              <div class="swiper-slide">
-                <div class="slide-card">
-                  <img src="/assets/photos/events/event-16.jpg" draggable="false" alt="">
-                </div>
-              </div>
-              <div class="swiper-slide">
-                <div class="slide-card">
-                  <img src="/assets/photos/events/event-01.jpg" draggable="false" alt="">
-                </div>
-              </div>
-              <div class="swiper-slide">
-                <div class="slide-card">
-                  <img src="/assets/photos/studio/studio-09.jpg" draggable="false" alt="">
-                </div>
-              </div>
-              <div class="swiper-slide">
-                <div class="slide-card">
-                  <img src="/assets/photos/studio/studio-10.jpg" draggable="false" alt="">
-                </div>
-              </div>
-              <div class="swiper-slide">
-                <div class="slide-card">
-                  <img src="/assets/photos/studio/studio-08.jpg" draggable="false" alt="">
-                </div>
-              </div>
-            </div>
-          </div>
-          <div class="swiper-navigation">
-            <button data-swiper-prev class="swiper-navigation__button">
-              <svg xmlns="http://www.w3.org/2000/svg" width="100%" viewBox="0 0 24 24" fill="none" class="swiper-navigation__button-arorw is--prev"><path d="M14 19L21 12L14 5" stroke="currentColor" stroke-miterlimit="10" stroke-width="2"></path><path d="M21 12H2" stroke="currentColor" stroke-miterlimit="10" stroke-width="2"></path></svg>
-            </button>
-            <div class="swiper-pagination"></div>
-            <button data-swiper-next class="swiper-navigation__button">
-              <svg xmlns="http://www.w3.org/2000/svg" width="100%" viewBox="0 0 24 24" fill="none" class="swiper-navigation__button-arorw"><path d="M14 19L21 12L14 5" stroke="currentColor" stroke-miterlimit="10" stroke-width="2"></path><path d="M21 12H2" stroke="currentColor" stroke-miterlimit="10" stroke-width="2"></path></svg>
-            </button>
-          </div>
-        </div>
-      </div>
-    </section>
-    </div>
-  </div>
-</div>
+<!-- Case study side panels (slide-out drawers), one per partner with a case study -->
+{partners.filter(hasCaseStudy).map((partner) => <CaseStudyPanel partner={partner} />)}
 
 <ContactPanel />
 </BaseLayout>

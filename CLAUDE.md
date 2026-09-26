@@ -40,18 +40,16 @@ The README explains the system; these are the working rules.
 
 ## Sanity
 
-- Content has three states in the one dataset: draft (`drafts.<id>`),
-  staging (the published document) and live (`live-<id>`, a copy made by
-  **Publish live**). Production is built from live copies only; staging reads
-  published documents. The publishing bar (`studio/components/PublishBar.tsx`)
-  and `studio/lib/live.ts` implement it; every site query takes `$live`
-  (`src/sanity/content.ts`). Keep that separation: never make production read
-  published documents, never edit live copies by hand, and keep the webhook
-  filtered on `string::startsWith(_id, "live-")`. (This replaced the earlier one-step
-  publish on 2026-09-25, at the user's request for a Webflow-like
-  staging/live workflow.)
-- Dataset writes from here (scripts, `sanity dataset create`) are blocked by
-  auto mode: the user runs `studio/scripts/*.ts` themselves.
+- Two datasets: `staging` (the Studio edits it; the staging site and the
+  Visual editor read it) and `production` (the live site alone reads it; only
+  the site's `/api/publish` route writes to it, with
+  `SANITY_API_WRITE_TOKEN`, after checking the caller's Studio session). The
+  publishing control is `studio/components/PublishControls.tsx`; the route
+  is `src/sanity/publish/`. Keep that separation: production never reads
+  `staging`, no browser code ever holds a write token, and publishing never
+  touches Git.
+- Dataset writes from here may be blocked by auto mode; the scripts in
+  `studio/scripts/` are then for the user to run.
 - Every query lives in `src/sanity/queries.ts`. After changing a query or the
   schema, run `npm run typegen`.
 - The hosted Studio is deployed by hand (`npm run studio:deploy`), from

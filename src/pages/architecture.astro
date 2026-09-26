@@ -4,13 +4,12 @@ import SiteNav from '../components/SiteNav.astro';
 import ContactPanel from '../components/ContactPanel.astro';
 import { imageAttrs } from '../sanity/image';
 import { ARCHITECTURE_PAGE_QUERY, PROJECT_INDEX_QUERY } from '../sanity/queries';
-import { contentParams } from '../sanity/content';
 import { PAGE_DEFAULTS } from '../sanity/page-defaults';
 
 // The projects from Sanity, in the order set in the Studio, and the page's
 // own words (the Architecture page document, or the page's defaults)
 const { sanity } = Astro.locals;
-const [projects, page] = await Promise.all([sanity.fetch(PROJECT_INDEX_QUERY, contentParams), sanity.fetch(ARCHITECTURE_PAGE_QUERY, contentParams)]);
+const [projects, page] = await Promise.all([sanity.fetch(PROJECT_INDEX_QUERY), sanity.fetch(ARCHITECTURE_PAGE_QUERY)]);
 const D = PAGE_DEFAULTS.architecturePage;
 const pad = (n: number) => String(n).padStart(2, '0');
 ---

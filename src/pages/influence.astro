@@ -9,12 +9,11 @@ import AtlasHotspots from '../components/AtlasHotspots.astro';
 import GetInTouch from '../components/GetInTouch.astro';
 import { imageAttrs, type SanityImage } from '../sanity/image';
 import { INFLUENCE_PAGE_QUERY } from '../sanity/queries';
-import { contentParams } from '../sanity/content';
 import { PAGE_DEFAULTS, type ImageDefault } from '../sanity/page-defaults';
 
 // The page's words and photo, from the Influence page document (or the
 // page's defaults); the timeline, the numbers and the map stay here
-const page = await Astro.locals.sanity.fetch(INFLUENCE_PAGE_QUERY, contentParams);
+const page = await Astro.locals.sanity.fetch(INFLUENCE_PAGE_QUERY);
 const D = PAGE_DEFAULTS.influencePage;
 // An <img>'s src, size and alt: the photo set in the Studio, or the page's own file
 const img = (image: SanityImage | null | undefined, fallback: ImageDefault, width: number) =>

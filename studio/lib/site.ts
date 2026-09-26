@@ -4,17 +4,13 @@ import {PAGES} from '../schemaTypes/pages'
    Both addresses are public settings (studio/.env.production and
    .env.development); see the README, "Addresses". */
 
-/** Staging: rendered on request, shows published content (drafts in draft mode) */
+/** Staging: rendered on request from the staging dataset; drafts in draft mode. Also hosts /api/publish. */
 export const STAGING_ORIGIN = (process.env.SANITY_STUDIO_PREVIEW_ORIGIN ?? '').replace(/\/$/, '')
 
-/** The live site: built from the live copies; empty when unset (the bar then hides its links) */
+/** The live site, built from the production dataset; empty when unset (links are then hidden) */
 export const LIVE_ORIGIN = (process.env.SANITY_STUDIO_PRODUCTION_ORIGIN ?? '').replace(/\/$/, '')
 
-export type Environment = 'staging' | 'live'
-
-export const ENVIRONMENT_LABEL: Record<Environment, string> = {staging: 'staging', live: 'the live site'}
-
-/** The document types that are collections: anything that isn't one of the fixed pages */
+/** The fixed pages: one document each, whose ID is its type */
 export const isPageType = (type: string): boolean => PAGES.some((page) => page.type === type)
 
 /**
@@ -25,7 +21,10 @@ export function routeFor(doc: {_type?: string; slug?: {current?: string}} | null
   if (!doc?._type) return null
   const page = PAGES.find((entry) => entry.type === doc._type)
   if (page) return page.route
-  if (doc._type === 'project') return doc.slug?.current ? `/projects/${doc.slug.current}` : null
+  const slug = doc.slug?.current
+  if (doc._type === 'project') return slug ? `/projects/${slug}` : null
+  if (doc._type === 'shopItem') return slug ? `/${slug}` : null
+  if (doc._type === 'partner') return '/partner'
   if (doc._type === 'client') return '/'
   return null
 }

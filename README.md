@@ -27,7 +27,7 @@ The Vercel project is `tomrowstudios`, in the `stasiosdesign` team.
 |                    | Production (`main`)                    | Staging (`staging`)                               |
 | ------------------ | -------------------------------------- | ------------------------------------------------- |
 | Built              | static, at deploy time                 | on each request, by a Vercel Function             |
-| Sanity content     | live copies only (`live-<id>`)         | published documents; drafts in draft mode         |
+| Sanity content     | the `production` dataset               | the `staging` dataset; drafts in draft mode       |
 | Visual editor      | never                                  | the Studio's Visual editor shows staging          |
 | Search engines     | indexed: robots.txt, sitemap           | never: `noindex, nofollow` on every response      |
 | Access             | public                                 | Vercel Authentication (and the Studio's bypass)   |
@@ -82,71 +82,71 @@ Visual editor still shows edits to the home page live.
 
 ## Content: draft, staging, live
 
-One dataset holds three states of every document, and each site reads one of
-them (`src/sanity/content.ts`, `studio/lib/live.ts`):
+Two datasets, one for each site (`src/sanity/client.ts` picks one by
+deployment), and Sanity's own drafts in the one the Studio edits:
 
-| State     | Document ID   | Made by                       | Shown by                                   |
-| --------- | ------------- | ----------------------------- | ------------------------------------------ |
-| Draft     | `drafts.<id>` | typing in the Studio (autosave) | staging, in draft mode only              |
-| Staging   | `<id>`        | **Publish to staging**        | staging, to everyone                       |
-| Live      | `live-<id>`   | **Publish live**              | production, at its next build              |
+| State   | Where                                | Made by                         | Shown by                                        |
+| ------- | ------------------------------------ | ------------------------------- | ----------------------------------------------- |
+| Draft   | `staging`, `drafts.<id>`             | typing in the Studio (autosave) | staging, in draft mode only (the Visual editor) |
+| Staging | `staging`, the published document    | **Publish to Staging**          | staging, to everyone                            |
+| Live    | `production`, the published document | **Publish Live**                | production, at its next build                   |
 
-- **Production** is built from the live copies alone, once, at build time
-  (`src/sanity/client.ts`, no token, no drafts, no edit markers; every query
-  takes `$live`, true there). Its build has no draft-mode routes and no
-  visual-editing code at all. A code release rebuilds it from the live copies
-  as they are, so deploying code never sweeps staged content along.
-- **Staging** reads Sanity on every request: published documents for anyone,
-  drafts for a browser in **draft mode**. The Studio's Visual editor switches
-  draft mode on: it opens staging at `/api/draft-mode/enable` with a secret it
-  has just written into the dataset (valid for an hour); the site checks the
-  secret with the read token, on the server, and sets a signed cookie that
-  lasts 12 hours. Pages in draft mode say **[ Drafts ]**, with an **Exit** link
+- **Production** is built from the `production` dataset alone, once, at build
+  time (no token, no drafts, no edit markers). Its build has no draft-mode
+  routes, no publishing route and no visual-editing code. A code release
+  rebuilds it from that dataset as it is, so deploying code never publishes
+  content, and publishing content never deploys code.
+- **Staging** reads the `staging` dataset on every request: published
+  documents for anyone, drafts for a browser in **draft mode**. The Studio's
+  Visual editor switches draft mode on: it opens staging at
+  `/api/draft-mode/enable` with a secret it has just written into the dataset
+  (valid for an hour); the site checks the secret with the read token, on the
+  server, sets a signed cookie that lasts 12 hours, and redirects to the page
+  asked for. Pages in draft mode say **[ Drafts ]**, with an **Exit** link
   (`/api/draft-mode/disable`). The token never reaches a browser.
 - In the Visual editor, edits to every page's editable words, photos and
-  button labels appear as you type (`src/sanity/live-preview.ts`); anything
-  else a draft changes (a new project, an added photo in a gallery) appears
-  when the preview reloads.
+  button labels appear as you type (`src/sanity/live-preview.ts`), and the
+  Studio's address follows the page as Barba moves between pages; anything
+  else a draft changes (a new project, a gallery photo) appears when the
+  preview reloads.
 - The Studio's **Share** menu in the Visual editor can make a link to the
   current preview for someone without a Studio or Vercel login.
 
 ### Publishing
 
-The publishing bar along the bottom of every document in the Studio
-(`studio/components/PublishBar.tsx`) says where the item stands (saved,
-staging, live) and holds the actions:
+The publishing control at the top right of every document in the Studio, in
+Content and in the Visual editor alike (`studio/components/PublishControls.tsx`),
+shows the document's status on each site and a **Publish Live** split button
+whose menu holds the four actions. It appears only when something can be
+published or unpublished.
 
-- **Publish to staging**: Sanity's own publish. The draft becomes the
-  published document; staging shows it on its next request. Production does
-  not change, even for an item that is already live.
-- **Publish live**: copies the published document to its live copy
-  (`live-<id>`), publishing the draft to staging first if there is one. The
-  dialog names the item and the site. Only that item changes; a reference to
-  something not yet live is refused, with the missing items named. Production
-  then rebuilds (below); the bar watches the site's build stamp
-  (`/build.json`, written by every production build) and says when the change
-  is on the site.
-- **Unpublish…**: from staging, from the live site, or both, chosen in the
-  dialog. Unpublishing from staging turns the published document back into a
-  draft; unpublishing from the live site deletes the live copy. Either way the
-  item stays in the Studio to edit and publish again, and the other site is
-  untouched.
-- **Delete** (collections only) removes the draft, the published document and
-  the live copy, after a dialog that says which sites it is on.
+- **Publish to Staging**: Sanity's own publish, in the `staging` dataset. The
+  draft becomes the published document; staging shows it on its next
+  request. Further edits make a new draft and leave that version alone.
+- **Publish Live**: sends the version in the editor (the draft, or else the
+  published document, pinned by its revision) to the site's server route,
+  `/api/publish` on staging (`src/sanity/publish/`). The route checks the
+  caller's Studio session with Sanity and their role, then writes the
+  document into the `production` dataset with its own token,
+  `SANITY_API_WRITE_TOKEN`, carrying over the images and files it uses. It
+  refuses a document that refers to something not yet live, naming it.
+  Staging is not changed, so live can be ahead of staging.
+- **Unpublish from Live** deletes the document from `production` (refused
+  while something live still links to it); **Unpublish from Staging** is
+  Sanity's unpublish, which keeps the draft. Either way the document stays
+  in the Studio to edit and publish again.
 
-A Sanity webhook, **Rebuild the site on publish**, calls a Vercel deploy hook
-that rebuilds `main`. It should fire on changes to live copies alone: filter
-`string::startsWith(_id, "live-")` (sanity.io/manage → API → Webhooks). It never fires
-for drafts, so editing never deploys anything, and staging needs no rebuild:
-it reads Sanity on every request.
+Status is derived from the datasets, not from what was clicked: **Staging**
+or **Staging · older**, **Live**, **Live · older** or **Live · rebuilding**,
+**Unpublished**, **New**, and **Draft changes** when there are edits since a
+site last got a version. Hover a status for the detail.
 
-Live copies are never edited directly: opening one (from a search result,
-say) shows a note and the way to the item itself. Two scripts in
-`studio/scripts/` work on them from the command line, run from `studio/`
-with `npx sanity exec <script> --with-user-token`: `publish-all-live.ts`
-gives every published document a live copy (the one-off step that moved the
-site to live copies; safe to run again, and `-- --all` releases everything on
-staging at once) and `live-status.ts` lists where every document stands.
+A Sanity webhook, **Rebuild the site on publish**, on the `production`
+dataset (filter `count(string::split(_id, ".")) == 1`: published documents),
+calls a Vercel deploy hook that rebuilds `main`. Production shows a live
+publish about a minute later; the control watches the site's build stamp
+(`/build.json`, written by every production build) and says when. Staging
+needs no rebuild.
 
 ## Search engines
 
@@ -172,6 +172,7 @@ The site's, set in Vercel (Settings → Environment Variables) and locally in
 | ---------------------------------- | ------------------- | ------------------------ | ------------------------------ |
 | `SITE_URL`                         | the production URL  | the same production URL  | optional                       |
 | `SANITY_API_READ_TOKEN` (secret)   | not set             | Git branch `staging` only | optional, for drafts          |
+| `SANITY_API_WRITE_TOKEN` (secret)  | not set             | Git branch `staging` only | optional, for Publish Live     |
 
 The Studio's, in committed files: `SANITY_STUDIO_PREVIEW_ORIGIN`, the site its
 Visual editor shows: staging's URL in `studio/.env.production` (the hosted
@@ -246,6 +247,7 @@ src/
     page-defaults.ts       every page's words and photos as the code had them: the fallbacks and the seed
     draft-mode/            the draft-mode routes and cookie (staging and local only)
     live-preview.ts        click-to-edit inside the Studio's Visual editor (staging and local only)
+    publish/               /api/publish: Publish Live and Unpublish from Live, on the server (staging only)
   styles/style.css         global stylesheet, imported once by the layout
 studio/                    Sanity Studio, with its own package.json
   schemaTypes/             documents/ (homePage, project, client), pages/ (one per fixed page), objects/, shared/
@@ -256,7 +258,7 @@ studio/                    Sanity Studio, with its own package.json
   structure.ts             the Content sidebar: Page editor, CMS collections
   sanity.config.ts         project, plugins (Visual editor, Content, Vision, Vercel bypass), document layout
   sanity.cli.ts            CLI settings, including TypeGen
-  studio.css               the red Publish live button, the sidebar's headings
+  studio.css               the red Publish button, hover and selection, forms, the preview canvas
   .env.development/.production  which sites the Visual editor and the publishing bar use (public)
 astro.config.mjs           production static / staging on request, by deployment; the build stamp
 vercel.ts                  Vercel: build, clean URLs, redirects, staging's noindex header, build.json's headers
@@ -276,35 +278,31 @@ vercel.ts                  Vercel: build, clean URLs, redirects, staging's noind
 ## Editing content
 
 1. Open https://tomrowstudios.sanity.studio (or `npm run studio`) and log in.
-   Editors must be members of the Sanity project (sanity.io/manage → Members).
+   Editors must be members of the Sanity project (sanity.io/manage → Members)
+   with a writing role (Administrator, Editor or Developer) to publish live.
 2. The **Visual editor** shows staging with your drafts, each page beside its
-   form; **Content** has the same documents as plain forms, in two parts
-   (`studio/structure.ts`):
-   - **Page editor**: the site's fixed pages, one document each (Home,
-     Architecture, Influence, Partners, Partners archive, Shop, Masterclass,
-     Communication package, Digital Sketchbook, Book, Privacy, Terms). Each
-     holds that page's editable words, photos and button labels, section by
-     section; layout, navigation and where buttons lead stay in the code
-     (`studio/schemaTypes/pages/`, defaults in `src/sanity/page-defaults.ts`).
-     The Architecture page is here; the projects on it are not.
-   - **CMS collections**: Projects and Clients, each a table of its items
+   form; **Content** has the same documents as plain forms, in two groups
+   (`studio/structure.ts`, `studio/components/ContentSidebar.tsx`):
+   - **Page editor**: Home, Influence, Architectural, Shop, Partner, Privacy
+     policy and Terms of use, one document each with that page's editable
+     words, photos and button labels; layout, navigation and where buttons
+     lead stay in the code (`studio/schemaTypes/pages/`, defaults in
+     `src/sanity/page-defaults.ts`). The client logos on the home page are
+     edited from the Home page's Client logos section.
+   - **CMS collections**: Projects, Shop (the products, at `/<slug>`) and
+     Partners (small case studies), each a table of its items
      (`studio/components/CollectionPane.tsx`) with search, a **New** button
-     and a **Columns** chooser (any field of the type; the choice is kept per
-     collection in the browser). A row opens the item beside a compact list
-     of the others; **All projects** brings the table back as it was.
-3. **Publish to staging**, review on staging (or in the Visual editor), then
-   **Publish live**. Production has it about a minute later; the publishing
-   bar says when. A new project gets its page, `/projects/<slug>`, and its
-   slider card automatically; its **Order** field sets its place on the
-   slider and which project its "Next project" link goes to.
+     and a **Columns** chooser (kept per collection in the browser). A row
+     opens the item beside a compact list of the others.
+3. **Publish to Staging**, review on staging or in the Visual editor, then
+   **Publish Live**. The status says when the live site has it.
 
 After changing Studio code or the schema, deploy the Studio
-(`npm run studio:deploy`). It serves both environments from the one dataset, so
-keep schema changes compatible with the code on `main`. A new page type needs
-its documents seeded (`npx sanity exec scripts/seed-pages.ts
---with-user-token` in `studio/`, which creates the page and its live copy from
-the defaults and never overwrites either) and the webhook's filter already
-covers it.
+(`npm run studio:deploy`). Both datasets share the schema, so keep changes
+compatible with the code on `main`. New content types are seeded with the
+scripts in `studio/scripts/` (`npx sanity exec scripts/<name>.ts
+--with-user-token` from `studio/`), which create documents in `staging` and
+never overwrite.
 
 ## Notes
 

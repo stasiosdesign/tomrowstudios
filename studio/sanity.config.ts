@@ -1,7 +1,6 @@
 import {defineConfig} from 'sanity'
 import {structureTool} from 'sanity/structure'
 import {defineDocuments, defineLocations, presentationTool} from 'sanity/presentation'
-import {visionTool} from '@sanity/vision'
 import {vercelProtectionBypassTool} from '@sanity/vercel-protection-bypass'
 import {DesktopIcon} from '@sanity/icons/Desktop'
 import './page'
@@ -27,16 +26,26 @@ if (!previewOrigin) {
 // or deleted. Its ID is its type (structure.ts opens that one document).
 const SINGLETONS = new Set(PAGES.map((page) => page.type))
 
+// Clients are edited from the Home page's logo wall, never made from the menu
+const HIDDEN_FROM_NEW = new Set([...SINGLETONS, 'client'])
+
+// The tools an editor sees: the Visual editor and Content. The Vercel bypass
+// tool stays installed (its secret lets the visual editor through Vercel's
+// authentication on staging) but is reached by its URL alone, /vercel-protection-bypass.
+const VISIBLE_TOOLS = new Set(['presentation', 'structure'])
+
 export default defineConfig({
   name: 'default',
   title: 'Tomrow Studios',
 
   projectId: '5cwu7mnl',
-  dataset: 'production',
+  // The dataset the Studio edits. The live site reads `production`, which
+  // only Publish Live writes to (src/sanity/publish/, studio/lib/publish.ts).
+  dataset: 'staging',
 
   // The website's fonts on a pure black ground (theme.ts; page.ts loads the
   // fonts and blacks out the page behind the Studio). studio.css sets the
-  // rest: the red "Publish live" call to action, the tables, the sidebar.
+  // rest: the red Publish button, hover and selection, tables, the sidebar.
   theme,
 
   // The visual editor comes first, so the Studio opens on it: the home page,
@@ -52,7 +61,11 @@ export default defineConfig({
       },
       resolve: {
         // Each page's route opens its document beside the preview
-        mainDocuments: defineDocuments(PAGES.map((page) => ({route: page.route, filter: `_id == "${page.type}"`}))),
+        mainDocuments: defineDocuments([
+          ...PAGES.map((page) => ({route: page.route, filter: `_id == "${page.type}"`})),
+          {route: '/projects/:slug', filter: `_type == "project" && slug.current == $slug`},
+          {route: '/:slug', filter: `_type == "shopItem" && slug.current == $slug`},
+        ]),
         // Where else a document shows, listed above its form. The pages have
         // none: each is the page the visual editor is looking at.
         locations: {
@@ -65,27 +78,43 @@ export default defineConfig({
               ],
             }),
           }),
+          shopItem: defineLocations({
+            select: {title: 'title', slug: 'slug.current'},
+            resolve: (doc) => ({
+              locations: [
+                {title: doc?.title || 'Untitled', href: `/${doc?.slug}`},
+                {title: 'Shop', href: '/shop'},
+              ],
+            }),
+          }),
+          partner: defineLocations({locations: [{title: 'Partners', href: '/partner'}, {title: 'Partners archive', href: '/partners-archive'}]}),
           client: defineLocations({locations: [{title: 'Home (logo wall)', href: '/'}]}),
         },
       },
     }),
     structureTool({structure, title: 'Content'}),
-    visionTool(),
     // Staging sits behind Vercel Authentication. This tool stores Vercel's
     // "Protection Bypass for Automation" secret in the dataset (a private
-    // document), and the visual editor then adds it to the staging URLs it
-    // opens. Only needed to set that secret; see the README.
+    // document); the visual editor and the publishing route then add it to
+    // the staging URLs they open. Hidden from the menu (VISIBLE_TOOLS).
     vercelProtectionBypassTool(),
   ],
 
+  tools: (tools) => tools.filter((tool) => VISIBLE_TOOLS.has(tool.name)),
+
+  // Content releases are not part of this workflow: staging and live are
+  // datasets, not releases
+  releases: {enabled: false},
+
   schema: {
     types: schemaTypes,
-    templates: (templates) => templates.filter(({schemaType}) => !SINGLETONS.has(schemaType)),
+    templates: (templates) => templates.filter(({schemaType}) => !HIDDEN_FROM_NEW.has(schemaType)),
   },
 
   document: {
-    // Sanity's Publish button and its menu are replaced by the publishing bar
-    // (components/PublishBar.tsx), which knows about staging and the live site
+    // Sanity's Publish button and its menu are replaced by the publishing
+    // control (components/PublishControls.tsx), which knows about staging
+    // and the live site
     actions: () => [],
     components: {
       unstable_layout: DocumentLayout,

@@ -17,11 +17,10 @@ import Button from '../../components/Button.astro';
 import { sanityClient } from '../../sanity/client';
 import { imageAttrs } from '../../sanity/image';
 import { PROJECT_INDEX_QUERY, PROJECT_PAGE_QUERY } from '../../sanity/queries';
-import { contentParams } from '../../sanity/content';
 
 export const getStaticPaths = __DEPLOYMENT__ === 'production'
   ? ((async () => {
-      const projects = await sanityClient.fetch(PROJECT_INDEX_QUERY, contentParams);
+      const projects = await sanityClient.fetch(PROJECT_INDEX_QUERY);
       return projects.map((project) => ({ params: { slug: project.slug as string } }));
     }) satisfies GetStaticPaths)
   : undefined;
@@ -30,8 +29,8 @@ export const getStaticPaths = __DEPLOYMENT__ === 'production'
 const { slug = '' } = Astro.params as { slug?: string };
 const { sanity } = Astro.locals;
 const [project, projects] = await Promise.all([
-  sanity.fetch(PROJECT_PAGE_QUERY, { ...contentParams, slug }),
-  sanity.fetch(PROJECT_INDEX_QUERY, contentParams),
+  sanity.fetch(PROJECT_PAGE_QUERY, { slug }),
+  sanity.fetch(PROJECT_INDEX_QUERY),
 ]);
 if (!project) return new Response('Not found', { status: 404 });
 

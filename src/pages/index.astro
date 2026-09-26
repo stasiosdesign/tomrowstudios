@@ -7,7 +7,6 @@ import GetInTouch from '../components/GetInTouch.astro';
 import Button from '../components/Button.astro';
 import { urlFor } from '../sanity/image';
 import { CLIENT_LOGOS_QUERY, HOME_PAGE_QUERY } from '../sanity/queries';
-import { contentParams } from '../sanity/content';
 
 // Every section's words and photos, from the Home page document in Sanity,
 // and the logo wall's clients in the order set in the Studio. The navigation,
@@ -17,7 +16,7 @@ import { contentParams } from '../sanity/content';
 // sections by it, marks their parts editable and swaps in drafts as they are
 // typed.
 const { sanity } = Astro.locals;
-const [home, clients] = await Promise.all([sanity.fetch(HOME_PAGE_QUERY, contentParams), sanity.fetch(CLIENT_LOGOS_QUERY, contentParams)]);
+const [home, clients] = await Promise.all([sanity.fetch(HOME_PAGE_QUERY), sanity.fetch(CLIENT_LOGOS_QUERY)]);
 if (!home) throw new Error('The Home page document is missing in Sanity');
 const { hero, logoWall, practice, slider, recognition, influence, partners, projects, courses } = home;
 if (!hero?.slides?.length || !logoWall || !practice || !slider?.images?.length || !recognition?.cards?.length || !influence || !partners || !projects || !courses) {

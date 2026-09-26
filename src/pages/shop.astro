@@ -6,13 +6,16 @@ import ContactPanel from '../components/ContactPanel.astro';
 import Button from '../components/Button.astro';
 import GetInTouch from '../components/GetInTouch.astro';
 import { imageAttrs, type SanityImage } from '../sanity/image';
-import { SHOP_PAGE_QUERY } from '../sanity/queries';
-import { contentParams } from '../sanity/content';
+import { SHOP_ITEMS_QUERY, SHOP_PAGE_QUERY } from '../sanity/queries';
 import { PAGE_DEFAULTS, type ImageDefault } from '../sanity/page-defaults';
 
 // The page's words and photo, from the Shop page document (or the page's
-// defaults); the products, the quotes and the questions stay here
-const page = await Astro.locals.sanity.fetch(SHOP_PAGE_QUERY, contentParams);
+// defaults), and the products from the shop items, in their order; the
+// quotes and the questions stay here
+const [page, items] = await Promise.all([
+  Astro.locals.sanity.fetch(SHOP_PAGE_QUERY),
+  Astro.locals.sanity.fetch(SHOP_ITEMS_QUERY),
+]);
 const D = PAGE_DEFAULTS.shopPage;
 // An <img>'s src, size and alt: the photo set in the Studio, or the page's own file
 const img = (image: SanityImage | null | undefined, fallback: ImageDefault, width: number) =>
@@ -60,57 +63,20 @@ const img = (image: SanityImage | null | undefined, fallback: ImageDefault, widt
     </div>
 
     <div class="product-grid">
+      {items.map((item) => (
       <article class="product-card">
-        <img class="product-img" src="/assets/photos/thumbnails/thumb-08.jpg" alt="">
+        {item.card?.image?.asset && <img class="product-img" {...imageAttrs(item.card.image, 1200)} loading="lazy" decoding="async" alt={item.card.image.alt ?? ''}>}
         <div class="product-body">
           <div class="product-info">
-            <span class="tag tag-dark">Course</span>
-            <span class="product-meta">Self-paced</span>
+            {item.card?.kind && <span class="tag tag-dark">{item.card.kind}</span>}
+            {item.card?.meta && <span class="product-meta">{item.card.meta}</span>}
           </div>
-          <h5>Architectural presentation masterclass</h5>
-          <p>A direct method for producing drawings and presentations that communicate clearly</p>
-          <Button href="/product" label="View Course" />
+          <h5>{item.title}</h5>
+          <p>{item.card?.text}</p>
+          <Button href={`/${item.slug}`} label={item.card?.button ?? 'View'} />
         </div>
       </article>
-
-      <article class="product-card">
-        <img class="product-img" src="/assets/photos/thumbnails/thumb-09.jpg" alt="">
-        <div class="product-body">
-          <div class="product-info">
-            <span class="tag tag-dark">Package</span>
-            <span class="product-meta">Digital download</span>
-          </div>
-          <h5>Architecture communication package</h5>
-          <p>Templates, guides, and frameworks for writing about and presenting architectural work</p>
-          <Button href="/course-communication" label="View Course" />
-        </div>
-      </article>
-
-      <article class="product-card">
-        <img class="product-img" src="/assets/photos/lifestyle/lifestyle-10.jpg" alt="">
-        <div class="product-body">
-          <div class="product-info">
-            <span class="tag tag-dark">Book</span>
-            <span class="product-meta">Hardcover</span>
-          </div>
-          <h5>Architectural Influence</h5>
-          <p>A precedent analysis of the 21 creators shaping how architecture is seen, shared and understood online</p>
-          <Button href="/book" label="Buy the Book" />
-        </div>
-      </article>
-
-      <article class="product-card">
-        <img class="product-img" src="/assets/photos/products/sketchbook.jpg" width="1600" height="1600" loading="lazy" decoding="async" alt="An Architect's Digital Sketchbook with Morpholio Trace">
-        <div class="product-body">
-          <div class="product-info">
-            <span class="tag tag-dark">Guide</span>
-            <span class="product-meta">Free PDF</span>
-          </div>
-          <h5>An Architect's Digital Sketchbook</h5>
-          <p>A step-by-step guide to sketching in Morpholio Trace — layering, photomontage and portfolio-ready output, with Hamza Shaikh</p>
-          <Button href="/course-sketchbook" label="View Guide" />
-        </div>
-      </article>
+      ))}
     </div>
   </div>
 </section>

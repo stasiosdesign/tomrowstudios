@@ -1,0 +1,174 @@
+---
+/* One page per shop item, from Sanity at /<slug>: the masterclass at
+   /product, the communication package at /course-communication, the book at
+   /book, the sketchbook at /course-sketchbook, and any item added since. The
+   markup is the four hand-written product pages' own, section for section;
+   the words, pictures, details and related items come from the Studio.
+
+   Production builds a page for each published item. Staging renders the page
+   on request, where Astro has no use for getStaticPaths, so there it is left
+   out; an item that is still a draft has a page there in draft mode. */
+import type { GetStaticPaths } from 'astro';
+import { PortableText } from 'astro-portabletext';
+import BaseLayout from '../layouts/BaseLayout.astro';
+import SiteNav from '../components/SiteNav.astro';
+import SiteFooter from '../components/SiteFooter.astro';
+import ContactPanel from '../components/ContactPanel.astro';
+import Button from '../components/Button.astro';
+import GetInTouch from '../components/GetInTouch.astro';
+import { sanityClient } from '../sanity/client';
+import { imageAttrs, type SanityImage } from '../sanity/image';
+import { SHOP_ITEMS_QUERY, SHOP_ITEM_QUERY } from '../sanity/queries';
+
+export const getStaticPaths = __DEPLOYMENT__ === 'production'
+  ? ((async () => {
+      const items = await sanityClient.fetch(SHOP_ITEMS_QUERY);
+      return items.map((item) => ({ params: { slug: item.slug as string } }));
+    }) satisfies GetStaticPaths)
+  : undefined;
+
+// (Typed here: Astro can't infer the params from a getStaticPaths only production has)
+const { slug = '' } = Astro.params as { slug?: string };
+const { sanity } = Astro.locals;
+const [item, items] = await Promise.all([
+  sanity.fetch(SHOP_ITEM_QUERY, { slug }),
+  sanity.fetch(SHOP_ITEMS_QUERY),
+]);
+if (!item) return new Response('Not found', { status: 404 });
+
+// The other items, in the shop grid's order, for the "Related" row
+const related = items.filter((other) => other._id !== item._id);
+
+// An <img>'s src, size and alt for a picture set in the Studio
+const img = (image: SanityImage | null | undefined, width: number) =>
+  image?.asset ? { ...imageAttrs(image, width), alt: image.alt ?? '' } : null;
+
+// The last row of the details: the contact panel, or a link (a new tab when it leaves the site)
+const cta = item.details?.cta;
+const external = !!cta?.href && /^[a-z]+:/i.test(cta.href);
+const header = img(item.header?.image, 1600);
+const overviewImg = img(item.overview?.image, 1200);
+const whatYouGetImg = img(item.whatYouGet?.image, 1200);
+const atlasImg = img(item.atlas?.image, 1600);
+---
+<BaseLayout title={`${item.title} — Tomrow Studios`} namespace={item.slug ?? slug} pageName={item.title ?? ''} pageDoc={item._id} pageType="shopItem">
+<SiteNav />
+
+
+<!-- Header -->
+<header class="page-header">
+  {header && <img class="page-header-img" data-page-field="header.image" data-page-width="1600" {...header}>}
+  <div class="page-header-body">
+    <div class="page-header-main">
+      <h1 data-page-field="title">{item.title}</h1>
+      <p class="lead" data-page-field="header.lead">{item.header?.lead}</p>
+      {item.header?.tags?.length ? (
+      <div class="tags">
+        {item.header.tags.map((tag, i) => (
+        <span class="tag" data-page-field={`header.tags.${i}`}>{tag}</span>
+        ))}
+      </div>
+      ) : null}
+    </div>
+    <dl class="panel-meta">
+      {item.details?.metaRows?.map((row, i) => (
+      <div><dt data-page-field={`details.metaRows.${i}.label`}>{row.label}</dt><dd data-page-field={`details.metaRows.${i}.value`}>{row.value}</dd></div>
+      ))}
+      {cta?.label && cta.href && (
+      <div><dt data-page-field="details.cta.rowLabel">{cta.rowLabel}</dt><dd>
+        {cta.opensContact
+          ? <a href="#contact" data-panel-open="contact" data-barba-prevent="self" data-scramble-hover="link" data-page-field="details.cta.label">{cta.label}</a>
+          : external
+            ? <a href={cta.href} target="_blank" rel="noreferrer" data-scramble-hover="link" data-page-field="details.cta.label">{cta.label}</a>
+            : <a href={cta.href} data-scramble-hover="link" data-page-field="details.cta.label">{cta.label}</a>}
+      </dd></div>
+      )}
+    </dl>
+  </div>
+</header>
+
+<!-- Overview -->
+<section class="section section-alt">
+  <div class="container">
+    <div class="rich-split">
+      <h3 data-page-field="overview.heading">{item.overview?.heading}</h3>
+      <div class="rich-text">
+        {item.overview?.body?.length ? <PortableText value={item.overview.body} /> : null}
+      </div>
+    </div>
+    {overviewImg && <img data-click-zoom class="panel-wide-img" data-page-field="overview.image" data-page-width="1200" {...overviewImg} loading="lazy" decoding="async">}
+  </div>
+</section>
+
+<!-- What you get -->
+<section class="section section-alt">
+  <div class="container">
+    <div class="rich-split">
+      <h3 data-page-field="whatYouGet.heading">{item.whatYouGet?.heading}</h3>
+      <div class="rich-text">
+        {item.whatYouGet?.body?.length ? <PortableText value={item.whatYouGet.body} /> : null}
+        {item.whatYouGet?.modules?.length ? (
+        <ul class="module-list">
+          {item.whatYouGet.modules.map((module, i) => (
+          <li><span class="module-name" data-page-field={`whatYouGet.modules.${i}.name`}>{module.name}</span><span data-page-field={`whatYouGet.modules.${i}.text`}>{module.text}</span></li>
+          ))}
+        </ul>
+        ) : null}
+      </div>
+    </div>
+    {whatYouGetImg && <img data-click-zoom class="panel-wide-img" data-page-field="whatYouGet.image" data-page-width="1200" {...whatYouGetImg} loading="lazy" decoding="async">}
+  </div>
+</section>
+
+<!-- Atlas — full-width map spread (the book) -->
+{atlasImg && (
+<section class="map-spread">
+  <img class="map-spread__img" data-page-field="atlas.image" data-page-width="1600" {...atlasImg} loading="lazy" decoding="async">
+  <div class="map-spread__footer">
+    <p class="map-spread__caption" data-page-field="atlas.caption">{item.atlas?.caption}</p>
+    <div class="actions">
+      {item.atlas?.primaryButton?.label && <Button href={item.atlas.primaryButton.href ?? '#'} data-page-field="atlas.primaryButton.label" label={item.atlas.primaryButton.label} />}
+      {item.atlas?.secondaryButton?.label && <Button href={item.atlas.secondaryButton.href ?? '#'} data-page-field="atlas.secondaryButton.label" label={item.atlas.secondaryButton.label} secondary />}
+    </div>
+  </div>
+</section>
+)}
+
+<!-- Related — the other items, on the Shop's own card -->
+{related.length ? (
+<section class="section section-alt">
+  <div class="container">
+    <div class="related-courses">
+      <div class="related-courses__head">
+        <p class="tagline">Also in the shop</p>
+        <h2>Related</h2>
+        <p>Three more ways to sharpen how the work is drawn, written and shown.</p>
+      </div>
+      <div class="product-grid">
+        {related.map((other) => (
+        <article class="product-card">
+          {other.card?.image?.asset && <img class="product-img" {...imageAttrs(other.card.image, 1200)} loading="lazy" decoding="async" alt={other.card.image.alt ?? ''}>}
+          <div class="product-body">
+            <div class="product-info">
+              {other.card?.kind && <span class="tag tag-dark">{other.card.kind}</span>}
+              {other.card?.meta && <span class="product-meta">{other.card.meta}</span>}
+            </div>
+            <h5>{other.title}</h5>
+            <p>{other.card?.text}</p>
+            <Button href={`/${other.slug}`} label={other.card?.button ?? 'View'} />
+          </div>
+        </article>
+        ))}
+      </div>
+    </div>
+  </div>
+</section>
+) : null}
+
+<GetInTouch />
+
+
+<SiteFooter />
+
+<ContactPanel />
+</BaseLayout>
