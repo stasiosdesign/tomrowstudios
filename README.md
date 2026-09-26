@@ -116,9 +116,9 @@ deployment), and Sanity's own drafts in the one the Studio edits:
 
 The publishing control at the top right of every document in the Studio, in
 Content and in the Visual editor alike (`studio/components/PublishControls.tsx`),
-shows the document's status on each site and a **Publish Live** split button
-whose menu holds the four actions. It appears only when something can be
-published or unpublished.
+shows one line of status and a **Publish Live** split button whose menu
+holds the four actions. It appears only when something can be published or
+unpublished. Publish Live runs at once; unpublishing asks first.
 
 - **Publish to Staging**: Sanity's own publish, in the `staging` dataset. The
   draft becomes the published document; staging shows it on its next
@@ -136,10 +136,13 @@ published or unpublished.
   Sanity's unpublish, which keeps the draft. Either way the document stays
   in the Studio to edit and publish again.
 
-Status is derived from the datasets, not from what was clicked: **Staging**
-or **Staging · older**, **Live**, **Live · older** or **Live · rebuilding**,
-**Unpublished**, **New**, and **Draft changes** when there are edits since a
-site last got a version. Hover a status for the detail.
+Status is derived from the datasets, not from what was clicked: **Not
+published yet**, **On staging**, **Live**, **Staging has an older version**,
+**Live site has an older version**, with **newer edits here** when there are
+edits since a site last got a version, and **site rebuilding…** while
+production catches up. Hover the status for the dates. The Studio always
+edits the working draft: the Published / Drafts switch is hidden, since
+drafts never reach the ordinary sites anyway.
 
 A Sanity webhook, **Rebuild the site on publish**, on the `production`
 dataset (filter `count(string::split(_id, ".")) == 1`: published documents),
@@ -280,8 +283,10 @@ vercel.ts                  Vercel: build, clean URLs, redirects, staging's noind
 1. Open https://tomrowstudios.sanity.studio (or `npm run studio`) and log in.
    Editors must be members of the Sanity project (sanity.io/manage → Members)
    with a writing role (Administrator, Editor or Developer) to publish live.
-2. The **Visual editor** shows staging with your drafts, each page beside its
-   form; **Content** has the same documents as plain forms, in two groups
+2. **Content** (the first tab) has the documents as plain forms, in two groups;
+   the **Visual editor** shows staging with your drafts, each page beside its
+   form. The Content sidebar is one narrow column and opens on the Home page;
+   the form fills the rest of the window
    (`studio/structure.ts`, `studio/components/ContentSidebar.tsx`):
    - **Page editor**: Home, Influence, Architectural, Shop, Partner, Privacy
      policy and Terms of use, one document each with that page's editable

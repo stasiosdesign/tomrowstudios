@@ -125,10 +125,57 @@ button.tomrow-cta--arrow > span {
   display: none;
 }
 
+/* The workspace: the Content sidebar is one compact column (its pane spec
+   fixes its width, structure.ts), an open collection's item list is another
+   when an item is open beside it, and the editor takes all the rest. Sanity
+   sizes panes inline, so these outrank that. */
+[data-ui='Pane']:has(> * > [data-tomrow-sidebar]),
+[data-ui='Pane']:has([data-tomrow-sidebar]) {
+  flex: 0 0 248px !important;
+  width: 248px !important;
+  min-width: 248px !important;
+  max-width: 248px !important;
+}
+
+[data-ui='Pane']:has([data-tomrow-collection='compact']) {
+  flex: 0 0 240px !important;
+  width: 240px !important;
+  min-width: 240px !important;
+  max-width: 240px !important;
+}
+
+[data-ui='Pane']:has([data-tomrow-document]),
+[data-ui='Pane']:has([data-tomrow-collection='table']) {
+  flex: 1 1 auto !important;
+  max-width: none !important;
+}
+
 /* A collection: the table fills its pane; the compact list keeps to a narrow
    column beside the item */
 [data-tomrow-collection] {
   min-height: 0;
+}
+
+/* The document form uses the whole pane: Sanity's reading-width container
+   is let go */
+[data-tomrow-document] [data-testid='document-panel-scroller'] [data-ui='Container'],
+[data-tomrow-document] [data-testid='form-view'] [data-ui='Container'] {
+  max-width: none !important;
+}
+
+/* Editing always means the working draft; the Published / Drafts switch in
+   the top bar is one decision fewer. The site's drafts stay off the ordinary
+   staging and live sites (they are drafts; publishing is the control above
+   the form). */
+[data-ui='Navbar'] [data-ui='Card']:has([data-testid='global-perspective-menu-button']),
+[data-testid='global-perspective-menu-button'] {
+  display: none !important;
+}
+
+/* The visual editor's address input: the preview is the canvas. The buttons
+   beside it (open, viewport, share) stay. */
+[data-testid='presentation-root'] [data-ui='Card']:has([data-testid='preview-viewport-toggle']) [data-ui='TextInput'] {
+  display: none !important;
 }
 
 /* Small screens: the publishing control wraps under the status */

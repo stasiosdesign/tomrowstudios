@@ -1,6 +1,7 @@
 import {ChevronRightIcon} from '@sanity/icons/ChevronRight'
 import {Box, Flex, Stack, Text} from '@sanity/ui'
-import {createElement, useCallback, useState, type ComponentType} from 'react'
+import {createElement, useCallback, useEffect, useState, type ComponentType} from 'react'
+import {useRouter} from 'sanity/router'
 import {usePaneRouter} from 'sanity/structure'
 import {styled} from 'styled-components'
 
@@ -25,7 +26,17 @@ const readOpen = (id: string): boolean => {
 
 export function ContentSidebar(props: {options?: Record<string, unknown>; childItemId?: string}) {
   const {groups} = props.options as SidebarOptions
-  const {ChildLink} = usePaneRouter()
+  const {ChildLink, groupIndex, routerPanesState} = usePaneRouter()
+  const router = useRouter()
+
+  // Nothing open beside the sidebar (entering Content, or coming back to it
+  // with nothing chosen): open the first page, so the workspace is never an
+  // empty panel
+  const first = groups[0]?.items[0]
+  const nothingOpen = !props.childItemId && !!first
+  useEffect(() => {
+    if (nothingOpen) router.navigate({panes: [...routerPanesState.slice(0, groupIndex + 1), [{id: first.id}]]}, {replace: true})
+  }, [nothingOpen, first, router, routerPanesState, groupIndex])
   const [open, setOpen] = useState<Record<string, boolean>>(() => Object.fromEntries(groups.map((group) => [group.id, readOpen(group.id)])))
   const toggle = useCallback((id: string) => {
     setOpen((current) => {

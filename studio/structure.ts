@@ -71,6 +71,9 @@ export const COLLECTIONS: (CollectionOptions & {icon: ComponentType})[] = [
 
 const collectionId = (type: string) => `collection-${type}`
 
+/** The sidebar's width: a compact column, like the reference's CMS Collections list */
+export const SIDEBAR_WIDTH = 248
+
 const collectionPane = (S: StructureBuilder, {icon: _icon, ...options}: (typeof COLLECTIONS)[number]) =>
   S.component(CollectionPane)
     .id(collectionId(options.type))
@@ -87,7 +90,9 @@ export const structure: StructureResolver = (S) => {
     {id: 'pages', title: 'Page editor', items: PAGE_ITEMS.map((page) => ({id: page.type, title: page.title, icon: iconOf(page.type) ?? DocumentIcon}))},
     {id: 'collections', title: 'CMS collections', items: COLLECTIONS.map((collection) => ({id: collectionId(collection.type), title: collection.title, icon: collection.icon}))},
   ]
-  return S.component(ContentSidebar)
+  // A component pane's width options (minWidth, maxWidth) come from its spec:
+  // the sidebar keeps to one narrow column, whatever is open beside it
+  return S.component({component: ContentSidebar, id: 'content', minWidth: SIDEBAR_WIDTH, maxWidth: SIDEBAR_WIDTH} as unknown as Parameters<typeof S.component>[0])
     .id('content')
     .title('Content')
     .options({groups})

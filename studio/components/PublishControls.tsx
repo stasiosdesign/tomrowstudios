@@ -42,7 +42,7 @@ import {formatDate} from './format'
 const API_VERSION = '2025-02-19'
 
 type Busy = 'staging' | 'live' | 'unpublish-staging' | 'unpublish-live' | null
-type Confirm = 'live' | 'unpublish-live' | 'unpublish-staging' | null
+type Confirm = 'unpublish-live' | 'unpublish-staging' | null
 type Tone = 'default' | 'muted' | 'positive' | 'caution' | 'critical'
 
 const failText = (error: unknown): string => {
@@ -186,10 +186,9 @@ export function PublishControls({documentId, documentType}: {documentId: string;
   const doPublishLive = useCallback(async () => {
     if (busy || !current) return
     setBusy('live')
-    setConfirm(null)
     try {
       await publishLive(client, documentId, current._rev)
-      toast.push({status: 'success', title: `${itemTitle} published live`, description: 'The live site rebuilds now; the status says when it is there.', closable: true})
+      toast.push({status: 'success', title: `${itemTitle} is going live`, description: 'The live site rebuilds in about a minute.', closable: true})
     } catch (error) {
       fail('Not published live', error)
     } finally {
@@ -225,27 +224,28 @@ export function PublishControls({documentId, documentType}: {documentId: string;
     }
   }, [busy, operations.unpublish, toast, itemTitle, fail])
 
-  // Status, in as few words as it can be said accurately
-  const chips: {text: string; tone: Tone; detail?: string}[] = []
-  if (!ready) chips.push({text: 'Loading…', tone: 'muted'})
-  else if (!current) chips.push({text: 'New', tone: 'muted', detail: 'Nothing saved yet: start typing to create it.'})
-  else {
-    if (published) chips.push(stagingCurrent ? {text: 'Staging', tone: 'positive', detail: 'The staging site has this version.'} : {text: 'Staging · older', tone: 'caution', detail: `Staging has an older version (${formatDate(published._updatedAt, true)}).`})
-    if (live) {
-      chips.push(
-        !liveCurrent
-          ? {text: 'Live · older', tone: 'caution', detail: `The live site has an older version (${formatDate(live._updatedAt, true)}).`}
-          : waitedLong
-            ? {text: 'Live · site not rebuilt', tone: 'caution', detail: 'The live site has not rebuilt yet: check the Sanity webhook (README).'}
-            : siteBehind
-              ? {text: 'Live · rebuilding', tone: 'caution', detail: 'The live site is rebuilding with this version.'}
-              : {text: 'Live', tone: 'positive', detail: buildStamp ? `The live site has this version (built ${formatDate(buildStamp.builtAt, true)}).` : 'The live site has this version.'},
-      )
-    } else if (liveLoading) chips.push({text: 'Live · checking', tone: 'muted'})
-    if (!published && !live) chips.push({text: 'Unpublished', tone: 'muted', detail: 'Saved here, on neither site.'})
-    if (draftChanges) chips.push({text: 'Draft changes', tone: 'default', detail: 'Edits since a site last got a version.'})
+  // Status: one line, the sites first, then whether there are newer edits.
+  // The detail (dates, the rebuild) is in the tooltip.
+  const sites: string[] = []
+  const details: string[] = []
+  if (published) {
+    sites.push(stagingCurrent ? 'On staging' : 'Staging has an older version')
+    details.push(`Staging: published ${formatDate(published._updatedAt, true)}`)
   }
-  const saving = isSyncing ? 'Saving…' : errors.length > 0 ? `${errors.length} ${errors.length === 1 ? 'problem' : 'problems'}` : null
+  if (live) {
+    sites.push(!liveCurrent ? 'Live site has an older version' : siteBehind ? (waitedLong ? 'Live (site not rebuilt yet)' : 'Live (site rebuilding…)') : 'Live')
+    details.push(`Live: published ${formatDate(live._updatedAt, true)}${buildStamp ? `, site built ${formatDate(buildStamp.builtAt, true)}` : ''}`)
+    if (waitedLong) details.push('The live site has not rebuilt: check the Sanity webhook (README).')
+  }
+  const status: {text: string; tone: Tone} = !ready
+    ? {text: 'Loading…', tone: 'muted'}
+    : !current
+      ? {text: 'New: start typing to create it', tone: 'muted'}
+      : sites.length === 0
+        ? {text: 'Not published yet', tone: 'muted'}
+        : {text: sites.join(' · ') + (draftChanges ? ' · newer edits here' : ''), tone: stagingCurrent || liveCurrent ? 'positive' : 'caution'}
+  void liveLoading
+  const saving = isSyncing ? 'Saving…' : errors.length > 0 ? `${errors.length} ${errors.length === 1 ? 'problem' : 'problems'} to fix` : null
 
   const canPublish = ready && !!current && errors.length === 0 && !isValidating && busy === null
   const canLive = canPublish && !liveCurrent
@@ -262,11 +262,9 @@ export function PublishControls({documentId, documentType}: {documentId: string;
     <Bar data-tomrow-publish>
       <Flex align="center" gap={3} wrap="wrap">
         <Flex flex={1} align="center" gap={3} wrap="wrap" style={{minWidth: 160}}>
-          {chips.map((chip) => (
-            <Chip key={chip.text} $tone={chip.tone} title={chip.detail}>
-              {chip.text}
-            </Chip>
-          ))}
+          <Chip $tone={status.tone} title={details.join('\n') || undefined}>
+            {status.text}
+          </Chip>
           {saving && (
             <Chip $tone={errors.length > 0 ? 'critical' : 'muted'} title={errors.length > 0 ? 'Publishing waits until the form is valid' : undefined}>
               {saving}
@@ -276,7 +274,7 @@ export function PublishControls({documentId, documentType}: {documentId: string;
         {ready && current && anything && (
           <Split>
             {primary === 'live' ? (
-              <Button className="tomrow-cta" text={busy === 'live' ? 'Publishing…' : 'Publish Live'} disabled={!canLive} title={canLive ? `Publish ${versionLine} to the live site` : blockedReason ?? 'The live site has this version'} onClick={() => setConfirm('live')} />
+              <Button className="tomrow-cta" text={busy === 'live' ? 'Publishing…' : 'Publish Live'} disabled={!canLive} title={canLive ? `Publish ${versionLine} to the live site` : blockedReason ?? 'The live site has this version'} onClick={doPublishLive} />
             ) : (
               <Button className="tomrow-cta" text={busy === 'staging' ? 'Publishing…' : 'Publish to Staging'} disabled={!canStaging} title={canStaging ? `Publish ${versionLine} to staging` : blockedReason} onClick={publishToStaging} />
             )}
@@ -286,7 +284,7 @@ export function PublishControls({documentId, documentType}: {documentId: string;
               popover={{portal: true, placement: 'bottom-end'}}
               menu={
                 <Menu>
-                  <MenuItem text="Publish Live" disabled={!canLive} onClick={() => setConfirm('live')} />
+                  <MenuItem text="Publish Live" disabled={!canLive} onClick={doPublishLive} />
                   <MenuItem text="Publish to Staging" disabled={!canStaging} onClick={publishToStaging} />
                   <MenuDivider />
                   <MenuItem text="Unpublish from Live" tone="critical" disabled={!canUnpublishLive} onClick={() => setConfirm('unpublish-live')} />
@@ -301,11 +299,6 @@ export function PublishControls({documentId, documentType}: {documentId: string;
         )}
       </Flex>
 
-      {confirm === 'live' && (
-        <ConfirmDialog id="tomrow-confirm-live" title="Publish Live" action="Publish Live" onCancel={() => setConfirm(null)} onConfirm={doPublishLive}>
-          <b>{itemTitle}</b>, {versionLine}, goes to the live site{LIVE_ORIGIN ? ` (${LIVE_ORIGIN.replace(/^https?:\/\//, '')})` : ''}. Staging is not changed.
-        </ConfirmDialog>
-      )}
       {confirm === 'unpublish-live' && (
         <ConfirmDialog id="tomrow-confirm-unpublish-live" title="Unpublish from Live" action="Unpublish from Live" tone="critical" onCancel={() => setConfirm(null)} onConfirm={doUnpublishLive}>
           <b>{itemTitle}</b> comes off the live site. Staging is not changed, and it stays here to edit.

@@ -48,10 +48,11 @@ export default defineConfig({
   // rest: the red Publish button, hover and selection, tables, the sidebar.
   theme,
 
-  // The visual editor comes first, so the Studio opens on it: the home page,
-  // with its form beside it. Content is the same documents as plain forms, in
-  // two parts: the Page editor and the CMS collections (structure.ts).
+  // Content first, so the Studio opens on it: the Page editor and the CMS
+  // collections (structure.ts). The Visual editor shows the same documents
+  // beside the page they make.
   plugins: [
+    structureTool({structure, title: 'Content'}),
     presentationTool({
       title: 'Visual editor',
       icon: DesktopIcon,
@@ -92,7 +93,6 @@ export default defineConfig({
         },
       },
     }),
-    structureTool({structure, title: 'Content'}),
     // Staging sits behind Vercel Authentication. This tool stores Vercel's
     // "Protection Bypass for Automation" secret in the dataset (a private
     // document); the visual editor and the publishing route then add it to
