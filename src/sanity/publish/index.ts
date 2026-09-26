@@ -5,10 +5,11 @@
    the kind). The Studio's publishing control calls it (studio/lib/publish.ts)
    to put one document on the live site, or take it off:
 
-     { action: "publish",   id, rev? }   copy the document's current saved
+     { action: "publish",   id, rev? }   publish the document's current saved
                                          version (its draft, or its published
-                                         document) from the staging dataset
-                                         to the production dataset
+                                         document) in the staging dataset,
+                                         then copy it to the production
+                                         dataset: staging is never behind
      { action: "unpublish", id }         delete it from the production dataset
 
    The caller sends the Sanity session token the Studio holds. The route
@@ -127,6 +128,13 @@ async function publish(staging: SanityClient, production: SanityClient, id: stri
   const renamed = await carryAssets(staging, production, assetReferences(source));
 
   const { _rev: _r, _updatedAt: _u, _system: _s, ...content } = source as SanityDocument & { _system?: unknown };
+
+  // Staging gets the same version first, so it is never behind the live site.
+  // The draft goes too when it is the version published; newer edits stay.
+  const toStaging = staging.transaction().createOrReplace({ ...content, _id: id } as SanityDocument);
+  if (draft && draft._rev === source._rev) toStaging.delete(draft._id);
+  await toStaging.commit();
+
   const written = await production
     .transaction()
     .createOrReplace(remapRefs({ ...content, _id: id }, renamed) as SanityDocument)

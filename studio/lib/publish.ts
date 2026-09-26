@@ -6,12 +6,15 @@ import {STAGING_ORIGIN} from './site'
    Two datasets: `staging`, which the Studio edits, and `production`, which
    only the live site reads.
 
-   - Publish to Staging   Sanity's own publish, in the staging dataset: the
-                          draft becomes the published document, which the
-                          staging site shows to everyone.
-   - Publish Live         asks the site's server route, /api/publish, to copy
-                          the current saved version (the draft, or else the
-                          published document) into the production dataset.
+   - Publish to Staging   Sanity's own publish, in the staging dataset only:
+                          the draft becomes the published document, which the
+                          staging site shows to everyone (with no draft, the
+                          published document is written again).
+   - Publish Live         asks the site's server route, /api/publish, to
+                          publish the current saved version (the draft, or
+                          else the published document) in staging and copy it
+                          into the production dataset: staging never falls
+                          behind the live site.
                           The route checks who is asking with Sanity and
                           writes with its own token; the browser never holds
                           one that can write to production.

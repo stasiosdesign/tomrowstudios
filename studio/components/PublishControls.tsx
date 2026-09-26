@@ -36,10 +36,12 @@ import {formatDate} from './format'
      Live           the live site has this version      (older: an older one)
      Draft changes  edits since either site last got a version
 
-   Publish to Staging is Sanity's publish in the staging dataset. Publish
-   Live sends the exact revision in the editor to the site's server route
-   (lib/publish.ts), which checks who is asking and writes to the production
-   dataset. Unpublish takes the document off one site and keeps it here. Each
+   Publish to Staging is Sanity's publish in the staging dataset only (with
+   no draft, the published version is written again). Publish Live sends the
+   exact revision in the editor to the site's server route (lib/publish.ts),
+   which checks who is asking and publishes it in staging, then in the
+   production dataset, so staging is never behind. Both stay enabled when
+   nothing has changed: publishing again simply runs again. Unpublish takes the document off one site and keeps it here. Each
    action runs once at a time, and Live ones ask first, in one line. */
 
 const API_VERSION = '2025-02-19'
@@ -177,22 +179,27 @@ export function PublishControls({documentId, documentType}: {documentId: string;
     setBusy('staging')
     try {
       const previousRev = published?._rev
-      operations.publish.execute()
+      if (draft) operations.publish.execute()
+      else if (published) {
+        // Nothing new since the last publish: publish the current version again, as it is
+        const {_rev: _r, _updatedAt: _u, ...content} = published
+        await client.createOrReplace(content as SanityDocument)
+      }
       await waitForPublish(documentStore, documentId, documentType, previousRev)
-      toast.push({status: 'success', title: `${itemTitle} published to staging`, closable: true})
+      toast.push({status: 'success', title: `${itemTitle} published to staging`, description: 'The live site is not changed.', closable: true})
     } catch (error) {
       fail('Not published to staging', error)
     } finally {
       if (mounted.current) setBusy(null)
     }
-  }, [busy, published, operations.publish, documentStore, documentId, documentType, toast, itemTitle, fail])
+  }, [busy, draft, published, client, operations.publish, documentStore, documentId, documentType, toast, itemTitle, fail])
 
   const doPublishLive = useCallback(async () => {
     if (busy || !current) return
     setBusy('live')
     try {
       await publishLive(client, documentId, current._rev)
-      toast.push({status: 'success', title: `${itemTitle} is going live`, description: 'The live site rebuilds in about a minute.', closable: true})
+      toast.push({status: 'success', title: `${itemTitle} published to staging and going live`, description: 'The live site rebuilds in about a minute.', closable: true})
     } catch (error) {
       fail('Not published live', error)
     } finally {
@@ -252,12 +259,11 @@ export function PublishControls({documentId, documentType}: {documentId: string;
   const saving = isSyncing ? 'Saving…' : errors.length > 0 ? `${errors.length} ${errors.length === 1 ? 'problem' : 'problems'} to fix` : null
 
   const canPublish = ready && !!current && errors.length === 0 && !isValidating && busy === null
-  const canLive = canPublish && !liveCurrent
-  const canStaging = canPublish && !!draft && publishPermission?.granted !== false
+  // Both stay enabled when nothing has changed: publishing again runs normally
+  const canLive = canPublish
+  const canStaging = canPublish && publishPermission?.granted !== false
   const canUnpublishLive = ready && !!live && busy === null
   const canUnpublishStaging = ready && !!published && busy === null && unpublishPermission?.granted !== false
-  const anything = canLive || canStaging || canUnpublishLive || canUnpublishStaging
-  const primary: 'live' | 'staging' = canLive || !canStaging ? 'live' : 'staging'
   const blockedReason = errors.length > 0 ? 'Fix the problems in the form first' : !current ? 'Nothing saved yet' : undefined
   const route = routeFor(current as {_type?: string; slug?: {current?: string}} | null)
   const versionLine = current ? `the version saved ${formatDate(current._updatedAt, true)}` : ''
@@ -276,21 +282,23 @@ export function PublishControls({documentId, documentType}: {documentId: string;
             </Chip>
           )}
         </Flex>
-        {ready && current && anything && (
+        {ready && current && (
           <Split>
-            {primary === 'live' ? (
-              <Button className="tomrow-cta" text={busy === 'live' ? 'Publishing…' : 'Publish Live'} disabled={!canLive} title={canLive ? `Publish ${versionLine} to the live site` : blockedReason ?? 'The live site has this version'} onClick={doPublishLive} />
-            ) : (
-              <Button className="tomrow-cta" text={busy === 'staging' ? 'Publishing…' : 'Publish to Staging'} disabled={!canStaging} title={canStaging ? `Publish ${versionLine} to staging` : blockedReason} onClick={publishToStaging} />
-            )}
+            <Button
+              className="tomrow-cta"
+              text={busy === 'live' ? 'Publishing…' : busy === 'staging' ? 'Publishing to Staging…' : 'Publish Live'}
+              disabled={!canLive}
+              title={canLive ? `Publish ${versionLine} to the live site and staging` : blockedReason}
+              onClick={doPublishLive}
+            />
             <MenuButton
               id={`tomrow-publish-${documentId}`}
               button={<Button className="tomrow-cta tomrow-cta--arrow" icon={ChevronDownIcon} aria-label="More publishing options" disabled={busy !== null} />}
               popover={{portal: true, placement: 'bottom-end'}}
               menu={
                 <Menu>
-                  <MenuItem text="Publish Live" disabled={!canLive} onClick={doPublishLive} />
-                  <MenuItem text="Publish to Staging" disabled={!canStaging} onClick={publishToStaging} />
+                  <MenuItem text="Publish Live (live + staging)" title="Publishes to the live site and to staging" disabled={!canLive} onClick={doPublishLive} />
+                  <MenuItem text="Publish to Staging (staging only)" title="The live site is not changed" disabled={!canStaging} onClick={publishToStaging} />
                   <MenuDivider />
                   <MenuItem text="Unpublish from Live" tone="critical" disabled={!canUnpublishLive} onClick={() => setConfirm('unpublish-live')} />
                   <MenuItem text="Unpublish from Staging" tone="critical" disabled={!canUnpublishStaging} onClick={() => setConfirm('unpublish-staging')} />
