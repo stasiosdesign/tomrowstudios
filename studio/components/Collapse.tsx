@@ -9,8 +9,8 @@ import {styled} from 'styled-components'
    show). Instant for anyone who prefers reduced motion. Used by the page
    sections (SectionField); dropdowns use Sanity UI's own popover motion. */
 
-export const MOTION_MS = 200
-export const MOTION_EASE = 'cubic-bezier(0.2, 0, 0, 1)'
+export const MOTION_MS = 280
+export const MOTION_EASE = 'cubic-bezier(0.16, 1, 0.3, 1)' // the dropdowns' easing (studio.css)
 
 export function Collapse({open, children, ...rest}: {open: boolean; children: ReactNode} & HTMLAttributes<HTMLDivElement>) {
   const reduceMotion = usePrefersReducedMotion()
