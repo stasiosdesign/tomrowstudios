@@ -117,20 +117,21 @@ deployment), and Sanity's own drafts in the one the Studio edits:
 The publishing control at the top right of every document in the Studio, in
 Content and in the Visual editor alike (`studio/components/PublishControls.tsx`),
 shows one line of status and a **Publish Live** split button whose menu
-holds the four actions. It appears only when something can be published or
-unpublished. Publish Live runs at once; unpublishing asks first.
+holds the four actions. Both publish actions are always available, even when
+nothing has changed. Publish Live runs at once; unpublishing asks first.
 
-- **Publish to Staging**: Sanity's own publish, in the `staging` dataset. The
-  draft becomes the published document; staging shows it on its next
-  request. Further edits make a new draft and leave that version alone.
+- **Publish to Staging**: Sanity's own publish, in the `staging` dataset only;
+  the live site is not changed. The draft becomes the published document
+  (with no draft, the published version is written again); staging shows it
+  on its next request. Further edits make a new draft and leave that version alone.
 - **Publish Live**: sends the version in the editor (the draft, or else the
   published document, pinned by its revision) to the site's server route,
   `/api/publish` on staging (`src/sanity/publish/`). The route checks the
-  caller's Studio session with Sanity and their role, then writes the
-  document into the `production` dataset with its own token,
+  caller's Studio session with Sanity and their role, publishes that version
+  in `staging`, then writes the document into the `production` dataset with its own token,
   `SANITY_API_WRITE_TOKEN`, carrying over the images and files it uses. It
   refuses a document that refers to something not yet live, naming it.
-  Staging is not changed, so live can be ahead of staging.
+  Staging gets the same version first, so it never falls behind live.
 - **Unpublish from Live** deletes the document from `production` (refused
   while something live still links to it); **Unpublish from Staging** is
   Sanity's unpublish, which keeps the draft. Either way the document stays
