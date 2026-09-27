@@ -8,7 +8,7 @@ import {TrashIcon} from '@sanity/icons/Trash'
 import {Box, Button, Card, Checkbox, Flex, Stack, Text, TextInput, useClickOutsideEvent} from '@sanity/ui'
 import {useToast} from '@sanity/ui/toast'
 import {Popover} from '@sanity/ui/popover'
-import {useCallback, useEffect, useMemo, useRef, useState, type KeyboardEvent, type MouseEvent} from 'react'
+import {useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, type KeyboardEvent, type MouseEvent} from 'react'
 import {useClient, useSchema, type SanityDocument} from 'sanity'
 import {useRouter} from 'sanity/router'
 import {usePaneRouter} from 'sanity/structure'
@@ -18,7 +18,7 @@ import {groupById, publishStatus, STATUS_LABEL, type PublishStatus} from '../lib
 import {LISTEN_OPTIONS, watchReads} from '../lib/watch'
 import {useAnimatedOpen} from './AnimatedMenuButton'
 import {ConfirmDialog} from './ConfirmDialog'
-import {columnsFor, renderValue, textOf, type Column} from './format'
+import {columnsFor, isImageType, renderValue, textOf, type Column} from './format'
 import {PANE_HEADING_PADDING_Y, PaneHeading} from './PaneHeading'
 import {isPermissionError, usePermissionGate, type RestrictedAction} from './PermissionDialog'
 import {StatusChip} from './Status'
@@ -288,7 +288,7 @@ export function CollectionPane(props: {options?: Record<string, unknown>; childI
 
   return (
     <Flex direction="column" height="fill" data-tomrow-collection={compact ? 'compact' : 'table'}>
-      <Card borderBottom style={{flexShrink: 0, padding: compact ? '12px 8px 12px 6px' : `${PANE_HEADING_PADDING_Y}px 14px`}}>
+      <Card borderBottom style={compact ? COMPACT_HEADER : {flexShrink: 0, padding: `${PANE_HEADING_PADDING_Y}px 14px`}}>
         <Flex align="center" gap={2} wrap="wrap">
           {compact ? (
             <Button icon={ArrowLeftIcon} mode="bleed" text={title} onClick={showAll} aria-label={`Back to all ${lowerTitle}`} />
@@ -341,9 +341,9 @@ export function CollectionPane(props: {options?: Record<string, unknown>; childI
       </Card>
 
       {!compact && selecting && (
-        <Card borderBottom paddingX={4} paddingY={2} style={{flexShrink: 0}}>
+        <Card borderBottom style={{flexShrink: 0, padding: '8px 14px'}}>
           <Flex align="center" gap={2} wrap="wrap">
-            <Box flex={1} paddingX={2}>
+            <Box flex={1}>
               <Text size={1} muted={pickedIds.length === 0}>
                 {bulkBusy ? 'Working…' : pickedIds.length === 0 ? `Tick the ${lowerTitle} to act on` : `${pickedIds.length} selected`}
               </Text>
@@ -432,7 +432,7 @@ export function CollectionPane(props: {options?: Record<string, unknown>; childI
       </Box>
 
       {!compact && documents !== null && rows.length > 0 && (
-        <Card borderTop paddingX={4} paddingY={3} style={{flexShrink: 0}}>
+        <Card borderTop style={{flexShrink: 0, padding: '12px 14px'}}>
           <Text size={0} muted>
             Showing {shown.length} of {rows.length}
           </Text>
@@ -549,9 +549,18 @@ const Table = styled.table`
     border-radius: 2px;
   }
 
+  /* An image column's thumbnail (format.tsx) sits within the row's usual
+     height: showing the column makes no row taller */
+  td.thumb {
+    padding-top: 0;
+    padding-bottom: 0;
+  }
+
   th.pick,
   td.pick {
     width: 1px;
+    padding-top: 0;
+    padding-bottom: 0;
     padding-right: 0;
   }
 
@@ -643,7 +652,7 @@ function ItemRow({
         <StatusChip status={row.status} />
       </td>
       {columns.map((column) => (
-        <td key={column.name} title={textOf(row.doc[column.name], column) || undefined}>
+        <td key={column.name} className={isImageType(column.type) ? 'thumb' : undefined} title={textOf(row.doc[column.name], column) || undefined}>
           {renderValue(row.doc[column.name], column, projectId, dataset)}
         </td>
       ))}
@@ -654,9 +663,27 @@ function ItemRow({
   )
 }
 
+/* The compact list lines up with the Content sidebar beside it: its header
+   is as tall as the sidebar's (--tomrow-bar-height, studio.css; the back
+   button's own padding puts its arrow on the 14px inset) and its rows are the
+   sidebar's 43px rows (ContentSidebar), so the two lists share their rules */
+const COMPACT_HEADER: CSSProperties = {
+  flexShrink: 0,
+  boxSizing: 'border-box',
+  display: 'flex',
+  flexDirection: 'column',
+  justifyContent: 'center',
+  minHeight: 'var(--tomrow-bar-height)',
+  padding: '0 14px 0 6px',
+}
+
 const CompactLink = styled.a<{$selected: boolean}>`
-  display: block;
-  padding: 12px 14px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-items: center;
+  box-sizing: border-box;
+  min-height: 43px;
+  padding: 0 14px;
   border-bottom: 1px solid var(--card-border-color);
   color: inherit;
   text-decoration: none;

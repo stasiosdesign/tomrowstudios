@@ -13,6 +13,9 @@
 :root {
   --tomrow-hover: rgb(255 255 255 / 0.06);
   --tomrow-selected: rgb(255 255 255 / 0.1);
+  /* The first band under the top bar: the publishing bar above a document
+     (PublishControls) and the Content sidebar's header, whose rules line up */
+  --tomrow-bar-height: 54px;
 }
 
 /* Hovered and selected states on menus, lists, buttons and cards: the
@@ -161,6 +164,24 @@ button.tomrow-cta--arrow > span {
   max-width: none !important;
 }
 
+/* The Content sidebar's header ("Content", Sanity's own pane header): as tall
+   as the publishing bar beside it, ruled the same, so the two rules line up */
+[data-testid='pane']:not([data-pane-collapsed]):has([data-tomrow-sidebar]) [data-testid='pane-header'] > [data-ui='Card'] {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-height: var(--tomrow-bar-height);
+  border-bottom: 1px solid var(--card-border-color);
+}
+
+/* Sanity's pane header titles (the sidebar's "Content", a CMS item's name) on
+   the same 14px inset as everything beneath them: 6px here, 8px their own */
+[data-testid='pane']:not([data-pane-collapsed]):has([data-tomrow-sidebar]) [data-testid='pane-header'] > [data-ui='Card'] > [data-ui='Flex'],
+[data-tomrow-document] [data-testid='pane-header'] > [data-ui='Card'] > [data-ui='Flex'] {
+  padding-left: 6px;
+}
+
 /* A collapsed pane (a narrow window) keeps Sanity's 51px strip */
 [data-pane-index][data-pane-collapsed] {
   flex: 0 0 51px !important;
@@ -196,6 +217,27 @@ button.tomrow-cta--arrow > span {
 [data-testid='studio-navbar'] .sc-ws7kvy-0,
 [data-testid='studio-navbar'] [data-ui='Card']:has([data-testid='global-perspective-menu-button']) {
   display: none !important;
+}
+
+/* The top bar: a little taller than Sanity's (its row fits the Content /
+   Visual editor switch, components/ToolToggle.tsx, and keeps that height on a
+   phone), everything centred in it, and the same 14px side inset as the
+   panes below. Where the switch is in the bar, the two sides share the room
+   equally, so the switch sits at the middle of the window. */
+[data-ui='Navbar'][data-testid='studio-navbar'] {
+  padding: 12px 14px;
+
+  & > [data-ui='Grid'] {
+    min-height: 32px;
+  }
+
+  & > [data-ui='Grid']:has([data-tomrow-tool-toggle]) {
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+
+    & > :last-child {
+      justify-content: flex-end;
+    }
+  }
 }
 
 /* The top bar without Help and resources or the trial countdown (Tasks is

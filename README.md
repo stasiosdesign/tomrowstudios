@@ -166,7 +166,13 @@ Columns button and a white New button; an opened item's list is headed
 "← Projects" and the item has no Comments. Page sections open and close with
 a short height transition (`Collapse`), menus with Sanity UI's popover
 motion, both off for anyone who prefers reduced motion. The top bar has no New document, search, Tasks, Help or trial
-countdown, and Favorites is hidden throughout. The theme (`theme.ts`) keeps
+countdown, and Favorites is hidden throughout. Content and the Visual editor
+are one switch in its middle, a white pill sliding over a grey track
+(`ToolToggle`, Sanity's tool menu slot; on a phone the tools stay in Sanity's
+side menu). The Content sidebar, the collection tables and the page sections
+share one grid: 43px ruled rows on a 14px inset, and the sidebar's header as
+tall as the publishing bar beside it (`--tomrow-bar-height` in `studio.css`).
+A collection's image columns show small cropped thumbnails. The theme (`theme.ts`) keeps
 text and icons white on hover, press and selection.
 
 Publishing, unpublishing and deleting are for Administrators, Editors and

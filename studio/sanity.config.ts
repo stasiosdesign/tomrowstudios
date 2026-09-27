@@ -9,6 +9,7 @@ import {DocumentLayout} from './components/DocumentLayout'
 import {PageInput} from './components/PageInput'
 import {PaneTitle} from './components/PaneTitle'
 import {PreviewControls, PreviewHeaderBridge} from './components/PreviewControls'
+import {ToolToggle} from './components/ToolToggle'
 import {STAGING_ORIGIN} from './lib/site'
 import {schemaTypes} from './schemaTypes'
 import {PAGES} from './schemaTypes/pages'
@@ -109,6 +110,13 @@ export default defineConfig({
   ],
 
   tools: (tools) => tools.filter((tool) => VISIBLE_TOOLS.has(tool.name)),
+
+  // The top bar's Content / Visual editor switch (components/ToolToggle.tsx)
+  studio: {
+    components: {
+      toolMenu: ToolToggle,
+    },
+  },
 
   // Content releases are not part of this workflow: staging and live are
   // datasets, not releases

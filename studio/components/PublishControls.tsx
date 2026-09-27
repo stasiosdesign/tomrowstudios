@@ -303,9 +303,16 @@ export function PublishControls({documentId, documentType}: {documentId: string;
   )
 }
 
+// As tall as the Content sidebar's header beside it (--tomrow-bar-height,
+// studio.css), and on the 14px inset of the title and rows beneath
 const Bar = styled.div`
   flex-shrink: 0;
-  padding: 10px 16px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-height: var(--tomrow-bar-height);
+  padding: 10px 14px;
   border-bottom: 1px solid var(--card-border-color);
   background: var(--card-bg-color);
 `
