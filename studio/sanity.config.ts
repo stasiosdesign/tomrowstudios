@@ -6,6 +6,7 @@ import {DesktopIcon} from '@sanity/icons/Desktop'
 import './page'
 import './studio.css'
 import {DocumentLayout} from './components/DocumentLayout'
+import {FieldLayout} from './components/FieldLayout'
 import {PageInput} from './components/PageInput'
 import {PaneTitle} from './components/PaneTitle'
 import {PreviewControls, PreviewHeaderBridge} from './components/PreviewControls'
@@ -125,10 +126,12 @@ export default defineConfig({
   // Nor are Sanity's tasks: the top bar drops its Tasks button
   tasks: {enabled: false},
 
-  // The static pages' form: their sections as one ruled list (PageInput)
+  // The static pages' form: their sections as one ruled list (PageInput).
+  // Every form: small fields share a row on a wide pane (FieldLayout).
   form: {
     components: {
       input: PageInput,
+      field: FieldLayout,
     },
   },
 

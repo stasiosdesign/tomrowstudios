@@ -83,8 +83,8 @@ const pagePane = (S: StructureBuilder, page: {type: string; title: string}) =>
 
 export const structure: StructureResolver = (S) => {
   const groups: SidebarGroup[] = [
-    {id: 'pages', title: 'Page editor', items: PAGE_ITEMS.map((page) => ({id: page.type, title: page.title, icon: iconOf(page.type) ?? DocumentIcon}))},
-    {id: 'collections', title: 'CMS collections', items: COLLECTIONS.map((collection) => ({id: collectionId(collection.type), title: collection.title, icon: collection.icon}))},
+    {id: 'pages', title: 'Page Editor', items: PAGE_ITEMS.map((page) => ({id: page.type, title: page.title, icon: iconOf(page.type) ?? DocumentIcon}))},
+    {id: 'collections', title: 'CMS Collections', items: COLLECTIONS.map((collection) => ({id: collectionId(collection.type), title: collection.title, icon: collection.icon}))},
   ]
   // A component pane's width options (minWidth, maxWidth) come from its spec:
   // the sidebar keeps to one narrow column, whatever is open beside it

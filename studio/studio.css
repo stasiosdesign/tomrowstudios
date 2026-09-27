@@ -16,6 +16,13 @@
   /* The first band under the top bar: the publishing bar above a document
      (PublishControls) and the Content sidebar's header, whose rules line up */
   --tomrow-bar-height: 54px;
+  /* Filled controls: the grey of every field and secondary button, lighter
+     under the pointer and when pressed (FIELD... in theme.ts, which sets
+     Sanity's own; these are for the parts the theme doesn't reach) */
+  --tomrow-field: #1a1a1a;
+  --tomrow-field-hover: #262626;
+  --tomrow-field-pressed: #333333;
+  --tomrow-radius: 3px;
 }
 
 /* Hovered and selected states on menus, lists, buttons and cards: the
@@ -54,7 +61,8 @@
    white text in every state: Sanity's own hover and pressed styles would
    swap the text colour, so it is set on each. Red while it can be pressed:
    disabled (the confirm dialogs' buttons, while they run), it drops back to
-   a quiet outline. The Publish Live button itself is never disabled. */
+   a quiet dark fill, like every disabled control (theme.ts). The Publish
+   Live button itself is never disabled. */
 button.tomrow-cta {
   transition:
     background-color 0.2s ease,
@@ -91,11 +99,11 @@ button.tomrow-cta {
   }
 
   &:disabled {
-    --card-bg-color: transparent;
-    --card-fg-color: rgb(255 255 255 / 0.4);
-    --card-icon-color: rgb(255 255 255 / 0.4);
-    background-color: transparent;
-    box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.2);
+    --card-bg-color: #0d0d0d;
+    --card-fg-color: #4d4d4d;
+    --card-icon-color: #4d4d4d;
+    background-color: var(--card-bg-color);
+    box-shadow: none;
   }
 
   &:focus-visible {
@@ -365,6 +373,150 @@ button.tomrow-white {
     outline: 2px solid #ffffff;
     outline-offset: 2px;
   }
+}
+
+/* Editing forms (a CMS item's, a page section's): on a pane wide enough for
+   two columns, the small fields components/FieldLayout.tsx marks share a row
+   with a small neighbour, in the schema's order, and every other field takes
+   the whole row. Narrower panes (the Visual editor's side panel, a phone)
+   keep Sanity's one column. The form's width is set in DocumentLayout.tsx. */
+[data-testid='form-view'] {
+  container: tomrow-form / inline-size;
+}
+
+@container tomrow-form (min-width: 640px) {
+  [data-ui='Stack']:has(> [data-tomrow-field]) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: 24px;
+
+    & > :not([data-tomrow-field]) {
+      grid-column: 1 / -1;
+    }
+  }
+
+  /* Two fields in a row line up both ways: their labels at the top and,
+     however long either description, their inputs at the bottom (each
+     field fills the row's height, its input held to the foot) */
+  [data-tomrow-field] {
+    display: flex;
+    flex-direction: column;
+
+    & > [data-testid^='field-'] {
+      display: flex;
+      flex: 1 1 auto;
+      flex-direction: column;
+    }
+
+    & > [data-ui='FormRow'],
+    & > [data-testid^='field-'] > [data-ui='FormRow'] {
+      flex: 1 1 auto;
+    }
+
+    & [data-ui='FormRow'] > div > [data-ui='Stack'] {
+      height: 100%;
+      align-content: space-between;
+    }
+  }
+}
+
+/* Filled controls, where Sanity draws a control as an outlined box instead
+   of through the theme's field and button colours (theme.ts). Each rule is
+   scoped to the one part it fills; structural rules (rows, panes, tables)
+   are left alone. Keyboard focus keeps Sanity's ring throughout. */
+
+/* A switch that is off: a grey track, its knob light enough to see (the
+   theme's field colour is both, so they would merge) */
+[data-ui='Switch'] > input:not(:checked) + [data-ui='Switch__representation'] {
+  --switch-bg-color: var(--tomrow-field-pressed);
+  --switch-fg-color: #b2b2b2;
+}
+
+@media (hover: hover) {
+  [data-ui='Switch'] > input:not(:checked):not(:disabled):hover + [data-ui='Switch__representation'] {
+    --switch-bg-color: #3d3d3d;
+  }
+}
+
+[data-ui='Switch'][data-ui] > input:not(:checked):disabled + [data-ui='Switch__representation'] {
+  --switch-bg-color: var(--tomrow-field);
+  --switch-fg-color: #4d4d4d;
+}
+
+/* A true/false field's box around its switch and label */
+[data-testid='form-view'] [data-ui='Card'][data-testid='boolean-input'] {
+  border-color: transparent;
+  background-color: var(--tomrow-field);
+}
+
+/* "Used on N pages" above a document's fields, and the pages it lists */
+[data-testid='form-view'] > [data-ui='FormRow'] [data-ui='Card'][data-as='div']:has(> div > button[data-ui='Card']) {
+  border-color: transparent;
+  background-color: var(--tomrow-field);
+  overflow: hidden;
+
+  & [data-ui='Card'] {
+    background-color: transparent;
+  }
+
+  & :is(a, button)[data-ui='Card']:hover {
+    background-color: var(--tomrow-field-hover);
+  }
+}
+
+/* A list of items (awards, sections, instructors...): a filled box, its
+   items rows on it, lighter under the pointer */
+[data-testid='form-view'] [data-ui='ArrayInput__content'] > [data-ui='Card'] {
+  border-color: transparent;
+  background-color: var(--tomrow-field);
+  border-radius: var(--tomrow-radius);
+
+  & [data-ui='Card'] {
+    background-color: transparent;
+  }
+
+  & :is(a, button)[data-ui='Card']:hover {
+    background-color: var(--tomrow-field-hover);
+  }
+}
+
+/* A list of words (tags): its items are fields already, so the box around
+   them goes */
+[data-testid='form-view'] [data-is-file-target] > [data-ui='Stack'] > [data-ui='Card'] {
+  border-color: transparent;
+}
+
+/* A file or image field's drop area (its Upload and Select buttons are icon
+   buttons, clear on the fill: theme.ts) */
+[data-testid='form-view'] [data-is-file-target] > div > [data-ui='Card'][data-tone='transparent'] {
+  border-color: transparent;
+  background-color: var(--tomrow-field);
+}
+
+/* Rich text: its toolbar and its text on one grey field, like every other
+   field (Sanity paints them black inside a faint frame) */
+[data-testid='form-view'] [data-ui='Card']:has(> div > [data-testid='pt-editor']),
+[data-testid='form-view'] [data-testid='pt-editor'],
+[data-testid='form-view'] [data-testid='pt-editor'] [data-ui='Card'] {
+  background-color: var(--tomrow-field);
+}
+
+/* ...its text starting at the field's edge like any input's, not centred in
+   the wide field; each paragraph keeps Sanity's readable 640px measure (and
+   full-screen editing its centred column) */
+[data-testid='form-view'] [data-testid='pt-editor'][data-fullscreen='false'] [contenteditable='true'] > div {
+  margin-left: 0;
+  margin-right: 0;
+}
+
+/* An image field's well: no outline around it */
+[data-testid='form-view'] [data-is-file-target][data-tone='transparent']:not(:focus-visible) {
+  box-shadow: none;
+}
+
+/* The frame around an item's thumbnail or icon in a list (the attribute is
+   repeated to outrank Sanity's rule, which is otherwise as specific) */
+[data-testid='Media'] > span[data-border][data-border] {
+  box-shadow: none;
 }
 
 /* A collection: the table fills its pane */

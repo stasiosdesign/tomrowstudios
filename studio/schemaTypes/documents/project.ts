@@ -25,29 +25,22 @@ export const project = defineType({
   title: 'Project',
   type: 'document',
   icon: ProjectsIcon,
-  groups: [
-    {name: 'overview', title: 'Overview', default: true},
-    {name: 'content', title: 'Page content'},
-  ],
   fields: [
     defineField({
       name: 'title',
       type: 'string',
-      group: 'overview',
       validation: (rule) => rule.required(),
     }),
     defineField({
       name: 'shortTitle',
       title: 'Short title',
       type: 'string',
-      group: 'overview',
       description:
         'Used on the Architecture slider, the “Next project” link and the page-transition label. Leave empty to use the title.',
     }),
     defineField({
       name: 'slug',
       type: 'slug',
-      group: 'overview',
       description:
         'The page address: /projects/<slug>. Lowercase letters, numbers and hyphens, e.g. “test-project”; “Generate” makes one from the title.',
       options: {source: 'title', maxLength: 96, slugify},
@@ -62,21 +55,18 @@ export const project = defineType({
       name: 'sortOrder',
       title: 'Order',
       type: 'number',
-      group: 'overview',
       description: 'Position on the Architecture page, 1 first. Also sets which project is “next”.',
       validation: (rule) => rule.integer().min(1),
     }),
     defineField({
       name: 'context',
       type: 'string',
-      group: 'overview',
       description:
         'Shown after “Architecture —” on the page and on the slider, e.g. “MArch 2”, “Dissertation” or a place.',
     }),
     defineField({
       name: 'year',
       type: 'number',
-      group: 'overview',
       validation: (rule) => rule.integer().min(1900).max(2100),
     }),
     defineField({
@@ -84,14 +74,12 @@ export const project = defineType({
       title: 'Standfirst',
       type: 'text',
       rows: 3,
-      group: 'overview',
       validation: (rule) => rule.required(),
     }),
     defineField({
       name: 'credits',
       title: 'Awards and details',
       type: 'array',
-      group: 'overview',
       description:
         'The labels beside the standfirst: awards first, then facts such as the programme, school and year.',
       of: [defineArrayMember({type: 'projectCredit'})],
@@ -100,7 +88,6 @@ export const project = defineType({
       name: 'portfolio',
       title: 'Portfolio PDF',
       type: 'file',
-      group: 'overview',
       description: 'For the “Download Portfolio” buttons. Upload it here…',
       options: {accept: 'application/pdf'},
     }),
@@ -108,14 +95,12 @@ export const project = defineType({
       name: 'portfolioUrl',
       title: 'Portfolio link',
       type: 'url',
-      group: 'overview',
       description: '…or link to a PDF hosted elsewhere. An uploaded PDF wins if both are set.',
     }),
     defineField({
       name: 'coverImage',
       title: 'Cover image',
       type: 'image',
-      group: 'overview',
       description: 'On the Architecture slider, and behind the “Next project” link from the project before.',
       options: {hotspot: true},
       fields: [altTextField],
@@ -125,7 +110,6 @@ export const project = defineType({
       name: 'content',
       title: 'Page content',
       type: 'array',
-      group: 'content',
       description: 'The page below the header, top to bottom.',
       of: [
         defineArrayMember({type: 'featureImage'}),

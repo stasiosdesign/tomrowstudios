@@ -134,12 +134,14 @@ const GroupButton = styled.button`
   }
 `
 
+/* The group names, "Page Editor" and "CMS Collections", as written: the
+   Studio's display type (the pane headings' Inter Tight, tightly set) at the
+   rows' size, quieter than the names beneath them */
 const GroupTitle = styled.span`
-  font-weight: 500;
-  font-size: 11px;
+  font-weight: 600;
+  font-size: 13px;
   line-height: 1;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
+  letter-spacing: -0.01em;
   color: rgb(255 255 255 / 0.6);
 
   [data-holds-open] > & {

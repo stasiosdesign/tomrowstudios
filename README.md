@@ -175,6 +175,20 @@ tall as the publishing bar beside it (`--tomrow-bar-height` in `studio.css`).
 A collection's image columns show small cropped thumbnails. The theme (`theme.ts`) keeps
 text and icons white on hover, press and selection.
 
+Every control is a filled surface, never a thin outline: fields and
+secondary buttons grey (lighter on hover and when pressed), primary buttons
+white, destructive ones and Publish red, icon buttons flat, all with the same
+3px corners; a field with a problem is tinted red, and keyboard focus keeps
+Sanity's ring. The theme's field and button colours do most of it
+(`theme.ts`); `studio.css` fills the few parts Sanity draws as outlined
+boxes (lists, file and image fields, rich text, true/false fields, "Used on N
+pages"). A CMS item's form and an open page section use the pane's width up
+to 1040px, on the 14px inset: small fields (a line of text, a number, a slug,
+a link, a date, a switch, a file) share a row two by two on a wide pane, in
+the schema's order, and everything else takes the whole row
+(`FieldLayout`); narrow panes keep one column. CMS items show all their
+fields in one form, with no tabs.
+
 Publishing, unpublishing and deleting are for Administrators, Editors and
 Developers (the route checks; the Studio checks first). Anyone else can click
 the controls and gets a dialog saying they don't have permission and to ask a
@@ -310,7 +324,7 @@ studio/                    Sanity Studio, with its own package.json
   lib/watch.ts             keeps what the two datasets hold current (tested in watch.test.ts)
   lib/site.ts              the two sites' addresses and each document's page
   scripts/                 one-off seeds and migrations (npx sanity exec … --with-user-token)
-  structure.ts             the Content sidebar: Page editor, CMS collections
+  structure.ts             the Content sidebar: Page Editor, CMS Collections
   sanity.config.ts         project, plugins (Visual editor, Content, Vercel bypass), document layout
   sanity.cli.ts            CLI settings, including TypeGen
   studio.css               the red Publish button, hover and selection, forms, the preview canvas

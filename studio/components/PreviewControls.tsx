@@ -5,6 +5,7 @@ import {Button, Card, Flex, Switch, Text} from '@sanity/ui'
 import {Tooltip} from '@sanity/ui/tooltip'
 import {useCallback, useEffect, useSyncExternalStore} from 'react'
 import {usePresentationParams, type PreviewHeaderProps} from 'sanity/presentation'
+import {styled} from 'styled-components'
 
 /** Whether this document is open in the Visual editor (else it is in Content) */
 export const useInVisualEditor = (): boolean => !!usePresentationParams(false)
@@ -140,7 +141,7 @@ export function PreviewControls() {
           </Flex>
         </Card>
       </Tooltip>
-      <Flex role="group" aria-label="Preview size" gap={1}>
+      <Views role="group" aria-label="Preview size">
         {VIEWS.map((view) => (
           <Tooltip key={view.mode} content={<Text size={1}>{view.label}</Text>} placement="bottom" portal>
             <Button
@@ -153,10 +154,20 @@ export function PreviewControls() {
             />
           </Tooltip>
         ))}
-      </Flex>
+      </Views>
     </Flex>
   )
 }
+
+// The three views as one control: a small grey track, the chosen view picked
+// out on it (the theme's selected icon button), like the other filled controls
+const Views = styled.div`
+  display: flex;
+  gap: 2px;
+  padding: 2px;
+  border-radius: var(--tomrow-radius);
+  background: var(--tomrow-field);
+`
 
 const VIEWS: {mode: PreviewMode; label: string; icon: typeof DesktopIcon}[] = [
   {mode: 'phone', label: 'Phone view', icon: MobileDeviceIcon},

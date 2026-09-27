@@ -4,6 +4,7 @@ import {useContext, useEffect, useId, useRef} from 'react'
 import {type ObjectFieldProps} from 'sanity'
 import {styled} from 'styled-components'
 import {Collapse, MOTION_EASE, MOTION_MS} from './Collapse'
+import {FORM_WIDTH} from './FieldLayout'
 import {SectionGroup} from './PageInput'
 
 /* One section of a page in the form: a row in a table-like list, in the
@@ -100,12 +101,13 @@ const RowButton = styled.button`
 `
 
 /* The opened section: the row's full width, its fields inset like the
-   table's cells, and held to a width that reads well however wide the pane */
+   table's cells, and held to the width a CMS item's form uses (FORM_WIDTH),
+   its small fields sharing rows the same way (FieldLayout) */
 const Fields = styled.div`
   padding: 24px 14px 36px;
   border-top: 1px solid var(--card-border-color);
 
   & > .section-row__fields {
-    max-width: 880px;
+    max-width: ${FORM_WIDTH}px;
   }
 `

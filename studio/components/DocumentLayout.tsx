@@ -3,6 +3,7 @@ import {useRef} from 'react'
 import type {DocumentLayoutProps} from 'sanity'
 import {styled} from 'styled-components'
 import {isPageType} from '../lib/site'
+import {FORM_WIDTH} from './FieldLayout'
 import {OverlayScrollbar} from './OverlayScrollbar'
 import {useInVisualEditor} from './PreviewControls'
 import {PublishControls} from './PublishControls'
@@ -86,6 +87,17 @@ const Root = styled(Flex)`
     max-width: none;
     margin: 0;
     padding: 8px 0 160px;
+  }
+
+  /* A CMS item's form, likewise, leaves the centred 640px column: it starts
+     on the pane's 14px inset, under the status and the title, and takes the
+     pane's width up to FORM_WIDTH, where lines would grow too long to read
+     (the small fields share rows there: FieldLayout, studio.css) */
+  &:not([data-tomrow-page]) [data-testid='document-panel-scroller'] > div {
+    max-width: ${FORM_WIDTH + 28}px;
+    margin: 0;
+    padding-left: 14px;
+    padding-right: 14px;
   }
 
   &[data-tomrow-page] [data-testid='copy-document-actions-button'] {

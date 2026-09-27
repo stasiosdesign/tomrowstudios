@@ -59,7 +59,6 @@ const richSection = (name: string, title: string, description: string, extra: Re
     name,
     title,
     type: 'object',
-    group: 'page',
     description,
     options: {collapsible: true, collapsed: false},
     validation: (rule) => rule.required(),
@@ -76,22 +75,16 @@ export const shopItem = defineType({
   title: 'Shop item',
   type: 'document',
   icon: BasketIcon,
-  groups: [
-    {name: 'card', title: 'Card', default: true},
-    {name: 'page', title: 'Page'},
-  ],
   fields: [
     defineField({
       name: 'title',
       type: 'string',
-      group: 'card',
       description: 'The name on the card and at the top of the page.',
       validation: (rule) => rule.required(),
     }),
     defineField({
       name: 'slug',
       type: 'slug',
-      group: 'card',
       description:
         'The page address: /<slug>. Lowercase letters, numbers and hyphens, e.g. “book”; “Generate” makes one from the title.',
       options: {source: 'title', maxLength: 96, slugify},
@@ -106,7 +99,6 @@ export const shopItem = defineType({
       name: 'sortOrder',
       title: 'Order',
       type: 'number',
-      group: 'card',
       description: 'Position in the shop grid, 1 first. The “Related” items on each page follow the same order.',
       validation: (rule) => rule.integer().min(1),
     }),
@@ -114,7 +106,6 @@ export const shopItem = defineType({
       name: 'card',
       title: 'Card',
       type: 'object',
-      group: 'card',
       description: 'The card on the Shop page, and in the “Related” row on the other items’ pages.',
       validation: (rule) => rule.required(),
       fields: [
@@ -161,7 +152,6 @@ export const shopItem = defineType({
       name: 'header',
       title: 'Header',
       type: 'object',
-      group: 'page',
       description: 'The full-width photo, the standfirst under the title, and the tags.',
       options: {collapsible: true, collapsed: false},
       validation: (rule) => rule.required(),
@@ -188,7 +178,6 @@ export const shopItem = defineType({
       name: 'details',
       title: 'Details',
       type: 'object',
-      group: 'page',
       description: 'The list beside the standfirst, and the link that closes it.',
       options: {collapsible: true, collapsed: false},
       validation: (rule) => rule.required(),
@@ -271,7 +260,6 @@ export const shopItem = defineType({
       name: 'atlas',
       title: 'Map band',
       type: 'object',
-      group: 'page',
       description: 'The full-width map with a caption and two buttons (the book). Leave empty for no band.',
       options: {collapsible: true, collapsed: true},
       fields: [
