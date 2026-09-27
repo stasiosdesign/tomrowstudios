@@ -166,7 +166,10 @@ Columns button and a white New button; an opened item's list is headed
 "← Projects" and the item has no Comments. An opened item is named once, in
 its header row beside its actions, as large as a page's title and kept to
 its current title (`PaneTitle`); its Title field stays in the form (on a
-phone Sanity's back arrow keeps its own row). Page sections open and close with
+phone Sanity's back arrow keeps its own row). A page's sections, and a shop
+item's folding groups, open and close independently, and where a document
+has two or more, its header row has Expand all / Collapse all
+(`Sections.tsx`; an icon in the Visual editor's narrow panel). Page sections open and close with
 a short height transition (`Collapse`), menus with Sanity UI's popover
 motion, both off for anyone who prefers reduced motion. The top bar has no New document, search, Tasks, Help or trial
 countdown, and Favorites is hidden throughout. Content and the Visual editor

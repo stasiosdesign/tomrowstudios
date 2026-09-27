@@ -243,7 +243,7 @@ button.tomrow-cta--arrow > span {
    panes below. Where the switch is in the bar, the two sides share the room
    equally, so the switch sits at the middle of the window. */
 [data-ui='Navbar'][data-testid='studio-navbar'] {
-  padding: 12px 14px;
+  padding: 16px 14px;
 
   & > [data-ui='Grid'] {
     min-height: 32px;

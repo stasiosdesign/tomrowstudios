@@ -37,10 +37,15 @@ export const Chip = styled.span<{$tone: Tone}>`
   }
 `
 
+// A publishing status reads a little heavier than the notes beside it
+const StatusLabel = styled(Chip)`
+  font-weight: 500;
+`
+
 export function StatusChip({status, title}: {status: PublishStatus; title?: string}) {
   return (
-    <Chip $tone={STATUS_TONE[status]} title={title}>
+    <StatusLabel $tone={STATUS_TONE[status]} title={title}>
       {STATUS_LABEL[status]}
-    </Chip>
+    </StatusLabel>
   )
 }

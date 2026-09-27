@@ -7,6 +7,7 @@ import {FORM_WIDTH} from './FieldLayout'
 import {OverlayScrollbar} from './OverlayScrollbar'
 import {useInVisualEditor} from './PreviewControls'
 import {PublishControls} from './PublishControls'
+import {SectionsProvider} from './Sections'
 
 /* Around every document pane, in Content and in the Visual editor: the
    publishing control across the top, then Sanity's own header and form
@@ -49,7 +50,8 @@ export function DocumentLayout(props: DocumentLayoutProps) {
     >
       <PublishControls documentId={props.documentId} documentType={props.documentType} />
       <Flex direction="column" flex={1} style={{minHeight: 0}}>
-        {props.renderDefault(props)}
+        {/* The header's Expand all reaches this document's sections (Sections.tsx) */}
+        <SectionsProvider>{props.renderDefault(props)}</SectionsProvider>
       </Flex>
       <OverlayScrollbar containerRef={rootRef} selector="[data-testid='document-panel-scroller']" />
     </Root>

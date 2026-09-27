@@ -1,4 +1,5 @@
-import type {FieldProps, SchemaType} from 'sanity'
+import type {FieldProps, ObjectFieldProps, SchemaType} from 'sanity'
+import {useSection} from './Sections'
 
 /* Every field in every form (sanity.config.ts, form.components.field). The
    editing forms use the pane's width: on a wide pane their fields sit on a
@@ -7,11 +8,23 @@ import type {FieldProps, SchemaType} from 'sanity'
    small ones that sit well side by side (a line of text, a number, a slug, a
    link, a date, a switch, a file) share a row with a small neighbour, in the
    schema's order. This only marks the small ones; the grid, and one column
-   on a narrow pane, are studio.css's. */
+   on a narrow pane, are studio.css's.
+
+   It also lists the document's top-level groups that fold (a page's
+   sections, a shop item's Header and Details...) for the header's Expand
+   all / Collapse all (Sections.tsx). */
 /** The widest an editing form's fields run (a CMS item's form, an open page section) */
 export const FORM_WIDTH = 1040
 
 export function FieldLayout(props: FieldProps) {
+  const group = props as Partial<ObjectFieldProps>
+  const isSection = props.path.length === 1 && props.schemaType.jsonType === 'object' && !!group.collapsible
+  useSection(
+    isSection ? String(props.path[0]) : null,
+    !!group.collapsed,
+    () => group.onExpand?.(),
+    () => group.onCollapse?.(),
+  )
   if (!isCompact(props.schemaType)) return props.renderDefault(props)
   return <div data-tomrow-field="compact">{props.renderDefault(props)}</div>
 }

@@ -10,6 +10,7 @@ import {FieldLayout} from './components/FieldLayout'
 import {PageInput} from './components/PageInput'
 import {PaneTitle} from './components/PaneTitle'
 import {PreviewControls, PreviewHeaderBridge} from './components/PreviewControls'
+import {SectionsToggle} from './components/Sections'
 import {ToolToggle} from './components/ToolToggle'
 import {STAGING_ORIGIN} from './lib/site'
 import {schemaTypes} from './schemaTypes'
@@ -147,10 +148,11 @@ export default defineConfig({
     actions: () => [],
     // No comments: the pages and the CMS items are edited, not discussed here
     comments: {enabled: false},
-    // Sanity's slot for controls in a document's header row: a static page's
-    // title in the page editor, the preview's Edit switch and phone view in
-    // the Visual editor. Each draws nothing elsewhere.
-    unstable_languageFilter: (prev) => [...prev, PaneTitle, PreviewControls],
+    // Sanity's slot for controls in a document's header row: a document's
+    // title in Content, the preview's Edit switch and views in the Visual
+    // editor, and Expand all / Collapse all where the document has sections
+    // that fold. Each draws nothing elsewhere.
+    unstable_languageFilter: (prev) => [...prev, PaneTitle, PreviewControls, SectionsToggle],
     // No "Open in Content" in the Visual editor's header row: the Presentation
     // tool's own action, which shows nowhere else. Content keeps its navigation.
     unstable_fieldActions: (prev) => prev.filter((action) => action.name !== 'presentation/openInStructure'),
