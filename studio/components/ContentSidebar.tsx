@@ -8,8 +8,9 @@ import {tabStates} from './tab'
 
 /* The Content sidebar: two accordion groups, each opened and closed on its
    own (and remembered in this browser), with the pages and the collections
-   as links. The root pane of the structure (structure.ts), so each item
-   opens as this pane's child. */
+   as links. A group's name opens its first item too, until one of its items
+   is open. The root pane of the structure (structure.ts), so each item opens
+   as this pane's child. */
 
 export type SidebarItem = {id: string; title: string; icon?: ComponentType}
 export type SidebarGroup = {id: string; title: string; items: SidebarItem[]}
@@ -30,18 +31,25 @@ export function ContentSidebar(props: {options?: Record<string, unknown>; childI
   const {ChildLink, groupIndex, routerPanesState} = usePaneRouter()
   const router = useRouter()
 
+  // Opens an item beside the sidebar, as its links (ChildLink) do
+  const openItem = useCallback(
+    (id: string, options?: {replace?: boolean}) => router.navigate({panes: [...routerPanesState.slice(0, groupIndex + 1), [{id}]]}, options),
+    [router, routerPanesState, groupIndex],
+  )
+
   // Nothing open beside the sidebar (entering Content, or coming back to it
   // with nothing chosen): open the first page, so the workspace is never an
   // empty panel
   const first = groups[0]?.items[0]
   const nothingOpen = !props.childItemId && !!first
   useEffect(() => {
-    if (nothingOpen) router.navigate({panes: [...routerPanesState.slice(0, groupIndex + 1), [{id: first.id}]]}, {replace: true})
-  }, [nothingOpen, first, router, routerPanesState, groupIndex])
+    if (nothingOpen) openItem(first.id, {replace: true})
+  }, [nothingOpen, first, openItem])
   const [open, setOpen] = useState<Record<string, boolean>>(() => Object.fromEntries(groups.map((group) => [group.id, readOpen(group.id)])))
-  const toggle = useCallback((id: string) => {
+  // Folds a group or unfolds it; `force` sets it either way, like classList.toggle
+  const toggle = useCallback((id: string, force?: boolean) => {
     setOpen((current) => {
-      const next = {...current, [id]: !current[id]}
+      const next = {...current, [id]: force ?? !current[id]}
       try {
         window.localStorage.setItem(key(id), next[id] ? 'open' : 'closed')
       } catch {
@@ -50,6 +58,16 @@ export function ContentSidebar(props: {options?: Record<string, unknown>; childI
       return next
     })
   }, [])
+
+  const holdsOpen = (group: SidebarGroup) => group.items.some((item) => item.id === props.childItemId)
+  // A group's name goes to it: unfolded, with its first item open. Once one
+  // of its items is open, the name folds and unfolds it.
+  const chooseGroup = (group: SidebarGroup) => {
+    const firstItem = group.items[0]
+    if (holdsOpen(group) || !firstItem) return toggle(group.id)
+    toggle(group.id, true)
+    openItem(firstItem.id)
+  }
 
   return (
     <Box overflow="auto" height="fill" data-tomrow-sidebar>
@@ -62,8 +80,8 @@ export function ContentSidebar(props: {options?: Record<string, unknown>; childI
               aria-expanded={open[group.id]}
               aria-controls={`sidebar-${group.id}-items`}
               // A folded group that holds what is open says so: its name brightens
-              data-holds-open={!open[group.id] && group.items.some((item) => item.id === props.childItemId) ? '' : undefined}
-              onClick={() => toggle(group.id)}
+              data-holds-open={!open[group.id] && holdsOpen(group) ? '' : undefined}
+              onClick={() => chooseGroup(group)}
             >
               <Text size={1} muted>
                 <ChevronRightIcon style={{transform: open[group.id] ? 'rotate(90deg)' : undefined, transition: 'transform 0.15s ease'}} />
