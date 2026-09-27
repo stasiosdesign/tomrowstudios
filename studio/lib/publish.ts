@@ -1,4 +1,4 @@
-import type {SanityClient, SanityDocument} from 'sanity'
+import type {SanityClient} from 'sanity'
 import {STAGING_ORIGIN} from './site'
 
 /* Publishing, as the Studio sees it (see the README, "Content").
@@ -18,32 +18,56 @@ import {STAGING_ORIGIN} from './site'
    - Unpublish              off both sites; the Studio keeps it as a draft.
    - Delete                 gone everywhere.
 
-   The status of a document (publishStatus) is read straight from the
-   datasets. */
+   The status of a document is read straight from the datasets
+   (lib/status.ts). */
 
 export const STAGING_DATASET = 'staging'
 export const PRODUCTION_DATASET = 'production'
 
+/** The API version the publishing control and the collections read with */
+export const API_VERSION = '2025-02-19'
+
+/** Readers for both datasets as they are (raw: drafts and notes included), never from the CDN */
+export function datasetClients(client: SanityClient): {staging: SanityClient; production: SanityClient} {
+  const staging = client.withConfig({dataset: STAGING_DATASET, perspective: 'raw', useCdn: false})
+  return {staging, production: staging.withConfig({dataset: PRODUCTION_DATASET})}
+}
+
 /** The Vercel protection-bypass secret the Visual editor also uses, kept in the dataset by its tool */
 const BYPASS_SECRET_ID = 'sanity-preview-url-secret.vercel-protection-bypass'
 
-/** The note /api/publish keeps beside each live document: which content went live */
-export type PublishLog = {_id: string; document: string; sourceId: string; sourceRev: string; contentKey: string; publishedAt: string}
+/* The project roles that may publish, unpublish and delete: the same set the
+   server route checks (src/sanity/publish/index.ts, PUBLISHING_ROLES). The
+   Studio checks first, so a Contributor is told plainly instead of the
+   action being sent; the route still refuses on its own. */
+export const PUBLISHING_ROLES = new Set(['administrator', 'editor', 'developer'])
 
-export const logId = (id: string): string => `publish-log.${id}`
-
-/** Whether the live site has the editor's version: its note carries the same content */
-export const liveHas = (log: PublishLog | null | undefined, doc: SanityDocument | null | undefined): boolean =>
-  !!log && !!doc && log.contentKey === contentKey(doc)
+type PublishErrorDetails = {
+  reason?: string
+  missing?: {id: string; type?: string; title?: string}[]
+  referrers?: {_id: string; _type: string; title?: string}[]
+}
 
 export class PublishError extends Error {
   constructor(
     message: string,
     public status: number,
-    public details?: {reason?: string; missing?: {id: string; type?: string; title?: string}[]; referrers?: {_id: string; _type: string; title?: string}[]},
+    public details?: PublishErrorDetails,
   ) {
     super(message)
   }
+}
+
+/** A failed action as the editor reads it: the route's own message, naming what it refers to */
+export function failText(error: unknown): string {
+  if (error instanceof PublishError) {
+    if (error.details?.missing?.length) return `${error.message} Missing: ${error.details.missing.map((item) => item.title ?? item.id).join(', ')}.`
+    if (error.details?.referrers?.length) return `${error.message} Linked from: ${error.details.referrers.map((item) => item.title ?? item._id).join(', ')}.`
+    return error.message
+  }
+  const err = error as {statusCode?: number; message?: string} | null | undefined
+  if (err?.statusCode === 403) return 'You don’t have permission for that. Ask an administrator of the Sanity project.'
+  return err?.message ?? String(error)
 }
 
 async function bypassSecret(client: SanityClient): Promise<string | null> {
@@ -71,7 +95,7 @@ async function call(client: SanityClient, body: Record<string, unknown>): Promis
   } catch {
     throw new PublishError('The staging site could not be reached. Check that it is deployed and that the Vercel bypass secret is set.', 0)
   }
-  const result = (await response.json().catch(() => ({}))) as {ok?: boolean; error?: string; details?: PublishError['details']} & Record<string, unknown>
+  const result = (await response.json().catch(() => ({}))) as {ok?: boolean; error?: string; details?: PublishErrorDetails} & Record<string, unknown>
   if (!response.ok || !result.ok) throw new PublishError(result.error ?? `The site answered ${response.status}.`, response.status, result.details)
   return result
 }
@@ -99,85 +123,3 @@ export async function unpublish(client: SanityClient, id: string): Promise<void>
 export async function deleteDocument(client: SanityClient, id: string): Promise<void> {
   await call(client, {action: 'delete', id})
 }
-
-/* The status of an item: where its latest saved version (the draft, or else
-   the published document) is published. One function, used by every place
-   that shows it (the collection table, the publishing control).
-
-     live         staging and the live site both have the latest version
-     staging      staging has it and the live site doesn't (an older version
-                  may still be live)
-     draft        newer edits that neither site has
-     unpublished  taken off both sites, and not edited since: the draft still
-                  holds what the route's unpublish note says was taken off */
-export type PublishStatus = 'live' | 'staging' | 'draft' | 'unpublished'
-
-export const STATUS_LABEL: Record<PublishStatus, string> = {
-  live: 'Live',
-  staging: 'Staging',
-  draft: 'Changes in draft',
-  unpublished: 'Unpublished',
-}
-
-export const STATUS_TONE: Record<PublishStatus, 'positive' | 'caution' | 'muted'> = {
-  live: 'positive',
-  staging: 'caution',
-  draft: 'caution',
-  unpublished: 'muted',
-}
-
-/** The note the route leaves in staging when it unpublishes a document */
-export type UnpublishLog = {_id: string; document: string; state: 'unpublished'; contentKey: string; unpublishedAt: string}
-
-/* The static pages publish as one site, so they share one status, worked out
-   from every page's own: Changes in draft while any page has edits neither
-   site has, else Staging while any page's latest version is on staging only,
-   else Unpublished when every page is, else Live. Pages with nothing saved
-   don't count. */
-export function groupStatus(statuses: (PublishStatus | null)[]): PublishStatus | null {
-  const known = statuses.filter((status): status is PublishStatus => status !== null)
-  if (known.length === 0) return null
-  if (known.includes('draft')) return 'draft'
-  if (known.includes('staging')) return 'staging'
-  if (known.every((status) => status === 'unpublished')) return 'unpublished'
-  return 'live'
-}
-
-/* The project roles that may publish, unpublish and delete: the same set the
-   server route checks (src/sanity/publish/index.ts, PUBLISHING_ROLES). The
-   Studio checks first, so a Contributor is told plainly instead of the
-   action being sent; the route still refuses on its own. */
-export const PUBLISHING_ROLES = new Set(['administrator', 'editor', 'developer'])
-
-export function publishStatus(state: {
-  draft?: SanityDocument | null
-  published?: SanityDocument | null
-  live?: SanityDocument | null
-  liveLog?: PublishLog | null
-  stagingLog?: UnpublishLog | null
-}): PublishStatus | null {
-  const {draft, published, live, liveLog, stagingLog} = state
-  const current = draft ?? published
-  if (!current) return null
-  const onStaging = !!published && sameContent(published, current)
-  const onLive = !!live && (liveHas(liveLog, current) || sameContent(live, current))
-  if (onStaging) return onLive ? 'live' : 'staging'
-  if (!published && !live && stagingLog?.state === 'unpublished' && stagingLog.contentKey === contentKey(current)) return 'unpublished'
-  return 'draft'
-}
-
-/* What is compared to say whether a site has the version in the editor: the
-   content, without the system fields that differ by nature. Keys are sorted
-   so the order they were written in doesn't count. */
-export function contentKey(doc: SanityDocument | null | undefined): string | null {
-  if (!doc) return null
-  const {_id: _i, _rev: _r, _updatedAt: _u, _createdAt: _c, _system: _s, ...content} = doc as SanityDocument & {_system?: unknown}
-  return JSON.stringify(content, (_key, value) =>
-    value && typeof value === 'object' && !Array.isArray(value)
-      ? Object.fromEntries(Object.entries(value as Record<string, unknown>).sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0)))
-      : value,
-  )
-}
-
-export const sameContent = (a: SanityDocument | null | undefined, b: SanityDocument | null | undefined): boolean =>
-  !!a && !!b && contentKey(a) === contentKey(b)

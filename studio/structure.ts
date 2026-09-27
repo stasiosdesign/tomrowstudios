@@ -6,6 +6,7 @@ import {UsersIcon} from '@sanity/icons/Users'
 import type {ComponentType} from 'react'
 import {CollectionPane, type CollectionOptions} from './components/CollectionPane'
 import {ContentSidebar, type SidebarGroup} from './components/ContentSidebar'
+import {SIDEBAR_WIDTH} from './page'
 import {PAGES} from './schemaTypes/pages'
 import {schemaTypes} from './schemaTypes'
 
@@ -67,9 +68,6 @@ export const COLLECTIONS: (CollectionOptions & {icon: ComponentType})[] = [
 ].filter((collection) => schemaTypes.some((schemaType) => schemaType.name === collection.type))
 
 const collectionId = (type: string) => `collection-${type}`
-
-/** The sidebar's width: a compact column, like the reference's CMS Collections list */
-export const SIDEBAR_WIDTH = 248
 
 // No pane title: Sanity then leaves out the pane's own header, and the
 // collection names itself once, with its count (CollectionPane)

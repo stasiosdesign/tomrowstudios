@@ -31,7 +31,8 @@
    only then writes with its own token, SANITY_API_WRITE_TOKEN, which never
    leaves the server. A publish takes exactly the revision the editor was
    looking at (rev, fetched from the document's history), so typing while it
-   runs cannot change what goes live; it refuses to publish a document that
+   runs cannot change what goes live, and what is typed stays as the draft
+   (it is deleted only at the revision published); it refuses to publish a document that
    refers to something not yet live, and carries the images and files the
    document uses over to the production dataset (an asset that comes back
    under another ID is re-pointed). Each publish leaves a note beside the
@@ -170,13 +171,25 @@ async function write(staging: SanityClient, production: SanityClient, { id, draf
 
   // Staging gets the version first, so it is never behind the live site. The
   // draft goes too when it is the version published (newer edits stay), and
-  // so does any note of an earlier unpublish.
-  const toStaging = staging
-    .transaction()
-    .createOrReplace({ ...content, _id: id } as SanityDocument)
-    .delete(logId(id));
-  if (draft && draft._rev === source._rev) toStaging.delete(draft._id);
-  const staged = await toStaging.commit({ returnDocuments: true });
+  // so does any note of an earlier unpublish. The draft is deleted only at the
+  // revision read above: if the editor typed on while this ran, Sanity refuses
+  // the commit (409) and it is made again without the draft, so those edits
+  // stay as the draft instead of being lost.
+  const toStaging = (withDraft: boolean) => {
+    const transaction = staging
+      .transaction()
+      .createOrReplace({ ...content, _id: id } as SanityDocument)
+      .delete(logId(id));
+    if (withDraft && draft) {
+      transaction.patch(draft._id, { unset: ['_revision_lock_pseudo_field_'], ifRevisionID: draft._rev }).delete(draft._id);
+    }
+    return transaction.commit({ returnDocuments: true });
+  };
+  const deleteDraft = !!draft && draft._rev === source._rev;
+  const staged = await toStaging(deleteDraft).catch((error: unknown) => {
+    if (deleteDraft && (error as { statusCode?: number }).statusCode === 409) return toStaging(false);
+    throw error;
+  });
   if (!live) return { rev: staged[0]?._rev, sourceRev: source._rev, sourceId: source._id };
 
   const written = await production
@@ -241,7 +254,7 @@ const logId = (id: string) => `publish-log.${id}`;
 
 /* What the two sides are compared on: the content, without the system fields
    that differ by nature, keys sorted. The same function as the Studio's
-   (studio/lib/publish.ts), so the two agree. */
+   (studio/lib/status.ts), so the two agree. */
 function contentKey(doc: SanityDocument): string {
   const { _id: _i, _rev: _r, _updatedAt: _u, _createdAt: _c, _system: _s, ...content } = doc as SanityDocument & { _system?: unknown };
   return JSON.stringify(content, (_key, value) =>

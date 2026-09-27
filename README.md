@@ -72,7 +72,8 @@ Node 22 (what Vercel uses). The two apps install their own dependencies:
 | `npm run studio`        | the Studio at http://localhost:3333; its Visual editor shows http://localhost:8766 |
 | `npm run build`         | the production build, into `dist/`                               |
 | `npm run preview`       | serves that build                                                |
-| `npm run check`         | type-checks the site and the Studio, lints the Studio            |
+| `npm run check`         | type-checks the site and the Studio, lints the Studio, runs its tests |
+| `npm test`              | the Studio's tests: the publishing status rules and how the Studio keeps them current (`studio/lib/*.test.ts`) |
 | `npm run typegen`       | regenerates the query types (`src/sanity/sanity.types.ts`) after a query or schema change |
 | `npm run studio:deploy` | deploys the hosted Studio                                        |
 
@@ -177,7 +178,7 @@ Collections also have a **Select** mode: tick items for a bulk Publish live,
 Publish staging only, Unpublish or Delete; each item goes through the same
 route, and the ones that fail stay ticked and are named.
 
-The status (`publishStatus` in `studio/lib/publish.ts`, the same in the
+The status (`publishStatus` in `studio/lib/status.ts`, the same in the
 collection table and the publishing control) says where the latest saved
 version is: **Live** (green: staging and live both have it), **Staging**
 (yellow: staging has it, live doesn't, even if an older version is live),
@@ -290,7 +291,6 @@ src/
     robots.txt.ts          robots.txt, per deployment
   middleware.ts            each page's Sanity client (drafts in draft mode); staging's noindex header
   sanity/                  client, image URLs, queries (every GROQ query), generated types,
-    content.ts             which side of the dataset this deployment reads ($live)
     page-defaults.ts       every page's words and photos as the code had them: the fallbacks and the seed
     draft-mode/            the draft-mode routes and cookie (staging and local only)
     live-preview.ts        click-to-edit inside the Studio's Visual editor (staging and local only)
@@ -298,12 +298,14 @@ src/
   styles/style.css         global stylesheet, imported once by the layout
 studio/                    Sanity Studio, with its own package.json
   schemaTypes/             documents/ (homePage, project, client), pages/ (one per fixed page), objects/, shared/
-  components/              CollectionPane (the tables), PublishBar, DocumentLayout, the home page's form parts
-  lib/live.ts              the live copies: IDs, copying, comparing, reference checks
+  components/              CollectionPane (the tables), PublishControls (the publishing control), DocumentLayout, ContentSidebar, the page editor's form parts
+  lib/publish.ts           the publishing actions, sent to /api/publish
+  lib/status.ts            the publishing status rules (tested in status.test.ts)
+  lib/watch.ts             keeps what the two datasets hold current (tested in watch.test.ts)
   lib/site.ts              the two sites' addresses and each document's page
-  scripts/                 publish-all-live, live-status, seed-pages (npx sanity exec … --with-user-token)
+  scripts/                 one-off seeds and migrations (npx sanity exec … --with-user-token)
   structure.ts             the Content sidebar: Page editor, CMS collections
-  sanity.config.ts         project, plugins (Visual editor, Content, Vision, Vercel bypass), document layout
+  sanity.config.ts         project, plugins (Visual editor, Content, Vercel bypass), document layout
   sanity.cli.ts            CLI settings, including TypeGen
   studio.css               the red Publish button, hover and selection, forms, the preview canvas
   .env.development/.production  which sites the Visual editor and the publishing bar use (public)

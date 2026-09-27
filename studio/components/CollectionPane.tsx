@@ -13,23 +13,14 @@ import {useClient, useSchema, type SanityDocument} from 'sanity'
 import {useRouter} from 'sanity/router'
 import {usePaneRouter} from 'sanity/structure'
 import {styled} from 'styled-components'
-import {
-  deleteDocument,
-  PRODUCTION_DATASET,
-  publishLive,
-  publishStaging,
-  publishStatus,
-  STATUS_LABEL,
-  unpublish,
-  type PublishLog,
-  type PublishStatus,
-  type UnpublishLog,
-} from '../lib/publish'
-import {columnsFor, renderValue, textOf, type Column} from './format'
-import {isPermissionError, usePermissionGate, type RestrictedAction} from './PermissionDialog'
+import {API_VERSION, datasetClients, deleteDocument, failText, publishLive, publishStaging, unpublish} from '../lib/publish'
+import {groupById, publishStatus, STATUS_LABEL, type PublishStatus} from '../lib/status'
+import {LISTEN_OPTIONS, watchReads} from '../lib/watch'
 import {useAnimatedOpen} from './AnimatedMenuButton'
-import {ConfirmDialog, failText} from './PublishControls'
+import {ConfirmDialog} from './ConfirmDialog'
+import {columnsFor, renderValue, textOf, type Column} from './format'
 import {PANE_HEADING_PADDING_Y, PaneHeading} from './PaneHeading'
+import {isPermissionError, usePermissionGate, type RestrictedAction} from './PermissionDialog'
 import {StatusChip} from './Status'
 
 /* A collection: every document of one type as a table, one row per item,
@@ -45,7 +36,7 @@ import {StatusChip} from './Status'
    The pane is a structure component pane (structure.ts) and takes its
    options from there. Rows come straight from the dataset: drafts,
    published documents, live copies and the publishing notes, joined by ID,
-   so each row can say where the item stands (lib/publish.ts, publishStatus). */
+   so each row can say where the item stands (lib/status.ts, publishStatus). */
 
 export type CollectionOptions = {
   /** The document type */
@@ -68,8 +59,6 @@ type Row = {
   status: PublishStatus
 }
 
-const API_VERSION = '2025-02-19'
-
 const columnsKey = (type: string) => `tomrow.columns.${type}`
 const searchKey = (type: string) => `tomrow.search.${type}`
 
@@ -90,40 +79,27 @@ function writeStored(storage: Storage | undefined, key: string, value: unknown) 
   }
 }
 
+// A numeric column's value to sort by: a number as it is, a date or a
+// timestamp (_createdAt, _updatedAt) by its time; nothing sorts last
+function sortNumber(value: unknown): number {
+  if (value == null) return Infinity
+  const number = typeof value === 'number' ? value : Date.parse(String(value))
+  return Number.isNaN(number) ? Infinity : number
+}
+
+const compareNumbers = (a: number, b: number): number => (a === b ? 0 : a - b)
+
 const local = () => (typeof window === 'undefined' ? undefined : window.localStorage)
 const session = () => (typeof window === 'undefined' ? undefined : window.sessionStorage)
 
-const publishedId = (id: string) => (id.startsWith('drafts.') ? id.slice(7) : id)
+// Every document of the type with each site's publishing notes: drafts,
+// published documents and unpublish notes from staging, the live site's
+// documents and publish notes from production
+type Documents = {staging: SanityDocument[]; production: SanityDocument[]}
 
-// Every document of the type: drafts and published documents from staging,
-// the live site's documents from production, and each site's publishing
-// notes, joined by ID
-type Documents = {staging: SanityDocument[]; production: SanityDocument[]; logs: PublishLog[]; stagingLogs: UnpublishLog[]}
-
-function toRows({staging, production, logs, stagingLogs}: Documents, nameField: string): Row[] {
-  const groups = new Map<string, {draft?: SanityDocument; published?: SanityDocument; live?: SanityDocument; liveLog?: PublishLog; stagingLog?: UnpublishLog}>()
-  for (const doc of staging) {
-    const id = publishedId(doc._id)
-    const group = groups.get(id) ?? {}
-    if (doc._id.startsWith('drafts.')) group.draft = doc
-    else group.published = doc
-    groups.set(id, group)
-  }
-  for (const doc of production) {
-    const group = groups.get(doc._id) ?? {}
-    group.live = doc
-    groups.set(doc._id, group)
-  }
-  for (const log of logs) {
-    const group = groups.get(log.document)
-    if (group) group.liveLog = log
-  }
-  for (const log of stagingLogs) {
-    const group = groups.get(log.document)
-    if (group) group.stagingLog = log
-  }
+function toRows({staging, production}: Documents, nameField: string): Row[] {
   const rows: Row[] = []
-  for (const [id, group] of groups) {
+  for (const [id, group] of groupById(staging, production)) {
     const doc = group.draft ?? group.published
     const status = publishStatus(group)
     if (!doc || !status) continue // live only: nothing here to edit
@@ -144,44 +120,27 @@ export function CollectionPane(props: {options?: Record<string, unknown>; childI
   const {ChildLink, groupIndex, routerPanesState} = usePaneRouter()
   const selectedId = props.childItemId
 
-  // The rows, kept current: both datasets are read again after each change to the type
+  // The rows, kept current: both datasets are read again after each change to
+  // the type. A failed read shows its error until a later read succeeds.
   const [documents, setDocuments] = useState<Documents | null>(null)
   const [error, setError] = useState<string | null>(null)
   useEffect(() => {
-    let cancelled = false
-    let timer: ReturnType<typeof setTimeout> | undefined
-    const staging = client.withConfig({perspective: 'raw', useCdn: false})
-    const production = staging.withConfig({dataset: PRODUCTION_DATASET})
+    const {staging, production} = datasetClients(client)
     // Drafts and published documents; never a dotted ID, which Sanity keeps private
-    const query = `*[_type == $type && (count(string::split(_id, ".")) == 1 || _id in path("drafts.**"))]`
-    const load = () =>
-      Promise.all([
-        staging.fetch<SanityDocument[]>(query, {type}),
-        production.fetch<SanityDocument[]>(query, {type}),
-        production.fetch<PublishLog[]>(`*[_type == "publishLog" && document in *[_type == $type]._id]`, {type}),
-        staging.fetch<UnpublishLog[]>(`*[_type == "publishLog" && state == "unpublished"]`),
-      ])
-        .then(([stagingDocs, productionDocs, logs, stagingLogs]) => {
-          if (!cancelled) setDocuments({staging: stagingDocs, production: productionDocs, logs, stagingLogs})
-        })
-        .catch((err: Error) => {
-          if (!cancelled) setError(err.message)
-        })
-    load()
-    const onChange = {
-      next: () => {
-        clearTimeout(timer)
-        timer = setTimeout(load, 300)
+    const items = `_type == $type && (count(string::split(_id, ".")) == 1 || _id in path("drafts.**"))`
+    return watchReads({
+      read: () =>
+        Promise.all([
+          staging.fetch<SanityDocument[]>(`*[(${items}) || (_type == "publishLog" && state == "unpublished")]`, {type}),
+          production.fetch<SanityDocument[]>(`*[(${items}) || (_type == "publishLog" && document in *[_type == $type]._id)]`, {type}),
+        ]),
+      listeners: [staging, production].map((source) => source.listen(`*[_type == $type || _type == "publishLog"]`, {type}, LISTEN_OPTIONS)),
+      onRead: ([stagingDocs, productionDocs]) => {
+        setError(null)
+        setDocuments({staging: stagingDocs, production: productionDocs})
       },
-      error: (err: Error) => setError(err.message),
-    }
-    const options = {visibility: 'query' as const, includeResult: false, events: ['mutation' as const]}
-    const subscriptions = [staging, production].map((source) => source.listen(`*[_type == $type || _type == "publishLog"]`, {type}, options).subscribe(onChange))
-    return () => {
-      cancelled = true
-      clearTimeout(timer)
-      subscriptions.forEach((subscription) => subscription.unsubscribe())
-    }
+      onError: (err) => setError(err.message),
+    })
   }, [client, type])
 
   const rows = useMemo(() => (documents ? toRows(documents, nameField) : []), [documents, nameField])
@@ -234,8 +193,7 @@ export function CollectionPane(props: {options?: Record<string, unknown>; childI
         const bv = b.doc[sort.name]
         const result =
           column?.numeric || typeof av === 'number'
-            ? (av == null ? Infinity : Number(column?.name.startsWith('_') ? Date.parse(String(av)) : av)) -
-              (bv == null ? Infinity : Number(column?.name.startsWith('_') ? Date.parse(String(bv)) : bv))
+            ? compareNumbers(sortNumber(av), sortNumber(bv))
             : textOf(av, column ?? {name: sort.name, title: sort.name}).localeCompare(textOf(bv, column ?? {name: sort.name, title: sort.name}))
         return sort.direction === 'asc' ? result : -result
       }

@@ -8,11 +8,11 @@
    and test IDs its own tests use; a pane's width is an inline style, which
    the !important rules below outrank. */
 
+/* Hover: a faint grey wash; selection: a little more. (--tomrow-sidebar-width
+   is set on the page by page.ts, from SIDEBAR_WIDTH.) */
 :root {
-  /* Hover: a faint grey wash; selection: a little more */
   --tomrow-hover: rgb(255 255 255 / 0.06);
   --tomrow-selected: rgb(255 255 255 / 0.1);
-  --tomrow-sidebar-width: 248px;
 }
 
 /* Hovered and selected states on menus, lists, buttons and cards: the
@@ -323,12 +323,6 @@ button.tomrow-white {
     outline: 2px solid #ffffff;
     outline-offset: 2px;
   }
-}
-
-/* The visual editor's address input: the preview is the canvas. The buttons
-   beside it (open, viewport, share) stay. */
-[data-testid='presentation-root'] [data-ui='Card']:has([data-testid='preview-viewport-toggle']) [data-ui='TextInput'] {
-  display: none !important;
 }
 
 /* A collection: the table fills its pane */

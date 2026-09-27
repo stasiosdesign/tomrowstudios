@@ -1,5 +1,5 @@
 import {styled} from 'styled-components'
-import {STATUS_LABEL, STATUS_TONE, type PublishStatus} from '../lib/publish'
+import {STATUS_LABEL, STATUS_TONE, type PublishStatus} from '../lib/status'
 
 /* An item's publishing status as a coloured dot and its name: Live (green),
    Staging and Changes in draft (yellow), Unpublished (grey). The same chip in

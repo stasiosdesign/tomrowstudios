@@ -9,6 +9,7 @@ import {DocumentLayout} from './components/DocumentLayout'
 import {PageInput} from './components/PageInput'
 import {PaneTitle} from './components/PaneTitle'
 import {PreviewControls, PreviewHeaderBridge} from './components/PreviewControls'
+import {STAGING_ORIGIN} from './lib/site'
 import {schemaTypes} from './schemaTypes'
 import {PAGES} from './schemaTypes/pages'
 import {structure} from './structure'
@@ -19,9 +20,9 @@ import {theme} from './theme'
 // file), your own dev server from `npm run studio` (.env.development). It opens
 // the site through its draft-mode route with a short-lived secret, so the site
 // renders drafts on the server (src/sanity/draft-mode/), and the click-to-edit
-// layer keeps them live as they are typed (src/sanity/live-preview.ts).
-const previewOrigin = process.env.SANITY_STUDIO_PREVIEW_ORIGIN
-if (!previewOrigin) {
+// layer keeps them live as they are typed (src/sanity/live-preview.ts). The
+// same address the publishing control sends its actions to (lib/site.ts).
+if (!STAGING_ORIGIN) {
   throw new Error('SANITY_STUDIO_PREVIEW_ORIGIN is not set: see studio/.env.production and .env.development')
 }
 
@@ -64,7 +65,7 @@ export default defineConfig({
       // website gets the height
       components: {unstable_header: {component: PreviewHeaderBridge}},
       previewUrl: {
-        initial: previewOrigin,
+        initial: STAGING_ORIGIN,
         previewMode: {enable: '/api/draft-mode/enable'},
       },
       resolve: {

@@ -7,12 +7,18 @@
 // - the workspace layout (below), kept right as the Studio re-renders.
 const FONTS = 'https://use.typekit.net/nqu1vih.css'
 
+/** The Content sidebar's width: a compact column, like the reference's CMS
+    Collections list. The one value for the layout below, the sidebar pane
+    (structure.ts) and studio.css (--tomrow-sidebar-width, set here). */
+export const SIDEBAR_WIDTH = 248
+
 if (typeof document !== 'undefined') {
   if (!document.querySelector(`link[href="${FONTS}"]`)) {
     document.head.append(Object.assign(document.createElement('link'), {rel: 'stylesheet', href: FONTS}))
   }
   const root = document.documentElement
   root.style.setProperty('--black', '#000000')
+  root.style.setProperty('--tomrow-sidebar-width', `${SIDEBAR_WIDTH}px`)
   for (const el of [root, document.body]) el?.style.setProperty('background-color', '#000000')
   watchLayout()
 }
@@ -28,8 +34,6 @@ if (typeof document !== 'undefined') {
    width with priority: the sidebar is one narrow column, a collection's
    list steps aside once an item is open, and the editor takes everything
    else. It runs after every change to the page. */
-const SIDEBAR_WIDTH = 248
-
 function set(el: HTMLElement, styles: Record<string, string>) {
   for (const [property, value] of Object.entries(styles)) {
     if (value === '') {

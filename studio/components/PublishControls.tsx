@@ -1,29 +1,19 @@
 import {ChevronDownIcon} from '@sanity/icons/ChevronDown'
 import {LaunchIcon} from '@sanity/icons/Launch'
-import {Box, Button, Dialog, Flex, Stack, Text} from '@sanity/ui'
+import {Button, Flex} from '@sanity/ui'
 import {Menu, MenuDivider, MenuItem} from '@sanity/ui/menu'
 import {useToast} from '@sanity/ui/toast'
-import {useCallback, useEffect, useMemo, useRef, useState, type ReactNode} from 'react'
+import {useCallback, useEffect, useMemo, useRef, useState} from 'react'
 import {useClient, useEditState, useSchema, useSyncState, useValidationStatus, type SanityDocument} from 'sanity'
 import {styled} from 'styled-components'
-import {
-  logId,
-  PRODUCTION_DATASET,
-  PublishError,
-  publishLive,
-  publishStaging,
-  publishStatus,
-  groupStatus,
-  STATUS_LABEL,
-  unpublish,
-  type PublishLog,
-  type PublishStatus,
-  type UnpublishLog,
-} from '../lib/publish'
-import {PAGES} from '../schemaTypes/pages'
+import {API_VERSION, datasetClients, failText, publishLive, publishStaging, unpublish} from '../lib/publish'
 import {fetchBuildStamp, isPageType, LIVE_ORIGIN, routeFor, STAGING_ORIGIN, type BuildStamp} from '../lib/site'
-import {formatDate} from './format'
+import {groupById, groupStatus, logId, publishStatus, STATUS_LABEL, type PublishLog, type PublishStatus, type UnpublishLog} from '../lib/status'
+import {LISTEN_OPTIONS, watchReads} from '../lib/watch'
+import {PAGES} from '../schemaTypes/pages'
 import {AnimatedMenuButton} from './AnimatedMenuButton'
+import {ConfirmDialog} from './ConfirmDialog'
+import {formatDate} from './format'
 import {isPermissionError, usePermissionGate} from './PermissionDialog'
 import {Chip, StatusChip} from './Status'
 
@@ -32,7 +22,7 @@ import {Chip, StatusChip} from './Status'
    document's status on the left, and a "Publish Live" split button whose menu
    holds the three actions and the links to both sites.
 
-   The status (lib/publish.ts, publishStatus) says where the version in the
+   The status (lib/status.ts, publishStatus) says where the version in the
    editor is published: Live, Staging, Changes in draft or Unpublished. It is
    read from what the two datasets hold, kept current as they change.
 
@@ -57,20 +47,7 @@ import {Chip, StatusChip} from './Status'
 /** The static site: every page's document ID (a singleton's ID is its type) */
 const SITE = PAGES.map((page) => page.type)
 
-const API_VERSION = '2025-02-19'
-
 type Busy = 'staging' | 'live' | 'unpublish' | null
-
-export const failText = (error: unknown): string => {
-  if (error instanceof PublishError) {
-    if (error.details?.missing?.length) return `${error.message} Missing: ${error.details.missing.map((item) => item.title ?? item.id).join(', ')}.`
-    if (error.details?.referrers?.length) return `${error.message} Linked from: ${error.details.referrers.map((item) => item.title ?? item._id).join(', ')}.`
-    return error.message
-  }
-  const err = error as {statusCode?: number; message?: string}
-  if (err?.statusCode === 403) return 'You don’t have permission for that. Ask an administrator of the Sanity project.'
-  return err?.message ?? String(error)
-}
 
 type SiteState = {live: SanityDocument | null; liveLog: PublishLog | null; stagingLog: UnpublishLog | null}
 
@@ -80,32 +57,22 @@ function useSiteState(id: string): SiteState {
   const client = useClient({apiVersion: API_VERSION})
   const [state, setState] = useState<SiteState>({live: null, liveLog: null, stagingLog: null})
   useEffect(() => {
-    const staging = client.withConfig({perspective: 'raw', useCdn: false})
-    const production = staging.withConfig({dataset: PRODUCTION_DATASET})
-    let cancelled = false
+    const {staging, production} = datasetClients(client)
     const params = {id, logId: logId(id)}
-    const load = () =>
-      Promise.all([
-        production.fetch<{live: SanityDocument | null; log: PublishLog | null}>(`{"live": *[_id == $id][0], "log": *[_id == $logId][0]}`, params),
-        staging.fetch<UnpublishLog | null>(`*[_id == $logId][0]`, params),
-      ])
-        .then(([{live, log}, stagingLog]) => !cancelled && setState({live, liveLog: log, stagingLog}))
-        .catch(() => undefined)
-    load()
-    const options = {visibility: 'query' as const, includeResult: false, events: ['mutation' as const]}
-    const subscriptions = [
-      production.listen(`*[_id in [$id, $logId]]`, params, options).subscribe({next: load, error: () => undefined}),
-      staging.listen(`*[_id == $logId]`, params, options).subscribe({next: load, error: () => undefined}),
-    ]
-    return () => {
-      cancelled = true
-      subscriptions.forEach((subscription) => subscription.unsubscribe())
-    }
+    return watchReads({
+      read: () =>
+        Promise.all([
+          production.fetch<{live: SanityDocument | null; log: PublishLog | null}>(`{"live": *[_id == $id][0], "log": *[_id == $logId][0]}`, params),
+          staging.fetch<UnpublishLog | null>(`*[_id == $logId][0]`, params),
+        ]),
+      listeners: [production.listen(`*[_id in [$id, $logId]]`, params, LISTEN_OPTIONS), staging.listen(`*[_id == $logId]`, params, LISTEN_OPTIONS)],
+      onRead: ([{live, log}, stagingLog]) => setState({live, liveLog: log, stagingLog}),
+    })
   }, [client, id])
   return state
 }
 
-// The static site's one status (lib/publish.ts, groupStatus), from every
+// The static site's one status (lib/status.ts, groupStatus), from every
 // page's own, and each page's for the tooltip; kept current
 type SiteGroup = {status: PublishStatus | null; pages: {id: string; status: PublishStatus | null}[]}
 function useSiteGroup(enabled: boolean): SiteGroup | null {
@@ -113,66 +80,39 @@ function useSiteGroup(enabled: boolean): SiteGroup | null {
   const [group, setGroup] = useState<SiteGroup | null>(null)
   useEffect(() => {
     if (!enabled) return undefined
-    const staging = client.withConfig({perspective: 'raw', useCdn: false})
-    const production = staging.withConfig({dataset: PRODUCTION_DATASET})
+    const {staging, production} = datasetClients(client)
     const params = {ids: SITE, drafts: SITE.map((id) => `drafts.${id}`), logs: SITE.map(logId)}
     const query = `*[_id in $ids || _id in $drafts || _id in $logs]`
-    let cancelled = false
-    let timer: ReturnType<typeof setTimeout> | undefined
-    const load = () =>
-      Promise.all([staging.fetch<SanityDocument[]>(query, params), production.fetch<SanityDocument[]>(query, params)])
-        .then(([onStaging, onLive]) => {
-          if (cancelled) return
-          const find = <T,>(docs: SanityDocument[], id: string) => (docs.find((doc) => doc._id === id) ?? null) as T | null
-          const pages = SITE.map((id) => ({
-            id,
-            status: publishStatus({
-              draft: find<SanityDocument>(onStaging, `drafts.${id}`),
-              published: find<SanityDocument>(onStaging, id),
-              live: find<SanityDocument>(onLive, id),
-              liveLog: find<PublishLog>(onLive, logId(id)),
-              stagingLog: find<UnpublishLog>(onStaging, logId(id)),
-            }),
-          }))
-          setGroup({status: groupStatus(pages.map((page) => page.status)), pages})
-        })
-        .catch(() => undefined)
-    load()
-    const onChange = {
-      next: () => {
-        clearTimeout(timer)
-        timer = setTimeout(load, 300)
+    return watchReads({
+      read: () => Promise.all([staging.fetch<SanityDocument[]>(query, params), production.fetch<SanityDocument[]>(query, params)]),
+      listeners: [staging, production].map((source) => source.listen(query, params, LISTEN_OPTIONS)),
+      onRead: ([onStaging, onLive]) => {
+        const byId = groupById(onStaging, onLive)
+        const pages = SITE.map((id) => ({id, status: publishStatus(byId.get(id) ?? {})}))
+        setGroup({status: groupStatus(pages.map((page) => page.status)), pages})
       },
-      error: () => undefined,
-    }
-    const options = {visibility: 'query' as const, includeResult: false, events: ['mutation' as const]}
-    const subscriptions = [staging, production].map((source) => source.listen(query, params, options).subscribe(onChange))
-    return () => {
-      cancelled = true
-      clearTimeout(timer)
-      subscriptions.forEach((subscription) => subscription.unsubscribe())
-    }
+    })
   }, [client, enabled])
   return group
 }
 
-// The live site's build stamp, asked for again every 15 seconds while a rebuild is awaited
-function useBuildStamp(waiting: boolean): BuildStamp | null | undefined {
+// The live site's build stamp: read when the live copy changes, then every 15
+// seconds while the site is older than it (a rebuild is awaited) or the stamp
+// couldn't be read; not at all for a document that isn't live
+function useBuildStamp(liveUpdatedAt: string | undefined): BuildStamp | null | undefined {
   const [stamp, setStamp] = useState<BuildStamp | null | undefined>(undefined)
+  const again = !!liveUpdatedAt && (stamp === null || (!!stamp && stamp.builtAt < liveUpdatedAt))
   useEffect(() => {
-    if (!LIVE_ORIGIN) {
-      setStamp(null)
-      return undefined
-    }
+    if (!liveUpdatedAt || !LIVE_ORIGIN) return undefined
     let cancelled = false
     const load = () => fetchBuildStamp(LIVE_ORIGIN).then((result) => !cancelled && setStamp(result))
     load()
-    const timer = waiting ? setInterval(load, 15_000) : undefined
+    const timer = again ? setInterval(load, 15_000) : undefined
     return () => {
       cancelled = true
-      if (timer) clearInterval(timer)
+      clearInterval(timer)
     }
-  }, [waiting])
+  }, [liveUpdatedAt, again])
   return stamp
 }
 
@@ -202,7 +142,7 @@ export function PublishControls({documentId, documentType}: {documentId: string;
   const status = isSite ? (siteGroup?.status ?? null) : publishStatus({draft, published, live, liveLog, stagingLog})
 
   const liveUpdatedAt = live?._updatedAt
-  const buildStamp = useBuildStamp(!!liveUpdatedAt)
+  const buildStamp = useBuildStamp(liveUpdatedAt)
   const siteBehind = !!liveUpdatedAt && !!buildStamp && buildStamp.builtAt < liveUpdatedAt
   const waitedLong = siteBehind && Date.now() - Date.parse(liveUpdatedAt) > 5 * 60_000
 
@@ -386,35 +326,3 @@ const Split = styled.div`
     box-shadow: inset 1px 0 0 rgb(0 0 0 / 0.25);
   }
 `
-
-/* One line, two buttons. The action runs once: the buttons lock while it does. */
-export function ConfirmDialog({id, title, action, tone, onCancel, onConfirm, children}: {id: string; title: string; action: string; tone?: 'critical'; onCancel: () => void; onConfirm: () => void; children: ReactNode}) {
-  const [submitting, setSubmitting] = useState(false)
-  const go = () => {
-    if (submitting) return
-    setSubmitting(true)
-    onConfirm()
-  }
-  return (
-    <Dialog
-      id={id}
-      header={title}
-      width={0}
-      onClose={onCancel}
-      footer={
-        <Box padding={3}>
-          <Flex gap={2} justify="flex-end">
-            <Button text="Cancel" mode="ghost" onClick={onCancel} disabled={submitting} />
-            <Button text={action} tone={tone ?? 'default'} className={tone ? undefined : 'tomrow-cta'} onClick={go} disabled={submitting} autoFocus />
-          </Flex>
-        </Box>
-      }
-    >
-      <Box padding={4}>
-        <Stack gap={3}>
-          <Text size={1}>{children}</Text>
-        </Stack>
-      </Box>
-    </Dialog>
-  )
-}

@@ -11,6 +11,7 @@
     "build": "astro build",
     "preview": "astro preview",
     "check": "astro check && npm --prefix studio run check",
+    "test": "npm --prefix studio test",
     "studio": "npm --prefix studio run dev",
     "studio:deploy": "npm --prefix studio run deploy",
     "typegen": "npm --prefix studio run typegen",
