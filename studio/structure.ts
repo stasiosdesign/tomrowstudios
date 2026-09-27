@@ -1,9 +1,4 @@
 import type {StructureBuilder, StructureResolver} from 'sanity/structure'
-import {BasketIcon} from '@sanity/icons/Basket'
-import {DocumentIcon} from '@sanity/icons/Document'
-import {ProjectsIcon} from '@sanity/icons/Projects'
-import {UsersIcon} from '@sanity/icons/Users'
-import type {ComponentType} from 'react'
 import {CollectionPane, type CollectionOptions} from './components/CollectionPane'
 import {ContentSidebar, type SidebarGroup} from './components/ContentSidebar'
 import {SIDEBAR_WIDTH} from './page'
@@ -25,9 +20,6 @@ import {schemaTypes} from './schemaTypes'
    sidebar takes the pages'. Clients are edited from the Home page's logo
    wall and have no place in the sidebar. */
 
-const iconOf = (type: string): ComponentType | undefined =>
-  (schemaTypes.find((schemaType) => schemaType.name === type) as {icon?: ComponentType} | undefined)?.icon
-
 /** The pages, in the sidebar's order and with its names */
 const PAGE_ITEMS: {type: string; title: string}[] = [
   {type: 'homePage', title: 'Home'},
@@ -40,14 +32,13 @@ const PAGE_ITEMS: {type: string; title: string}[] = [
 ].filter((item) => PAGES.some((page) => page.type === item.type))
 
 /** The collections, in the sidebar's order */
-export const COLLECTIONS: (CollectionOptions & {icon: ComponentType})[] = [
+export const COLLECTIONS: CollectionOptions[] = [
   {
     type: 'project',
     title: 'Projects',
     singular: 'project',
     nameField: 'title',
     orderField: 'sortOrder',
-    icon: ProjectsIcon,
   },
   {
     type: 'shopItem',
@@ -55,7 +46,6 @@ export const COLLECTIONS: (CollectionOptions & {icon: ComponentType})[] = [
     singular: 'item',
     nameField: 'title',
     orderField: 'sortOrder',
-    icon: BasketIcon,
   },
   {
     type: 'partner',
@@ -63,7 +53,6 @@ export const COLLECTIONS: (CollectionOptions & {icon: ComponentType})[] = [
     singular: 'partner',
     nameField: 'name',
     orderField: 'sortOrder',
-    icon: UsersIcon,
   },
 ].filter((collection) => schemaTypes.some((schemaType) => schemaType.name === collection.type))
 
@@ -71,7 +60,7 @@ const collectionId = (type: string) => `collection-${type}`
 
 // No pane title: Sanity then leaves out the pane's own header, and the
 // collection names itself once, with its count (CollectionPane)
-const collectionPane = (S: StructureBuilder, {icon: _icon, ...options}: (typeof COLLECTIONS)[number]) =>
+const collectionPane = (S: StructureBuilder, options: CollectionOptions) =>
   S.component(CollectionPane)
     .id(collectionId(options.type))
     .options(options)
@@ -83,8 +72,8 @@ const pagePane = (S: StructureBuilder, page: {type: string; title: string}) =>
 
 export const structure: StructureResolver = (S) => {
   const groups: SidebarGroup[] = [
-    {id: 'pages', title: 'Page Editor', items: PAGE_ITEMS.map((page) => ({id: page.type, title: page.title, icon: iconOf(page.type) ?? DocumentIcon}))},
-    {id: 'collections', title: 'CMS Collections', items: COLLECTIONS.map((collection) => ({id: collectionId(collection.type), title: collection.title, icon: collection.icon}))},
+    {id: 'pages', title: 'Page Editor', items: PAGE_ITEMS.map((page) => ({id: page.type, title: page.title}))},
+    {id: 'collections', title: 'CMS Collections', items: COLLECTIONS.map((collection) => ({id: collectionId(collection.type), title: collection.title}))},
   ]
   // A component pane's width options (minWidth, maxWidth) come from its spec:
   // the sidebar keeps to one narrow column, whatever is open beside it

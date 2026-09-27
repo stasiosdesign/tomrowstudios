@@ -1,6 +1,6 @@
 import {ChevronRightIcon} from '@sanity/icons/ChevronRight'
 import {Box, Text} from '@sanity/ui'
-import {createElement, useCallback, useEffect, useState, type ComponentType} from 'react'
+import {useCallback, useEffect, useState} from 'react'
 import {useRouter} from 'sanity/router'
 import {usePaneRouter} from 'sanity/structure'
 import {css, styled} from 'styled-components'
@@ -11,7 +11,7 @@ import {tabStates} from './tab'
    as links. The root pane of the structure (structure.ts), so each item
    opens as this pane's child. */
 
-export type SidebarItem = {id: string; title: string; icon?: ComponentType}
+export type SidebarItem = {id: string; title: string}
 export type SidebarGroup = {id: string; title: string; items: SidebarItem[]}
 export type SidebarOptions = {groups: SidebarGroup[]}
 
@@ -77,7 +77,7 @@ export function ContentSidebar(props: {options?: Record<string, unknown>; childI
                   return (
                     <li key={item.id}>
                       <ItemLink as={ChildLink} childId={item.id} aria-current={selected ? 'page' : undefined}>
-                        <Text size={1}>{item.icon && createElement(item.icon)}</Text>
+                        <Dot />
                         <Text size={1} weight={selected ? 'medium' : 'regular'} textOverflow="ellipsis">
                           {item.title}
                         </Text>
@@ -100,7 +100,8 @@ export function ContentSidebar(props: {options?: Record<string, unknown>; childI
    by the pane's header, as tall as the publishing bar. Two columns for every
    row: the chevrons and the icons in the first, the group names and the page
    and collection names in the second. The pages and collections are tabs
-   (tab.ts): the open one white on the grey highlight, the others dimmed. */
+   (tab.ts): the open one white on the grey highlight, the others dimmed;
+   each is marked with a small white dot. */
 // role="list" stays on it: without list styling, Safari no longer announces a list
 const List = styled.ul`
   list-style: none;
@@ -148,6 +149,16 @@ const GroupTitle = styled.span`
   [data-holds-open] > & {
     color: #ffffff;
   }
+`
+
+// Centred under the chevrons, whose glyphs sit 4.5px into the first column
+// (Sanity pulls icons left of their text box)
+const Dot = styled.span`
+  width: 5px;
+  height: 5px;
+  margin-left: 2px;
+  border-radius: 50%;
+  background: #ffffff;
 `
 
 const ItemLink = styled.a`
