@@ -182,15 +182,13 @@ The Studio has one grid (`studio.css`): under the top bar every pane starts
 with a band one bar tall (`--tomrow-bar-height`: the sidebar's header, a
 collection's header, the publishing bar), and every list under it is ruled
 in rows one row tall (`--tomrow-row-height`, the hairline included): the
-sidebar (an open group ruled only at its end), a collection's table, its
-Select bar and its compact list, a page's sections and a CMS item's two
-header rows. The page editor's title row is two rows tall. So the rules of
-panes side by side meet, and everything starts on the 14px inset. Tabs and
-view choices share one look (`components/tab.ts`): the chosen one white on
-the grey highlight, the others dimmed, lighter under the pointer: a
-collection's compact list and the Visual editor's views. The sidebar's pages
-and collections take its text alone, as plain names on a tree line whose
-branch is white for the open one.
+sidebar, a collection's table, its Select bar and its compact list, a page's
+sections and a CMS item's two header rows. The page editor's title row is two
+rows tall. So the rules of panes side by side meet, and everything starts on
+the 14px inset. Tabs and view choices share one look (`components/tab.ts`):
+the chosen one white on the grey highlight, the others dimmed, lighter under
+the pointer: the sidebar's pages and collections, a collection's compact
+list and the Visual editor's views.
 A collection's image columns show small cropped thumbnails. The theme (`theme.ts`) keeps
 text and icons white on hover, press and selection.
 

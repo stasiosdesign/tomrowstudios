@@ -1,10 +1,9 @@
 import {css} from 'styled-components'
 
 /* Tabs and view choices: one look for everything that chooses what the
-   Studio shows. A collection's compact list and the Visual editor's views
-   use it as it is; the Content sidebar's pages and collections without the
-   fills (ContentSidebar); the top bar's Content / Visual editor switch
-   (ToolToggle) keeps its chosen side white.
+   Studio shows. The Content sidebar's pages and collections, a collection's
+   compact list and the Visual editor's views use it as it is; the top bar's
+   Content / Visual editor switch (ToolToggle) keeps its chosen side white.
    A tab is chosen when it carries aria-current, aria-selected="true" or
    data-selected.
 
