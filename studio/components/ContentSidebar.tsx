@@ -4,7 +4,7 @@ import {useCallback, useEffect, useState} from 'react'
 import {useRouter} from 'sanity/router'
 import {usePaneRouter} from 'sanity/structure'
 import {css, styled} from 'styled-components'
-import {tabStates} from './tab'
+import {TAB_MOTION, tabStates} from './tab'
 
 /* The Content sidebar: two accordion groups, each opened and closed on its
    own (and remembered in this browser), with the pages and the collections
@@ -98,8 +98,11 @@ export function ContentSidebar(props: {options?: Record<string, unknown>; childI
    collection tables beside them, so their rules meet: the first ruled off
    by the pane's header, as tall as the publishing bar. Two columns for every
    row: the chevrons and the tree in the first, the group names and the page
-   and collection names in the second. The pages and collections are tabs
-   (tab.ts): the open one white on the grey highlight, the others dimmed. */
+   and collection names in the second. An open group is one block: its
+   heading, then its pages or collections as plain names on the tree, their
+   rows keeping the grid's height but not its rules, ruled off once at the
+   end. The names keep the tabs' text states (tab.ts) without their fills:
+   the open one white, the others dimmed, lighter under the pointer. */
 // role="list" stays on it: without list styling, Safari no longer announces a list
 const List = styled.ul`
   list-style: none;
@@ -109,10 +112,11 @@ const List = styled.ul`
   /* The tree: a hairline trunk down from the group's chevron (its glyph
      centred 4.5px into the first column; Sanity pulls icons left of their
      text box), a short curved branch to each name, the last one ending it.
-     In the rules' colour, opaque, so where trunk and branch meet they don't
-     darken; drawn over the rows' highlight. */
+     Dimmed like the names beside it; the open name's branch white, like the
+     name. Opaque, so where trunk and branch meet they don't darken. */
   & > li {
     --branch-radius: 6px;
+    --tree-line: #4d4d4d;
     position: relative;
   }
 
@@ -122,15 +126,20 @@ const List = styled.ul`
     position: absolute;
     left: 18px;
     box-sizing: border-box;
-    border: 0 solid var(--card-border-color);
+    border: 0 solid var(--tree-line);
     pointer-events: none;
   }
 
-  /* The trunk: through every row, and in the last down to its branch */
+  /* The trunk: from just under the chevron (the heading's rule is gone once
+     the group is open) through every row, and in the last down to its branch */
   & > li::before {
     top: 0;
     bottom: 0;
     border-left-width: 1px;
+  }
+
+  & > li:first-child::before {
+    top: -12px;
   }
 
   & > li:last-child::before {
@@ -147,6 +156,17 @@ const List = styled.ul`
     border-left-width: 1px;
     border-bottom-width: 1px;
     border-bottom-left-radius: var(--branch-radius);
+    transition: border-color ${TAB_MOTION};
+  }
+
+  & > li:has(> [aria-current='page'])::after {
+    border-color: #ffffff;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    & > li::after {
+      transition: none;
+    }
   }
 `
 
@@ -175,6 +195,11 @@ const GroupButton = styled.button`
   &:hover {
     background: var(--tomrow-hover);
   }
+
+  /* Open, the group's rule moves to the end of its names (ItemLink) */
+  &[aria-expanded='true'] {
+    border-bottom-color: transparent;
+  }
 `
 
 /* The group names, "Page Editor" and "CMS Collections", as written: the
@@ -196,6 +221,15 @@ const ItemLink = styled.a`
   ${row}
   ${tabStates}
   text-decoration: none;
+  /* Plain names: no fill under the pointer or when open, and no rule
+     between them; the last one's rule closes the group */
+  --tomrow-hover: transparent;
+  --tomrow-selected: transparent;
+  border-bottom-color: transparent;
+
+  li:last-child > & {
+    border-bottom-color: var(--card-border-color);
+  }
 
   /* The name in the second column; the first is the tree's */
   & > * {
