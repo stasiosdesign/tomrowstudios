@@ -77,7 +77,6 @@ export function ContentSidebar(props: {options?: Record<string, unknown>; childI
                   return (
                     <li key={item.id}>
                       <ItemLink as={ChildLink} childId={item.id} aria-current={selected ? 'page' : undefined}>
-                        <Dot />
                         <Text size={1} weight={selected ? 'medium' : 'regular'} textOverflow="ellipsis">
                           {item.title}
                         </Text>
@@ -98,15 +97,57 @@ export function ContentSidebar(props: {options?: Record<string, unknown>; childI
    hairline included, studio.css), like the page editor's sections and the
    collection tables beside them, so their rules meet: the first ruled off
    by the pane's header, as tall as the publishing bar. Two columns for every
-   row: the chevrons and the icons in the first, the group names and the page
+   row: the chevrons and the tree in the first, the group names and the page
    and collection names in the second. The pages and collections are tabs
-   (tab.ts): the open one white on the grey highlight, the others dimmed;
-   each is marked with a small white dot. */
+   (tab.ts): the open one white on the grey highlight, the others dimmed. */
 // role="list" stays on it: without list styling, Safari no longer announces a list
 const List = styled.ul`
   list-style: none;
   margin: 0;
   padding: 0;
+
+  /* The tree: a hairline trunk down from the group's chevron (its glyph
+     centred 4.5px into the first column; Sanity pulls icons left of their
+     text box), a short curved branch to each name, the last one ending it.
+     In the rules' colour, opaque, so where trunk and branch meet they don't
+     darken; drawn over the rows' highlight. */
+  & > li {
+    --branch-radius: 6px;
+    position: relative;
+  }
+
+  & > li::before,
+  & > li::after {
+    content: '';
+    position: absolute;
+    left: 18px;
+    box-sizing: border-box;
+    border: 0 solid var(--card-border-color);
+    pointer-events: none;
+  }
+
+  /* The trunk: through every row, and in the last down to its branch */
+  & > li::before {
+    top: 0;
+    bottom: 0;
+    border-left-width: 1px;
+  }
+
+  & > li:last-child::before {
+    bottom: auto;
+    height: calc(50% - 0.5px - var(--branch-radius));
+  }
+
+  /* The branch: curving off level with the name's middle (the row's, above
+     its hairline) and stopping at the first column's edge, short of the name */
+  & > li::after {
+    top: calc(50% - 0.5px - var(--branch-radius));
+    width: 17px;
+    height: var(--branch-radius);
+    border-left-width: 1px;
+    border-bottom-width: 1px;
+    border-bottom-left-radius: var(--branch-radius);
+  }
 `
 
 const row = css`
@@ -151,18 +192,13 @@ const GroupTitle = styled.span`
   }
 `
 
-// Centred under the chevrons, whose glyphs sit 4.5px into the first column
-// (Sanity pulls icons left of their text box)
-const Dot = styled.span`
-  width: 5px;
-  height: 5px;
-  margin-left: 2px;
-  border-radius: 50%;
-  background: #ffffff;
-`
-
 const ItemLink = styled.a`
   ${row}
   ${tabStates}
   text-decoration: none;
+
+  /* The name in the second column; the first is the tree's */
+  & > * {
+    grid-column: 2;
+  }
 `
