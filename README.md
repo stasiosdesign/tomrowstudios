@@ -369,8 +369,7 @@ vercel.ts                  Vercel: build, clean URLs, redirects, staging's noind
 2. **Content** (the first tab) has the documents as plain forms, in two groups;
    the **Visual editor** shows staging with your drafts, each page beside its
    form. The Content sidebar is one narrow column and opens on the Home page;
-   a group's name opens its first item (and folds the group once one of its
-   items is open); the form fills the rest of the window
+   the form fills the rest of the window
    (`studio/structure.ts`, `studio/components/ContentSidebar.tsx`):
    - **Page editor**: Home, Influence, Architectural, Shop, Partner, Privacy
      policy and Terms of use, one document each with that page's editable
