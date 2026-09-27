@@ -17,11 +17,13 @@ import {PublishControls} from './PublishControls'
    The pane is marked with the tool it is in and, for a static page, as a
    page, so the rules below can shape the header row for each:
 
-   - CMS items in Content keep Sanity's header as it is (less Favorites).
-   - The page editor (a static page in Content): one row, the page's large
-     title (PaneTitle) opposite Show more; no smaller label row, no title in
-     the form, no focus mode, no presence avatar, no Copy. The form fills the
-     pane, its sections full-width rows like a collection's table.
+   - Every document in Content: one header row, two grid rows tall, the
+     document's large title (PaneTitle: a page's name, a CMS item's current
+     title) beside its actions; no smaller label row, no title in the form
+     (its Title field stays), so it is named once.
+   - The page editor (a static page in Content), besides: no focus mode, no
+     presence avatar, no Copy. The form fills the pane, its sections
+     full-width rows like a collection's table.
    - The Visual editor: the header row holds the preview's Edit switch and
      phone view (PreviewControls) and Show more; the smaller
      label row goes, so the form's title names the document once.
@@ -107,13 +109,11 @@ const Root = styled(Flex)`
     display: none;
   }
 
-  /* The header rows on the Studio's grid (--tomrow-row-height, its hairline
+  /* The header row on the Studio's grid (--tomrow-row-height, its hairline
      included, studio.css), so a document's rules meet those of the list
-     beside it: the row with the document's actions (the Visual editor's Edit
-     switch and views there), and a CMS item's row with its name, one grid
-     row each. The page editor's title row is two (below). */
-  ${HEADER_ROW},
-  &:not([data-tomrow-page]) [data-testid='pane-header'] > [data-ui='Card'] {
+     beside it: one grid row in the Visual editor (its Edit switch and views),
+     two where it holds the title (below) */
+  ${HEADER_ROW} {
     box-sizing: border-box;
     display: flex;
     flex-direction: column;
@@ -126,17 +126,24 @@ const Root = styled(Flex)`
     }
   }
 
-  /* The page editor: the header row is the title row */
-  &[data-tomrow-page][data-tomrow-tool='structure'] {
-    [data-testid='pane-header'],
-    [data-testid='document-level-presence'],
-    [data-testid^='focus-pane-button'],
+  /* Content: the header row is the title row, for a static page and a CMS
+     item alike */
+  &[data-tomrow-tool='structure'] {
     :has(> [data-testid='document-perspective-list']) {
       display: none;
     }
 
+    /* Sanity's smaller label row repeats the title, so it goes; on a narrow
+       screen it also holds the back arrow, the way back to the list, so there
+       it stays with only its title hidden */
+    [data-testid='pane-header']:not(:has(a[data-ui='Button'] [data-sanity-icon='arrow-left'])),
+    [data-testid='pane-header'] [data-ui='Card']:has(> [data-ui='Flex'] > [data-ui='Text']) {
+      display: none;
+    }
+
     /* The title row is two grid rows tall: its rule meets the one under the
-       sidebar's second row, and every section below meets a sidebar row */
+       second row of the list beside it (the sidebar, a collection's compact
+       list), and a page's sections each meet a row of the sidebar */
     ${HEADER_ROW} {
       min-height: calc(var(--tomrow-row-height) * 2);
     }
@@ -149,7 +156,8 @@ const Root = styled(Flex)`
       flex: 1 1 auto;
       min-width: 0;
       padding-left: 14px;
-      /* Show more's dots centred over the sections' chevrons */
+      /* The last action (Show more; a CMS item's close) centred over the
+         chevrons of a page's sections */
       padding-right: 2px;
 
       & > [data-ui='Flex'] {
@@ -157,8 +165,23 @@ const Root = styled(Flex)`
       }
     }
 
-    /* The form's own title: the header row names the page */
+    /* A CMS item's last action (close) in the same place as a page's (Show
+       more): under the publishing button's edge */
+    &:not([data-tomrow-page]) [data-ui='Box']:has(> [data-ui='Flex'] > [data-tomrow-pane-title]) {
+      padding-right: 6px;
+    }
+
+    /* The form's own title: the header row names the document (the Title
+       field that edits it stays in the form) */
     :has(> [data-testid='document-panel-document-title']) {
+      display: none;
+    }
+  }
+
+  /* The page editor, besides */
+  &[data-tomrow-page][data-tomrow-tool='structure'] {
+    [data-testid='document-level-presence'],
+    [data-testid^='focus-pane-button'] {
       display: none;
     }
 

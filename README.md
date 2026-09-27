@@ -163,7 +163,10 @@ document header's control slot); switching views only resizes the frame.
 Collections name themselves once, as `Projects (5)`, in the same heading as a
 static page's title (`PaneHeading`), with a compact search, an icon-only
 Columns button and a white New button; an opened item's list is headed
-"← Projects" and the item has no Comments. Page sections open and close with
+"← Projects" and the item has no Comments. An opened item is named once, in
+its header row beside its actions, as large as a page's title and kept to
+its current title (`PaneTitle`); its Title field stays in the form (on a
+phone Sanity's back arrow keeps its own row). Page sections open and close with
 a short height transition (`Collapse`), menus with Sanity UI's popover
 motion, both off for anyone who prefers reduced motion. The top bar has no New document, search, Tasks, Help or trial
 countdown, and Favorites is hidden throughout. Content and the Visual editor
