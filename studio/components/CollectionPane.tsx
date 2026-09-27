@@ -19,9 +19,10 @@ import {LISTEN_OPTIONS, watchReads} from '../lib/watch'
 import {useAnimatedOpen} from './AnimatedMenuButton'
 import {ConfirmDialog} from './ConfirmDialog'
 import {columnsFor, isImageType, renderValue, textOf, type Column} from './format'
-import {PANE_HEADING_PADDING_Y, PaneHeading} from './PaneHeading'
+import {PaneHeading} from './PaneHeading'
 import {isPermissionError, usePermissionGate, type RestrictedAction} from './PermissionDialog'
 import {StatusChip} from './Status'
+import {tabStates} from './tab'
 
 /* A collection: every document of one type as a table, one row per item,
    with its status (always shown) and the columns the editor chooses (none at
@@ -288,7 +289,7 @@ export function CollectionPane(props: {options?: Record<string, unknown>; childI
 
   return (
     <Flex direction="column" height="fill" data-tomrow-collection={compact ? 'compact' : 'table'}>
-      <Card borderBottom style={compact ? COMPACT_HEADER : {flexShrink: 0, padding: `${PANE_HEADING_PADDING_Y}px 14px`}}>
+      <Card borderBottom style={compact ? COMPACT_HEADER : TABLE_HEADER}>
         <Flex align="center" gap={2} wrap="wrap">
           {compact ? (
             <Button icon={ArrowLeftIcon} mode="bleed" text={title} onClick={showAll} aria-label={`Back to all ${lowerTitle}`} />
@@ -341,7 +342,7 @@ export function CollectionPane(props: {options?: Record<string, unknown>; childI
       </Card>
 
       {!compact && selecting && (
-        <Card borderBottom style={{flexShrink: 0, padding: '8px 14px'}}>
+        <Card borderBottom style={SELECT_BAR}>
           <Flex align="center" gap={2} wrap="wrap">
             <Box flex={1}>
               <Text size={1} muted={pickedIds.length === 0}>
@@ -493,8 +494,10 @@ const Table = styled.table`
 
   th,
   td {
+    box-sizing: border-box;
+    height: var(--tomrow-row-height);
     text-align: left;
-    padding: 12px 14px;
+    padding: 0 14px;
     border-bottom: 1px solid var(--card-border-color);
     white-space: nowrap;
     max-width: 320px;
@@ -663,35 +666,38 @@ function ItemRow({
   )
 }
 
-/* The compact list lines up with the Content sidebar beside it: its header
-   is as tall as the sidebar's (--tomrow-bar-height, studio.css; the back
-   button's own padding puts its arrow on the 14px inset) and its rows are the
-   sidebar's 43px rows (ContentSidebar), so the two lists share their rules */
-const COMPACT_HEADER: CSSProperties = {
+/* The pane's rows on the Studio's grid (studio.css): its header one bar tall
+   like the Content sidebar's and the publishing bar (so the table's rows meet
+   the sidebar's), the Select bar one row, the table's rows and the compact
+   list's the sidebar's rows. The compact list's back button's own padding
+   puts its arrow on the 14px inset. */
+const header: CSSProperties = {
   flexShrink: 0,
   boxSizing: 'border-box',
   display: 'flex',
   flexDirection: 'column',
   justifyContent: 'center',
   minHeight: 'var(--tomrow-bar-height)',
-  padding: '0 14px 0 6px',
 }
 
-const CompactLink = styled.a<{$selected: boolean}>`
+// With room above and below for when a narrow pane wraps the controls
+const TABLE_HEADER: CSSProperties = {...header, padding: '10px 14px'}
+
+const SELECT_BAR: CSSProperties = {...header, minHeight: 'var(--tomrow-row-height)', padding: '5px 14px'}
+
+const COMPACT_HEADER: CSSProperties = {...header, padding: '10px 14px 10px 6px'}
+
+// The items are tabs (tab.ts): the open one white on the grey highlight
+const CompactLink = styled.a`
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   align-items: center;
   box-sizing: border-box;
-  min-height: 43px;
+  min-height: var(--tomrow-row-height);
   padding: 0 14px;
   border-bottom: 1px solid var(--card-border-color);
-  color: inherit;
   text-decoration: none;
-  background: ${({$selected}) => ($selected ? 'var(--tomrow-selected)' : 'transparent')};
-
-  &:hover {
-    background: ${({$selected}) => ($selected ? 'var(--tomrow-selected)' : 'var(--tomrow-hover)')};
-  }
+  ${tabStates}
 
   &:focus-visible {
     outline: 2px solid var(--card-focus-ring-color);
@@ -701,7 +707,7 @@ const CompactLink = styled.a<{$selected: boolean}>`
 
 function CompactItem({row, selected, ChildLink}: {row: Row; selected: boolean; ChildLink: ChildLinkComponent}) {
   return (
-    <CompactLink as={ChildLink} childId={row.id} childParameters={{type: row.doc._type}} $selected={selected} aria-current={selected ? 'page' : undefined}>
+    <CompactLink as={ChildLink} childId={row.id} childParameters={{type: row.doc._type}} aria-current={selected ? 'page' : undefined}>
       <Text size={1} weight={selected ? 'medium' : 'regular'} textOverflow="ellipsis">
         {row.title}
       </Text>

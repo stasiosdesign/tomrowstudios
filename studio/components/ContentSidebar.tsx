@@ -4,6 +4,7 @@ import {createElement, useCallback, useEffect, useState, type ComponentType} fro
 import {useRouter} from 'sanity/router'
 import {usePaneRouter} from 'sanity/structure'
 import {css, styled} from 'styled-components'
+import {tabStates} from './tab'
 
 /* The Content sidebar: two accordion groups, each opened and closed on its
    own (and remembered in this browser), with the pages and the collections
@@ -75,10 +76,8 @@ export function ContentSidebar(props: {options?: Record<string, unknown>; childI
                   const selected = props.childItemId === item.id
                   return (
                     <li key={item.id}>
-                      <ItemLink as={ChildLink} childId={item.id} $selected={selected} aria-current={selected ? 'page' : undefined}>
-                        <Text size={1} muted={!selected}>
-                          {item.icon && createElement(item.icon)}
-                        </Text>
+                      <ItemLink as={ChildLink} childId={item.id} aria-current={selected ? 'page' : undefined}>
+                        <Text size={1}>{item.icon && createElement(item.icon)}</Text>
                         <Text size={1} weight={selected ? 'medium' : 'regular'} textOverflow="ellipsis">
                           {item.title}
                         </Text>
@@ -95,11 +94,13 @@ export function ContentSidebar(props: {options?: Record<string, unknown>; childI
   )
 }
 
-/* Ruled full-width rows like the page editor's sections and the collection
-   tables: the same 43px height, 14px inset and hairline, the first ruled off
-   by the pane's header above (studio.css). Two columns for every row: the
-   chevrons and the icons in the first, the group names and the page and
-   collection names in the second. */
+/* Ruled full-width rows on the Studio's grid (--tomrow-row-height, its
+   hairline included, studio.css), like the page editor's sections and the
+   collection tables beside them, so their rules meet: the first ruled off
+   by the pane's header, as tall as the publishing bar. Two columns for every
+   row: the chevrons and the icons in the first, the group names and the page
+   and collection names in the second. The pages and collections are tabs
+   (tab.ts): the open one white on the grey highlight, the others dimmed. */
 // role="list" stays on it: without list styling, Safari no longer announces a list
 const List = styled.ul`
   list-style: none;
@@ -114,7 +115,7 @@ const row = css`
   align-items: center;
   box-sizing: border-box;
   width: 100%;
-  min-height: 43px;
+  min-height: var(--tomrow-row-height);
   padding: 0 14px;
   border-bottom: 1px solid var(--card-border-color);
   cursor: pointer;
@@ -149,13 +150,8 @@ const GroupTitle = styled.span`
   }
 `
 
-const ItemLink = styled.a<{$selected: boolean}>`
+const ItemLink = styled.a`
   ${row}
-  color: inherit;
+  ${tabStates}
   text-decoration: none;
-  background: ${({$selected}) => ($selected ? 'var(--tomrow-selected)' : 'transparent')};
-
-  &:hover {
-    background: ${({$selected}) => ($selected ? 'var(--tomrow-selected)' : 'var(--tomrow-hover)')};
-  }
 `

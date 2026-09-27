@@ -54,6 +54,9 @@ export function DocumentLayout(props: DocumentLayoutProps) {
   )
 }
 
+/** A document's header row, with its actions: found by the perspective chips it also holds (hidden) */
+const HEADER_ROW = `[data-ui='Card']:has(> [data-ui='Flex'] > [data-ui='Card'] > [data-testid='document-perspective-list'])`
+
 /* This element sits directly in Sanity's row of panes, beside the sidebar:
    it takes all the width left, or the editor stays as narrow as its content,
    and the row's full height (stretched, not 100%: on a phone the row's height
@@ -104,6 +107,25 @@ const Root = styled(Flex)`
     display: none;
   }
 
+  /* The header rows on the Studio's grid (--tomrow-row-height, its hairline
+     included, studio.css), so a document's rules meet those of the list
+     beside it: the row with the document's actions (the Visual editor's Edit
+     switch and views there), and a CMS item's row with its name, one grid
+     row each. The page editor's title row is two (below). */
+  ${HEADER_ROW},
+  &:not([data-tomrow-page]) [data-testid='pane-header'] > [data-ui='Card'] {
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-height: var(--tomrow-row-height);
+
+    & > [data-ui='Flex'] {
+      padding-top: 0;
+      padding-bottom: 0;
+    }
+  }
+
   /* The page editor: the header row is the title row */
   &[data-tomrow-page][data-tomrow-tool='structure'] {
     [data-testid='pane-header'],
@@ -113,8 +135,12 @@ const Root = styled(Flex)`
       display: none;
     }
 
-    /* The title's own padding (PaneTitle) sets the row's height, the same as
-       a collection's header, so the row adds none of its own */
+    /* The title row is two grid rows tall: its rule meets the one under the
+       sidebar's second row, and every section below meets a sidebar row */
+    ${HEADER_ROW} {
+      min-height: calc(var(--tomrow-row-height) * 2);
+    }
+
     [data-ui='Flex']:has(> [data-ui='Box'] > [data-ui='Flex'] > [data-tomrow-pane-title]) {
       padding-block: 0;
     }
@@ -123,7 +149,8 @@ const Root = styled(Flex)`
       flex: 1 1 auto;
       min-width: 0;
       padding-left: 14px;
-      padding-right: 4px;
+      /* Show more's dots centred over the sections' chevrons */
+      padding-right: 2px;
 
       & > [data-ui='Flex'] {
         width: 100%;
@@ -143,6 +170,12 @@ const Root = styled(Flex)`
 
     [data-tomrow-section]:first-child {
       border-top: 0;
+    }
+
+    /* Sanity keeps a 1px marker above the form (it watches the scroll); the
+       form covers it, so the sections start on the grid */
+    [data-testid='form-view'] {
+      margin-top: -1px;
     }
   }
 

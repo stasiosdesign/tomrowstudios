@@ -6,6 +6,7 @@ import {Tooltip} from '@sanity/ui/tooltip'
 import {useCallback, useEffect, useSyncExternalStore} from 'react'
 import {usePresentationParams, type PreviewHeaderProps} from 'sanity/presentation'
 import {styled} from 'styled-components'
+import {tabStates} from './tab'
 
 /** Whether this document is open in the Visual editor (else it is in Content) */
 export const useInVisualEditor = (): boolean => !!usePresentationParams(false)
@@ -159,14 +160,20 @@ export function PreviewControls() {
   )
 }
 
-// The three views as one control: a small grey track, the chosen view picked
-// out on it (the theme's selected icon button), like the other filled controls
+// The three views as one control: a small grey track, like the other filled
+// controls, the views on it tabs (tab.ts): the chosen one white on the grey
+// highlight, a step lighter here to show on the track, the others dimmed
 const Views = styled.div`
+  --tomrow-selected: var(--tomrow-field-pressed);
   display: flex;
   gap: 2px;
   padding: 2px;
   border-radius: var(--tomrow-radius);
   background: var(--tomrow-field);
+
+  & [data-ui='Button'] {
+    ${tabStates}
+  }
 `
 
 const VIEWS: {mode: PreviewMode; label: string; icon: typeof DesktopIcon}[] = [

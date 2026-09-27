@@ -21,5 +21,6 @@ export const PaneHeading = styled.h1`
   }
 `
 
-/* The vertical room around a pane heading, shared by both header rows */
+/* The least room above and below the page editor's title (PaneTitle); its
+   row is two grid rows tall (DocumentLayout), the title centred in it */
 export const PANE_HEADING_PADDING_Y = 20

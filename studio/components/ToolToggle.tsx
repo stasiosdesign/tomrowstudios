@@ -4,9 +4,11 @@ import {ToolLink, type ToolMenuProps} from 'sanity'
 import {styled} from 'styled-components'
 
 /* The top bar's switch between the Studio's tools, Content and the Visual
-   editor (sanity.config.ts, studio.components.toolMenu): one rounded grey
-   track, the active tool on a white pill that slides over to the other when
-   it becomes active (the Osmo toggle switch's motion).
+   editor (sanity.config.ts, studio.components.toolMenu): one grey track with
+   the same small corners as every other control, the active tool white with
+   black text on a highlight that slides over to the other when it becomes
+   active (the Osmo toggle switch's motion), the other dimmed like any tab
+   that isn't chosen (tab.ts: the same greys, lighter under the pointer).
 
    Each option is Sanity's own tool link, so switching, the address and each
    tool's state work as before. Which option is lit is Sanity's active tool,
@@ -51,7 +53,7 @@ function moveFocus(event: KeyboardEvent<HTMLElement>) {
   links[(target + links.length) % links.length]?.focus()
 }
 
-/** The Osmo toggle's easing and pace, for the pill and the labels alike */
+/** The Osmo toggle's easing and pace, for the highlight and the labels alike */
 const MOTION = '500ms cubic-bezier(0.65, 0.05, 0, 1)'
 const INSET = 3
 
@@ -61,7 +63,7 @@ const Track = styled.nav`
   grid-auto-flow: column;
   grid-auto-columns: 1fr;
   padding: ${INSET}px;
-  border-radius: 999px;
+  border-radius: var(--tomrow-radius);
   background: var(--tomrow-selected);
 `
 
@@ -71,7 +73,7 @@ const Pill = styled.span`
   bottom: ${INSET}px;
   left: ${INSET}px;
   width: calc((100% - ${INSET * 2}px) / var(--tomrow-toggle-count));
-  border-radius: 999px;
+  border-radius: 2px;
   background: #ffffff;
   transform: translateX(calc(100% * var(--tomrow-toggle-active)));
   transition: transform ${MOTION};
@@ -92,8 +94,8 @@ const Option = styled(ToolLink)`
   justify-content: center;
   height: 26px;
   padding: 0 16px;
-  border-radius: 999px;
-  color: #ffffff;
+  border-radius: 2px;
+  color: var(--tomrow-tab-fg);
   text-decoration: none;
   white-space: nowrap;
   transition: color ${MOTION};
@@ -108,6 +110,7 @@ const Option = styled(ToolLink)`
 
   @media (hover: hover) {
     &:not([data-selected]):hover {
+      color: var(--tomrow-tab-fg-hover);
       background: var(--tomrow-hover);
     }
   }

@@ -167,11 +167,22 @@ Columns button and a white New button; an opened item's list is headed
 a short height transition (`Collapse`), menus with Sanity UI's popover
 motion, both off for anyone who prefers reduced motion. The top bar has no New document, search, Tasks, Help or trial
 countdown, and Favorites is hidden throughout. Content and the Visual editor
-are one switch in its middle, a white pill sliding over a grey track
+are one switch in its middle, the active one white on a grey track with the
+same small corners as every control, sliding across when it changes
 (`ToolToggle`, Sanity's tool menu slot; on a phone the tools stay in Sanity's
-side menu). The Content sidebar, the collection tables and the page sections
-share one grid: 43px ruled rows on a 14px inset, and the sidebar's header as
-tall as the publishing bar beside it (`--tomrow-bar-height` in `studio.css`).
+side menu).
+
+The Studio has one grid (`studio.css`): under the top bar every pane starts
+with a band one bar tall (`--tomrow-bar-height`: the sidebar's header, a
+collection's header, the publishing bar), and every list under it is ruled
+in rows one row tall (`--tomrow-row-height`, the hairline included): the
+sidebar, a collection's table, its Select bar and its compact list, a page's
+sections and a CMS item's two header rows. The page editor's title row is two
+rows tall. So the rules of panes side by side meet, and everything starts on
+the 14px inset. Tabs and view choices share one look (`components/tab.ts`):
+the chosen one white on the grey highlight, the others dimmed, lighter under
+the pointer: the sidebar's pages and collections, a collection's compact
+list and the Visual editor's views.
 A collection's image columns show small cropped thumbnails. The theme (`theme.ts`) keeps
 text and icons white on hover, press and selection.
 
