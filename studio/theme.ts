@@ -60,9 +60,16 @@ const DISABLED_FG = '#4d4d4d'
 const PLACEHOLDER = '#8c8c8c' // 5:1 on FIELD
 const RED = '#dd341d' // --cta-accent-color in src/styles/style.css
 
+/* Rules and edges (a pane's dividers, a list's rows, a header's underline):
+   a quiet hairline, the way Linear's docs draw theirs, rather than the
+   builder's brighter grey */
+const BORDER = '#222222'
+
 type StateColor = {bg: string; bg2?: string; border: string; fg: string; icon: string; placeholder?: string; muted: {fg: string}}
 type ToneColor = {
+  base?: {border: string}
   selectable?: Record<string, Record<string, StateColor>>
+
   button?: Record<string, Record<string, Record<string, StateColor>>>
   input?: Record<string, Record<string, StateColor>>
 }
@@ -80,6 +87,7 @@ function studioColors(color: NonNullable<StudioTheme['color']>): NonNullable<Stu
     for (const tone of Object.keys(next[scheme] ?? {})) {
       const card = next[scheme][tone]
       if (tone === 'default' || tone === 'transparent') {
+        if (card.base) card.base.border = BORDER
         paint(card.selectable?.default?.hovered, HOVER_BG, WHITE)
         paint(card.selectable?.default?.pressed, SELECTED_BG, WHITE)
         paint(card.selectable?.default?.selected, SELECTED_BG, WHITE)

@@ -1,10 +1,10 @@
 import {ChevronRightIcon} from '@sanity/icons/ChevronRight'
-import {Box, Text} from '@sanity/ui'
+import {Box} from '@sanity/ui'
 import {createElement, useCallback, useEffect, useState, type ComponentType} from 'react'
 import {useRouter} from 'sanity/router'
 import {usePaneRouter} from 'sanity/structure'
-import {css, styled} from 'styled-components'
-import {TAB_MOTION, tabStates} from './tab'
+import {styled} from 'styled-components'
+import {navItem, TAB_MOTION} from './tab'
 
 /* The Content sidebar, laid out like Linear's docs: the overview on top,
    then two groups, Page Editor and CMS Collections, each folded and unfolded
@@ -54,13 +54,13 @@ export function ContentSidebar(props: {options?: Record<string, unknown>; childI
 
   return (
     <Box overflow="auto" height="fill" data-tomrow-sidebar>
-      <nav aria-label="Content">
-        <TopLink as={ChildLink} childId={overview.id} aria-current={props.childItemId === overview.id ? 'page' : undefined}>
+      <Nav aria-label="Content">
+        <NavLink as={ChildLink} childId={overview.id} aria-current={props.childItemId === overview.id ? 'page' : undefined}>
           <Icon icon={overview.icon} />
-          <Label>{overview.title}</Label>
-        </TopLink>
+          <span data-nav-label>{overview.title}</span>
+        </NavLink>
         {groups.map((group) => (
-          <section key={group.id} aria-labelledby={`sidebar-${group.id}`}>
+          <Group key={group.id} aria-labelledby={`sidebar-${group.id}`}>
             <GroupButton
               type="button"
               id={`sidebar-${group.id}`}
@@ -71,124 +71,101 @@ export function ContentSidebar(props: {options?: Record<string, unknown>; childI
               onClick={() => toggle(group.id)}
             >
               <Icon icon={group.icon} />
-              <Label>{group.title}</Label>
-              <Text size={1}>
-                <ChevronRightIcon style={{transform: open[group.id] ? 'rotate(90deg)' : undefined, transition: `transform ${TAB_MOTION}`}} />
-              </Text>
+              <span data-nav-label>{group.title}</span>
+              <Chevron data-open={open[group.id] ? '' : undefined}>
+                <ChevronRightIcon />
+              </Chevron>
             </GroupButton>
             {open[group.id] && (
               <List id={`sidebar-${group.id}-items`} role="list">
-                {group.items.map((item) => {
-                  const selected = props.childItemId === item.id
-                  return (
-                    <li key={item.id}>
-                      <ItemLink as={ChildLink} childId={item.id} aria-current={selected ? 'page' : undefined}>
-                        <Icon icon={item.icon} />
-                        <Text size={1} weight={selected ? 'medium' : 'regular'} textOverflow="ellipsis">
-                          {item.title}
-                        </Text>
-                      </ItemLink>
-                    </li>
-                  )
-                })}
+                {group.items.map((item) => (
+                  <li key={item.id}>
+                    <NestedLink as={ChildLink} childId={item.id} aria-current={props.childItemId === item.id ? 'page' : undefined}>
+                      <Icon icon={item.icon} />
+                      <span data-nav-label>{item.title}</span>
+                    </NestedLink>
+                  </li>
+                ))}
               </List>
             )}
-          </section>
+          </Group>
         ))}
-      </nav>
+      </Nav>
     </Box>
   )
 }
 
-const Icon = ({icon}: {icon?: ComponentType}) => <Text size={1}>{icon && createElement(icon)}</Text>
+const Icon = ({icon}: {icon?: ComponentType}) => <span data-nav-icon>{icon && createElement(icon)}</span>
 
-/* Ruled full-width rows on the Studio's grid (--tomrow-row-height, its
-   hairline included, studio.css), like the page editor's sections and the
-   collection tables beside them, so their rules meet: the first ruled off
-   by the pane's header, as tall as the publishing bar. Every row starts with
-   its icon, then its name; a group's row ends in its fold chevron, and its
-   entries are nested one step in, their icons under its name. The overview
-   and the entries are tabs (tab.ts): the open one white on the grey
-   highlight, the others dimmed. */
+/* A list of rounded entries with no rules between them (navItem, tab.ts):
+   the overview, then each group under a little space of its own, its
+   heading a little taller than its entries. As in Linear's docs, an
+   entry's icon sits under its group's name, one step in. The overview and
+   the entries are tabs: the open one white on the grey highlight, the
+   others dimmed. */
+const Nav = styled.nav`
+  padding: 12px 0 24px;
+`
+
+const Group = styled.section`
+  margin-top: 12px;
+`
+
 // role="list" stays on it: without list styling, Safari no longer announces a list
 const List = styled.ul`
-  list-style: none;
-  margin: 0;
-  padding: 0;
-`
-
-const row = css`
   display: grid;
-  grid-template-columns: 21px minmax(0, 1fr);
-  column-gap: 10px;
-  align-items: center;
-  box-sizing: border-box;
-  width: 100%;
-  min-height: var(--tomrow-row-height);
-  padding: 0 14px;
-  border-bottom: 1px solid var(--card-border-color);
-  cursor: pointer;
-
-  &:focus-visible {
-    outline: 2px solid var(--card-focus-ring-color);
-    outline-offset: -2px;
-  }
+  gap: 2px;
+  margin: 0;
+  padding: 2px 0 0;
+  list-style: none;
 `
 
-/* The top level, the overview and the groups' names: the Studio's display
-   type (the pane headings' Inter Tight, tightly set) at the rows' size, a
-   step heavier than the entries nested under them */
-const Label = styled.span`
-  overflow: hidden;
-  font-size: 13px;
-  font-weight: 600;
-  line-height: 1;
-  letter-spacing: -0.01em;
-  white-space: nowrap;
-  text-overflow: ellipsis;
+const NavLink = styled.a`
+  ${navItem}
 `
 
-const TopLink = styled.a`
-  ${row}
-  ${tabStates}
-  text-decoration: none;
+const NestedLink = styled.a`
+  ${navItem}
+  padding-left: 36px;
 `
 
-// Dimmed like a tab that isn't chosen, lighter under the pointer, white when
-// folded over what is open; its icon and chevron take its colour
+// A group's heading: dimmed while folded, white once open (or folded over
+// what is open), its chevron a step quieter; lighter under the pointer
 const GroupButton = styled.button`
   all: unset;
-  ${row}
-  grid-template-columns: 21px minmax(0, 1fr) 21px;
-  color: var(--tomrow-tab-fg);
-  transition:
-    color ${TAB_MOTION},
-    background-color ${TAB_MOTION};
-  --card-fg-color: currentColor;
-  --card-muted-fg-color: currentColor;
-  --card-icon-color: currentColor;
+  ${navItem}
+  grid-template-columns: 20px minmax(0, 1fr) 16px;
+  width: calc(100% - 16px);
+  min-height: var(--tomrow-nav-heading-row);
 
-  & [data-ui='Text'] {
-    color: inherit;
-  }
-
-  &:hover {
-    color: var(--tomrow-tab-fg-hover);
-    background-color: var(--tomrow-hover);
-  }
-
+  &[aria-expanded='true'],
   &[data-holds-open] {
     color: #ffffff;
+
+    & > [data-nav-icon] {
+      opacity: 1;
+    }
+  }
+`
+
+const Chevron = styled.span`
+  display: flex;
+  justify-content: flex-end;
+  font-size: 21px;
+  line-height: 0;
+  opacity: 0.6;
+
+  & > svg {
+    transition: transform ${TAB_MOTION};
+  }
+
+  &[data-open] > svg {
+    transform: rotate(90deg);
   }
 
   @media (prefers-reduced-motion: reduce) {
-    transition: none;
+    & > svg {
+      transition: none;
+    }
   }
-`
-
-const ItemLink = styled.a`
-  ${row}
-  ${tabStates}
-  padding-left: 45px;
-  text-decoration: none;
 `

@@ -2,13 +2,14 @@ import {styled} from 'styled-components'
 
 /* The one large heading at the top of a pane: a static page's title in the
    page editor (PaneTitle) and a collection's name (CollectionPane). Same
-   size, weight, line height and 14px inset as the rows beneath them. */
+   size, weight, line height and 14px inset everywhere; semibold and tightly
+   set, like the overview's headings (ContentHome) and Linear's. */
 export const PaneHeading = styled.h1`
   margin: 0;
   font-size: 28px;
-  font-weight: 700;
+  font-weight: 600;
   line-height: 1.15;
-  letter-spacing: -0.01em;
+  letter-spacing: -0.02em;
   color: var(--card-fg-color);
   white-space: nowrap;
   overflow: hidden;

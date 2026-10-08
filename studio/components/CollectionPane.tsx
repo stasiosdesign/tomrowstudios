@@ -22,7 +22,7 @@ import {columnsFor, isImageType, renderValue, textOf, type Column} from './forma
 import {PaneHeading} from './PaneHeading'
 import {isPermissionError, usePermissionGate, type RestrictedAction} from './PermissionDialog'
 import {StatusChip} from './Status'
-import {tabStates} from './tab'
+import {navItem} from './tab'
 
 /* A collection: every document of one type as a table, one row per item,
    with its status (always shown) and the columns the editor chooses (none at
@@ -422,13 +422,13 @@ export function CollectionPane(props: {options?: Record<string, unknown>; childI
           </Table>
         )}
         {documents !== null && shown.length > 0 && compact && (
-          <Stack as="ul" role="list" style={{listStyle: 'none', margin: 0, padding: 0}}>
+          <CompactList role="list">
             {shown.map((row) => (
               <li key={row.id}>
                 <CompactItem row={row} selected={row.id === selectedId} ChildLink={ChildLink} />
               </li>
             ))}
-          </Stack>
+          </CompactList>
         )}
       </Box>
 
@@ -667,10 +667,10 @@ function ItemRow({
 }
 
 /* The pane's rows on the Studio's grid (studio.css): its header one bar tall
-   like the Content sidebar's and the publishing bar (so the table's rows meet
-   the sidebar's), the Select bar one row, the table's rows and the compact
-   list's the sidebar's rows. The compact list's back button's own padding
-   puts its arrow on the 14px inset. */
+   like the Content sidebar's and the publishing bar, the Select bar and the
+   table's rows one row each; the compact list is navigation, like the
+   sidebar (navItem). The compact list's back button's own padding puts its
+   arrow on the 14px inset. */
 const header: CSSProperties = {
   flexShrink: 0,
   boxSizing: 'border-box',
@@ -687,30 +687,25 @@ const SELECT_BAR: CSSProperties = {...header, minHeight: 'var(--tomrow-row-heigh
 
 const COMPACT_HEADER: CSSProperties = {...header, padding: '10px 14px 10px 6px'}
 
-// The items are tabs (tab.ts): the open one white on the grey highlight
+// The items are navigation entries (navItem, tab.ts), like the Content
+// sidebar's beside them, names only: the open one white on the grey highlight
 const CompactLink = styled.a`
-  display: grid;
+  ${navItem}
   grid-template-columns: minmax(0, 1fr);
-  align-items: center;
-  box-sizing: border-box;
-  min-height: var(--tomrow-row-height);
-  padding: 0 14px;
-  border-bottom: 1px solid var(--card-border-color);
-  text-decoration: none;
-  ${tabStates}
+`
 
-  &:focus-visible {
-    outline: 2px solid var(--card-focus-ring-color);
-    outline-offset: -2px;
-  }
+const CompactList = styled.ul`
+  display: grid;
+  gap: 2px;
+  margin: 0;
+  padding: 12px 0 24px;
+  list-style: none;
 `
 
 function CompactItem({row, selected, ChildLink}: {row: Row; selected: boolean; ChildLink: ChildLinkComponent}) {
   return (
     <CompactLink as={ChildLink} childId={row.id} childParameters={{type: row.doc._type}} aria-current={selected ? 'page' : undefined}>
-      <Text size={1} weight={selected ? 'medium' : 'regular'} textOverflow="ellipsis">
-        {row.title}
-      </Text>
+      <span data-nav-label>{row.title}</span>
     </CompactLink>
   )
 }

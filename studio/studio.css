@@ -14,11 +14,12 @@
   --tomrow-hover: rgb(255 255 255 / 0.06);
   --tomrow-selected: rgb(255 255 255 / 0.1);
   /* The Studio's grid. The first band under the top bar is one bar tall in
-     every pane (the Content sidebar's header, a collection's header, the
-     publishing bar above a document); under it, every list is ruled in rows
-     of one row height, its hairline included: the sidebar, a collection's
-     table and compact list, a page's sections, a CMS item's header rows. So
-     the rules of panes side by side meet. */
+     every pane (the Content sidebar's header, a collection's or the
+     overview's header, the publishing bar above a document); under it, every
+     list of content is ruled in rows of one row height, its hairline
+     included: a collection's table, a page's sections, a CMS item's header
+     rows. So the rules of panes side by side meet. Navigation (the sidebar,
+     a collection's compact list) has no rules: see below. */
   --tomrow-bar-height: 54px;
   --tomrow-row-height: 43px;
   /* Tabs and view choices (components/tab.ts): the chosen one white on the
@@ -26,6 +27,15 @@
   --tomrow-tab-fg: #8c8c8c;
   --tomrow-tab-fg-hover: #bfbfbf;
   --tomrow-tab-fg-disabled: #4d4d4d;
+  /* Navigation (components/tab.ts, navItem), after Linear's docs: the
+     Content sidebar and a collection's compact list are lists of rounded
+     entries with no rules between them, a little shorter than the grid's
+     rows; a group's heading in the sidebar a little taller. Cards (the
+     overview's) are rounder still. Sanity's own controls keep its 3px. */
+  --tomrow-nav-row: 32px;
+  --tomrow-nav-heading-row: 36px;
+  --tomrow-nav-radius: 6px;
+  --tomrow-card-radius: 8px;
   /* Filled controls: the grey of every field and secondary button, lighter
      under the pointer and when pressed (FIELD... in theme.ts, which sets
      Sanity's own; these are for the parts the theme doesn't reach) */

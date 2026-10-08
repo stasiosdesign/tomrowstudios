@@ -178,17 +178,23 @@ same small corners as every control, sliding across when it changes
 (`ToolToggle`, Sanity's tool menu slot; on a phone the tools stay in Sanity's
 side menu).
 
-The Studio has one grid (`studio.css`): under the top bar every pane starts
-with a band one bar tall (`--tomrow-bar-height`: the sidebar's header, a
-collection's or the Overview's header, the publishing bar), and every list under it is ruled
-in rows one row tall (`--tomrow-row-height`, the hairline included): the
-sidebar, a collection's table, its Select bar and its compact list, a page's
-sections and a CMS item's two header rows. The page editor's title row is two
-rows tall. So the rules of panes side by side meet, and everything starts on
-the 14px inset. Tabs and view choices share one look (`components/tab.ts`):
-the chosen one white on the grey highlight, the others dimmed, lighter under
-the pointer: the sidebar's Overview, pages and collections, a collection's
-compact list and the Visual editor's views. The Overview's cards are plain
+The Studio's look follows Linear's docs: restrained hairlines (`#222`, set
+in `theme.ts`), clear type and room to breathe. It has one grid
+(`studio.css`): under the top bar every pane starts with a band one bar tall
+(`--tomrow-bar-height`: the sidebar's header, a collection's or the
+Overview's header, the publishing bar), and every list of content under it
+is ruled in rows one row tall (`--tomrow-row-height`, the hairline
+included): a collection's table and its Select bar, a page's sections and a
+CMS item's two header rows. The page editor's title row is two rows tall. So
+the rules of panes side by side meet, and everything starts on the 14px
+inset. Navigation has no rules: the sidebar and a collection's compact list
+are lists of rounded entries (`navItem` in `components/tab.ts`), 14px
+medium type with dimmed icons. Tabs and view choices share one look: the
+chosen one white on the grey highlight, the others dimmed, lighter under the
+pointer (the sidebar's and compact list's entries too, and the Visual
+editor's views). Corners grow with what they round: Sanity's own controls
+keep their 3px, navigation entries 6px, the Overview's cards 8px
+(`--tomrow-nav-radius`, `--tomrow-card-radius`). The cards are plain
 rectangles a shade lighter than the page, edged with a hairline, both a
 little brighter under the pointer.
 A collection's image columns show small cropped thumbnails. The theme (`theme.ts`) keeps
@@ -372,11 +378,12 @@ vercel.ts                  Vercel: build, clean URLs, redirects, staging's noind
    the **Visual editor** shows staging with your drafts, each page beside its
    form. Content is laid out like Linear's docs: a narrow sidebar with an icon
    beside every entry (**Overview**, then the two groups, each folding open
-   on its own with its pages or collections nested under it), and beside it
-   whatever is open, filling the rest of the window. Content opens on the
-   **Overview**, the same two groups as sections of cards, one per page or
-   collection with its icon and what it holds; a card opens it like its
-   sidebar entry does. The names, icons and descriptions are written once,
+   on its own with its pages or collections under it, their icons under the
+   group's name), and beside it whatever is open, filling the rest of the
+   window. Content opens on the **Overview**: the Studio's name, then the
+   same two groups as sections of cards, one per page or collection with its
+   icon and what it holds; a card opens it like its sidebar entry does. The
+   names, icons and descriptions are written once,
    in `studio/structure.ts`, for both (`studio/components/ContentSidebar.tsx`,
    `studio/components/ContentHome.tsx`):
    - **Page editor**: Home, Influence, Architectural, Shop, Partner, Privacy
