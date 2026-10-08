@@ -453,13 +453,15 @@ button.tomrow-white {
    keep Sanity's one column. The form's width is set in DocumentLayout.tsx.
    A form's column of fields is Sanity UI's Stack, a grid; newer releases
    (the hosted Studio updates itself) mark it VStack and lay it out as a
-   flex column, so the grid is set here. */
+   flex column, so the grid is set here, scoped to the form so it outranks
+   Sanity UI's flex rule (.sui-display-flex:not([hidden]), as specific as
+   the bare selector, and loaded after this file from Sanity's CDN). */
 [data-testid='form-view'] {
   container: tomrow-form / inline-size;
 }
 
 @container tomrow-form (min-width: 640px) {
-  :is([data-ui='Stack'], [data-ui='VStack']):has(> [data-tomrow-field]) {
+  [data-testid='form-view'] :is([data-ui='Stack'], [data-ui='VStack']):has(> [data-tomrow-field]) {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
     column-gap: 24px;
