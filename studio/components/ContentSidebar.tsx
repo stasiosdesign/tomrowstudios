@@ -4,16 +4,18 @@ import {createElement, useCallback, useEffect, useState, type ComponentType} fro
 import {useRouter} from 'sanity/router'
 import {usePaneRouter} from 'sanity/structure'
 import {css, styled} from 'styled-components'
-import {tabStates} from './tab'
+import {TAB_MOTION, tabStates} from './tab'
 
-/* The Content sidebar: two accordion groups, each opened and closed on its
-   own (and remembered in this browser), with the pages and the collections
-   as links. The root pane of the structure (structure.ts), so each item
-   opens as this pane's child. */
+/* The Content sidebar, laid out like Linear's docs: the overview on top,
+   then two groups, Page Editor and CMS Collections, each folded and unfolded
+   on its own (and remembered in this browser), its pages or collections
+   nested under it. Every entry has its icon. The overview (ContentHome)
+   shows the same list again as cards; both read it from structure.ts. The
+   root pane of the structure, so each entry opens as this pane's child. */
 
-export type SidebarItem = {id: string; title: string; icon?: ComponentType}
-export type SidebarGroup = {id: string; title: string; items: SidebarItem[]}
-export type SidebarOptions = {groups: SidebarGroup[]}
+export type SidebarItem = {id: string; title: string; icon?: ComponentType; description?: string}
+export type SidebarGroup = SidebarItem & {items: SidebarItem[]}
+export type SidebarOptions = {overview: SidebarItem; groups: SidebarGroup[]}
 
 const key = (id: string) => `tomrow.sidebar.${id}`
 
@@ -26,18 +28,17 @@ const readOpen = (id: string): boolean => {
 }
 
 export function ContentSidebar(props: {options?: Record<string, unknown>; childItemId?: string}) {
-  const {groups} = props.options as SidebarOptions
+  const {overview, groups} = props.options as SidebarOptions
   const {ChildLink, groupIndex, routerPanesState} = usePaneRouter()
   const router = useRouter()
 
   // Nothing open beside the sidebar (entering Content, or coming back to it
-  // with nothing chosen): open the first page, so the workspace is never an
+  // with nothing chosen): open the overview, so the workspace is never an
   // empty panel
-  const first = groups[0]?.items[0]
-  const nothingOpen = !props.childItemId && !!first
+  const nothingOpen = !props.childItemId
   useEffect(() => {
-    if (nothingOpen) router.navigate({panes: [...routerPanesState.slice(0, groupIndex + 1), [{id: first.id}]]}, {replace: true})
-  }, [nothingOpen, first, router, routerPanesState, groupIndex])
+    if (nothingOpen) router.navigate({panes: [...routerPanesState.slice(0, groupIndex + 1), [{id: overview.id}]]}, {replace: true})
+  }, [nothingOpen, overview.id, router, routerPanesState, groupIndex])
   const [open, setOpen] = useState<Record<string, boolean>>(() => Object.fromEntries(groups.map((group) => [group.id, readOpen(group.id)])))
   const toggle = useCallback((id: string) => {
     setOpen((current) => {
@@ -53,7 +54,11 @@ export function ContentSidebar(props: {options?: Record<string, unknown>; childI
 
   return (
     <Box overflow="auto" height="fill" data-tomrow-sidebar>
-      <div>
+      <nav aria-label="Content">
+        <TopLink as={ChildLink} childId={overview.id} aria-current={props.childItemId === overview.id ? 'page' : undefined}>
+          <Icon icon={overview.icon} />
+          <Label>{overview.title}</Label>
+        </TopLink>
         {groups.map((group) => (
           <section key={group.id} aria-labelledby={`sidebar-${group.id}`}>
             <GroupButton
@@ -65,10 +70,11 @@ export function ContentSidebar(props: {options?: Record<string, unknown>; childI
               data-holds-open={!open[group.id] && group.items.some((item) => item.id === props.childItemId) ? '' : undefined}
               onClick={() => toggle(group.id)}
             >
-              <Text size={1} muted>
-                <ChevronRightIcon style={{transform: open[group.id] ? 'rotate(90deg)' : undefined, transition: 'transform 0.15s ease'}} />
+              <Icon icon={group.icon} />
+              <Label>{group.title}</Label>
+              <Text size={1}>
+                <ChevronRightIcon style={{transform: open[group.id] ? 'rotate(90deg)' : undefined, transition: `transform ${TAB_MOTION}`}} />
               </Text>
-              <GroupTitle>{group.title}</GroupTitle>
             </GroupButton>
             {open[group.id] && (
               <List id={`sidebar-${group.id}-items`} role="list">
@@ -77,7 +83,7 @@ export function ContentSidebar(props: {options?: Record<string, unknown>; childI
                   return (
                     <li key={item.id}>
                       <ItemLink as={ChildLink} childId={item.id} aria-current={selected ? 'page' : undefined}>
-                        <Text size={1}>{item.icon && createElement(item.icon)}</Text>
+                        <Icon icon={item.icon} />
                         <Text size={1} weight={selected ? 'medium' : 'regular'} textOverflow="ellipsis">
                           {item.title}
                         </Text>
@@ -89,18 +95,21 @@ export function ContentSidebar(props: {options?: Record<string, unknown>; childI
             )}
           </section>
         ))}
-      </div>
+      </nav>
     </Box>
   )
 }
 
+const Icon = ({icon}: {icon?: ComponentType}) => <Text size={1}>{icon && createElement(icon)}</Text>
+
 /* Ruled full-width rows on the Studio's grid (--tomrow-row-height, its
    hairline included, studio.css), like the page editor's sections and the
    collection tables beside them, so their rules meet: the first ruled off
-   by the pane's header, as tall as the publishing bar. Two columns for every
-   row: the chevrons and the icons in the first, the group names and the page
-   and collection names in the second. The pages and collections are tabs
-   (tab.ts): the open one white on the grey highlight, the others dimmed. */
+   by the pane's header, as tall as the publishing bar. Every row starts with
+   its icon, then its name; a group's row ends in its fold chevron, and its
+   entries are nested one step in, their icons under its name. The overview
+   and the entries are tabs (tab.ts): the open one white on the grey
+   highlight, the others dimmed. */
 // role="list" stays on it: without list styling, Safari no longer announces a list
 const List = styled.ul`
   list-style: none;
@@ -126,32 +135,60 @@ const row = css`
   }
 `
 
+/* The top level, the overview and the groups' names: the Studio's display
+   type (the pane headings' Inter Tight, tightly set) at the rows' size, a
+   step heavier than the entries nested under them */
+const Label = styled.span`
+  overflow: hidden;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+`
+
+const TopLink = styled.a`
+  ${row}
+  ${tabStates}
+  text-decoration: none;
+`
+
+// Dimmed like a tab that isn't chosen, lighter under the pointer, white when
+// folded over what is open; its icon and chevron take its colour
 const GroupButton = styled.button`
   all: unset;
   ${row}
+  grid-template-columns: 21px minmax(0, 1fr) 21px;
+  color: var(--tomrow-tab-fg);
+  transition:
+    color ${TAB_MOTION},
+    background-color ${TAB_MOTION};
+  --card-fg-color: currentColor;
+  --card-muted-fg-color: currentColor;
+  --card-icon-color: currentColor;
+
+  & [data-ui='Text'] {
+    color: inherit;
+  }
 
   &:hover {
-    background: var(--tomrow-hover);
+    color: var(--tomrow-tab-fg-hover);
+    background-color: var(--tomrow-hover);
   }
-`
 
-/* The group names, "Page Editor" and "CMS Collections", as written: the
-   Studio's display type (the pane headings' Inter Tight, tightly set) at the
-   rows' size, quieter than the names beneath them */
-const GroupTitle = styled.span`
-  font-weight: 600;
-  font-size: 13px;
-  line-height: 1;
-  letter-spacing: -0.01em;
-  color: rgb(255 255 255 / 0.6);
-
-  [data-holds-open] > & {
+  &[data-holds-open] {
     color: #ffffff;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    transition: none;
   }
 `
 
 const ItemLink = styled.a`
   ${row}
   ${tabStates}
+  padding-left: 45px;
   text-decoration: none;
 `

@@ -180,15 +180,17 @@ side menu).
 
 The Studio has one grid (`studio.css`): under the top bar every pane starts
 with a band one bar tall (`--tomrow-bar-height`: the sidebar's header, a
-collection's header, the publishing bar), and every list under it is ruled
+collection's or the Overview's header, the publishing bar), and every list under it is ruled
 in rows one row tall (`--tomrow-row-height`, the hairline included): the
 sidebar, a collection's table, its Select bar and its compact list, a page's
 sections and a CMS item's two header rows. The page editor's title row is two
 rows tall. So the rules of panes side by side meet, and everything starts on
 the 14px inset. Tabs and view choices share one look (`components/tab.ts`):
 the chosen one white on the grey highlight, the others dimmed, lighter under
-the pointer: the sidebar's pages and collections, a collection's compact
-list and the Visual editor's views.
+the pointer: the sidebar's Overview, pages and collections, a collection's
+compact list and the Visual editor's views. The Overview's cards are plain
+rectangles a shade lighter than the page, edged with a hairline, both a
+little brighter under the pointer.
 A collection's image columns show small cropped thumbnails. The theme (`theme.ts`) keeps
 text and icons white on hover, press and selection.
 
@@ -335,13 +337,13 @@ src/
   styles/style.css         global stylesheet, imported once by the layout
 studio/                    Sanity Studio, with its own package.json
   schemaTypes/             documents/ (homePage, project, client), pages/ (one per fixed page), objects/, shared/
-  components/              CollectionPane (the tables), PublishControls (the publishing control), DocumentLayout, ContentSidebar, the page editor's form parts
+  components/              CollectionPane (the tables), PublishControls (the publishing control), DocumentLayout, ContentSidebar, ContentHome (the Overview's cards), the page editor's form parts
   lib/publish.ts           the publishing actions, sent to /api/publish
   lib/status.ts            the publishing status rules (tested in status.test.ts)
   lib/watch.ts             keeps what the two datasets hold current (tested in watch.test.ts)
   lib/site.ts              the two sites' addresses and each document's page
   scripts/                 one-off seeds and migrations (npx sanity exec … --with-user-token)
-  structure.ts             the Content sidebar: Page Editor, CMS Collections
+  structure.ts             the Content sidebar and Overview: Page Editor, CMS Collections, with their icons and descriptions
   sanity.config.ts         project, plugins (Visual editor, Content, Vercel bypass), document layout
   sanity.cli.ts            CLI settings, including TypeGen
   studio.css               the red Publish button, hover and selection, forms, the preview canvas
@@ -368,9 +370,15 @@ vercel.ts                  Vercel: build, clean URLs, redirects, staging's noind
    with a writing role (Administrator, Editor or Developer) to publish live.
 2. **Content** (the first tab) has the documents as plain forms, in two groups;
    the **Visual editor** shows staging with your drafts, each page beside its
-   form. The Content sidebar is one narrow column and opens on the Home page;
-   the form fills the rest of the window
-   (`studio/structure.ts`, `studio/components/ContentSidebar.tsx`):
+   form. Content is laid out like Linear's docs: a narrow sidebar with an icon
+   beside every entry (**Overview**, then the two groups, each folding open
+   on its own with its pages or collections nested under it), and beside it
+   whatever is open, filling the rest of the window. Content opens on the
+   **Overview**, the same two groups as sections of cards, one per page or
+   collection with its icon and what it holds; a card opens it like its
+   sidebar entry does. The names, icons and descriptions are written once,
+   in `studio/structure.ts`, for both (`studio/components/ContentSidebar.tsx`,
+   `studio/components/ContentHome.tsx`):
    - **Page editor**: Home, Influence, Architectural, Shop, Partner, Privacy
      policy and Terms of use, one document each with that page's editable
      words, photos and button labels; layout, navigation and where buttons
