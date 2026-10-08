@@ -176,7 +176,16 @@ countdown, and Favorites is hidden throughout. Content and the Visual editor
 are one switch in its middle, the active one white on a grey track with the
 same small corners as every control, sliding across when it changes
 (`ToolToggle`, Sanity's tool menu slot; on a phone the tools stay in Sanity's
-side menu).
+side menu). At its left, as in Linear's docs, the website's favicon (from
+www.tomrowstudios.com, `studio/static/site-favicon.png`), a hairline and
+"CMS"; the favicon opens the project menu (Manage project, Invite members),
+which shows it too (`components/StudioIcon.tsx`, `studio.css`).
+
+The hosted Studio updates Sanity itself (`autoUpdates` in `sanity.cli.ts`),
+so it can run a newer Sanity than `npm run studio`. Where `studio.css` or a
+component reaches into Sanity's markup, it allows for both: a form's column
+of fields, for one, is `data-ui="Stack"` in older releases and `"VStack"`
+(a flex column, no longer a grid) in newer ones.
 
 The Studio's look follows Linear's docs: restrained hairlines (`#222`, set
 in `theme.ts`), clear type and room to breathe. It has one grid

@@ -18,20 +18,24 @@ export function PageInput(props: InputProps) {
   return <Sections>{props.renderDefault(props)}</Sections>
 }
 
+// The form's column of fields: Sanity UI's Stack, which newer releases (the
+// hosted Studio updates itself) mark VStack instead
+const STACK = `:is([data-ui='Stack'], [data-ui='VStack'])`
+
 const Sections = styled.div`
-  & > [data-ui='Stack'] {
+  & > ${STACK} {
     gap: 0;
   }
 
-  & > [data-ui='Stack'] > [data-tomrow-section]:first-child {
+  & > ${STACK} > [data-tomrow-section]:first-child {
     border-top: 1px solid var(--card-border-color);
   }
 
-  & > [data-ui='Stack'] > :not([data-tomrow-section]) {
+  & > ${STACK} > :not([data-tomrow-section]) {
     padding-inline: 14px;
   }
 
-  & > [data-ui='Stack'] > :not([data-tomrow-section]):not(:first-child) {
+  & > ${STACK} > :not([data-tomrow-section]):not(:first-child) {
     margin-top: 32px;
   }
 `

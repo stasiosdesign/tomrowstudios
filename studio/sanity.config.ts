@@ -11,6 +11,7 @@ import {PageInput} from './components/PageInput'
 import {PaneTitle} from './components/PaneTitle'
 import {PreviewControls, PreviewHeaderBridge} from './components/PreviewControls'
 import {SectionsToggle} from './components/Sections'
+import {StudioIcon} from './components/StudioIcon'
 import {ToolToggle} from './components/ToolToggle'
 import {STAGING_ORIGIN} from './lib/site'
 import {schemaTypes} from './schemaTypes'
@@ -44,6 +45,9 @@ const VISIBLE_TOOLS = new Set(['presentation', 'structure'])
 export default defineConfig({
   name: 'default',
   title: 'Tomrow Studios',
+  // The website's favicon, in the project menu (and, through studio.css, at
+  // the top left, beside "CMS")
+  icon: StudioIcon,
 
   projectId: '5cwu7mnl',
   // The dataset the Studio edits. The live site reads `production`, which

@@ -268,6 +268,57 @@ button.tomrow-cta--arrow > span {
   }
 }
 
+/* The top left, after Linear's docs: the website's favicon, a hairline, then
+   "CMS". The favicon opens the project menu (Manage project, Invite members),
+   which keeps the Studio's name and shows the favicon too
+   (components/StudioIcon.tsx). Sanity draws two controls there, an icon
+   linking to the Studio's home and a menu button with the Studio's name and
+   a chevron: the link goes, and the button draws the favicon and "CMS" in
+   place of its own content, which stays for screen readers. */
+[data-testid='studio-navbar'] [data-ui='Flex']:has(> a + [data-ui='MenuButton']) {
+  & > a {
+    display: none !important;
+  }
+
+  & > [data-ui='MenuButton'] > button {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    padding: 4px 8px 4px 4px;
+    font-family: inherit;
+    font-size: 15px;
+    font-weight: 600;
+    line-height: 20px;
+    letter-spacing: -0.01em;
+    color: #ffffff;
+
+    & > * {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      clip-path: inset(50%);
+      white-space: nowrap;
+    }
+
+    &::before {
+      content: '';
+      flex: none;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: url('/static/site-favicon.png') center / cover;
+    }
+
+    &::after {
+      content: 'CMS';
+      padding-left: 12px;
+      border-left: 1px solid rgb(255 255 255 / 0.2);
+    }
+  }
+}
+
 /* The top bar without Help and resources or the trial countdown (Tasks is
    switched off in sanity.config.ts). Sanity has no setting for these two, so
    they go by their own markers: the Help menu's test ID, and the trial
@@ -399,13 +450,17 @@ button.tomrow-white {
    two columns, the small fields components/FieldLayout.tsx marks share a row
    with a small neighbour, in the schema's order, and every other field takes
    the whole row. Narrower panes (the Visual editor's side panel, a phone)
-   keep Sanity's one column. The form's width is set in DocumentLayout.tsx. */
+   keep Sanity's one column. The form's width is set in DocumentLayout.tsx.
+   A form's column of fields is Sanity UI's Stack, a grid; newer releases
+   (the hosted Studio updates itself) mark it VStack and lay it out as a
+   flex column, so the grid is set here. */
 [data-testid='form-view'] {
   container: tomrow-form / inline-size;
 }
 
 @container tomrow-form (min-width: 640px) {
-  [data-ui='Stack']:has(> [data-tomrow-field]) {
+  :is([data-ui='Stack'], [data-ui='VStack']):has(> [data-tomrow-field]) {
+    display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
     column-gap: 24px;
 
@@ -435,6 +490,11 @@ button.tomrow-white {
     & [data-ui='FormRow'] > div > [data-ui='Stack'] {
       height: 100%;
       align-content: space-between;
+    }
+
+    & [data-ui='FormRow'] > div > [data-ui='VStack'] {
+      height: 100%;
+      justify-content: space-between;
     }
   }
 }
@@ -501,7 +561,7 @@ button.tomrow-white {
 
 /* A list of words (tags): its items are fields already, so the box around
    them goes */
-[data-testid='form-view'] [data-is-file-target] > [data-ui='Stack'] > [data-ui='Card'] {
+[data-testid='form-view'] [data-is-file-target] > :is([data-ui='Stack'], [data-ui='VStack']) > [data-ui='Card'] {
   border-color: transparent;
 }
 
