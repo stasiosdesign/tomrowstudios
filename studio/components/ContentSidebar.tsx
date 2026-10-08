@@ -40,9 +40,11 @@ export function ContentSidebar(props: {options?: Record<string, unknown>; childI
     if (nothingOpen) router.navigate({panes: [...routerPanesState.slice(0, groupIndex + 1), [{id: overview.id}]]}, {replace: true})
   }, [nothingOpen, overview.id, router, routerPanesState, groupIndex])
   const [open, setOpen] = useState<Record<string, boolean>>(() => Object.fromEntries(groups.map((group) => [group.id, readOpen(group.id)])))
-  const toggle = useCallback((id: string) => {
+  // Folds or unfolds a group (`force` sets it either way, like
+  // classList.toggle), remembered in this browser
+  const toggle = useCallback((id: string, force?: boolean) => {
     setOpen((current) => {
-      const next = {...current, [id]: !current[id]}
+      const next = {...current, [id]: force ?? !current[id]}
       try {
         window.localStorage.setItem(key(id), next[id] ? 'open' : 'closed')
       } catch {
@@ -51,6 +53,15 @@ export function ContentSidebar(props: {options?: Record<string, unknown>; childI
       return next
     })
   }, [])
+
+  // Whatever opens beside the sidebar (an overview card, a link from the
+  // visual editor, an address) unfolds the group it is in, so the sidebar
+  // shows it open. Only when it opens: folding the group again afterwards
+  // stays the editor's choice.
+  const openGroup = groups.find((group) => group.items.some((item) => item.id === props.childItemId))?.id
+  useEffect(() => {
+    if (openGroup) toggle(openGroup, true)
+  }, [props.childItemId, openGroup, toggle])
 
   return (
     <Box overflow="auto" height="fill" data-tomrow-sidebar>
