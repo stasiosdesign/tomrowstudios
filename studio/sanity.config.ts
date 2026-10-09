@@ -12,7 +12,7 @@ import {PaneTitle} from './components/PaneTitle'
 import {PreviewControls, PreviewHeaderBridge} from './components/PreviewControls'
 import {SectionsToggle} from './components/Sections'
 import {StudioIcon} from './components/StudioIcon'
-import {ToolToggle} from './components/ToolToggle'
+import {StudioNavbar} from './components/StudioNavbar'
 import {STAGING_ORIGIN} from './lib/site'
 import {schemaTypes} from './schemaTypes'
 import {PAGES} from './schemaTypes/pages'
@@ -45,8 +45,8 @@ const VISIBLE_TOOLS = new Set(['presentation', 'structure'])
 export default defineConfig({
   name: 'default',
   title: 'Tomrow Studios',
-  // The website's favicon, in the project menu (and, through studio.css, at
-  // the top left, beside "CMS")
+  // The website's favicon, wherever Sanity shows the Studio's icon (the top
+  // bar, components/StudioNavbar.tsx, shows it beside "CMS")
   icon: StudioIcon,
 
   projectId: '5cwu7mnl',
@@ -117,10 +117,12 @@ export default defineConfig({
 
   tools: (tools) => tools.filter((tool) => VISIBLE_TOOLS.has(tool.name)),
 
-  // The top bar's Content / Visual editor switch (components/ToolToggle.tsx)
+  // The top bar, one row like Linear's: favicon and "CMS" (the project menu),
+  // the open tool's name, and the Content / Visual editor switch at the right
+  // (components/StudioNavbar.tsx, in place of Sanity's own bar)
   studio: {
     components: {
-      toolMenu: ToolToggle,
+      navbar: StudioNavbar,
     },
   },
 

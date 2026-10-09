@@ -2,9 +2,11 @@
 // soon as the config loads, so the login screen gets it too:
 // - the website's Adobe Fonts kit, the one src/layouts/BaseLayout.astro loads,
 //   for the fonts theme.ts names;
-// - a pure black page behind the Studio: Sanity paints html and body a
-//   blue-black (#13141b / #0d0e12) of its own;
+// - the Studio's ground behind it (theme.ts, BACKGROUND): Sanity paints
+//   html and body a blue-black (#13141b / #0d0e12) of its own;
 // - the workspace layout (below), kept right as the Studio re-renders.
+import {BACKGROUND} from './theme'
+
 const FONTS = 'https://use.typekit.net/nqu1vih.css'
 
 /** The Content sidebar's width: a compact column, like the reference's CMS
@@ -19,7 +21,7 @@ if (typeof document !== 'undefined') {
   const root = document.documentElement
   root.style.setProperty('--black', '#000000')
   root.style.setProperty('--tomrow-sidebar-width', `${SIDEBAR_WIDTH}px`)
-  for (const el of [root, document.body]) el?.style.setProperty('background-color', '#000000')
+  for (const el of [root, document.body]) el?.style.setProperty('background-color', BACKGROUND)
   watchLayout()
 }
 
@@ -79,9 +81,9 @@ function layout() {
       }
     })
   }
-  // Editing always means the working draft: the Published / Draft chips and
-  // the top bar's Drafts menu go (the status beside Publish Live remains)
-  for (const el of document.querySelectorAll<HTMLElement>('[data-ui="ReleasesNav"], [data-testid="document-perspective-list"], [data-testid="global-perspective-menu-button"]')) {
+  // Editing always means the working draft: the Published / Draft chips go
+  // (the status beside Publish Live remains; the top bar has no Drafts menu)
+  for (const el of document.querySelectorAll<HTMLElement>('[data-testid="document-perspective-list"]')) {
     set(el, {display: 'none'})
   }
 }

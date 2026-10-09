@@ -6,8 +6,8 @@ import {styled} from 'styled-components'
    section that makes the form taller no longer narrows every row by the
    width of a scrollbar.
 
-   The area's own scrollbar is hidden (studio.css, data-tomrow-overlay-scroll)
-   and scrolls exactly as before (wheel, trackpad, touch, keyboard); this
+   The Studio draws no scrollbars of its own (studio.css), and the area
+   scrolls exactly as before (wheel, trackpad, touch, keyboard); this
    draws a slim thumb over the edge, only while there is something to scroll,
    kept in step with the position and the content's height, and draggable.
    It sits in the rows' right padding, clear of their arrows.
@@ -45,7 +45,6 @@ export function OverlayScrollbar({containerRef, selector}: {containerRef: RefObj
   useEffect(() => {
     const root = containerRef.current
     if (!area || !root) return undefined
-    area.setAttribute('data-tomrow-overlay-scroll', '')
     const update = () => {
       const {scrollTop, scrollHeight, clientHeight} = area
       if (scrollHeight <= clientHeight + 1) {
@@ -80,7 +79,6 @@ export function OverlayScrollbar({containerRef, selector}: {containerRef: RefObj
       area.removeEventListener('scroll', update)
       resize.disconnect()
       children.disconnect()
-      area.removeAttribute('data-tomrow-overlay-scroll')
     }
   }, [area, containerRef])
 

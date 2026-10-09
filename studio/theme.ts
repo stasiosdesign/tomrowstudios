@@ -1,25 +1,27 @@
 import {buildLegacyTheme, type StudioTheme} from 'sanity'
 
-// The website's look: its two Adobe Fonts (loaded by page.ts) and its pure
-// black ground with white type (src/styles/style.css).
+// The website's fonts (two Adobe Fonts, loaded by page.ts) and white type on
+// a near-black ground, a shade lighter than the site's pure black: Linear's
+// (page.ts paints the page behind the Studio with it too).
 const TEXT = '"inter-tight-variable", sans-serif'
 const MONO = 'ui-monospace, SFMono-Regular, Menlo, Consolas, monospace' // code fields only
 const BLACK = '#000000'
 const WHITE = '#ffffff'
+export const BACKGROUND = '#08090a'
 
 // The legacy builder derives every tone from a background, a text colour and a
 // grey between them: black, white and a neutral grey give neutral greys, with
 // none of the default blue. Its light scheme reads the component colours and
-// its dark scheme the navigation colours, so both are set to black, and the
-// Studio is black whichever scheme is picked.
+// its dark scheme the navigation colours, so both take the ground, and the
+// Studio is the same whichever scheme is picked.
 const base = buildLegacyTheme({
   '--font-family-base': TEXT,
   '--font-family-monospace': MONO,
   '--black': BLACK,
   '--white': WHITE,
-  '--component-bg': BLACK,
+  '--component-bg': BACKGROUND,
   '--component-text-color': WHITE,
-  '--main-navigation-color': BLACK,
+  '--main-navigation-color': BACKGROUND,
   '--main-navigation-color--inverted': WHITE,
   '--gray-base': '#808080',
   '--gray': '#808080',
@@ -30,11 +32,11 @@ const fonts = base.fonts as NonNullable<StudioTheme['fonts']>
 
 /* The builder's hovered, pressed and selected states for the neutral tones
    invert: a light grey or blue ground with black text and icons (a menu's
-   active item, an icon button under the pointer). On this black Studio they
+   active item, an icon button under the pointer). On this dark Studio they
    keep white text and icons, on the same faint grey washes studio.css uses
    (--tomrow-hover, --tomrow-selected), so nothing turns black on hover. */
-const HOVER_BG = '#0f0f0f' // white at 6% on black
-const SELECTED_BG = '#1a1a1a' // white at 10% on black
+const HOVER_BG = '#171819' // white at 6% on the ground
+const SELECTED_BG = '#212222' // white at 10% on the ground
 // The same washes see-through, for icon buttons, which also sit on grey
 const WASH_HOVER = 'rgba(255, 255, 255, 0.06)'
 const WASH_SELECTED = 'rgba(255, 255, 255, 0.1)'

@@ -297,7 +297,8 @@ export function CollectionPane(props: {options?: Record<string, unknown>; childI
             <Box flex={1} style={{minWidth: 120}}>
               <PaneHeading>
                 {title}
-                {documents && <span className="pane-heading__count"> ({rows.length})</span>}
+                {/* How many, and while a search narrows them, how many of how many */}
+                {documents && <span className="pane-heading__count"> ({shown.length === rows.length ? rows.length : `${shown.length} of ${rows.length}`})</span>}
               </PaneHeading>
             </Box>
           )}
@@ -431,14 +432,6 @@ export function CollectionPane(props: {options?: Record<string, unknown>; childI
           </CompactList>
         )}
       </Box>
-
-      {!compact && documents !== null && rows.length > 0 && (
-        <Card borderTop style={{flexShrink: 0, padding: '12px 14px'}}>
-          <Text size={0} muted>
-            Showing {shown.length} of {rows.length}
-          </Text>
-        </Card>
-      )}
 
       {gate.dialog}
       {confirm && (

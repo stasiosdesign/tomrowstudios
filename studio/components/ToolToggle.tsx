@@ -1,25 +1,23 @@
 import {Flex, Text} from '@sanity/ui'
 import type {CSSProperties, KeyboardEvent} from 'react'
-import {ToolLink, type ToolMenuProps} from 'sanity'
+import {ToolLink, type Tool} from 'sanity'
 import {styled} from 'styled-components'
 
 /* The top bar's switch between the Studio's tools, Content and the Visual
-   editor (sanity.config.ts, studio.components.toolMenu): one grey track with
-   the same small corners as every other control, the active tool white with
-   black text on a highlight that slides over to the other when it becomes
-   active (the Osmo toggle switch's motion), the other dimmed like any tab
-   that isn't chosen (tab.ts: the same greys, lighter under the pointer).
+   editor, at its right (StudioNavbar): one grey track with the same small
+   corners as every other control, the active tool white with black text on
+   a highlight that slides over to the other when it becomes active (the
+   Osmo toggle switch's motion), the other dimmed like any tab that isn't
+   chosen (tab.ts: the same greys, lighter under the pointer).
 
    Each option is Sanity's own tool link, so switching, the address and each
    tool's state work as before. Which option is lit is Sanity's active tool,
    never a state of its own, so it always matches the view. The options are
    links: Tab reaches each, Enter follows it, the arrow keys (and Home and End)
    move between them as in Sanity's own tool menu, and the active one is
-   marked aria-current. On a narrow screen the tools stay in Sanity's own
-   side menu. */
-export function ToolToggle(props: ToolMenuProps) {
-  const {activeToolName, context, tools} = props
-  if (context !== 'topbar' || tools.length < 2) return props.renderDefault(props)
+   marked aria-current. */
+export function ToolToggle({tools, activeToolName}: {tools: Tool[]; activeToolName?: string}) {
+  if (tools.length < 2) return null
   const active = tools.findIndex((tool) => tool.name === activeToolName)
   const style = {'--tomrow-toggle-count': tools.length, '--tomrow-toggle-active': Math.max(active, 0)} as CSSProperties
   return (

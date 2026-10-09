@@ -160,7 +160,8 @@ three views, Phone, Laptop (a fitted 16:9 frame) and Fill (the default), sit
 in the side panel's header row with Show more (Sanity's Open in Content is removed there)
 (`PreviewControls`, through the Presentation tool's header option and the
 document header's control slot); switching views only resizes the frame.
-Collections name themselves once, as `Projects (5)`, in the same heading as a
+Collections name themselves once, as `Projects (5)` (`Projects (2 of 5)` while
+a search narrows them; there is no footer count), in the same heading as a
 static page's title (`PaneHeading`), with a compact search, an icon-only
 Columns button and a white New button; an opened item's list is headed
 "← Projects" and the item has no Comments. An opened item is named once, in
@@ -171,15 +172,25 @@ item's folding groups, open and close independently, and where a document
 has two or more, its header row has Expand all / Collapse all
 (`Sections.tsx`; an icon in the Visual editor's narrow panel). Page sections open and close with
 a short height transition (`Collapse`), menus with Sanity UI's popover
-motion, both off for anyone who prefers reduced motion. The top bar has no New document, search, Tasks, Help or trial
-countdown, and Favorites is hidden throughout. Content and the Visual editor
-are one switch in its middle, the active one white on a grey track with the
-same small corners as every control, sliding across when it changes
-(`ToolToggle`, Sanity's tool menu slot; on a phone the tools stay in Sanity's
-side menu). At its left, as in Linear's docs, the website's favicon (from
-www.tomrowstudios.com, `studio/static/site-favicon.png`), a hairline and
-"CMS"; the favicon opens the project menu (Manage project, Invite members),
-which shows it too (`components/StudioIcon.tsx`, `studio.css`).
+motion, both off for anyone who prefers reduced motion. Favorites is hidden
+throughout.
+
+The top bar is the Studio's own (`components/StudioNavbar.tsx`, in place of
+Sanity's), one row like Linear's: at its left, as wide as the Content
+sidebar under it and ruled off at the sidebar's edge, the website's favicon
+(from www.tomrowstudios.com, `studio/static/site-favicon.png`), a hairline
+and "CMS", which open the project menu (Manage project and Invite members
+on sanity.io, and Sign out); then the open tool's name ("Content"); and at
+the right, Content and the Visual editor as one switch, the active one
+white on a grey track, sliding across when it changes (`ToolToggle`). It has
+no search, New document, Tasks, help, presence or user menu. The sidebar has
+no header row of its own, so its entries start right under the bar.
+
+No scrollbars are drawn (`studio.css`): every area still scrolls by wheel,
+trackpad, touch and keyboard. A CMS item's form, the one long enough to
+need it, has a slim one drawn over its edge (`OverlayScrollbar`). Pictures'
+alternative-text fields are hidden from the forms for now
+(`schemaTypes/shared/alt-text.ts`): text already written is kept and used.
 
 The hosted Studio updates Sanity itself (`autoUpdates` in `sanity.cli.ts`),
 so it can run a newer Sanity than `npm run studio`. Where `studio.css` or a
@@ -187,11 +198,12 @@ component reaches into Sanity's markup, it allows for both: a form's column
 of fields, for one, is `data-ui="Stack"` in older releases and `"VStack"`
 (a flex column, no longer a grid) in newer ones.
 
-The Studio's look follows Linear's docs: restrained hairlines (`#222`, set
-in `theme.ts`), clear type and room to breathe. It has one grid
-(`studio.css`): under the top bar every pane starts with a band one bar tall
-(`--tomrow-bar-height`: the sidebar's header, a collection's or the
-Overview's header, the publishing bar), and every list of content under it
+The Studio's look follows Linear's docs: a near-black ground (`#08090a`,
+`BACKGROUND` in `theme.ts`, a shade lighter than the site's black),
+restrained hairlines (`#222`), clear type and room to breathe. It has one grid
+(`studio.css`): under the top bar every pane but the sidebar starts with a
+band one bar tall (`--tomrow-bar-height`: a collection's or the Overview's
+header, the publishing bar), and every list of content under it
 is ruled in rows one row tall (`--tomrow-row-height`, the hairline
 included): a collection's table and its Select bar, a page's sections and a
 CMS item's two header rows. The page editor's title row is two rows tall. So

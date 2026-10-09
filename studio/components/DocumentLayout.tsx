@@ -32,12 +32,14 @@ import {SectionsProvider} from './Sections'
    Everything is matched by Sanity's test IDs, its icons' names or this
    Studio's own markers, never by text.
 
-   The form's scroll area keeps its full width whether or not it can scroll:
-   its scrollbar is drawn over the edge (OverlayScrollbar), so opening a
-   section that makes the form taller moves nothing sideways. */
+   The Studio draws no scrollbars (studio.css). A CMS item's form, the one
+   long enough to need it, has a slim one drawn over its edge
+   (OverlayScrollbar), so it keeps its full width; a page's sections scroll
+   without one. */
 export function DocumentLayout(props: DocumentLayoutProps) {
   // A document opens in Content (the structure tool) or the Visual editor (presentation)
   const tool = useInVisualEditor() ? 'presentation' : 'structure'
+  const isPage = isPageType(props.documentType)
   const rootRef = useRef<HTMLDivElement | null>(null)
   return (
     <Root
@@ -46,14 +48,14 @@ export function DocumentLayout(props: DocumentLayoutProps) {
       height="fill"
       data-tomrow-document
       data-tomrow-tool={tool}
-      data-tomrow-page={isPageType(props.documentType) ? '' : undefined}
+      data-tomrow-page={isPage ? '' : undefined}
     >
       <PublishControls documentId={props.documentId} documentType={props.documentType} />
       <Flex direction="column" flex={1} style={{minHeight: 0}}>
         {/* The header's Expand all reaches this document's sections (Sections.tsx) */}
         <SectionsProvider>{props.renderDefault(props)}</SectionsProvider>
       </Flex>
-      <OverlayScrollbar containerRef={rootRef} selector="[data-testid='document-panel-scroller']" />
+      {!isPage && <OverlayScrollbar containerRef={rootRef} selector="[data-testid='document-panel-scroller']" />}
     </Root>
   )
 }

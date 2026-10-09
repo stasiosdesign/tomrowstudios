@@ -1,6 +1,7 @@
 /* The Studio's icon: the website's favicon (www.tomrowstudios.com's), served
-   from studio/static. Sanity shows it in the project menu (sanity.config.ts,
-   icon); studio.css draws the same file at the top left, beside "CMS". */
+   from studio/static. The top bar shows it beside "CMS" and in the project
+   menu (StudioNavbar); Sanity, wherever it shows the Studio's icon
+   (sanity.config.ts, icon). */
 const SITE_FAVICON = '/static/site-favicon.png'
 
 export function StudioIcon() {

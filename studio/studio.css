@@ -192,20 +192,16 @@ button.tomrow-cta--arrow > span {
   max-width: none !important;
 }
 
-/* The Content sidebar's header ("Content", Sanity's own pane header): as tall
-   as the publishing bar beside it, ruled the same, so the two rules line up */
-[data-testid='pane']:not([data-pane-collapsed]):has([data-tomrow-sidebar]) [data-testid='pane-header'] > [data-ui='Card'] {
-  box-sizing: border-box;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  min-height: var(--tomrow-bar-height);
-  border-bottom: 1px solid var(--card-border-color);
+/* The Content sidebar has no header row of its own: "Content" is in the top
+   bar (components/StudioNavbar.tsx), so the sidebar's entries start right
+   under it, as in Linear's. Collapsed to a strip (a narrow window), the
+   sidebar keeps Sanity's header, which names it there. */
+[data-testid='pane']:not([data-pane-collapsed]):has([data-tomrow-sidebar]) [data-testid='pane-header'] {
+  display: none;
 }
 
-/* Sanity's pane header titles (the sidebar's "Content", a CMS item's name) on
-   the same 14px inset as everything beneath them: 6px here, 8px their own */
-[data-testid='pane']:not([data-pane-collapsed]):has([data-tomrow-sidebar]) [data-testid='pane-header'] > [data-ui='Card'] > [data-ui='Flex'],
+/* Sanity's pane header titles (a CMS item's name) on the same 14px inset as
+   everything beneath them: 6px here, 8px their own */
 [data-tomrow-document] [data-testid='pane-header'] > [data-ui='Card'] > [data-ui='Flex'] {
   padding-left: 6px;
 }
@@ -218,15 +214,18 @@ button.tomrow-cta--arrow > span {
   max-width: 51px !important;
 }
 
-/* A document's scroll area draws no scrollbar of its own, so it never takes
-   width from the form: components/OverlayScrollbar.tsx draws one over the
-   edge instead. Scrolling itself is untouched. */
-[data-tomrow-overlay-scroll] {
+/* No scrollbars drawn anywhere: every area that scrolls (the sidebar, the
+   overview, a collection, the page editor, menus, dialogs) still scrolls by
+   wheel, trackpad, touch and keyboard, without the bar, and never gives up
+   width to one. A CMS item's form, long enough to need a sense of where you
+   are, draws a slim one over its edge instead (components/OverlayScrollbar.tsx,
+   from DocumentLayout). */
+* {
   scrollbar-width: none;
+}
 
-  &::-webkit-scrollbar {
-    display: none;
-  }
+*::-webkit-scrollbar {
+  display: none;
 }
 
 /* The document form uses the whole pane: Sanity's reading-width container
@@ -236,102 +235,11 @@ button.tomrow-cta--arrow > span {
 }
 
 /* Editing always means the working draft. The Published / Draft chips above
-   a document, and the Drafts menu in the top bar, are one decision fewer;
-   the status beside Publish Live says where the document stands. Drafts
-   stay off the ordinary staging and live sites regardless. */
-[data-testid='document-perspective-list'],
-[data-ui='ReleasesNav'],
-[data-testid='global-perspective-menu-button'],
-[data-testid='studio-navbar'] .sc-ws7kvy-0,
-[data-testid='studio-navbar'] [data-ui='Card']:has([data-testid='global-perspective-menu-button']) {
-  display: none !important;
-}
-
-/* The top bar: a little taller than Sanity's (its row fits the Content /
-   Visual editor switch, components/ToolToggle.tsx, and keeps that height on a
-   phone), everything centred in it, and the same 14px side inset as the
-   panes below. Where the switch is in the bar, the two sides share the room
-   equally, so the switch sits at the middle of the window. */
-[data-ui='Navbar'][data-testid='studio-navbar'] {
-  padding: 16px 14px;
-
-  & > [data-ui='Grid'] {
-    min-height: 32px;
-  }
-
-  & > [data-ui='Grid']:has([data-tomrow-tool-toggle]) {
-    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
-
-    & > :last-child {
-      justify-content: flex-end;
-    }
-  }
-}
-
-/* The top left, after Linear's docs: the website's favicon, a hairline, then
-   "CMS". The favicon opens the project menu (Manage project, Invite members),
-   which keeps the Studio's name and shows the favicon too
-   (components/StudioIcon.tsx). Sanity draws two controls there, an icon
-   linking to the Studio's home and a menu button with the Studio's name and
-   a chevron: the link goes, and the button draws the favicon and "CMS" in
-   place of its own content, which stays for screen readers. */
-[data-testid='studio-navbar'] [data-ui='Flex']:has(> a + [data-ui='MenuButton']) {
-  & > a {
-    display: none !important;
-  }
-
-  & > [data-ui='MenuButton'] > button {
-    position: relative;
-    display: inline-flex;
-    align-items: center;
-    gap: 12px;
-    padding: 4px 8px 4px 4px;
-    font-family: inherit;
-    font-size: 15px;
-    font-weight: 600;
-    line-height: 20px;
-    letter-spacing: -0.01em;
-    color: #ffffff;
-
-    & > * {
-      position: absolute;
-      width: 1px;
-      height: 1px;
-      overflow: hidden;
-      clip-path: inset(50%);
-      white-space: nowrap;
-    }
-
-    &::before {
-      content: '';
-      flex: none;
-      width: 24px;
-      height: 24px;
-      border-radius: 50%;
-      background: url('/static/site-favicon.png') center / cover;
-    }
-
-    &::after {
-      content: 'CMS';
-      padding-left: 12px;
-      border-left: 1px solid rgb(255 255 255 / 0.2);
-    }
-  }
-}
-
-/* The top bar without Help and resources or the trial countdown (Tasks is
-   switched off in sanity.config.ts). Sanity has no setting for these two, so
-   they go by their own markers: the Help menu's test ID, and the trial
-   button's bolt icon, which nothing else in the top bar uses. */
-[data-testid='studio-navbar'] [data-testid='button-resources-menu'],
-[data-testid='studio-navbar'] button:has(> span [data-sanity-icon='bolt']) {
-  display: none !important;
-}
-
-/* The top bar's New document button and search, beside the Studio's name.
-   Each CMS collection keeps its own New button and search (CollectionPane). */
-[data-testid='studio-navbar'] [data-testid='new-document-button'],
-[data-testid='studio-navbar'] [data-testid='studio-search'] {
+   a document are one decision fewer; the status beside Publish Live says
+   where the document stands. Drafts stay off the ordinary staging and live
+   sites regardless. (The top bar is the Studio's own, StudioNavbar, without
+   Sanity's Drafts menu, search, New document or help.) */
+[data-testid='document-perspective-list'] {
   display: none !important;
 }
 
