@@ -15,7 +15,7 @@ like a Webflow site's live and staging domains.
 |            | URL                                                     | From                        |
 | ---------- | ------------------------------------------------------- | --------------------------- |
 | Production | https://tomrowstudios.vercel.app                        | `main`                      |
-| Staging    | https://tomrowstudios-git-staging-stasiosdesign.vercel.app | `staging`                |
+| Staging    | https://tomrowstudios-staging.vercel.app | `staging`                |
 | Studio     | https://tomrowstudios.sanity.studio                     | `studio/`, deployed by hand |
 
 Staging's URL is Vercel's alias for the `staging` branch: it always shows the
