@@ -1,13 +1,13 @@
 import {defineArrayMember, defineField, defineType} from 'sanity'
 import {HomeIcon} from '@sanity/icons/Home'
-import {SectionField} from '../../components/SectionField'
+import {SectionField} from '../../cms'
 import {altTextField} from '../shared/alt-text'
 import {FIXED_LENGTH, fixedPhotosField} from '../shared/fixed-photos'
 
 // The home page, one field per section, in the order the page shows them. The
 // navigation, the footer and where every button leads stay in the site's code.
-// A singleton: structure.ts opens the one document with the fixed ID
-// "homePage", and sanity.config.ts stops copies being made or it being deleted.
+// A singleton: the Page editor (cms/structure.ts) opens the one document with the fixed ID
+// "homePage", and the CMS foundation stops copies being made or it being deleted.
 
 // Every section starts folded, so the document reads as an outline of the
 // page, each one a bar that opens and closes on a click (SectionField).

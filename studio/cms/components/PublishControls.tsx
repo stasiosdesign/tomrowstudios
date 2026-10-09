@@ -6,12 +6,11 @@ import {useToast} from '@sanity/ui/toast'
 import {useCallback, useEffect, useMemo, useRef, useState} from 'react'
 import {useClient, useEditState, useSchema, useSyncState, useValidationStatus, type SanityDocument} from 'sanity'
 import {styled} from 'styled-components'
-import {API_VERSION, datasetClients, failText, PublishError, publishLive, publishStaging, unpublish, type Phase, type PublishResult} from '../lib/publish'
+import {useCms} from '../context'
+import {API_VERSION, datasetClients, failText, PublishError, publishLive, publishStaging, unpublish, type Datasets, type Phase, type PublishResult} from '../lib/publish'
 import {advance, buildDone, currentStep, failRun, finishRun, hasFailed, isActive, isBusy, LINGER_MS, REBUILD_SLOW_MS, startRun, type Run, type RunKind} from '../lib/run'
-import {isPageType, LIVE_ORIGIN, routeFor, STAGING_ORIGIN} from '../lib/site'
 import {groupById, groupStatus, logId, publishStatus, STATUS_LABEL, type PublishLog, type PublishStatus, type UnpublishLog} from '../lib/status'
 import {LISTEN_OPTIONS, watchReads} from '../lib/watch'
-import {PAGES} from '../schemaTypes/pages'
 import {AnimatedMenuButton} from './AnimatedMenuButton'
 import {ConfirmDialog} from './ConfirmDialog'
 import {formatDate} from './format'
@@ -53,18 +52,15 @@ import {builtSince, useBuildStamp} from './useBuildStamp'
    anyone else gets the permission dialog (PermissionDialog.tsx) on click,
    and nothing is sent. */
 
-/** The static site: every page's document ID (a singleton's ID is its type) */
-const SITE = PAGES.map((page) => page.type)
-
 type SiteState = {live: SanityDocument | null; liveLog: PublishLog | null; stagingLog: UnpublishLog | null}
 
 // What the sites hold beyond the editor's own documents: the live copy and its
 // note from production, and the unpublish note from staging, kept current
-function useSiteState(id: string): SiteState {
+function useSiteState(id: string, datasets: Datasets): SiteState {
   const client = useClient({apiVersion: API_VERSION})
   const [state, setState] = useState<SiteState>({live: null, liveLog: null, stagingLog: null})
   useEffect(() => {
-    const {staging, production} = datasetClients(client)
+    const {staging, production} = datasetClients(client, datasets)
     const params = {id, logId: logId(id)}
     return watchReads({
       read: () =>
@@ -75,31 +71,31 @@ function useSiteState(id: string): SiteState {
       listeners: [production.listen(`*[_id in [$id, $logId]]`, params, LISTEN_OPTIONS), staging.listen(`*[_id == $logId]`, params, LISTEN_OPTIONS)],
       onRead: ([{live, log}, stagingLog]) => setState({live, liveLog: log, stagingLog}),
     })
-  }, [client, id])
+  }, [client, datasets, id])
   return state
 }
 
 // The static site's one status (lib/status.ts, groupStatus), from every
 // page's own, and each page's for the tooltip; kept current
 type SiteGroup = {status: PublishStatus | null; pages: {id: string; status: PublishStatus | null}[]}
-function useSiteGroup(enabled: boolean): SiteGroup | null {
+function useSiteGroup(enabled: boolean, pageIds: string[], datasets: Datasets): SiteGroup | null {
   const client = useClient({apiVersion: API_VERSION})
   const [group, setGroup] = useState<SiteGroup | null>(null)
   useEffect(() => {
     if (!enabled) return undefined
-    const {staging, production} = datasetClients(client)
-    const params = {ids: SITE, drafts: SITE.map((id) => `drafts.${id}`), logs: SITE.map(logId)}
+    const {staging, production} = datasetClients(client, datasets)
+    const params = {ids: pageIds, drafts: pageIds.map((id) => `drafts.${id}`), logs: pageIds.map(logId)}
     const query = `*[_id in $ids || _id in $drafts || _id in $logs]`
     return watchReads({
       read: () => Promise.all([staging.fetch<SanityDocument[]>(query, params), production.fetch<SanityDocument[]>(query, params)]),
       listeners: [staging, production].map((source) => source.listen(query, params, LISTEN_OPTIONS)),
       onRead: ([onStaging, onLive]) => {
         const byId = groupById(onStaging, onLive)
-        const pages = SITE.map((id) => ({id, status: publishStatus(byId.get(id) ?? {})}))
+        const pages = pageIds.map((id) => ({id, status: publishStatus(byId.get(id) ?? {})}))
         setGroup({status: groupStatus(pages.map((page) => page.status)), pages})
       },
     })
-  }, [client, enabled])
+  }, [client, enabled, pageIds, datasets])
   return group
 }
 
@@ -111,17 +107,23 @@ export function PublishControls({documentId, documentType}: {documentId: string;
   const schemaType = schema.get(documentType)
   const client = useClient({apiVersion: API_VERSION})
   const toast = useToast()
+  const cms = useCms()
+  const {datasets, sites, routeFor} = cms
+  /** The static site: every page's document ID (a singleton's ID is its type), in the site's order */
+  const SITE = useMemo(() => cms.pages.map((page) => page.type), [cms.pages])
+  // Where the actions go (the project's route, cms/config.ts)
+  const connection = useMemo(() => ({client, endpoint: cms.publishEndpoint}), [client, cms.publishEndpoint])
 
   const {draft, published, ready} = useEditState(documentId, documentType)
   const {isSyncing} = useSyncState(documentId, documentType)
   const {validation} = useValidationStatus(documentId, documentType, false)
-  const {live, liveLog, stagingLog} = useSiteState(documentId)
-  const isSite = isPageType(documentType) && SITE.includes(documentId)
-  const siteGroup = useSiteGroup(isSite)
+  const {live, liveLog, stagingLog} = useSiteState(documentId, datasets)
+  const isSite = cms.isPage(documentType) && SITE.includes(documentId)
+  const siteGroup = useSiteGroup(isSite, SITE, datasets)
   const gate = usePermissionGate()
 
   const current = draft ?? published
-  const isPage = isPageType(documentType)
+  const isPage = cms.isPage(documentType)
   const typeTitle = schemaType?.title ?? documentType
   const itemTitle = isPage
     ? typeTitle
@@ -214,13 +216,13 @@ export function PublishControls({documentId, documentType}: {documentId: string;
   }
   const what = isSite ? 'the site' : itemTitle
   const doPublishLive = () =>
-    current && !blocked() && start({kind: 'live', what, restricted: 'publish', action: (onPhase) => publishLive(client, {id: documentId, rev: current._rev, site}, onPhase)})
+    current && !blocked() && start({kind: 'live', what, restricted: 'publish', action: (onPhase) => publishLive(connection, {id: documentId, rev: current._rev, site}, onPhase)})
   const doPublishStaging = () =>
-    current && !blocked() && start({kind: 'staging', what, restricted: 'publish', action: (onPhase) => publishStaging(client, {id: documentId, rev: current._rev, site}, onPhase)})
+    current && !blocked() && start({kind: 'staging', what, restricted: 'publish', action: (onPhase) => publishStaging(connection, {id: documentId, rev: current._rev, site}, onPhase)})
   const [confirmUnpublish, setConfirmUnpublish] = useState(false)
   const doUnpublish = () => {
     setConfirmUnpublish(false)
-    return start({kind: 'unpublish', what: itemTitle, restricted: 'unpublish', action: (onPhase) => unpublish(client, {id: documentId}, onPhase)})
+    return start({kind: 'unpublish', what: itemTitle, restricted: 'unpublish', action: (onPhase) => unpublish(connection, {id: documentId}, onPhase)})
   }
 
   // The detail behind the status (dates, the live site's rebuild; for the
@@ -229,7 +231,7 @@ export function PublishControls({documentId, documentType}: {documentId: string;
   if (isSite) {
     details.push('All pages publish together. CMS items are published on their own.')
     for (const page of siteGroup?.pages ?? []) {
-      if (page.status) details.push(`${PAGES.find((entry) => entry.type === page.id)?.title ?? page.id}: ${STATUS_LABEL[page.status]}`)
+      if (page.status) details.push(`${cms.pages.find((entry) => entry.type === page.id)?.title ?? page.id}: ${STATUS_LABEL[page.status]}`)
     }
   } else if (published) details.push(`Staging: published ${formatDate(published._updatedAt, true)}`)
   if (live) {
@@ -289,9 +291,9 @@ export function PublishControls({documentId, documentType}: {documentId: string;
                       onClick={() => gate.allow('unpublish') && setConfirmUnpublish(true)}
                     />
                   )}
-                  {route && (STAGING_ORIGIN || (LIVE_ORIGIN && live)) && <MenuDivider />}
-                  {route && LIVE_ORIGIN && live && <MenuItem as="a" href={`${LIVE_ORIGIN}${route}`} target="_blank" rel="noreferrer" icon={LaunchIcon} text="Live site link" />}
-                  {route && STAGING_ORIGIN && <MenuItem as="a" href={`${STAGING_ORIGIN}${route}`} target="_blank" rel="noreferrer" icon={LaunchIcon} text="Staging link" />}
+                  {route && (sites.preview || (sites.live && live)) && <MenuDivider />}
+                  {route && sites.live && live && <MenuItem as="a" href={`${sites.live}${route}`} target="_blank" rel="noreferrer" icon={LaunchIcon} text="Live site link" />}
+                  {route && sites.preview && <MenuItem as="a" href={`${sites.preview}${route}`} target="_blank" rel="noreferrer" icon={LaunchIcon} text="Staging link" />}
                 </Menu>
               }
             />

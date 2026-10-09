@@ -1,7 +1,7 @@
 import {Box} from '@sanity/ui'
 import type {ObjectSchemaType} from 'sanity'
 import {useDocumentTitle} from 'sanity/structure'
-import {isPageType} from '../lib/site'
+import {useCms} from '../context'
 import {PANE_HEADING_PADDING_Y, PaneHeading} from './PaneHeading'
 import {useInVisualEditor} from './PreviewControls'
 
@@ -14,10 +14,11 @@ import {useInVisualEditor} from './PreviewControls'
    once. Nothing in the Visual editor, where the form names it. */
 export function PaneTitle({schemaType}: {schemaType: ObjectSchemaType}) {
   const inVisualEditor = useInVisualEditor()
+  const {isPage} = useCms()
   const {title} = useDocumentTitle()
   if (inVisualEditor) return null
   const typeTitle = schemaType.title ?? schemaType.name
-  const name = isPageType(schemaType.name) ? typeTitle : title?.trim() || `Untitled ${typeTitle.toLowerCase()}`
+  const name = isPage(schemaType.name) ? typeTitle : title?.trim() || `Untitled ${typeTitle.toLowerCase()}`
   return (
     <Box data-tomrow-pane-title flex={1} style={{minWidth: 0, paddingBlock: PANE_HEADING_PADDING_Y}}>
       <PaneHeading title={name}>{name}</PaneHeading>

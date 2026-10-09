@@ -2,7 +2,7 @@
 
    Staging and development only (astro.config.mjs injects the route where
    the site renders on request; production, being static, has nothing of
-   the kind). The Studio's publishing controls call it (studio/lib/publish.ts)
+   the kind). The Studio's publishing controls call it (studio/cms/lib/publish.ts)
    for every publishing action:
 
      { action: "publish",   id, rev? }   publish the document's current saved
@@ -323,7 +323,7 @@ async function writeAll(staging: SanityClient, production: SanityClient, prepare
   // the revision read above: if an editor typed on while this ran, Sanity
   // refuses the commit (409) and it is made again with every draft kept, so
   // those edits stay as drafts instead of being lost (a draft identical to
-  // what was published reads as published anyway: studio/lib/status.ts).
+  // what was published reads as published anyway: studio/cms/lib/status.ts).
   const stagingStarted = performance.now();
   const toStaging = (withDrafts: boolean) => {
     const transaction = staging.transaction();
@@ -390,7 +390,7 @@ const logId = (id: string) => `publish-log.${id}`;
 
 /* What the two sides are compared on: the content, without the system fields
    that differ by nature, keys sorted. The same function as the Studio's
-   (studio/lib/status.ts), so the two agree. */
+   (studio/cms/lib/status.ts), so the two agree. */
 function contentKey(doc: SanityDocument): string {
   const { _id: _i, _rev: _r, _updatedAt: _u, _createdAt: _c, _system: _s, ...content } = doc as SanityDocument & { _system?: unknown };
   return JSON.stringify(content, (_key, value) =>

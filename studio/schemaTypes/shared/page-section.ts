@@ -1,29 +1,14 @@
-import {defineArrayMember, defineField, type FieldDefinition} from 'sanity'
-import {CollapsibleField, SectionField} from '../../components/SectionField'
+import {defineArrayMember, defineField} from 'sanity'
+import {CollapsibleField} from '../../cms'
 import {optionalAltTextField} from './alt-text'
 
 // The building blocks of the page documents (schemaTypes/pages): one section
-// per part of a page, each a folded bar in the form (SectionField), holding
-// the few things the page's code no longer fixes: a label, a heading, a
-// standfirst, a picture, a button's words. Every page's own file is a list of
-// these, so it reads as an outline of the page.
-
-const SECTION = {
-  options: {collapsible: true, collapsed: true},
-  components: {field: SectionField},
-}
-
-/** One section of a page: a folded object with the given fields, all of it required. */
-export const pageSection = (name: string, title: string, description: string, fields: FieldDefinition[]) =>
-  defineField({
-    name,
-    title,
-    type: 'object',
-    description,
-    ...SECTION,
-    validation: (rule) => rule.required(),
-    fields,
-  })
+// per part of a page, each a folded bar in the form (pageSection, the CMS
+// foundation's convention for the Page editor), holding the few things the
+// page's code no longer fixes: a label, a heading, a standfirst, a picture, a
+// button's words. Every page's own file is a list of these, so it reads as an
+// outline of the page.
+export {pageSection} from '../../cms'
 
 /** The small line above a heading (the tagline). */
 export const labelField = (description = 'The small line above the heading.', name = 'label', title = 'Label') =>

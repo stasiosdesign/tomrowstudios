@@ -1,6 +1,6 @@
 import {defineField, defineType} from 'sanity'
 import {DocumentIcon} from '@sanity/icons/Document'
-import {BlockItem} from '../../components/BlockItem'
+import {BlockItem} from '../../cms'
 import {optionalAltTextField} from '../shared/alt-text'
 
 // One of the three stepped cards under Recognition on the home page: a photo,

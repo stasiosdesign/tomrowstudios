@@ -5,18 +5,20 @@ import {usePresentationNavigate, usePresentationParams} from 'sanity/presentatio
 import {useRouter} from 'sanity/router'
 import {useDocumentTitle} from 'sanity/structure'
 import {styled} from 'styled-components'
-import type {Collection} from '../structure'
+import type {CmsCollection} from '../config'
+import {useCms} from '../context'
 import {cmsItemPath, pageAt, pageOfType} from './navigation'
 
-/* The Visual editor's panel for a CMS item (a project, a shop item, a
-   partner): clicked in the preview, it is not edited here, beside the page,
+/* The Visual editor's panel for a CMS item (one of the collections in
+   cms/config.ts): clicked in the preview, it is not edited here, beside the page,
    but in its CMS collection, so the panel says so instead of showing its
    fields (DocumentLayout): what it is and which collection holds it, Go to
    CMS item, which opens that very item in its collection in Content, and
    Dismiss, back to the page in the preview (or, where the preview is the
    item's own page, the page that lists the collection). Page Editor content
    and its repeatable blocks are edited in the panel as before. */
-export function CmsItemPrompt({documentId, collection}: {documentId: string; collection: Collection}) {
+export function CmsItemPrompt({documentId, collection}: {documentId: string; collection: CmsCollection}) {
+  const cms = useCms()
   const {title} = useDocumentTitle()
   const router = useRouter()
   const navigate = usePresentationNavigate()
@@ -31,10 +33,10 @@ export function CmsItemPrompt({documentId, collection}: {documentId: string; col
     router.navigateUrl({path: itemPath})
   }
   const dismiss = () => {
-    const shown = pageAt(preview)
+    const shown = pageAt(cms, preview)
     if (shown) navigate(undefined, {type: shown.type, id: shown.type})
     else {
-      const listing = pageOfType(collection.listedOn)
+      const listing = pageOfType(cms, collection.listedOn)
       if (listing) navigate(listing.route, {type: listing.type, id: listing.type})
     }
   }

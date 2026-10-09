@@ -44,7 +44,7 @@ The README explains the system; these are the working rules.
   Visual editor read it) and `production` (the live site alone reads it; only
   the site's `/api/publish` route writes to it, with
   `SANITY_API_WRITE_TOKEN`, after checking the caller's Studio session). The
-  publishing control is `studio/components/PublishControls.tsx`; the route
+  publishing control is `studio/cms/components/PublishControls.tsx`; the route
   is `src/sanity/publish/`. Keep that separation: production never reads
   `staging`, no browser code ever holds a write token, and publishing never
   touches Git.
@@ -56,3 +56,19 @@ The README explains the system; these are the working rules.
   whichever branch is checked out, and serves both environments. Deploy it
   after schema or Studio changes, and keep schema changes backward-compatible
   with the code on `main` (they share one dataset).
+
+## The CMS foundation
+
+- `studio/cms/` is the shared CMS foundation, the future package every
+  client Studio uses (`studio/cms/README.md`); the rest of `studio/` is this
+  website (`project.ts`, `schemaTypes/`, `components/`).
+- Shared behaviour and design go in `cms/`; anything about this website
+  (types, pages, routes, wording about its content, integrations) goes in
+  `project.ts` or the schema, reaching `cms/` only through its config. If
+  shared code needs to know something new about a site, add a typed field to
+  `cms/config.ts` rather than importing it.
+- `npm run check` enforces the boundary (`studio/eslint.config.mjs`): `cms/`
+  imports nothing outside itself and reads no `process.env`; the website
+  imports only `cms/index.ts`.
+- Bump `cms/package.json`'s version when changing `cms/` (semver: major for
+  anything a website must change).

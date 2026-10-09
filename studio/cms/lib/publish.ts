@@ -1,5 +1,4 @@
 import type {SanityClient} from 'sanity'
-import {STAGING_ORIGIN} from './site'
 
 /* Publishing, as the Studio sees it (see the README, "Content").
 
@@ -26,18 +25,27 @@ import {STAGING_ORIGIN} from './site'
    an action is. An older route that answers in one piece is read as before.
 
    The status of a document is read straight from the datasets
-   (lib/status.ts). */
+   (lib/status.ts).
 
-export const STAGING_DATASET = 'staging'
-export const PRODUCTION_DATASET = 'production'
+   The datasets' names and the route's address are the site's (cms/config.ts,
+   publishing): the components read them from the project's configuration
+   (useCms) and hand them to the functions here. */
+
+/** The dataset the Studio edits, and the one only the live site reads */
+export type Datasets = {staging: string; production: string}
+
+export const DEFAULT_DATASETS: Datasets = {staging: 'staging', production: 'production'}
+
+/** Where an action is sent: the Studio's client (its session token says who is asking) and the publishing route's full address */
+export type PublishConnection = {client: SanityClient; endpoint: string}
 
 /** The API version the publishing control and the collections read with */
 export const API_VERSION = '2025-02-19'
 
 /** Readers for both datasets as they are (raw: drafts and notes included), never from the CDN */
-export function datasetClients(client: SanityClient): {staging: SanityClient; production: SanityClient} {
-  const staging = client.withConfig({dataset: STAGING_DATASET, perspective: 'raw', useCdn: false})
-  return {staging, production: staging.withConfig({dataset: PRODUCTION_DATASET})}
+export function datasetClients(client: SanityClient, datasets: Datasets): {staging: SanityClient; production: SanityClient} {
+  const staging = client.withConfig({dataset: datasets.staging, perspective: 'raw', useCdn: false})
+  return {staging, production: staging.withConfig({dataset: datasets.production})}
 }
 
 /** The Vercel protection-bypass secret the Visual editor also uses, kept in the dataset by its tool */
@@ -122,11 +130,11 @@ const forgetBypass = () => {
 
 type Answer = {ok?: boolean; error?: string; details?: PublishErrorDetails; status?: number; phases?: Phase[]; phase?: Phase} & Partial<PublishResult>
 
-async function call(client: SanityClient, body: Record<string, unknown>, onPhase?: (phase: Phase) => void): Promise<PublishResult> {
-  if (!STAGING_ORIGIN) throw new PublishError('The staging site’s address is not set (SANITY_STUDIO_PREVIEW_ORIGIN).', 0)
+async function call({client, endpoint}: PublishConnection, body: Record<string, unknown>, onPhase?: (phase: Phase) => void): Promise<PublishResult> {
+  if (!endpoint) throw new PublishError('The staging site’s address is not set.', 0)
   const token = client.config().token
   if (!token) throw new PublishError('No Studio session token is available to identify you. Sign out and in again.', 0)
-  const url = new URL('/api/publish', STAGING_ORIGIN)
+  const url = new URL(endpoint)
   const secret = await bypassSecret(client)
   if (secret) url.searchParams.set('x-vercel-protection-bypass', secret)
   let response: Response
@@ -197,21 +205,21 @@ export type Target = {id: string; rev?: string; site?: string[]; ids?: string[]}
  * Puts the current saved version on staging and the live site: of the document, of every static
  * page (`site`) or of each of several items (`ids`). `rev` pins the exact revision of `id`.
  */
-export function publishLive(client: SanityClient, target: Target, onPhase?: (phase: Phase) => void): Promise<PublishResult> {
-  return call(client, {action: 'publish', ...target}, onPhase)
+export function publishLive(connection: PublishConnection, target: Target, onPhase?: (phase: Phase) => void): Promise<PublishResult> {
+  return call(connection, {action: 'publish', ...target}, onPhase)
 }
 
 /** The same, on staging only; the live site is not changed */
-export function publishStaging(client: SanityClient, target: Target, onPhase?: (phase: Phase) => void): Promise<PublishResult> {
-  return call(client, {action: 'stage', ...target}, onPhase)
+export function publishStaging(connection: PublishConnection, target: Target, onPhase?: (phase: Phase) => void): Promise<PublishResult> {
+  return call(connection, {action: 'stage', ...target}, onPhase)
 }
 
 /** Takes the document (or each of `ids`) off both sites; the Studio keeps its content as a draft */
-export function unpublish(client: SanityClient, target: Target, onPhase?: (phase: Phase) => void): Promise<PublishResult> {
-  return call(client, {action: 'unpublish', ...target}, onPhase)
+export function unpublish(connection: PublishConnection, target: Target, onPhase?: (phase: Phase) => void): Promise<PublishResult> {
+  return call(connection, {action: 'unpublish', ...target}, onPhase)
 }
 
 /** Deletes the document (or each of `ids`) everywhere: both sites and the Studio */
-export function deleteDocument(client: SanityClient, target: Target, onPhase?: (phase: Phase) => void): Promise<PublishResult> {
-  return call(client, {action: 'delete', ...target}, onPhase)
+export function deleteDocument(connection: PublishConnection, target: Target, onPhase?: (phase: Phase) => void): Promise<PublishResult> {
+  return call(connection, {action: 'delete', ...target}, onPhase)
 }

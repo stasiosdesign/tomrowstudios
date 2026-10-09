@@ -1,6 +1,6 @@
 import {type InputProps} from 'sanity'
 import {styled} from 'styled-components'
-import {isPageType} from '../lib/site'
+import {useCms} from '../context'
 import {useInVisualEditor} from './PreviewControls'
 import {sectionColumns} from './SectionField'
 
@@ -20,7 +20,8 @@ import {sectionColumns} from './SectionField'
    Visual editor's Expand all / Collapse all acts on them all (Sections.tsx). */
 export function PageInput(props: InputProps) {
   const inVisualEditor = useInVisualEditor()
-  if (props.path.length > 0 || !isPageType(props.schemaType.name)) return props.renderDefault(props)
+  const {isPage} = useCms()
+  if (props.path.length > 0 || !isPage(props.schemaType.name)) return props.renderDefault(props)
   return (
     <Sections>
       {!inVisualEditor && (

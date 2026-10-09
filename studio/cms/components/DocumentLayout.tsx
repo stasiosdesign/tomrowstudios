@@ -2,7 +2,7 @@ import {Flex} from '@sanity/ui'
 import {useRef} from 'react'
 import type {DocumentLayoutProps} from 'sanity'
 import {styled} from 'styled-components'
-import {isPageType} from '../lib/site'
+import {useCms} from '../context'
 import {CmsItemPrompt} from './CmsItemPrompt'
 import {FORM_WIDTH} from './FieldLayout'
 import {collectionOfType} from './navigation'
@@ -44,11 +44,12 @@ import {SectionsProvider} from './Sections'
 export function DocumentLayout(props: DocumentLayoutProps) {
   // A document opens in Content (the structure tool) or the Visual editor (presentation)
   const tool = useInVisualEditor() ? 'presentation' : 'structure'
-  const isPage = isPageType(props.documentType)
+  const cms = useCms()
+  const isPage = cms.isPage(props.documentType)
   const rootRef = useRef<HTMLDivElement | null>(null)
   // A CMS item clicked in the Visual editor's preview is edited in its
   // collection, not here: the panel says so (CmsItemPrompt)
-  const collection = tool === 'presentation' ? collectionOfType(props.documentType) : undefined
+  const collection = tool === 'presentation' ? collectionOfType(cms, props.documentType) : undefined
   if (collection) {
     return (
       <Root direction="column" height="fill" data-tomrow-document data-tomrow-tool={tool}>

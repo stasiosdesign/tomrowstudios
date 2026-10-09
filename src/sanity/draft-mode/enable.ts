@@ -1,5 +1,5 @@
 /* GET /api/draft-mode/enable: where the Studio's Visual editor opens the site
-   (previewMode in studio/sanity.config.ts). Staging and development only.
+   (previewMode in studio/cms/studio.ts). Staging and development only.
 
    The URL carries the preview secret the Studio has just created, the page to
    show and, when staging is protected by Vercel Authentication, Vercel's bypass

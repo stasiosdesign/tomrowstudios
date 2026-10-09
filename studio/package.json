@@ -11,7 +11,7 @@
     "deploy-graphql": "sanity graphql deploy",
     "dev": "sanity dev",
     "start": "sanity start",
-    "test": "node --experimental-strip-types --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --disable-warning=ExperimentalWarning --test \"lib/**/*.test.ts\"",
+    "test": "node --experimental-strip-types --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --disable-warning=ExperimentalWarning --test \"cms/**/*.test.ts\"",
     "typegen": "sanity schemas extract --force && sanity typegen generate"
   },
   "keywords": [

@@ -1,5 +1,6 @@
 import {useEffect, useState} from 'react'
-import {fetchBuildStamp, LIVE_ORIGIN, type BuildStamp} from '../lib/site'
+import {useCms} from '../context'
+import {fetchBuildStamp, type BuildStamp} from '../lib/site'
 
 /* The live site's build stamp (/build.json, written by every production
    build): read when the live copy changes, then again every so often while
@@ -11,19 +12,20 @@ const POLL_MS = 15_000
 const EAGER_POLL_MS = 6_000
 
 export function useBuildStamp(liveUpdatedAt: string | undefined, eager = false): BuildStamp | null | undefined {
+  const origin = useCms().sites.live
   const [stamp, setStamp] = useState<BuildStamp | null | undefined>(undefined)
   const again = !!liveUpdatedAt && (stamp === null || (!!stamp && stamp.builtAt < liveUpdatedAt))
   useEffect(() => {
-    if (!liveUpdatedAt || !LIVE_ORIGIN) return undefined
+    if (!liveUpdatedAt || !origin) return undefined
     let cancelled = false
-    const load = () => fetchBuildStamp(LIVE_ORIGIN).then((result) => !cancelled && setStamp(result))
+    const load = () => fetchBuildStamp(origin).then((result) => !cancelled && setStamp(result))
     load()
     const timer = again ? setInterval(load, eager ? EAGER_POLL_MS : POLL_MS) : undefined
     return () => {
       cancelled = true
       clearInterval(timer)
     }
-  }, [liveUpdatedAt, again, eager])
+  }, [origin, liveUpdatedAt, again, eager])
   return stamp
 }
 

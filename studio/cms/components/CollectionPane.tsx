@@ -12,6 +12,8 @@ import {useClient, useSchema, type SanityDocument} from 'sanity'
 import {useRouter} from 'sanity/router'
 import {usePaneRouter} from 'sanity/structure'
 import {styled} from 'styled-components'
+import type {CollectionOptions} from '../config'
+import {useCms} from '../context'
 import {API_VERSION, datasetClients, deleteDocument, failText, PublishError, publishLive, publishStaging, unpublish, type FailedDocument, type Phase} from '../lib/publish'
 import {advance, buildDone, currentStep, failRun, finishRun, hasFailed, isActive, isBusy, LINGER_MS, REBUILD_SLOW_MS, startRun, type Run} from '../lib/run'
 import {groupById, publishStatus, STATUS_LABEL, type PublishStatus} from '../lib/status'
@@ -42,19 +44,6 @@ import {builtSince, useBuildStamp} from './useBuildStamp'
    options from there. Rows come straight from the dataset: drafts,
    published documents, live copies and the publishing notes, joined by ID,
    so each row can say where the item stands (lib/status.ts, publishStatus). */
-
-export type CollectionOptions = {
-  /** The document type */
-  type: string
-  /** The collection's name, e.g. "Projects" */
-  title: string
-  /** One item, e.g. "project" */
-  singular: string
-  /** The field that names an item: title or name */
-  nameField: string
-  /** The field the collection is ordered by, if it has one */
-  orderField?: string
-}
 
 type Row = {
   id: string
@@ -120,6 +109,9 @@ export function CollectionPane(props: {options?: Record<string, unknown>; childI
   const schema = useSchema()
   const schemaType = schema.get(type)
   const client = useClient({apiVersion: API_VERSION})
+  const {datasets, publishEndpoint} = useCms()
+  // Where the publishing actions go (the project's route, cms/config.ts)
+  const connection = useMemo(() => ({client, endpoint: publishEndpoint}), [client, publishEndpoint])
   const {projectId, dataset} = client.config() as {projectId: string; dataset: string}
   const router = useRouter()
   const {ChildLink, groupIndex, routerPanesState} = usePaneRouter()
@@ -130,7 +122,7 @@ export function CollectionPane(props: {options?: Record<string, unknown>; childI
   const [documents, setDocuments] = useState<Documents | null>(null)
   const [error, setError] = useState<string | null>(null)
   useEffect(() => {
-    const {staging, production} = datasetClients(client)
+    const {staging, production} = datasetClients(client, datasets)
     // Drafts and published documents; never a dotted ID, which Sanity keeps private
     const items = `_type == $type && (count(string::split(_id, ".")) == 1 || _id in path("drafts.**"))`
     return watchReads({
@@ -146,7 +138,7 @@ export function CollectionPane(props: {options?: Record<string, unknown>; childI
       },
       onError: (err) => setError(err.message),
     })
-  }, [client, type])
+  }, [client, datasets, type])
 
   const rows = useMemo(() => (documents ? toRows(documents, nameField) : []), [documents, nameField])
 
@@ -300,7 +292,7 @@ export function CollectionPane(props: {options?: Record<string, unknown>; childI
         updateBulk(run)
       }
       try {
-        const result = await call(client, {id: ids[0], ids}, (phase: Phase) => step((current) => advance(current, phase)))
+        const result = await call(connection, {id: ids[0], ids}, (phase: Phase) => step((current) => advance(current, phase)))
         // A site whose route predates bulk actions took the first item alone:
         // the rest go one by one, as before
         const covered = new Set([...result.published, ...result.failed.map((item) => item.id)])
@@ -308,7 +300,7 @@ export function CollectionPane(props: {options?: Record<string, unknown>; childI
         const published = [...result.published]
         for (const id of ids.filter((item) => !covered.has(item))) {
           try {
-            await call(client, {id})
+            await call(connection, {id})
             published.push(id)
           } catch (error) {
             if (isPermissionError(error)) throw error
@@ -326,7 +318,7 @@ export function CollectionPane(props: {options?: Record<string, unknown>; childI
         } else step((current) => failRun(current, failText(error), error instanceof PublishError ? error.phases : []))
       }
     },
-    [client, selectedId, showAll, singular, lowerTitle, gate, updateBulk],
+    [connection, selectedId, showAll, singular, lowerTitle, gate, updateBulk],
   )
   const retryBulk = useCallback(() => lastBulk.current && runBulk(lastBulk.current.action, lastBulk.current.ids), [runBulk])
   const titles = useMemo(() => Object.fromEntries(rows.map((row) => [row.id, row.title])), [rows])

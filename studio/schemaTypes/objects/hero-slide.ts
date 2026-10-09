@@ -1,6 +1,6 @@
 import {defineField, defineType} from 'sanity'
 import {ImageIcon} from '@sanity/icons/Image'
-import {BlockItem} from '../../components/BlockItem'
+import {BlockItem} from '../../cms'
 
 // One of the home hero dial's five states: the caption beside the dial, the
 // photograph in its round frame, and the full-screen photograph behind it.

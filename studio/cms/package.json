@@ -1,0 +1,19 @@
+{
+  "name": "@stasiosdesign/sanity-cms",
+  "version": "0.1.0",
+  "private": true,
+  "description": "The CMS foundation every website's Sanity Studio is built on: Content (Page editor, CMS collections), the Visual editor, the publishing control and the design system. Not yet published: it lives in the Tomrow Studios repository until it is extracted (README.md).",
+  "license": "UNLICENSED",
+  "type": "module",
+  "exports": {
+    ".": "./index.ts"
+  },
+  "peerDependencies": {
+    "@sanity/icons": "^5.2.2",
+    "@sanity/image-url": "^2.1.1",
+    "@sanity/ui": "^4.2.4",
+    "react": "^19.2.4",
+    "sanity": "^6.16.0",
+    "styled-components": "^6.1.18"
+  }
+}

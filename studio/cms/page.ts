@@ -1,26 +1,30 @@
-// The Studio's page itself, which the theme (theme.ts) cannot reach. Runs as
-// soon as the config loads, so the login screen gets it too:
-// - the website's Adobe Fonts kit, the one src/layouts/BaseLayout.astro loads,
-//   for the fonts theme.ts names;
+// The Studio's page itself, which the theme (theme.ts) cannot reach. Set up
+// as soon as the config loads (defineCmsStudio, studio.ts), so the login
+// screen gets it too:
+// - the site's font stylesheet (brand.font), for the typeface theme.ts names;
+// - the site's accent (brand.accent), for studio.css (--tomrow-accent);
 // - the Studio's ground behind it (theme.ts, BACKGROUND): Sanity paints
 //   html and body a blue-black (#13141b / #0d0e12) of its own;
 // - the workspace layout (below), kept right as the Studio re-renders.
 import {BACKGROUND} from './theme'
-
-const FONTS = 'https://use.typekit.net/nqu1vih.css'
 
 /** The Content sidebar's width: a compact column, like the reference's CMS
     Collections list. The one value for the layout below, the sidebar pane
     (structure.ts) and studio.css (--tomrow-sidebar-width, set here). */
 export const SIDEBAR_WIDTH = 248
 
-if (typeof document !== 'undefined') {
-  if (!document.querySelector(`link[href="${FONTS}"]`)) {
-    document.head.append(Object.assign(document.createElement('link'), {rel: 'stylesheet', href: FONTS}))
+let installed = false
+
+export function installStudioPage({fontStylesheet, accent}: {fontStylesheet?: string; accent: string}) {
+  if (typeof document === 'undefined' || installed) return
+  installed = true
+  if (fontStylesheet && !document.querySelector(`link[href="${fontStylesheet}"]`)) {
+    document.head.append(Object.assign(document.createElement('link'), {rel: 'stylesheet', href: fontStylesheet}))
   }
   const root = document.documentElement
   root.style.setProperty('--black', '#000000')
   root.style.setProperty('--tomrow-sidebar-width', `${SIDEBAR_WIDTH}px`)
+  root.style.setProperty('--tomrow-accent', accent)
   for (const el of [root, document.body]) el?.style.setProperty('background-color', BACKGROUND)
   watchLayout()
 }

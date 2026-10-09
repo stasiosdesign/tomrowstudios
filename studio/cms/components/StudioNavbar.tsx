@@ -9,16 +9,15 @@ import type {ComponentProps, ComponentType, MouseEvent} from 'react'
 import {ToolLink, useWorkspace} from 'sanity'
 import {useRouter, useRouterState} from 'sanity/router'
 import {css, styled} from 'styled-components'
+import {useCms} from '../context'
 import {SIDEBAR_WIDTH} from '../page'
-import {PAGE_LINKS} from '../structure'
 import {cmsItemPath, pageEditorPath, placeOf, visualEditorPath} from './navigation'
-import {StudioIcon} from './StudioIcon'
 
 /* The Studio's top bar (sanity.config.ts, studio.components.navbar): one
    row, like Linear's.
 
    - At the left, as wide as the Content sidebar under it and ruled off on
-     the sidebar's own rule: the website's favicon, a hairline and "CMS". It
+     the sidebar's own rule: the site's icon, a hairline and "CMS". It
      opens the project menu: Manage project and Invite members (on
      sanity.io, in a new tab, as in Sanity's own menu) and Sign out.
    - Then, on the panes' 14px inset, the two tools as two plain buttons,
@@ -39,13 +38,16 @@ import {StudioIcon} from './StudioIcon'
    releases. */
 export function StudioNavbar() {
   const {auth, projectId, title, tools} = useWorkspace()
+  const cms = useCms()
+  // The site's icon (brand.icon)
+  const StudioIcon = cms.brand.icon
   const activeToolName = useRouterState((state) => (typeof state.tool === 'string' ? state.tool : undefined))
   const manageUrl = `https://www.sanity.io/manage/project/${projectId}`
   const router = useRouter()
 
   // Where the Studio is (read again on every move): the page or CMS item open
   const address = new URL(useRouterState(() => window.location.href))
-  const place = placeOf(address.pathname, address.search)
+  const place = placeOf(cms, address.pathname, address.search)
   const pathFor = (toolName: string) => {
     if (toolName === 'presentation') return place.page && visualEditorPath(place.page)
     if (toolName === 'structure') return place.item ? cmsItemPath(place.item.type, place.item.id) : place.page && pageEditorPath(place.page)
@@ -125,7 +127,7 @@ export function StudioNavbar() {
                 }
                 menu={
                   <Menu>
-                    {PAGE_LINKS.map((page) => {
+                    {cms.pageLinks.map((page) => {
                       const current = place.page?.type === page.type
                       return (
                         <MenuItem

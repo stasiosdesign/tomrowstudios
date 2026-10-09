@@ -346,7 +346,7 @@ function update() {
 update();
 
 // Opening a section in the Studio's side panel scrolls the page to it
-// (studio/components/SectionField.tsx and PreviewControls.tsx post its field
+// (studio/cms/components/SectionField.tsx and PreviewControls.tsx post its field
 // name). The home page marks its sections with their field names
 // (data-home-section; the hero is .home-hero), other pages each part they
 // show (data-page-field, "hero.heading"...), and Get in touch ends most

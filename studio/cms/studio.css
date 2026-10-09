@@ -88,7 +88,7 @@
   outline-offset: -2px;
 }
 
-/* The site's one red (--cta-accent-color in src/styles/style.css), with
+/* The site's accent (brand.accent: --tomrow-accent, set by page.ts), with
    white text in every state: Sanity's own hover and pressed styles would
    swap the text colour, so it is set on each. Red while it can be pressed:
    disabled (the confirm dialogs' buttons, while they run), it drops back to
@@ -105,7 +105,7 @@ button.tomrow-cta {
   &:enabled:focus-visible,
   &:enabled[data-hovered],
   &:enabled[data-selected] {
-    --card-bg-color: #dd341d;
+    --card-bg-color: var(--tomrow-accent);
     --card-fg-color: #ffffff !important;
     --card-icon-color: #ffffff !important;
     --card-muted-fg-color: #ffffff !important;
@@ -116,13 +116,13 @@ button.tomrow-cta {
 
   @media (hover: hover) {
     &:enabled:hover {
-      --card-bg-color: color-mix(in srgb, #dd341d 88%, #ffffff);
+      --card-bg-color: color-mix(in srgb, var(--tomrow-accent) 88%, #ffffff);
       background-color: var(--card-bg-color);
     }
   }
 
   &:enabled:active {
-    --card-bg-color: color-mix(in srgb, #dd341d 88%, #000000);
+    --card-bg-color: color-mix(in srgb, var(--tomrow-accent) 88%, #000000);
   }
 
   &:disabled {
@@ -136,7 +136,7 @@ button.tomrow-cta {
   /* While its action runs (PublishControls: the button waits, so it can't
      be pressed twice): still red, a shade quieter, with the wait cursor */
   &[aria-busy='true']:disabled {
-    --card-bg-color: color-mix(in srgb, #dd341d 70%, #08090a);
+    --card-bg-color: color-mix(in srgb, var(--tomrow-accent) 70%, #08090a);
     --card-fg-color: rgb(255 255 255 / 0.85);
     --card-icon-color: rgb(255 255 255 / 0.85);
     color: rgb(255 255 255 / 0.85) !important;

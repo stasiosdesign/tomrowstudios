@@ -1,34 +1,21 @@
 import {buildLegacyTheme, type StudioTheme} from 'sanity'
 
-// The website's fonts (two Adobe Fonts, loaded by page.ts) and white type on
-// a near-black ground, a shade lighter than the site's pure black: Linear's
-// (page.ts paints the page behind the Studio with it too).
-const TEXT = '"inter-tight-variable", sans-serif'
+// The site's typeface (brand.font, its stylesheet loaded by page.ts) and
+// white type on a near-black ground, a shade lighter than a pure black:
+// Linear's (page.ts paints the page behind the Studio with it too).
+const SYSTEM_TEXT = 'system-ui, sans-serif' // when the site names no typeface
 const MONO = 'ui-monospace, SFMono-Regular, Menlo, Consolas, monospace' // code fields only
 const BLACK = '#000000'
 const WHITE = '#ffffff'
 export const BACKGROUND = '#08090a'
 
-// The legacy builder derives every tone from a background, a text colour and a
-// grey between them: black, white and a neutral grey give neutral greys, with
-// none of the default blue. Its light scheme reads the component colours and
-// its dark scheme the navigation colours, so both take the ground, and the
-// Studio is the same whichever scheme is picked.
-const base = buildLegacyTheme({
-  '--font-family-base': TEXT,
-  '--font-family-monospace': MONO,
-  '--black': BLACK,
-  '--white': WHITE,
-  '--component-bg': BACKGROUND,
-  '--component-text-color': WHITE,
-  '--main-navigation-color': BACKGROUND,
-  '--main-navigation-color--inverted': WHITE,
-  '--gray-base': '#808080',
-  '--gray': '#808080',
-})
-
-// The builder always returns all four fonts (text, heading, label, code)
-const fonts = base.fonts as NonNullable<StudioTheme['fonts']>
+/** What the theme takes from the site (cms/config.ts, brand) */
+export type ThemeBrand = {
+  /** The typeface, as a CSS font-family list */
+  fontFamily?: string
+  /** The accent, with its hovered and pressed shades: destructive buttons (and, in studio.css, the Publish button) */
+  accent: {base: string; hover: string; pressed: string}
+}
 
 /* The builder's hovered, pressed and selected states for the neutral tones
    invert: a light grey or blue ground with black text and icons (a menu's
@@ -50,7 +37,7 @@ const WASH_SELECTED = 'rgba(255, 255, 255, 0.1)'
      step up from the page, lighter under the pointer and when pressed or
      chosen, darker and dimmer when disabled.
    - Primary buttons are white with black text, destructive ones the site's
-     red with white text (the Publish button's red, studio.css).
+     site's accent with white text (brand.accent; the Publish button's, studio.css).
    - A field with a problem stays tinted red with a red edge; the keyboard
      focus ring is Sanity's own.
    Icon-only buttons (bleed: menus, close, chevrons) stay flat, as before. */
@@ -60,7 +47,6 @@ const FIELD_PRESSED = '#2c2d2e'
 const FIELD_DISABLED = '#0d0d0d'
 const DISABLED_FG = '#4d4d4d'
 const PLACEHOLDER = '#8c8c8c' // 5.4:1 on FIELD
-const RED = '#dd341d' // --cta-accent-color in src/styles/style.css
 
 /* Rules and edges (a pane's dividers, a list's rows, a header's underline):
    a quiet hairline, the way Linear's docs draw theirs, rather than the
@@ -76,7 +62,7 @@ type ToneColor = {
   input?: Record<string, Record<string, StateColor>>
 }
 
-function studioColors(color: NonNullable<StudioTheme['color']>): NonNullable<StudioTheme['color']> {
+function studioColors(color: NonNullable<StudioTheme['color']>, accent: ThemeBrand['accent']): NonNullable<StudioTheme['color']> {
   const next = structuredClone(color) as unknown as Record<string, Record<string, ToneColor>>
   const paint = (state: StateColor | undefined, bg: string, fg?: string) => {
     if (!state) return
@@ -122,7 +108,7 @@ function studioColors(color: NonNullable<StudioTheme['color']>): NonNullable<Stu
       for (const [buttonTone, fill] of [
         ['default', {enabled: WHITE, hovered: '#e6e6e6', pressed: '#d4d4d4', fg: BLACK}],
         ['primary', {enabled: WHITE, hovered: '#e6e6e6', pressed: '#d4d4d4', fg: BLACK}],
-        ['critical', {enabled: RED, hovered: '#e45442', pressed: '#c22e1a', fg: WHITE}],
+        ['critical', {enabled: accent.base, hovered: accent.hover, pressed: accent.pressed, fg: WHITE}],
       ] as const) {
         const states = card.button?.default?.[buttonTone]
         if (!states) continue
@@ -153,13 +139,36 @@ function studioColors(color: NonNullable<StudioTheme['color']>): NonNullable<Stu
    at the Studio's few (studio.css: controls 2px, cards 3px). */
 const RADIUS = [0, 1, 2, 3, 3, 4, 6]
 
-// One typeface throughout: the site's Inter Tight, for labels too
-export const theme: StudioTheme = {
-  ...base,
-  radius: RADIUS,
-  color: base.color && studioColors(base.color),
-  fonts: {
-    ...fonts,
-    label: {...fonts.label, family: TEXT},
-  },
+export function createStudioTheme({fontFamily = SYSTEM_TEXT, accent}: ThemeBrand): StudioTheme {
+  // The legacy builder derives every tone from a background, a text colour and a
+  // grey between them: black, white and a neutral grey give neutral greys, with
+  // none of the default blue. Its light scheme reads the component colours and
+  // its dark scheme the navigation colours, so both take the ground, and the
+  // Studio is the same whichever scheme is picked.
+  const base = buildLegacyTheme({
+    '--font-family-base': fontFamily,
+    '--font-family-monospace': MONO,
+    '--black': BLACK,
+    '--white': WHITE,
+    '--component-bg': BACKGROUND,
+    '--component-text-color': WHITE,
+    '--main-navigation-color': BACKGROUND,
+    '--main-navigation-color--inverted': WHITE,
+    '--gray-base': '#808080',
+    '--gray': '#808080',
+  })
+
+  // The builder always returns all four fonts (text, heading, label, code)
+  const fonts = base.fonts as NonNullable<StudioTheme['fonts']>
+
+  // One typeface throughout: the site's, for labels too
+  return {
+    ...base,
+    radius: RADIUS,
+    color: base.color && studioColors(base.color, accent),
+    fonts: {
+      ...fonts,
+      label: {...fonts.label, family: fontFamily},
+    },
+  }
 }
