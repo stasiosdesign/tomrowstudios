@@ -20,11 +20,11 @@ export default defineCliConfig({
   },
   /**
    * `npm run dev:linked` runs the Studio on a local checkout of the CMS
-   * package (../../sanity-cms) instead of its installed release, to work on a
+   * package (../../../1 - HQ/shared-sanity-cms) instead of its installed release, to work on a
    * change that needs both sides. `npm run dev`, builds and deploys always use
    * the release package-lock.json pins.
    */
-  vite: linkLocalCms({scripts: ['dev:linked']}),
+  vite: linkLocalCms({scripts: ['dev:linked'], path: '../../../1 - HQ/shared-sanity-cms'}),
   /**
    * Types for the website's GROQ queries, written into the Astro app at the
    * repository root. Every query the site runs is in src/sanity/queries.ts.

@@ -60,12 +60,15 @@ The README explains the system; these are the working rules.
 ## The CMS
 
 The Studio is the shared CMS package `@stasiosdesign/sanity-cms` (private,
-GitHub Packages; source in the `sanity-cms` repository, checked out beside
-this one at `../sanity-cms`, with its own CLAUDE.md) set up for this website.
+GitHub Packages; source in the `sanity-cms` repository, checked out on the
+development machine at `3 - Claude/1 - HQ/shared-sanity-cms`, with its own
+CLAUDE.md) set up for this website. This repository lives in its client
+folder, `3 - Claude/tomrowstudios/tomrowstudios-website`; shared changes are
+never made from here.
 
 | Kind of change | Where |
 | --- | --- |
-| How every Studio looks or works: navigation, layout, the Content tool, the Visual editor's controls, editors, publishing UI and logic, the theme | `../sanity-cms/src/`, developed in the stasiosdesign.com Studio (`../Stasiosdesign`), released, then updated here. Never in this repository. |
+| How every Studio looks or works: navigation, layout, the Content tool, the Visual editor's controls, editors, publishing UI and logic, the theme | the shared package (`1 - HQ/shared-sanity-cms/src/`), developed in the stasiosdesign.com Studio (`1 - HQ/stasiosdesign-website`), released, then updated here. Never in this repository. |
 | This site's content model: pages, sections, fields, references | `studio/schemaTypes/` |
 | This site's Studio setup: pages, collections, routes, brand, Visual editor locations, publishing wording | `studio/project.ts` |
 | A bespoke editor only this site needs | `studio/components/`, used from the schema |
@@ -81,7 +84,7 @@ this one at `../sanity-cms`, with its own CLAUDE.md) set up for this website.
   Merging is the user's approval; then the usual staging → main promotion and
   `npm run studio:deploy`. Never merge or deploy an update without approval.
   Read the package's CHANGELOG.md for what a version asks of the site.
-- A change that needs both sides: the shared part in `../sanity-cms`; run
+- A change that needs both sides: the shared part in the shared package; run
   this Studio on it with `npm run dev:linked` in `studio/` (the local
   source; `npm run dev` and every build use the pinned release); commit this
   site's part once a release with the shared part is installed here.
