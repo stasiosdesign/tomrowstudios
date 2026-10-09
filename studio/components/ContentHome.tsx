@@ -1,5 +1,6 @@
-import {Box, Card, Flex, Text} from '@sanity/ui'
-import {createElement, type CSSProperties} from 'react'
+import {Box, Flex} from '@sanity/ui'
+import {createElement} from 'react'
+import {useWorkspace} from 'sanity'
 import {StateLink} from 'sanity/router'
 import {usePaneRouter} from 'sanity/structure'
 import {styled} from 'styled-components'
@@ -7,42 +8,33 @@ import type {SidebarGroup} from './ContentSidebar'
 import {TAB_MOTION} from './tab'
 
 /* The Content tool's home, laid out like the front page of Linear's docs:
-   the sidebar's two groups, each a section of cards, one card per page or
-   collection with its icon, its name and what it holds. Each group is
-   headed by its icon in a square (the Page Editor's white, the CMS
-   Collections' grey, so the two read apart at a glance), its name and a
-   line saying what kind of content it holds, for someone who doesn't know
-   the difference. A second way in: a card opens its page or collection in
-   this pane's place, as the sidebar's entry does, and the sidebar then
-   marks it. Content opens here (ContentSidebar). The list, with its names,
-   icons and descriptions, comes from structure.ts, so the two always
+   the sidebar's two groups again, each a section of cards, one card per page
+   or collection with its icon, its name and what it holds. A second way in:
+   a card opens its page or collection in this pane's place, as the sidebar's
+   entry does, and the sidebar then marks it. Content opens here
+   (ContentSidebar). The pane has no header band of its own: the page starts
+   right under the top bar, the Studio's name its heading. The list, with its
+   names, icons and descriptions, comes from structure.ts, so the two always
    agree. */
 
 export type HomeOptions = {title: string; groups: SidebarGroup[]}
 
 export function ContentHome(props: {options?: Record<string, unknown>}) {
-  const {title, groups} = props.options as HomeOptions
+  const {groups} = props.options as HomeOptions
+  const {title: studioTitle} = useWorkspace()
   const {groupIndex, routerPanesState} = usePaneRouter()
   // Beside the sidebar, in this pane's place
   const opening = (id: string) => ({panes: [...routerPanesState.slice(0, groupIndex), [{id}]]})
 
   return (
     <Flex direction="column" height="fill" data-tomrow-home>
-      <Card borderBottom style={HEADER}>
-        <Text size={1} weight="semibold">
-          {title}
-        </Text>
-      </Card>
       <Box flex={1} overflow="auto">
         <Body>
-          {groups.map((group, index) => (
+          <Hero>{studioTitle}</Hero>
+          <Intro>The website’s pages and the collections behind them. Choose one to start editing.</Intro>
+          {groups.map((group) => (
             <Section key={group.id} aria-labelledby={`home-${group.id}`}>
-              <SectionHead>
-                <GroupIcon aria-hidden data-tone={index === 0 ? 'light' : 'dark'}>
-                  {group.icon && createElement(group.icon)}
-                </GroupIcon>
-                <SectionHeading id={`home-${group.id}`}>{group.title}</SectionHeading>
-              </SectionHead>
+              <SectionHeading id={`home-${group.id}`}>{group.title}</SectionHeading>
               {group.description && <SectionText>{group.description}</SectionText>}
               <Cards role="list">
                 {group.items.map((item) => (
@@ -65,62 +57,35 @@ export function ContentHome(props: {options?: Record<string, unknown>}) {
   )
 }
 
-/* The header band: one bar tall (--tomrow-bar-height) and ruled, like the
-   sidebar's beside it, the pane's name set as the sidebar's "Content" is,
-   so the two read as one bar */
-const HEADER: CSSProperties = {
-  flexShrink: 0,
-  boxSizing: 'border-box',
-  display: 'flex',
-  flexDirection: 'column',
-  justifyContent: 'center',
-  minHeight: 'var(--tomrow-bar-height)',
-  padding: '10px 14px',
-}
-
 /* The page under it: one centred column, no wider than four cards abreast,
-   with room around it, a section per group with air between them */
+   with room around it; the Studio's name large over a quiet line, then a
+   section per group */
 const Body = styled.div`
   box-sizing: border-box;
   max-width: 1040px;
   margin: 0 auto;
-  padding: 48px 32px 80px;
+  padding: 56px 32px 80px;
+`
+
+const Hero = styled.h1`
+  margin: 0;
+  font-size: 40px;
+  font-weight: 600;
+  line-height: 1.1;
+  letter-spacing: -0.022em;
+  color: #ffffff;
+`
+
+const Intro = styled.p`
+  margin: 12px 0 0;
+  max-width: 560px;
+  font-size: 15px;
+  line-height: 1.5;
+  color: var(--tomrow-tab-fg);
 `
 
 const Section = styled.section`
-  & + & {
-    margin-top: 72px;
-  }
-`
-
-const SectionHead = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 12px;
-`
-
-/* The group's icon in a square the cards' corners: the Page Editor's white
-   with a black icon, the CMS Collections' the fields' grey with a white one */
-const GroupIcon = styled.span`
-  display: flex;
-  flex: none;
-  align-items: center;
-  justify-content: center;
-  width: 32px;
-  height: 32px;
-  border-radius: var(--tomrow-card-radius);
-  font-size: 21px;
-  line-height: 0;
-
-  &[data-tone='light'] {
-    background: #ffffff;
-    color: #000000;
-  }
-
-  &[data-tone='dark'] {
-    background: var(--tomrow-field-pressed);
-    color: #ffffff;
-  }
+  margin-top: 56px;
 `
 
 const SectionHeading = styled.h2`
@@ -133,8 +98,7 @@ const SectionHeading = styled.h2`
 `
 
 const SectionText = styled.p`
-  max-width: 640px;
-  margin: 10px 0 0;
+  margin: 6px 0 0;
   font-size: 14px;
   line-height: 1.5;
   color: var(--tomrow-tab-fg);

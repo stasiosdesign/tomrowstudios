@@ -440,11 +440,10 @@ vercel.ts                  Vercel: build, clean URLs, redirects, staging's noind
    beside every entry (**Overview**, then the two groups, each folding open
    on its own with its pages or collections under it, their icons under the
    group's name), and beside it whatever is open, filling the rest of the
-   window. Content opens on the **Overview**: the same two groups as
-   sections of cards, each headed by its icon in a square (the Page Editor's
-   white, the CMS Collections' grey) and a line saying what kind of content
-   it holds, one card per page or collection with its icon and what it
-   holds; a card opens it like its sidebar entry does. The
+   window. Content opens on the **Overview**: the Studio's name, then the
+   same two groups as sections of cards, one per page or collection with its
+   icon and what it holds (no header band of its own: the page starts right
+   under the top bar); a card opens it like its sidebar entry does. The
    names, icons and descriptions are written once,
    in `studio/structure.ts`, for both (`studio/components/ContentSidebar.tsx`,
    `studio/components/ContentHome.tsx`):
