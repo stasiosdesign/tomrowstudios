@@ -28,14 +28,15 @@
   --tomrow-tab-fg-hover: #bfbfbf;
   --tomrow-tab-fg-disabled: #4d4d4d;
   /* Navigation (components/tab.ts, navItem), after Linear's docs: the
-     Content sidebar and a collection's compact list are lists of rounded
-     entries with no rules between them, a little shorter than the grid's
-     rows; a group's heading in the sidebar a little taller. Cards (the
-     overview's) are rounder still. Sanity's own controls keep its 3px. */
+     Content sidebar and a collection's compact list are lists of entries
+     with no rules between them, a little shorter than the grid's rows; a
+     group's heading in the sidebar a little taller. Corners stay close to
+     square throughout: entries and controls 3px (Sanity's own controls'
+     too), the overview's cards 4px. */
   --tomrow-nav-row: 32px;
   --tomrow-nav-heading-row: 36px;
-  --tomrow-nav-radius: 6px;
-  --tomrow-card-radius: 8px;
+  --tomrow-nav-radius: 3px;
+  --tomrow-card-radius: 4px;
   /* Filled controls: the grey of every field and secondary button, lighter
      under the pointer and when pressed (FIELD... in theme.ts, which sets
      Sanity's own; these are for the parts the theme doesn't reach) */
@@ -69,6 +70,14 @@
   --card-bg-color: var(--tomrow-selected);
   --card-hover-bg-color: var(--tomrow-selected);
   background-color: var(--tomrow-selected);
+}
+
+/* Menus, popovers and dialogs close to square like every other surface here
+   (4px, as the overview's cards; Sanity rounds them 6px) */
+[data-ui='Popover'],
+[data-ui='MenuButton__popover'],
+[data-ui='DialogCard'] {
+  border-radius: var(--tomrow-card-radius) !important;
 }
 
 /* Keyboard focus keeps its own ring, distinct from hover and selection */

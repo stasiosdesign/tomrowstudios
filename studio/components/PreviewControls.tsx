@@ -37,7 +37,15 @@ type Controls = {
   toggleOverlay: () => void
   viewport: 'desktop' | 'mobile'
   setViewport: (viewport: 'desktop' | 'mobile') => void
+  /** Scrolls the preview to a section of the page, by its field name */
+  showSection: (name: string) => void
 }
+
+/* Opening a section in the side panel (SectionField) scrolls the preview to
+   it: the bridge below posts the section's field name to the page in the
+   frame, whose visual-editing script finds it and scrolls there
+   (src/sanity/live-preview.ts). Nothing happens outside the Visual editor. */
+export const showInPreview = (name: string) => current?.showSection(name)
 
 // Laptop view is this Studio's own: Sanity knows desktop and mobile only
 let laptop = false
@@ -87,16 +95,30 @@ export function PreviewHeaderBridge(props: PreviewHeaderProps) {
   const overlaysEnabled = useSyncExternalStore(subscribe, () => !!snapshot().context.visualEditingOverlaysEnabled)
   const loaded = useSyncExternalStore(subscribe, () => snapshot().matches('loaded'))
   const overlaysReady = loaded && overlaysConnection === 'connected'
+  const {iframeRef} = props
+
+  // Only to the page the frame shows, at its own origin
+  const showSection = useCallback(
+    (name: string) => {
+      const frame = iframeRef.current
+      if (!frame?.contentWindow) return
+      try {
+        frame.contentWindow.postMessage({type: 'tomrow/show-section', section: name}, new URL(frame.src).origin)
+      } catch {
+        // no address to send to yet: the preview is still loading
+      }
+    },
+    [iframeRef],
+  )
 
   useEffect(() => {
-    store.set({overlaysEnabled, overlaysReady, toggleOverlay, viewport, setViewport})
-  }, [overlaysEnabled, overlaysReady, toggleOverlay, viewport, setViewport])
+    store.set({overlaysEnabled, overlaysReady, toggleOverlay, viewport, setViewport, showSection})
+  }, [overlaysEnabled, overlaysReady, toggleOverlay, viewport, setViewport, showSection])
   useEffect(() => () => store.set(null), [])
 
   // Laptop view: the frame at 16:9, as large as the canvas allows, centred
   // (the frame's box already centres it), refitted as the canvas resizes
   const inLaptop = useSyncExternalStore(laptopStore.subscribe, laptopStore.get) && viewport === 'desktop'
-  const {iframeRef} = props
   useEffect(() => {
     const box = iframeRef.current?.parentElement
     if (!box || !inLaptop) return undefined
@@ -133,7 +155,7 @@ export function PreviewControls() {
   return (
     <Flex align="center" gap={1} data-tomrow-preview-controls>
       <Tooltip content={<Text size={1}>{controls.overlaysEnabled ? 'Turn off edit mode' : 'Click the page to edit it'}</Text>} placement="bottom" portal>
-        <Card as="label" padding={2} radius={2} style={{cursor: controls.overlaysReady ? 'pointer' : 'default'}}>
+        <Card as="label" padding={2} radius={2} tone="transparent" style={{cursor: controls.overlaysReady ? 'pointer' : 'default', background: 'transparent'}}>
           <Flex align="center" gap={2}>
             <Switch checked={controls.overlaysEnabled} indeterminate={!controls.overlaysReady} disabled={!controls.overlaysReady} onChange={controls.toggleOverlay} />
             <Text size={1} muted={!controls.overlaysEnabled}>
@@ -160,16 +182,16 @@ export function PreviewControls() {
   )
 }
 
-// The three views as one control: a small grey track, like the other filled
-// controls, the views on it tabs (tab.ts): the chosen one white on the grey
+// The three views as one control on the header row's toolbar (DocumentLayout:
+// one grey track for the Edit switch, the views, Expand all and Show more),
+// after a hairline: tabs (tab.ts), the chosen one white on the grey
 // highlight, a step lighter here to show on the track, the others dimmed
 const Views = styled.div`
   --tomrow-selected: var(--tomrow-field-pressed);
   display: flex;
   gap: 2px;
-  padding: 2px;
-  border-radius: var(--tomrow-radius);
-  background: var(--tomrow-field);
+  padding-left: 2px;
+  border-left: 1px solid rgb(255 255 255 / 0.1);
 
   & [data-ui='Button'] {
     ${tabStates}

@@ -151,15 +151,25 @@ of their own. CMS items are never part of it: they publish one at a time, or
 in bulk only when selected.
 
 Each static page's form fills its pane, its sections one full-width ruled list
-like a collection table (`DocumentLayout`, `PageInput`, `SectionField`): a row opens beneath its title. The page
-editor's header is one row: the page's large title (`PaneTitle`) opposite
-Show more (no Copy, Comments, focus mode, presence or close).
+like a collection table (`DocumentLayout`, `PageInput`, `SectionField`),
+under column heads, Section and Section Description, on the rows' own
+columns: a row opens beneath its title. The page editor's header is one
+row: the page's large title (`PaneTitle`) opposite Show more. No document
+has Copy, Comments, presence avatars or (in Content) Expand all; a static
+page has no focus mode or close either.
 
 In the Visual editor there is no bar above the preview: its Edit switch and
 three views, Phone, Laptop (a fitted 16:9 frame) and Fill (the default), sit
-in the side panel's header row with Show more (Sanity's Open in Content is removed there)
-(`PreviewControls`, through the Presentation tool's header option and the
-document header's control slot); switching views only resizes the frame.
+in the side panel's header row with Expand all and Show more, all on one grey
+track, divided into the switch, the views and the two actions (Sanity's Open
+in Content is removed there) (`PreviewControls`, through the Presentation
+tool's header option and the document header's control slot;
+`DocumentLayout`); switching views only resizes the frame. The panel heads
+the form with the document's name, a step larger, and lists a page's
+sections by name alone, a little taller; opening one scrolls the preview to
+that section (`showInPreview` posts its field name to the page in the frame,
+whose `src/sanity/live-preview.ts` finds it by `data-home-section`,
+`data-page-field` or the Get in touch block, and scrolls there).
 Collections name themselves once, as `Projects (5)` (`Projects (2 of 5)` while
 a search narrows them; there is no footer count), in the same heading as a
 static page's title (`PaneHeading`), with a compact search, an icon-only
@@ -169,8 +179,8 @@ its header row beside its actions, as large as a page's title and kept to
 its current title (`PaneTitle`); its Title field stays in the form (on a
 phone Sanity's back arrow keeps its own row). A page's sections, and a shop
 item's folding groups, open and close independently, and where a document
-has two or more, its header row has Expand all / Collapse all
-(`Sections.tsx`; an icon in the Visual editor's narrow panel). Page sections open and close with
+has two or more, the Visual editor's toolbar has Expand all / Collapse all
+(`Sections.tsx`). Page sections open and close with
 a short height transition (`Collapse`), menus with Sanity UI's popover
 motion, both off for anyone who prefers reduced motion. Favorites is hidden
 throughout.
@@ -213,8 +223,9 @@ are lists of rounded entries (`navItem` in `components/tab.ts`), 14px
 medium type with dimmed icons. Tabs and view choices share one look: the
 chosen one white on the grey highlight, the others dimmed, lighter under the
 pointer (the sidebar's and compact list's entries too, and the Visual
-editor's views). Corners grow with what they round: Sanity's own controls
-keep their 3px, navigation entries 6px, the Overview's cards 8px
+editor's views). Corners stay close to square: controls and navigation
+entries 3px (Sanity's own controls too), the Overview's cards, menus,
+popovers, dialogs and the Publish button's outer corners 4px
 (`--tomrow-nav-radius`, `--tomrow-card-radius`). The cards are plain
 rectangles a shade lighter than the page, edged with a hairline, both a
 little brighter under the pointer.

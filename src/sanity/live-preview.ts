@@ -300,6 +300,32 @@ function update() {
 
 update();
 
+// Opening a section in the Studio's side panel scrolls the page to it
+// (studio/components/SectionField.tsx and PreviewControls.tsx post its field
+// name). The home page marks its sections with their field names
+// (data-home-section; the hero is .home-hero), other pages each part they
+// show (data-page-field, "hero.heading"...), and Get in touch ends most
+// pages. Only from the Studio framing this page; through Lenis where the
+// site scrolls smoothly, so the two never fight over the position.
+const sectionNamed = (name: string): Element | null => {
+  const field = CSS.escape(name);
+  if (name === 'hero' && document.querySelector('.home-hero')) return document.querySelector('.home-hero');
+  if (name === 'getInTouch') return document.querySelector('.final-cta');
+  const marked = document.querySelector(`[data-home-section="${field}"]`);
+  if (marked) return marked;
+  const part = document.querySelector(`main [data-page-field="${field}"], main [data-page-field^="${field}."]`);
+  return part?.closest('section') ?? part;
+};
+type Lenis = { scrollTo: (target: Element, options?: { offset?: number }) => void };
+window.addEventListener('message', (event) => {
+  if (event.source !== window.parent || event.data?.type !== 'tomrow/show-section' || typeof event.data.section !== 'string') return;
+  const target = sectionNamed(event.data.section);
+  if (!target) return;
+  const lenis = (window as unknown as { lenis?: Lenis }).lenis;
+  if (lenis) lenis.scrollTo(target);
+  else target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+});
+
 // Barba swaps pages without a reload, bringing in the published words
 const { barba } = window as unknown as { barba?: { hooks: { after: (hook: () => void) => void } } };
 barba?.hooks.after(update);

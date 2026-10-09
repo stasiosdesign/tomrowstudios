@@ -59,17 +59,16 @@ export function useSection(id: string | null, collapsed: boolean, onExpand: () =
 }
 
 /* Expand all while any section is closed, Collapse all once every one is
-   open; only where the document has two sections or more. A secondary
-   button, filled like the others (theme.ts). In the document's header row
-   (sanity.config.ts, document.unstable_languageFilter), beside its actions;
-   in the Visual editor's narrow side panel, where that row also holds the
-   Edit switch and the views, an icon with the same name as its label and
-   tooltip, so Show more stays in view. */
+   open; only where the document has two sections or more, and only in the
+   Visual editor: in the document's header row (sanity.config.ts,
+   document.unstable_languageFilter), part of one toolbar with the Edit
+   switch, the views and Show more (DocumentLayout), an icon with the same
+   name as its label and tooltip. Content's header row keeps to the title. */
 export function SectionsToggle() {
   const sections = useContext(SectionsContext)
   const inVisualEditor = useInVisualEditor()
   const all = useMemo(() => [...sections.values()], [sections])
-  if (all.length < 2) return null
+  if (!inVisualEditor || all.length < 2) return null
   const anyClosed = all.some((section) => section.collapsed)
   const label = anyClosed ? 'Expand all' : 'Collapse all'
   const toggle = () => {
@@ -78,12 +77,9 @@ export function SectionsToggle() {
       else if (!anyClosed) section.collapse()
     }
   }
-  if (!inVisualEditor) {
-    return <Button mode="ghost" fontSize={1} padding={2} text={label} onClick={toggle} data-tomrow-sections-toggle />
-  }
   return (
     <Tooltip content={<Text size={1}>{label}</Text>} placement="bottom" portal>
-      <Button mode="ghost" padding={2} icon={anyClosed ? DoubleChevronDownIcon : DoubleChevronUpIcon} aria-label={label} onClick={toggle} data-tomrow-sections-toggle />
+      <Button mode="bleed" icon={anyClosed ? DoubleChevronDownIcon : DoubleChevronUpIcon} aria-label={label} onClick={toggle} data-tomrow-sections-toggle />
     </Tooltip>
   )
 }

@@ -63,6 +63,9 @@ export function DocumentLayout(props: DocumentLayoutProps) {
 /** A document's header row, with its actions: found by the perspective chips it also holds (hidden) */
 const HEADER_ROW = `[data-ui='Card']:has(> [data-ui='Flex'] > [data-ui='Card'] > [data-testid='document-perspective-list'])`
 
+/** The Visual editor's header controls: the row Sanity puts them in, the Edit switch and views first */
+const TOOLBAR = `[data-ui='Flex']:has(> [data-tomrow-preview-controls])`
+
 /* This element sits directly in Sanity's row of panes, beside the sidebar:
    it takes all the width left, or the editor stays as narrow as its content,
    and the row's full height (stretched, not 100%: on a phone the row's height
@@ -109,7 +112,10 @@ const Root = styled(Flex)`
     padding-right: 14px;
   }
 
-  &[data-tomrow-page] [data-testid='copy-document-actions-button'] {
+  /* No Copy (Sanity's copy-and-paste of a whole document) and no avatars of
+     who else has it open in any header row: the Studio shows no presence */
+  & [data-testid='copy-document-actions-button'],
+  & [data-testid='document-level-presence'] {
     display: none;
   }
 
@@ -184,7 +190,6 @@ const Root = styled(Flex)`
 
   /* The page editor, besides */
   &[data-tomrow-page][data-tomrow-tool='structure'] {
-    [data-testid='document-level-presence'],
     [data-testid^='focus-pane-button'] {
       display: none;
     }
@@ -214,5 +219,38 @@ const Root = styled(Flex)`
   /* The Visual editor: no smaller label row (with its Favorites star) */
   &[data-tomrow-tool='presentation'] [data-testid='pane-header'] {
     display: none;
+  }
+
+  /* ...its document's name over the form a step larger and semibold, as the
+     panel's heading, like the pane headings in Content (PaneHeading) */
+  &[data-tomrow-tool='presentation'] [data-testid='document-panel-document-title'],
+  &[data-tomrow-tool='presentation'] [data-testid='document-panel-document-title'] > span {
+    font-size: 26px;
+    font-weight: 600;
+    line-height: 1.15;
+    letter-spacing: -0.02em;
+  }
+
+  /* ...and its controls one toolbar: the Edit switch, the three views
+     (PreviewControls), Expand all (SectionsToggle) and Show more on one grey
+     track, the filled controls' grey, every button the same size, with
+     hairlines between the switch, the views and the two actions */
+  &[data-tomrow-tool='presentation'] ${TOOLBAR} {
+    gap: 2px;
+    padding: 2px;
+    border-radius: var(--tomrow-radius);
+    background: var(--tomrow-field);
+
+    & > [data-tomrow-preview-controls] {
+      gap: 2px;
+      padding-right: 2px;
+      border-right: 1px solid rgb(255 255 255 / 0.1);
+    }
+
+    & [data-testid='pane-context-menu-button'] {
+      width: 33px;
+      height: 33px;
+      justify-content: center;
+    }
   }
 `

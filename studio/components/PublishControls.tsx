@@ -317,19 +317,19 @@ const Bar = styled.div`
   background: var(--card-bg-color);
 `
 
+// One button in two halves: the outer corners subtly rounded, the edge where
+// the halves meet square and marked by a dark hairline
 const Split = styled.div`
   display: inline-flex;
   align-items: stretch;
 
   & > button:first-child {
-    border-top-right-radius: 0;
-    border-bottom-right-radius: 0;
+    border-radius: 4px 0 0 4px;
   }
 
   & > *:last-child button,
   & > button:last-child {
-    border-top-left-radius: 0;
-    border-bottom-left-radius: 0;
+    border-radius: 0 4px 4px 0;
     box-shadow: inset 1px 0 0 rgb(0 0 0 / 0.25);
   }
 `
