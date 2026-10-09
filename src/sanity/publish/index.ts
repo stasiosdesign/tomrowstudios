@@ -373,7 +373,7 @@ const pageName = (id: string) => id.replace(/Page$/, '').replace(/^./, (c) => c.
 
 /** The static pages a site-wide publish may touch: singleton documents named <name>Page, the open one among them */
 function siteIds(site: unknown, openId: string): string[] {
-  const isPageId = (id: unknown): id is string => typeof id === 'string' && /^[a-z]+Page$/.test(id);
+  const isPageId = (id: unknown): id is string => typeof id === 'string' && /^[a-z][a-zA-Z]*Page$/.test(id);
   if (!Array.isArray(site) || !site.every(isPageId) || !site.includes(openId)) throw new PublishError(400, 'A site-wide publish needs the list of static pages, including the open one.');
   return [...new Set(site)];
 }
