@@ -65,11 +65,11 @@ export const project: CmsProjectConfig = {
   // The Page editor's list: its order, its names, and each page's card on the
   // overview. The Architecture page is here; the projects on it are not.
   pageEditor: [
-    {type: 'homePage', title: 'Home', description: 'The hero, client logos, photo slider, recognition and galleries.'},
-    {type: 'influencePage', title: 'Influence', description: 'The opening, reach figures, approach, origins, insights and the book.'},
-    {type: 'architecturePage', title: 'Architectural', description: 'The header above the projects, which are a collection.'},
-    {type: 'shopPage', title: 'Shop', description: 'The opening, catalogue heading, testimonials and FAQ.'},
-    {type: 'partnersPage', title: 'Partner', description: 'The opening, clients, services, results and enquiry.'},
+    {type: 'homePage', title: 'Home', description: 'The hero, client logos, slider and galleries.'},
+    {type: 'influencePage', title: 'Influence', description: 'Reach figures, approach, origins and the book.'},
+    {type: 'architecturePage', title: 'Architectural', description: 'The header above the projects.'},
+    {type: 'shopPage', title: 'Shop', description: 'The opening, catalogue, testimonials and FAQ.'},
+    {type: 'partnersPage', title: 'Partner', description: 'The clients, services, results and enquiry.'},
     {type: 'privacyPage', title: 'Privacy policy', description: 'The privacy policy: its heading and text.'},
     {type: 'termsPage', title: 'Terms of use', description: 'The terms of use: their heading and text.'},
   ],
@@ -84,7 +84,7 @@ export const project: CmsProjectConfig = {
       nameField: 'title',
       orderField: 'sortOrder',
       icon: ProjectsIcon,
-      description: 'The architecture projects: the Architecture slider and each project’s page.',
+      description: 'The architecture projects and their pages.',
       listedOn: 'architecturePage',
     },
     {
@@ -94,7 +94,7 @@ export const project: CmsProjectConfig = {
       nameField: 'title',
       orderField: 'sortOrder',
       icon: BasketIcon,
-      description: 'The products, each with its own page in the shop.',
+      description: 'The products, each with its own shop page.',
       listedOn: 'shopPage',
     },
     {
@@ -104,7 +104,7 @@ export const project: CmsProjectConfig = {
       nameField: 'name',
       orderField: 'sortOrder',
       icon: UsersIcon,
-      description: 'Partner case studies, on the Partners page and its archive.',
+      description: 'Partner case studies and their archive.',
       listedOn: 'partnersPage',
     },
   ],
