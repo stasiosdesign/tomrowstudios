@@ -89,8 +89,8 @@ deployment), and Sanity's own drafts in the one the Studio edits:
 | State   | Where                                | Made by                         | Shown by                                        |
 | ------- | ------------------------------------ | ------------------------------- | ----------------------------------------------- |
 | Draft   | `staging`, `drafts.<id>`             | typing in the Studio (autosave) | staging, in draft mode only (the Visual editor) |
-| Staging | `staging`, the published document    | **Publish staging only**       | staging, to everyone                            |
-| Live    | `production`, the published document | **Publish Live**                | production, at its next build                   |
+| Staging | `staging`, the published document    | **Publish to Staging**         | staging, to everyone                            |
+| Live    | `production`, the published document | **Publish Live…**               | production, at its next build                   |
 
 - **Production** is built from the `production` dataset alone, once, at build
   time (no token, no drafts, no edit markers). Its build has no draft-mode
@@ -118,10 +118,12 @@ deployment), and Sanity's own drafts in the one the Studio edits:
 The publishing control at the top right of every document in the Studio, in
 Content, the page editor and the Visual editor alike
 (`sanity-cms/src/components/PublishControls.tsx`), shows the document's status and a
-**Publish Live** split button. Its menu holds **Publish live**, **Publish
-staging only** and **Unpublish**, then the **Staging link** and **Live site
-link**. Both publish actions are always available, even when nothing has
-changed; Unpublish asks first.
+**Publish to Staging** split button, which only ever updates the staging
+site. Its menu holds **Publish to Staging**, **Publish Live…** (which asks
+for confirmation and names what goes live, so the public site is never
+updated by a slip) and **Unpublish**, then the **Staging link** and **Live
+site link**. Both publish actions are always available, even when nothing
+has changed; Publish Live and Unpublish ask first.
 
 Every action goes to the site's server route, `/api/publish` on staging
 (`src/sanity/publish/`), which checks the caller's Studio session with Sanity
@@ -138,12 +140,12 @@ build stamp. A stage is marked done only when it is; a failure after staging
 was written says so, and the row offers Try again. The button waits while an
 action runs, so nothing is sent twice.
 
-- **Publish live**: the version in the editor (the draft, or else the
+- **Publish Live…**: the version in the editor (the draft, or else the
   published document, pinned by its revision) is published in `staging`,
   then written into `production` with the images and files it uses. Staging
   gets it first, so it never falls behind live. Refused while it links to
   something not yet published there, naming it.
-- **Publish staging only**: the same in `staging` alone; live is not changed.
+- **Publish to Staging**: the same in `staging` alone; live is not changed.
 - **Unpublish**: off both sites. The Studio keeps the content as a draft and
   the route leaves a note (`publish-log.<id>` in staging) so the item reads
   Unpublished until it is edited. Refused while something links to it.
@@ -151,8 +153,8 @@ action runs, so nothing is sent twice.
   Studio and both sites, after a confirmation.
 
 The static pages (the page editor) publish together, like a site builder's
-site: on any of them the button reads **Publish Site**, and Publish live and
-Publish staging only take every page's latest saved version, not just the
+site: on any of them the button reads **Publish Site to Staging**, and
+both publish actions take every page's latest saved version, not just the
 open one's (the route's site mode; every page is checked before any is
 written). They share one status, the same on every page (`groupStatus`):
 Changes in draft while any page has edits, else Staging while any page is on
@@ -267,8 +269,8 @@ Developers (the route checks; the Studio checks first). Anyone else can click
 the controls and gets a dialog saying they don't have permission and to ask a
 project administrator; nothing is sent.
 
-Collections also have a **Select** mode: tick items for a bulk Publish live,
-Publish staging only, Unpublish or Delete, sent to the route as one request
+Collections also have a **Select** mode: tick items for a bulk Publish to
+staging, Publish live (after a confirmation), Unpublish or Delete, sent to the route as one request
 (`ids`): each item is checked on its own, the ones that pass are written
 together, and the ones refused stay ticked and are named under the Select
 bar, with the action's stages.
@@ -478,8 +480,8 @@ vercel.ts                  Vercel: build, clean URLs, redirects, staging's noind
    name lists the page editor's pages and opens any of them; or follow the
    site's own links in the preview (`sanity-cms/src/components/StudioNavbar.tsx`,
    `sanity-cms/src/components/navigation.ts`).
-3. **Publish staging only**, review on staging or in the Visual editor, then
-   **Publish live**. The status says where the latest version is.
+3. **Publish to Staging**, review on staging or in the Visual editor, then
+   **Publish Live…** and confirm. The status says where the latest version is.
 
 After changing Studio code or the schema, deploy the Studio
 (`npm run studio:deploy`). Both datasets share the schema, so keep changes
