@@ -13,6 +13,12 @@ updates:
     target-branch: staging
     schedule:
       interval: daily
+    # Our own releases are deliberate and checked before they are published,
+    # so they skip Dependabot's waiting period for brand-new versions
+    cooldown:
+      default-days: 3
+      exclude:
+        - '@stasiosdesign/*'
     allow:
       - dependency-name: '@stasiosdesign/*'
     commit-message:
