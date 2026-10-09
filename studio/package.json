@@ -24,7 +24,7 @@
     "@sanity/ui": "^4.2.4",
     "@sanity/vercel-protection-bypass": "^5.0.23",
     "@sanity/vision": "6.18.0",
-    "@stasiosdesign/sanity-cms": "1.2.0",
+    "@stasiosdesign/sanity-cms": "1.2.1",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
     "sanity": "6.18.0",
