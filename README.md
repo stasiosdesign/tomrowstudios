@@ -284,18 +284,21 @@ production catches up. Hover the status for the dates. The Studio always
 edits the working draft: the Published / Drafts switch is hidden, since
 drafts never reach the ordinary sites anyway.
 
-A Sanity webhook, **Rebuild the site on publish**, on the `production`
+A Sanity webhook, **Rebuild the site once per live action**, on the `production`
 dataset, calls a Vercel deploy hook that rebuilds `main`. Production is
 static, so a live publish genuinely needs that build: it shows about a
 minute later, and the control watches the site's build stamp (`/build.json`,
 written by every production build) and says when. Staging needs no rebuild.
 The route writes one marker document, `publish-log.site-build`, in every
 production transaction (a publish, an unpublish, a delete), and the webhook
-should filter on it alone, `_id == "publish-log.site-build"`, so each live
-action queues one build however many documents it took (the earlier filter,
-`count(string::split(_id, ".")) == 1`, fired once per document: seven builds
-for a site publish). A Sanity webhook is delivered once per matching
-document per transaction, which is why the marker exists.
+filters on it alone, `_id == "publish-log.site-build"`, so each live action
+queues one build however many documents it took. (A Sanity webhook is
+delivered once per matching document per transaction, which is why the
+marker exists: the earlier filter, `count(string::split(_id, ".")) == 1`,
+fired once per document, seven builds for a site publish.) The marker is
+written only by the route, so the site is rebuilt only by it: a route
+without the marker, or a webhook without this filter, would leave the live
+site unbuilt after a publish; the control says so after five minutes.
 
 ## Search engines
 
