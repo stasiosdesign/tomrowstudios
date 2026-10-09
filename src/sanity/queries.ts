@@ -150,7 +150,7 @@ export const SHOP_PAGE_QUERY = defineQuery(`*[_id == "shopPage"][0] {
   hero { label, heading, lead, image { ${IMAGE} }, primaryButton, secondaryButton },
   catalogue { label, heading },
   testimonials { heading, lead },
-  faq { label, heading, note, helpHeading, helpLead, helpButton }
+  faq { label, heading, note, questions[] { _key, question, answer }, helpHeading, helpLead, helpButton }
 }`);
 
 export const PARTNERS_PAGE_QUERY = defineQuery(`*[_id == "partnersPage"][0] {

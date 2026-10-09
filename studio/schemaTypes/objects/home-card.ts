@@ -1,5 +1,6 @@
 import {defineField, defineType} from 'sanity'
 import {DocumentIcon} from '@sanity/icons/Document'
+import {BlockItem} from '../../components/BlockItem'
 import {optionalAltTextField} from '../shared/alt-text'
 
 // One of the three stepped cards under Recognition on the home page: a photo,
@@ -9,6 +10,8 @@ export const homeCard = defineType({
   title: 'Card',
   type: 'object',
   icon: DocumentIcon,
+  // A block of Recognition's list of cards, opened in place (BlockItem)
+  components: {item: BlockItem},
   fields: [
     defineField({
       name: 'image',

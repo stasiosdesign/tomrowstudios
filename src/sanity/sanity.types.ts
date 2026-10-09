@@ -15,6 +15,12 @@
 export declare const internalGroqTypeReferenceTo: unique symbol;
 
 // Source: schema.json
+export type FaqItem = {
+  _type: "faqItem";
+  question?: string;
+  answer?: string;
+};
+
 export type TextSection = {
   _type: "textSection";
   label?: string;
@@ -515,6 +521,11 @@ export type ShopPage = {
     label?: string;
     heading?: string;
     note?: string;
+    questions?: Array<
+      {
+        _key: string;
+      } & FaqItem
+    >;
     helpHeading?: string;
     helpLead?: string;
     helpButton?: string;
@@ -815,6 +826,7 @@ export type Geopoint = {
 };
 
 export type AllSanitySchemaTypes =
+  | FaqItem
   | TextSection
   | SanityImageAssetReference
   | ImageGallery
@@ -1532,7 +1544,7 @@ export type INFLUENCE_PAGE_QUERY_RESULT =
 
 // Source: ../src/sanity/queries.ts
 // Variable: SHOP_PAGE_QUERY
-// Query: *[_id == "shopPage"][0] {  hero { label, heading, lead, image { asset->{ _id, metadata { dimensions { width, height } } }, crop, hotspot, alt }, primaryButton, secondaryButton },  catalogue { label, heading },  testimonials { heading, lead },  faq { label, heading, note, helpHeading, helpLead, helpButton }}
+// Query: *[_id == "shopPage"][0] {  hero { label, heading, lead, image { asset->{ _id, metadata { dimensions { width, height } } }, crop, hotspot, alt }, primaryButton, secondaryButton },  catalogue { label, heading },  testimonials { heading, lead },  faq { label, heading, note, questions[] { _key, question, answer }, helpHeading, helpLead, helpButton }}
 export type SHOP_PAGE_QUERY_RESULT =
   | {
       hero: null;
@@ -1613,6 +1625,11 @@ export type SHOP_PAGE_QUERY_RESULT =
         label: string | null;
         heading: string | null;
         note: string | null;
+        questions: Array<{
+          _key: string;
+          question: string | null;
+          answer: string | null;
+        }> | null;
         helpHeading: string | null;
         helpLead: string | null;
         helpButton: string | null;
@@ -2332,6 +2349,11 @@ export type PAGE_LIVE_QUERY_RESULT =
         label?: string;
         heading?: string;
         note?: string;
+        questions?: Array<
+          {
+            _key: string;
+          } & FaqItem
+        >;
         helpHeading?: string;
         helpLead?: string;
         helpButton?: string;
@@ -2475,7 +2497,7 @@ declare global {
     '*[_id == "homePage"][0].getInTouch {\n  label,\n  title,\n  portrait { asset->{ _id, metadata { dimensions { width, height } } }, crop, hotspot, alt },\n  lead,\n  button\n}': GET_IN_TOUCH_QUERY_RESULT;
     '*[_id == "architecturePage"][0] {\n  header { label, heading }\n}': ARCHITECTURE_PAGE_QUERY_RESULT;
     '*[_id == "influencePage"][0] {\n  hero { label, heading, lead, image { asset->{ _id, metadata { dimensions { width, height } } }, crop, hotspot, alt } },\n  reach { label, number, text },\n  approach { label, statement },\n  origins { label, heading },\n  insights { label, heading, lead },\n  atlas { label, heading },\n  book { label, heading, lead, button }\n}': INFLUENCE_PAGE_QUERY_RESULT;
-    '*[_id == "shopPage"][0] {\n  hero { label, heading, lead, image { asset->{ _id, metadata { dimensions { width, height } } }, crop, hotspot, alt }, primaryButton, secondaryButton },\n  catalogue { label, heading },\n  testimonials { heading, lead },\n  faq { label, heading, note, helpHeading, helpLead, helpButton }\n}': SHOP_PAGE_QUERY_RESULT;
+    '*[_id == "shopPage"][0] {\n  hero { label, heading, lead, image { asset->{ _id, metadata { dimensions { width, height } } }, crop, hotspot, alt }, primaryButton, secondaryButton },\n  catalogue { label, heading },\n  testimonials { heading, lead },\n  faq { label, heading, note, questions[] { _key, question, answer }, helpHeading, helpLead, helpButton }\n}': SHOP_PAGE_QUERY_RESULT;
     '*[_id == "partnersPage"][0] {\n  intro { heading, lead, button },\n  clients { label, heading, note },\n  statement { heading, image { asset->{ _id, metadata { dimensions { width, height } } }, crop, hotspot, alt }, lead, button },\n  services { label, lead },\n  results { label, heading, note },\n  enquire { label, heading, lead },\n  archive { heading, lead }\n}': PARTNERS_PAGE_QUERY_RESULT;
     '*[_id == "privacyPage"][0] {\n  header { heading },\n  body\n}': PRIVACY_PAGE_QUERY_RESULT;
     '*[_id == "termsPage"][0] {\n  header { heading },\n  body\n}': TERMS_PAGE_QUERY_RESULT;

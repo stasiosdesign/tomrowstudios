@@ -119,6 +119,38 @@ export const PAGE_DEFAULTS = {
   },
 } satisfies Record<string, Record<string, Section>>;
 
+/** The Shop page's FAQ questions as the page was built with them, shaped like
+    the document's blocks (faq.questions, studio/schemaTypes/objects/faq-item.ts):
+    the page shows these while the document has none, and
+    studio/scripts/seed-shop-faq.ts puts them in the document, keys and all. */
+export const FAQ_DEFAULTS: { _key: string; question: string; answer: string }[] = [
+  {
+    _key: 'access',
+    question: 'How do I access my purchase?',
+    answer: 'Once you’ve completed your purchase, you’ll receive an email with a direct link to your course or digital product. Access is immediate and remains available indefinitely. You can log in anytime to download files or revisit materials.',
+  },
+  {
+    _key: 'download',
+    question: 'Can I download the files?',
+    answer: 'Yes. All digital products and course materials are available for download. You own what you purchase and can store files locally or in your preferred cloud service.',
+  },
+  {
+    _key: 'refund',
+    question: 'What if I need a refund?',
+    answer: 'We offer a 14-day money-back guarantee if you’re not satisfied. Contact us with your order details and we’ll process it promptly. No questions asked.',
+  },
+  {
+    _key: 'discounts',
+    question: 'Are there group discounts?',
+    answer: 'For teams or studios purchasing multiple licenses, we offer custom pricing. Reach out through the Partners page to discuss your needs and we’ll find a solution.',
+  },
+  {
+    _key: 'certificates',
+    question: 'Do you offer certificates?',
+    answer: 'Course completions come with a digital certificate of achievement. This is yours to share, print, or add to your professional profile as you see fit.',
+  },
+];
+
 /** The page document types that have defaults here: every static page but the home page. */
 export type PageType = keyof typeof PAGE_DEFAULTS;
 export type PageDefaults = (typeof PAGE_DEFAULTS)[PageType];

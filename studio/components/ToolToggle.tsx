@@ -1,7 +1,8 @@
 import {Flex, Text} from '@sanity/ui'
-import type {CSSProperties, KeyboardEvent} from 'react'
+import type {CSSProperties, KeyboardEvent, MouseEvent} from 'react'
 import {ToolLink, type Tool} from 'sanity'
-import {styled} from 'styled-components'
+import {useRouter} from 'sanity/router'
+import {css, styled} from 'styled-components'
 
 /* The top bar's switch between the Studio's tools, Content and the Visual
    editor, at its right (StudioNavbar): one grey track with the same small
@@ -15,9 +16,20 @@ import {styled} from 'styled-components'
    never a state of its own, so it always matches the view. The options are
    links: Tab reaches each, Enter follows it, the arrow keys (and Home and End)
    move between them as in Sanity's own tool menu, and the active one is
-   marked aria-current. */
-export function ToolToggle({tools, activeToolName}: {tools: Tool[]; activeToolName?: string}) {
+   marked aria-current.
+
+   Where the bar knows a place in the other tool for what is open (the same
+   page in the Visual editor, from the page editor, and back: pathFor), that
+   option goes there instead of to the tool's start. */
+export function ToolToggle({tools, activeToolName, pathFor}: {tools: Tool[]; activeToolName?: string; pathFor?: (toolName: string) => string | undefined}) {
+  const router = useRouter()
   if (tools.length < 2) return null
+  // A plain click stays in the Studio; a new tab or window gets the address
+  const follow = (event: MouseEvent<HTMLAnchorElement>, path: string) => {
+    if (event.metaKey || event.ctrlKey || event.shiftKey || event.button !== 0) return
+    event.preventDefault()
+    router.navigateUrl({path})
+  }
   const active = tools.findIndex((tool) => tool.name === activeToolName)
   const style = {'--tomrow-toggle-count': tools.length, '--tomrow-toggle-active': Math.max(active, 0)} as CSSProperties
   return (
@@ -26,11 +38,19 @@ export function ToolToggle({tools, activeToolName}: {tools: Tool[]; activeToolNa
         <Pill aria-hidden data-hidden={active < 0 ? '' : undefined} />
         {tools.map((tool) => {
           const selected = tool.name === activeToolName
-          return (
+          const path = selected ? undefined : pathFor?.(tool.name)
+          const label = (
+            <Text size={1} weight="medium">
+              {tool.title || tool.name}
+            </Text>
+          )
+          return path ? (
+            <PlaceOption key={tool.name} href={path} onClick={(event) => follow(event, path)}>
+              {label}
+            </PlaceOption>
+          ) : (
             <Option key={tool.name} name={tool.name} aria-current={selected ? 'page' : undefined} data-selected={selected ? '' : undefined}>
-              <Text size={1} weight="medium">
-                {tool.title || tool.name}
-              </Text>
+              {label}
             </Option>
           )
         })}
@@ -85,7 +105,7 @@ const Pill = styled.span`
   }
 `
 
-const Option = styled(ToolLink)`
+const option = css`
   position: relative;
   display: flex;
   align-items: center;
@@ -121,4 +141,13 @@ const Option = styled(ToolLink)`
   @media (prefers-reduced-motion: reduce) {
     transition: none;
   }
+`
+
+// Sanity's own tool link, or a plain link to a place in the other tool (pathFor)
+const Option = styled(ToolLink)`
+  ${option}
+`
+
+const PlaceOption = styled.a`
+  ${option}
 `

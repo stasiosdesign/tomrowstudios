@@ -49,7 +49,10 @@ const PAGE_ITEMS: {type: string; title: string; description: string}[] = [
 ].filter((item) => PAGES.some((page) => page.type === item.type))
 
 /** The collections, in the sidebar's order */
-export const COLLECTIONS: (CollectionOptions & {icon: ComponentType; description: string})[] = [
+/** A collection: its table's options, its icon, its card's description, and the page that lists its items on the site (where the Visual editor goes back to from one of them) */
+export type Collection = CollectionOptions & {icon: ComponentType; description: string; listedOn: string}
+
+export const COLLECTIONS: Collection[] = [
   {
     type: 'project',
     title: 'Projects',
@@ -58,6 +61,7 @@ export const COLLECTIONS: (CollectionOptions & {icon: ComponentType; description
     orderField: 'sortOrder',
     icon: ProjectsIcon,
     description: 'The architecture projects: the Architecture slider and each project’s page.',
+    listedOn: 'architecturePage',
   },
   {
     type: 'shopItem',
@@ -67,6 +71,7 @@ export const COLLECTIONS: (CollectionOptions & {icon: ComponentType; description
     orderField: 'sortOrder',
     icon: BasketIcon,
     description: 'The products, each with its own page in the shop.',
+    listedOn: 'shopPage',
   },
   {
     type: 'partner',
@@ -76,10 +81,19 @@ export const COLLECTIONS: (CollectionOptions & {icon: ComponentType; description
     orderField: 'sortOrder',
     icon: UsersIcon,
     description: 'Partner case studies, on the Partners page and its archive.',
+    listedOn: 'partnersPage',
   },
 ].filter((collection) => schemaTypes.some((schemaType) => schemaType.name === collection.type))
 
-const collectionId = (type: string) => `collection-${type}`
+export const collectionId = (type: string) => `collection-${type}`
+
+/** The pages, as the sidebar names them, with their icons and their address on the site: for the Visual editor's All pages and the switch between the tools (StudioNavbar) */
+export const PAGE_LINKS: {type: string; title: string; icon: ComponentType; route: string}[] = PAGE_ITEMS.map((item) => ({
+  type: item.type,
+  title: item.title,
+  icon: iconOf(item.type) ?? DocumentIcon,
+  route: PAGES.find((page) => page.type === item.type)?.route ?? '/',
+}))
 
 /** The overview's entry in the sidebar, and its pane's ID */
 const OVERVIEW: SidebarItem = {id: 'overview', title: 'Overview', icon: DashboardIcon}
@@ -104,7 +118,7 @@ const GROUPS: SidebarGroup[] = [
 
 // No pane title: Sanity then leaves out the pane's own header, and the
 // collection names itself once, with its count (CollectionPane)
-const collectionPane = (S: StructureBuilder, {icon: _icon, description: _description, ...options}: (typeof COLLECTIONS)[number]) =>
+const collectionPane = (S: StructureBuilder, {icon: _icon, description: _description, listedOn: _listedOn, ...options}: Collection) =>
   S.component(CollectionPane)
     .id(collectionId(options.type))
     .options(options)

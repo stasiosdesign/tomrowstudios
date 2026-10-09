@@ -206,12 +206,57 @@ function renderGetInTouch(cta: NonNullable<GET_IN_TOUCH_QUERY_RESULT>) {
 // the width in data-page-width), a button (Button.astro's a.cta) or, for
 // anything else, the element's text. A field a draft leaves empty keeps the
 // page's own words.
+const valueAt = (page: Record<string, unknown>, path: string[]) =>
+  path.reduce<unknown>((at, key) => (at && typeof at === 'object' ? (at as Record<string, unknown>)[key] : undefined), page);
+
+// A list of a page's repeatable blocks (the FAQ's questions): each block an
+// element carrying its key (data-page-item), its fields marked by name
+// (data-page-item-field). Redrawn from the draft in its order, so adding,
+// removing and moving a block shows at once (a new one copies the first's
+// markup), and each block marked by its key, so a click on one opens that
+// very block in the Studio's panel.
+type Block = { _key: string } & Record<string, unknown>;
+function renderList(list: HTMLElement, path: string[], blocks: Block[], doc: Doc) {
+  const current = [...list.querySelectorAll<HTMLElement>(':scope > [data-page-item]')];
+  const template = current[0];
+  if (!template) return;
+  const byKey = new Map(current.map((el) => [el.dataset.pageItem, el]));
+  let previous: HTMLElement | null = null;
+  for (const block of blocks) {
+    let el = byKey.get(block._key);
+    byKey.delete(block._key);
+    if (!el) {
+      el = template.cloneNode(true) as HTMLElement;
+      el.removeAttribute('open');
+      el.dataset.pageItem = block._key;
+    }
+    const blockPath = [...path, { _key: block._key }];
+    mark(el, blockPath, doc);
+    el.querySelectorAll<HTMLElement>('[data-page-item-field]').forEach((field) => {
+      const name = field.dataset.pageItemField ?? '';
+      const value = block[name];
+      text(field, [...blockPath, name], typeof value === 'string' ? value : null, doc);
+    });
+    if (previous) previous.after(el);
+    else list.prepend(el);
+    previous = el;
+  }
+  byKey.forEach((el) => el.remove());
+}
+
 function renderPage(doc: Doc, page: Record<string, unknown>) {
   const main = document.querySelector(`main[data-page-doc="${doc.id}"]`);
+  // While the draft has no blocks in a list, the page keeps the ones it was built with
+  main?.querySelectorAll('[data-page-list]').forEach((list) => {
+    if (!(list instanceof HTMLElement) || !list.dataset.pageList) return;
+    const path = list.dataset.pageList.split('.');
+    const blocks = valueAt(page, path);
+    if (Array.isArray(blocks) && blocks.length > 0) renderList(list, path, blocks as Block[], doc);
+  });
   main?.querySelectorAll('[data-page-field]').forEach((el) => {
     if (!(el instanceof HTMLElement) || !el.dataset.pageField) return;
     const path = el.dataset.pageField.split('.');
-    const value = path.reduce<unknown>((at, key) => (at && typeof at === 'object' ? (at as Record<string, unknown>)[key] : undefined), page);
+    const value = valueAt(page, path);
     if (el instanceof HTMLImageElement) {
       mark(el, path, doc);
       setImage(el, value as SanityImage | null | undefined, Number(el.dataset.pageWidth) || 1600);

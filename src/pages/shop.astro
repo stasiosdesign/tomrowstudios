@@ -7,16 +7,20 @@ import Button from '../components/Button.astro';
 import GetInTouch from '../components/GetInTouch.astro';
 import { imageAttrs, type SanityImage } from '../sanity/image';
 import { SHOP_ITEMS_QUERY, SHOP_PAGE_QUERY } from '../sanity/queries';
-import { PAGE_DEFAULTS, type ImageDefault } from '../sanity/page-defaults';
+import { FAQ_DEFAULTS, PAGE_DEFAULTS, type ImageDefault } from '../sanity/page-defaults';
 
 // The page's words and photo, from the Shop page document (or the page's
-// defaults), and the products from the shop items, in their order; the
-// quotes and the questions stay here
+// defaults), the FAQ's questions from the same document (or the five it was
+// built with), and the products from the shop items, in their order; the
+// quotes stay here. The questions carry their keys (data-page-item) so the
+// Studio's Visual editor can redraw the list as it is edited
+// (src/sanity/live-preview.ts).
 const [page, items] = await Promise.all([
   Astro.locals.sanity.fetch(SHOP_PAGE_QUERY),
   Astro.locals.sanity.fetch(SHOP_ITEMS_QUERY),
 ]);
 const D = PAGE_DEFAULTS.shopPage;
+const questions = page?.faq?.questions?.length ? page.faq.questions : FAQ_DEFAULTS;
 // An <img>'s src, size and alt: the photo set in the Studio, or the page's own file
 const img = (image: SanityImage | null | undefined, fallback: ImageDefault, width: number) =>
   image?.asset ? { ...imageAttrs(image, width), alt: image.alt ?? fallback.alt } : { src: fallback.path, width: fallback.width, height: fallback.height, alt: fallback.alt };
@@ -187,27 +191,13 @@ const img = (image: SanityImage | null | undefined, fallback: ImageDefault, widt
         <p class="faq-layout__note" data-page-field="faq.note">{page?.faq?.note ?? D.faq.note}</p>
       </div>
 
-      <div class="faq">
-      <details open>
-        <summary>How do I access my purchase?</summary>
-        <p>Once you've completed your purchase, you'll receive an email with a direct link to your course or digital product. Access is immediate and remains available indefinitely. You can log in anytime to download files or revisit materials.</p>
-      </details>
-      <details>
-        <summary>Can I download the files?</summary>
-        <p>Yes. All digital products and course materials are available for download. You own what you purchase and can store files locally or in your preferred cloud service.</p>
-      </details>
-      <details>
-        <summary>What if I need a refund?</summary>
-        <p>We offer a 14-day money-back guarantee if you're not satisfied. Contact us with your order details and we'll process it promptly. No questions asked.</p>
-      </details>
-      <details>
-        <summary>Are there group discounts?</summary>
-        <p>For teams or studios purchasing multiple licenses, we offer custom pricing. Reach out through the Partners page to discuss your needs and we'll find a solution.</p>
-      </details>
-      <details>
-        <summary>Do you offer certificates?</summary>
-        <p>Course completions come with a digital certificate of achievement. This is yours to share, print, or add to your professional profile as you see fit.</p>
-      </details>
+      <div class="faq" data-page-list="faq.questions">
+      {questions.map((item, i) => (
+        <details open={i === 0} data-page-item={item._key}>
+          <summary data-page-item-field="question">{item.question}</summary>
+          <p data-page-item-field="answer">{item.answer}</p>
+        </details>
+      ))}
 
         <div class="faq-footer">
           <h3 data-page-field="faq.helpHeading">{page?.faq?.helpHeading ?? D.faq.helpHeading}</h3>

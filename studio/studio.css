@@ -478,6 +478,19 @@ button.tomrow-white {
   }
 }
 
+/* ...but a repeatable page component's blocks (the FAQ's questions, the
+   hero's slides, the Recognition cards: components/BlockItem.tsx) have no
+   box around them: each block is its own framed container, a little apart
+   from the next, the list's Add item under them */
+[data-testid='form-view'] [data-ui='ArrayInput__content'] > [data-ui='Card']:has([data-tomrow-block]) {
+  background-color: transparent;
+
+  & > [data-ui='Grid'] {
+    gap: 8px;
+    padding: 0;
+  }
+}
+
 /* A list of words (tags): its items are fields already, so the box around
    them goes */
 [data-testid='form-view'] [data-is-file-target] > :is([data-ui='Stack'], [data-ui='VStack']) > [data-ui='Card'] {

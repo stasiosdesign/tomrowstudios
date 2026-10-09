@@ -3,7 +3,9 @@ import {useRef} from 'react'
 import type {DocumentLayoutProps} from 'sanity'
 import {styled} from 'styled-components'
 import {isPageType} from '../lib/site'
+import {CmsItemPrompt} from './CmsItemPrompt'
 import {FORM_WIDTH} from './FieldLayout'
+import {collectionOfType} from './navigation'
 import {OverlayScrollbar} from './OverlayScrollbar'
 import {useInVisualEditor} from './PreviewControls'
 import {PublishControls} from './PublishControls'
@@ -22,12 +24,15 @@ import {SectionsProvider} from './Sections'
      document's large title (PaneTitle: a page's name, a CMS item's current
      title) beside its actions; no smaller label row, no title in the form
      (its Title field stays), so it is named once.
-   - The page editor (a static page in Content), besides: no focus mode, no
-     presence avatar, no Copy. The form fills the pane, its sections
-     full-width rows like a collection's table.
-   - The Visual editor: the header row holds the preview's Edit switch and
-     phone view (PreviewControls) and Show more; the smaller
-     label row goes, so the form's title names the document once.
+   - No document anywhere has Copy or presence avatars.
+   - The page editor (a static page in Content), besides: no focus mode.
+     The form fills the pane, its sections full-width rows like a
+     collection's table.
+   - The Visual editor: the header row is one toolbar, the preview's Edit
+     switch and views (PreviewControls), Expand all and Show more; the
+     smaller label row goes, so the form's title names the document once. A
+     CMS item has no form there at all, but a prompt to edit it in its
+     collection (CmsItemPrompt).
 
    Everything is matched by Sanity's test IDs, its icons' names or this
    Studio's own markers, never by text.
@@ -41,6 +46,16 @@ export function DocumentLayout(props: DocumentLayoutProps) {
   const tool = useInVisualEditor() ? 'presentation' : 'structure'
   const isPage = isPageType(props.documentType)
   const rootRef = useRef<HTMLDivElement | null>(null)
+  // A CMS item clicked in the Visual editor's preview is edited in its
+  // collection, not here: the panel says so (CmsItemPrompt)
+  const collection = tool === 'presentation' ? collectionOfType(props.documentType) : undefined
+  if (collection) {
+    return (
+      <Root direction="column" height="fill" data-tomrow-document data-tomrow-tool={tool}>
+        <CmsItemPrompt documentId={props.documentId} collection={collection} />
+      </Root>
+    )
+  }
   return (
     <Root
       ref={rootRef}

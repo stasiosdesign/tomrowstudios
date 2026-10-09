@@ -1,5 +1,6 @@
 import {defineField, defineType} from 'sanity'
 import {ImageIcon} from '@sanity/icons/Image'
+import {BlockItem} from '../../components/BlockItem'
 
 // One of the home hero dial's five states: the caption beside the dial, the
 // photograph in its round frame, and the full-screen photograph behind it.
@@ -8,6 +9,8 @@ export const heroSlide = defineType({
   title: 'Dial slide',
   type: 'object',
   icon: ImageIcon,
+  // A block of the hero's list of slides, opened in place (BlockItem)
+  components: {item: BlockItem},
   fields: [
     defineField({
       name: 'caption',

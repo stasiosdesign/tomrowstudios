@@ -424,11 +424,33 @@ vercel.ts                  Vercel: build, clean URLs, redirects, staging's noind
      lead stay in the code (`studio/schemaTypes/pages/`, defaults in
      `src/sanity/page-defaults.ts`). The client logos on the home page are
      edited from the Home page's Client logos section.
+     **Repeatable blocks** belong to their page, not to a collection: the
+     Shop page's FAQ questions (`faqItem`), the hero's dial slides and the
+     Recognition cards. Each is a framed block in its list, with Sanity's
+     own row to drag it, remove or duplicate it, and Add item under the list;
+     a click on its row opens its own fields inside the frame
+     (`studio/components/BlockItem.tsx`). In the Visual editor a click on a
+     block opens that block in the panel, and the FAQ redraws as questions
+     are added, removed or moved (`data-page-list` / `data-page-item` in
+     `src/pages/shop.astro`, `src/sanity/live-preview.ts`). While the Shop
+     page has no questions the site shows the five it was built with
+     (`FAQ_DEFAULTS`).
    - **CMS collections**: Projects, Shop (the products, at `/<slug>`) and
      Partners (small case studies), each a table of its items
      (`studio/components/CollectionPane.tsx`) with search, a **New** button
      and a **Columns** chooser (kept per collection in the browser). A row
-     opens the item beside a compact list of the others.
+     opens the item beside a compact list of the others. In the Visual
+     editor a CMS item is not edited beside the page: clicked in the
+     preview, the panel says it is a CMS item, with **Go to CMS item** (that
+     item, in its collection in Content) and **Dismiss** (back to the page)
+     (`studio/components/CmsItemPrompt.tsx`).
+
+   The top bar's switch takes the open page across: from a page in the page
+   editor it opens the Visual editor on that page, and back (a CMS item
+   opens in its collection). In the Visual editor, **All pages** beside its
+   name lists the page editor's pages and opens any of them; or follow the
+   site's own links in the preview (`studio/components/StudioNavbar.tsx`,
+   `studio/components/navigation.ts`).
 3. **Publish staging only**, review on staging or in the Visual editor, then
    **Publish live**. The status says where the latest version is.
 
@@ -437,7 +459,8 @@ After changing Studio code or the schema, deploy the Studio
 compatible with the code on `main`. New content types are seeded with the
 scripts in `studio/scripts/` (`npx sanity exec scripts/<name>.ts
 --with-user-token` from `studio/`), which create documents in `staging` and
-never overwrite.
+never overwrite (`seed-shop-faq.ts` puts the FAQ's five questions into the
+Shop page).
 
 ## Notes
 

@@ -3,6 +3,7 @@ import {homePage} from './documents/home-page'
 import {partner} from './documents/partner'
 import {project} from './documents/project'
 import {shopItem} from './documents/shop-item'
+import {faqItem} from './objects/faq-item'
 import {featureImage} from './objects/feature-image'
 import {heroSlide} from './objects/hero-slide'
 import {homeCard} from './objects/home-card'
@@ -26,4 +27,5 @@ export const schemaTypes = [
   featureImage,
   imageGallery,
   textSection,
+  faqItem,
 ]
