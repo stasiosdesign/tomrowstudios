@@ -26,9 +26,14 @@ jobs:
         with:
           node-version: 24
           cache: npm
-          cache-dependency-path: studio/package-lock.json
+          cache-dependency-path: |
+            package-lock.json
+            studio/package-lock.json
           registry-url: https://npm.pkg.github.com
           scope: '@stasiosdesign'
+      # The site's own packages too: the schema tools read the root tsconfig
+      - run: npm ci
+        working-directory: .
       - run: npm ci
         env:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
