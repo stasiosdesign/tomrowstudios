@@ -2,7 +2,7 @@
 
    Staging and development only (astro.config.mjs injects the route where
    the site renders on request; production, being static, has nothing of
-   the kind). The Studio's publishing controls call it (studio/cms/lib/publish.ts)
+   the kind). The Studio's publishing controls call it (@stasiosdesign/sanity-cms, its publishing client)
    for every publishing action:
 
      { action: "publish",   id, rev? }   publish the document's current saved
@@ -72,6 +72,7 @@ import type { APIRoute } from 'astro';
 import { createClient, type SanityClient, type SanityDocument, type Transaction } from '@sanity/client';
 import { SANITY_API_WRITE_TOKEN } from 'astro:env/server';
 import { projectId } from '../client';
+import { contentKey, logId } from './content-key';
 
 const API_VERSION = '2025-02-19';
 const STAGING = 'staging';
@@ -323,7 +324,7 @@ async function writeAll(staging: SanityClient, production: SanityClient, prepare
   // the revision read above: if an editor typed on while this ran, Sanity
   // refuses the commit (409) and it is made again with every draft kept, so
   // those edits stay as drafts instead of being lost (a draft identical to
-  // what was published reads as published anyway: studio/cms/lib/status.ts).
+  // what was published reads as published anyway: the CMS package's status rules).
   const stagingStarted = performance.now();
   const toStaging = (withDrafts: boolean) => {
     const transaction = staging.transaction();
@@ -385,20 +386,6 @@ function manyIds(ids: unknown, openId: string): string[] {
   return [...new Set(ids as string[])];
 }
 
-/** The note kept beside each live document; a dotted ID, so it is private to the Studio */
-const logId = (id: string) => `publish-log.${id}`;
-
-/* What the two sides are compared on: the content, without the system fields
-   that differ by nature, keys sorted. The same function as the Studio's
-   (studio/cms/lib/status.ts), so the two agree. */
-function contentKey(doc: SanityDocument): string {
-  const { _id: _i, _rev: _r, _updatedAt: _u, _createdAt: _c, _system: _s, ...content } = doc as SanityDocument & { _system?: unknown };
-  return JSON.stringify(content, (_key, value) =>
-    value && typeof value === 'object' && !Array.isArray(value)
-      ? Object.fromEntries(Object.entries(value as Record<string, unknown>).sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0)))
-      : value,
-  );
-}
 
 function remapRefs<T>(value: T, renamed: Map<string, string>): T {
   if (renamed.size === 0) return value;

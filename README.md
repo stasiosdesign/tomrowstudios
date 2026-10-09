@@ -73,7 +73,7 @@ Node 22 (what Vercel uses). The two apps install their own dependencies:
 | `npm run build`         | the production build, into `dist/`                               |
 | `npm run preview`       | serves that build                                                |
 | `npm run check`         | type-checks the site and the Studio, lints the Studio, runs its tests |
-| `npm test`              | the Studio's tests: the publishing status rules and how the Studio keeps them current (`studio/cms/lib/*.test.ts`) |
+| `npm test`              | the Studio's tests: the publishing route and the CMS package agree on `contentKey` (`studio/test/`); the status rules are tested in the package |
 | `npm run typegen`       | regenerates the query types (`src/sanity/sanity.types.ts`) after a query or schema change |
 | `npm run studio:deploy` | deploys the hosted Studio                                        |
 
@@ -117,7 +117,7 @@ deployment), and Sanity's own drafts in the one the Studio edits:
 
 The publishing control at the top right of every document in the Studio, in
 Content, the page editor and the Visual editor alike
-(`studio/cms/components/PublishControls.tsx`), shows the document's status and a
+(`sanity-cms/src/components/PublishControls.tsx`), shows the document's status and a
 **Publish Live** split button. Its menu holds **Publish live**, **Publish
 staging only** and **Unpublish**, then the **Staging link** and **Live site
 link**. Both publish actions are always available, even when nothing has
@@ -132,7 +132,7 @@ selection), the route reads and checks them all in parallel and then writes
 each dataset once: one transaction to `staging`, one to `production`. It
 answers stage by stage, as a stream of lines (staging done, live done, then
 the result), and the Studio draws those stages under the control as they
-land (`PublishProgress`, `studio/cms/lib/run.ts`): Checking, Staging, Live site
+land (`PublishProgress`, `sanity-cms/src/lib/run.ts`): Checking, Staging, Live site
 and, for a live publish, Site rebuild, which it watches through the site's
 build stamp. A stage is marked done only when it is; a failure after staging
 was written says so, and the row offers Try again. The button waits while an
@@ -273,7 +273,7 @@ Publish staging only, Unpublish or Delete, sent to the route as one request
 together, and the ones refused stay ticked and are named under the Select
 bar, with the action's stages.
 
-The status (`publishStatus` in `studio/cms/lib/status.ts`, the same in the
+The status (`publishStatus` in `sanity-cms/src/lib/status.ts`, the same in the
 collection table and the publishing control) says where the latest saved
 version is: **Live** (green: staging and live both have it), **Staging**
 (yellow: staging has it, live doesn't, even if an older version is live),
@@ -401,23 +401,18 @@ src/
     publish/               /api/publish: every publishing action, on the server (staging only)
   styles/style.css         global stylesheet, imported once by the layout
 studio/                    Sanity Studio, with its own package.json
-  cms/                     the CMS foundation, shared by every website's Studio (a future package; see cms/README.md)
-    studio.ts, config.ts   defineCmsStudio and the typed project config it takes
-    components/            CollectionPane (the tables), PublishControls (the publishing control), PublishProgress (an action's stages), DocumentLayout, StudioNavbar (the top bar), ContentSidebar, ContentHome (the Overview's cards), the page editor's form parts
-    lib/publish.ts         the publishing actions, sent to /api/publish; reads its streamed answer
-    lib/run.ts             an action's stages, as the progress shows them (tested in run.test.ts)
-    lib/status.ts          the publishing status rules (tested in status.test.ts)
-    lib/watch.ts           keeps what the two datasets hold current (tested in watch.test.ts)
-    structure.ts           the Content sidebar and Overview: Page Editor, CMS Collections
-    theme.ts, studio.css   the design system: the theme, the accent Publish button, hover and selection, forms, the preview canvas
-  project.ts               this website for the foundation: Sanity project, brand, sites, pages, collections (names, icons, descriptions), routes, Visual editor locations, Vercel bypass
+  (the CMS itself)         the package @stasiosdesign/sanity-cms, from the sanity-cms repository: the layout, editors, publishing control and design (CLAUDE.md, "The CMS")
+  project.ts               this website for the CMS package: Sanity project, brand, sites, pages, collections (names, icons, descriptions), routes, Visual editor locations, publishing wording, Vercel bypass
   sanity.config.ts         defineCmsStudio(project)
   schemaTypes/             documents/ (homePage, project, client), pages/ (one per fixed page), objects/, shared/
   components/StudioIcon    the site's favicon as the Studio's icon
   scripts/                 one-off seeds and migrations (npx sanity exec … --with-user-token)
-  sanity.cli.ts            CLI settings, including TypeGen
+  sanity.cli.ts            CLI settings: TypeGen, autoUpdates off, linkLocalCms (npm run dev:linked)
+  test/                    the route and the package agree on contentKey (npm test)
+  .npmrc                   where @stasiosdesign packages come from (no token)
   .env.development/.production  which sites the Visual editor and the publishing bar use (public)
 astro.config.mjs           production static / staging on request, by deployment; the build stamp
+.github/                   Dependabot (CMS package updates, against staging) and the Studio's checks
 vercel.ts                  Vercel: build, clean URLs, redirects, staging's noindex header, build.json's headers
 ```
 
@@ -448,8 +443,8 @@ vercel.ts                  Vercel: build, clean URLs, redirects, staging's noind
    icon and what it holds (no header band of its own: the page starts right
    under the top bar); a card opens it like its sidebar entry does. The
    names, icons and descriptions are written once,
-   in `studio/project.ts`, for both (`studio/cms/components/ContentSidebar.tsx`,
-   `studio/cms/components/ContentHome.tsx`):
+   in `studio/project.ts`, for both (`sanity-cms/src/components/ContentSidebar.tsx`,
+   `sanity-cms/src/components/ContentHome.tsx`):
    - **Page editor**: Home, Influence, Architectural, Shop, Partner, Privacy
      policy and Terms of use, one document each with that page's editable
      words, photos and button labels; layout, navigation and where buttons
@@ -461,7 +456,7 @@ vercel.ts                  Vercel: build, clean URLs, redirects, staging's noind
      Recognition cards. Each is a framed block in its list, with Sanity's
      own row to drag it, remove or duplicate it, and Add item under the list;
      a click on its row opens its own fields inside the frame
-     (`studio/cms/components/BlockItem.tsx`). In the Visual editor a click on a
+     (`sanity-cms/src/components/BlockItem.tsx`). In the Visual editor a click on a
      block opens that block in the panel, and the FAQ redraws as questions
      are added, removed or moved (`data-page-list` / `data-page-item` in
      `src/pages/shop.astro`, `src/sanity/live-preview.ts`). While the Shop
@@ -469,20 +464,20 @@ vercel.ts                  Vercel: build, clean URLs, redirects, staging's noind
      (`FAQ_DEFAULTS`).
    - **CMS collections**: Projects, Shop (the products, at `/<slug>`) and
      Partners (small case studies), each a table of its items
-     (`studio/cms/components/CollectionPane.tsx`) with search, a **New** button
+     (`sanity-cms/src/components/CollectionPane.tsx`) with search, a **New** button
      and a **Columns** chooser (kept per collection in the browser). A row
      opens the item beside a compact list of the others. In the Visual
      editor a CMS item is not edited beside the page: clicked in the
      preview, the panel says it is a CMS item, with **Go to CMS item** (that
      item, in its collection in Content) and **Dismiss** (back to the page)
-     (`studio/cms/components/CmsItemPrompt.tsx`).
+     (`sanity-cms/src/components/CmsItemPrompt.tsx`).
 
    The top bar's switch takes the open page across: from a page in the page
    editor it opens the Visual editor on that page, and back (a CMS item
    opens in its collection). In the Visual editor, **All pages** beside its
    name lists the page editor's pages and opens any of them; or follow the
-   site's own links in the preview (`studio/cms/components/StudioNavbar.tsx`,
-   `studio/cms/components/navigation.ts`).
+   site's own links in the preview (`sanity-cms/src/components/StudioNavbar.tsx`,
+   `sanity-cms/src/components/navigation.ts`).
 3. **Publish staging only**, review on staging or in the Visual editor, then
    **Publish live**. The status says where the latest version is.
 

@@ -346,7 +346,7 @@ function update() {
 update();
 
 // Opening a section in the Studio's side panel scrolls the page to it
-// (studio/cms/components/SectionField.tsx and PreviewControls.tsx post its field
+// (the CMS package's SectionField and PreviewControls post its field
 // name). The home page marks its sections with their field names
 // (data-home-section; the hero is .home-hero), other pages each part they
 // show (data-page-field, "hero.heading"...), and Get in touch ends most
@@ -362,8 +362,11 @@ const sectionNamed = (name: string): Element | null => {
   return part?.closest('section') ?? part;
 };
 type Lenis = { scrollTo: (target: Element, options?: { offset?: number }) => void };
+// The message's type: SHOW_SECTION_MESSAGE and LEGACY_SHOW_SECTION_MESSAGE in
+// @stasiosdesign/sanity-cms/protocol (the Studio before 1.0 sent the second)
+const SHOW_SECTION = new Set(['sanity-cms/show-section', 'tomrow/show-section']);
 window.addEventListener('message', (event) => {
-  if (event.source !== window.parent || event.data?.type !== 'tomrow/show-section' || typeof event.data.section !== 'string') return;
+  if (event.source !== window.parent || !SHOW_SECTION.has(event.data?.type) || typeof event.data.section !== 'string') return;
   const target = sectionNamed(event.data.section);
   if (!target) return;
   const lenis = (window as unknown as { lenis?: Lenis }).lenis;

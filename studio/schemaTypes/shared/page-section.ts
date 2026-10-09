@@ -1,5 +1,5 @@
 import {defineArrayMember, defineField} from 'sanity'
-import {CollapsibleField} from '../../cms'
+import {CollapsibleField} from '@stasiosdesign/sanity-cms'
 import {optionalAltTextField} from './alt-text'
 
 // The building blocks of the page documents (schemaTypes/pages): one section
@@ -8,7 +8,7 @@ import {optionalAltTextField} from './alt-text'
 // page's code no longer fixes: a label, a heading, a standfirst, a picture, a
 // button's words. Every page's own file is a list of these, so it reads as an
 // outline of the page.
-export {pageSection} from '../../cms'
+export {pageSection} from '@stasiosdesign/sanity-cms'
 
 /** The small line above a heading (the tagline). */
 export const labelField = (description = 'The small line above the heading.', name = 'label', title = 'Label') =>

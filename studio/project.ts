@@ -3,15 +3,15 @@ import {ProjectsIcon} from '@sanity/icons/Projects'
 import {UsersIcon} from '@sanity/icons/Users'
 import {defineLocations} from 'sanity/presentation'
 import {vercelProtectionBypassTool} from '@sanity/vercel-protection-bypass'
-import type {CmsProjectConfig} from './cms'
+import type {CmsProjectConfig} from '@stasiosdesign/sanity-cms'
 import {StudioIcon} from './components/StudioIcon'
 import {schemaTypes} from './schemaTypes'
 import {PAGES} from './schemaTypes/pages'
 
-/* Everything the CMS foundation (cms/) needs to know about the Tomrow Studios
+/* Everything the CMS package (@stasiosdesign/sanity-cms) needs to know about the Tomrow Studios
    website: its Sanity project, its brand, its two sites, its content model,
    and how the Studio's Visual editor and publishing reach it. The foundation
-   builds the Studio from this (sanity.config.ts); nothing in cms/ knows about
+   builds the Studio from this (sanity.config.ts); nothing in the package knows about
    this site otherwise. */
 
 // The site the Visual editor (Sanity's Presentation tool) shows, never
@@ -45,6 +45,13 @@ export const project: CmsProjectConfig = {
   },
 
   sites: {preview: PREVIEW_ORIGIN, live: LIVE_ORIGIN},
+
+  publishing: {
+    // The route is src/sanity/publish/ (the default /api/publish), on the
+    // datasets staging and production (the defaults). A live publish that
+    // doesn't rebuild the site points to the deploy webhook in the README.
+    rebuildHelp: 'check the Sanity webhook (README)',
+  },
 
   schema: {
     types: schemaTypes,

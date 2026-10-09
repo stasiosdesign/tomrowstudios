@@ -10,8 +10,9 @@
     "deploy": "sanity deploy",
     "deploy-graphql": "sanity graphql deploy",
     "dev": "sanity dev",
+    "dev:linked": "sanity dev",
     "start": "sanity start",
-    "test": "node --experimental-strip-types --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --disable-warning=ExperimentalWarning --test \"cms/**/*.test.ts\"",
+    "test": "node --experimental-strip-types --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --disable-warning=ExperimentalWarning --test \"test/**/*.test.ts\"",
     "typegen": "sanity schemas extract --force && sanity typegen generate"
   },
   "keywords": [
@@ -22,10 +23,11 @@
     "@sanity/image-url": "^2.1.1",
     "@sanity/ui": "^4.2.4",
     "@sanity/vercel-protection-bypass": "^5.0.23",
-    "@sanity/vision": "^6.16.0",
+    "@sanity/vision": "6.18.0",
+    "@stasiosdesign/sanity-cms": "1.0.0",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
-    "sanity": "^6.16.0",
+    "sanity": "6.18.0",
     "styled-components": "^6.1.18"
   },
   "devDependencies": {

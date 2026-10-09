@@ -1,6 +1,6 @@
 import {defineArrayMember, defineField, defineType} from 'sanity'
 import {HomeIcon} from '@sanity/icons/Home'
-import {SectionField} from '../../cms'
+import {SectionField} from '@stasiosdesign/sanity-cms'
 import {altTextField} from '../shared/alt-text'
 import {FIXED_LENGTH, fixedPhotosField} from '../shared/fixed-photos'
 

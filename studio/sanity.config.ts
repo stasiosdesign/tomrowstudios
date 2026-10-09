@@ -1,4 +1,4 @@
-import {defineCmsStudio} from './cms'
+import {defineCmsStudio} from '@stasiosdesign/sanity-cms'
 import {project} from './project'
 
 // The Tomrow Studios Studio: the CMS foundation (cms/, shared by every
