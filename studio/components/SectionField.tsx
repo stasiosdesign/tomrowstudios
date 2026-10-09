@@ -1,11 +1,12 @@
 import {ChevronDownIcon} from '@sanity/icons/ChevronDown'
 import {Badge, Text} from '@sanity/ui'
-import {useId} from 'react'
-import {type ObjectFieldProps} from 'sanity'
+import {useEffect, useId, useState, type ReactNode} from 'react'
+import {type FieldProps, type FormNodeValidation, type ObjectFieldProps} from 'sanity'
 import {css, styled} from 'styled-components'
 import {Collapse, MOTION_EASE, MOTION_MS} from './Collapse'
 import {FORM_WIDTH} from './FieldLayout'
 import {showInPreview, useInVisualEditor} from './PreviewControls'
+import {useSection} from './Sections'
 
 /* One section of a page in the form: a row in a table-like list, in the
    page's order, that opens and closes on a click anywhere along it (or Enter
@@ -20,18 +21,70 @@ import {showInPreview, useInVisualEditor} from './PreviewControls'
    In Content a row is the section's name and description, under the list's
    column heads (PageInput). In the Visual editor's narrow panel it is the
    name alone, a little taller, and a click also scrolls the preview to the
-   section (showInPreview). */
+   section (showInPreview).
+
+   SectionField is for a page's object sections, which Sanity folds itself
+   (collapsible in the schema); CollapsibleField gives the same row to a
+   field Sanity doesn't fold, the Privacy and Terms text, keeping its own
+   open state: closed until opened, and opened by a click into it from the
+   Visual editor's preview. */
 export function SectionField(props: ObjectFieldProps) {
   const {children, collapsed, description, name, onCollapse, onExpand, title, validation} = props
+  return (
+    <SectionRow name={name} title={title ?? name} description={description} validation={validation} open={!collapsed} onToggle={() => (collapsed ? onExpand() : onCollapse())}>
+      {children}
+    </SectionRow>
+  )
+}
+
+export function CollapsibleField(props: FieldProps) {
+  const {children, description, name, title, validation, inputProps} = props
+  const [open, setOpen] = useState(false)
+  // A click on the text in the Visual editor's preview, or the keyboard
+  // reaching into it, opens the row (the focus path points inside)
+  const focusPath = (inputProps as {focusPath?: unknown[]}).focusPath
+  const focusedWithin = !!inputProps.focused || (focusPath?.length ?? 0) > 0
+  useEffect(() => {
+    if (focusedWithin) setOpen(true)
+  }, [focusedWithin])
+  // Listed for Expand all / Collapse all, like the page's sections
+  useSection(
+    props.path.length === 1 ? String(props.path[0]) : null,
+    !open,
+    () => setOpen(true),
+    () => setOpen(false),
+  )
+  return (
+    <SectionRow name={name} title={title ?? name} description={description} validation={validation} open={open} onToggle={() => setOpen((current) => !current)}>
+      {children}
+    </SectionRow>
+  )
+}
+
+function SectionRow({
+  name,
+  title,
+  description,
+  validation,
+  open,
+  onToggle,
+  children,
+}: {
+  name: string
+  title: string
+  description?: string
+  validation: FormNodeValidation[]
+  open: boolean
+  onToggle: () => void
+  children: ReactNode
+}) {
   const inVisualEditor = useInVisualEditor()
-  const open = !collapsed
   const hasError = validation.some((marker) => marker.level === 'error')
   const hasWarning = !hasError && validation.some((marker) => marker.level === 'warning')
   const id = useId()
 
   const toggle = () => {
-    if (open) onCollapse()
-    else onExpand()
+    onToggle()
     if (inVisualEditor) showInPreview(name)
   }
 
@@ -45,9 +98,7 @@ export function SectionField(props: ObjectFieldProps) {
         data-names-only={inVisualEditor ? '' : undefined}
         onClick={toggle}
       >
-        <Text size={1} weight="medium">
-          {title}
-        </Text>
+        <Name>{title}</Name>
         {!inVisualEditor && (
           <span className="section-row__description">
             {description && (
@@ -138,6 +189,18 @@ const RowButton = styled.button`
     outline: 2px solid var(--card-focus-ring-color);
     outline-offset: -2px;
   }
+`
+
+// The section's name: the same 14px medium as the sidebar's entries and a
+// collection's rows, a step up from Sanity's small labels, on one line
+const Name = styled.span`
+  overflow: hidden;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.3;
+  color: var(--card-fg-color);
+  white-space: nowrap;
+  text-overflow: ellipsis;
 `
 
 /* The opened section: the row's full width, its fields inset like the

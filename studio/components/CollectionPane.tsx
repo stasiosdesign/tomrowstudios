@@ -6,14 +6,14 @@ import {ControlsIcon} from '@sanity/icons/Controls'
 import {SearchIcon} from '@sanity/icons/Search'
 import {TrashIcon} from '@sanity/icons/Trash'
 import {Box, Button, Card, Checkbox, Flex, Stack, Text, TextInput, useClickOutsideEvent} from '@sanity/ui'
-import {useToast} from '@sanity/ui/toast'
 import {Popover} from '@sanity/ui/popover'
 import {useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, type KeyboardEvent, type MouseEvent} from 'react'
 import {useClient, useSchema, type SanityDocument} from 'sanity'
 import {useRouter} from 'sanity/router'
 import {usePaneRouter} from 'sanity/structure'
 import {styled} from 'styled-components'
-import {API_VERSION, datasetClients, deleteDocument, failText, publishLive, publishStaging, unpublish} from '../lib/publish'
+import {API_VERSION, datasetClients, deleteDocument, failText, PublishError, publishLive, publishStaging, unpublish, type FailedDocument, type Phase} from '../lib/publish'
+import {advance, buildDone, currentStep, failRun, finishRun, hasFailed, isActive, isBusy, LINGER_MS, REBUILD_SLOW_MS, startRun, type Run} from '../lib/run'
 import {groupById, publishStatus, STATUS_LABEL, type PublishStatus} from '../lib/status'
 import {LISTEN_OPTIONS, watchReads} from '../lib/watch'
 import {useAnimatedOpen} from './AnimatedMenuButton'
@@ -21,15 +21,19 @@ import {ConfirmDialog} from './ConfirmDialog'
 import {columnsFor, isImageType, renderValue, textOf, type Column} from './format'
 import {PaneHeading} from './PaneHeading'
 import {isPermissionError, usePermissionGate, type RestrictedAction} from './PermissionDialog'
+import {PublishProgress} from './PublishProgress'
 import {StatusChip} from './Status'
 import {navItem} from './tab'
+import {builtSince, useBuildStamp} from './useBuildStamp'
 
 /* A collection: every document of one type as a table, one row per item,
    with its status (always shown) and the columns the editor chooses (none at
    first; the choice is kept per collection in this browser), a search box and
    a New button. Select mode ticks several items for one action on them all:
-   Publish live, Publish staging only, Unpublish or Delete, each item through
-   the same route as the publishing control, failures reported by name. Clicking a row opens the item in the pane
+   Publish live, Publish staging only, Unpublish or Delete, in one request to
+   the same route as the publishing control (each item checked on its own,
+   the ones that pass written together), its stages shown under the Select
+   bar (PublishProgress) and the items refused named there, still ticked. Clicking a row opens the item in the pane
    to the right; the table then folds into a compact list of the items, so the
    editor switches between them without going back. "All <items>" (or closing
    the item) brings the full table back, with its columns and search kept.
@@ -224,12 +228,43 @@ export function CollectionPane(props: {options?: Record<string, unknown>; childI
   const lowerTitle = title.toLowerCase()
 
   // Select mode: tick items, then one action for them all
-  const toast = useToast()
   const gate = usePermissionGate()
   const [selecting, setSelecting] = useState(false)
   const [picked, setPicked] = useState<Set<string>>(() => new Set())
-  const [bulkBusy, setBulkBusy] = useState(false)
   const [confirm, setConfirm] = useState<{action: 'unpublish' | 'delete'; ids: string[]} | null>(null)
+
+  // The bulk action running, or just run: its stages, under the Select bar
+  // (lib/run.ts, PublishProgress), kept until it clears itself or is dismissed
+  const [bulkRun, setBulkRun] = useState<Run | null>(null)
+  const bulkRef = useRef<Run | null>(null)
+  const lastBulk = useRef<{action: BulkAction; ids: string[]} | null>(null)
+  const updateBulk = useCallback((next: Run | null) => {
+    bulkRef.current = next
+    setBulkRun(next)
+  }, [])
+  const bulkBusy = isBusy(bulkRun)
+  useEffect(() => {
+    if (!bulkRun || isActive(bulkRun) || hasFailed(bulkRun)) return undefined
+    const timer = setTimeout(() => bulkRef.current === bulkRun && updateBulk(null), LINGER_MS)
+    return () => clearTimeout(timer)
+  }, [bulkRun, updateBulk])
+
+  // The live site's rebuild after a bulk live publish: done once the site was
+  // built after the newest live copy changed (the items go in one transaction)
+  const liveUpdatedAt = useMemo(() => {
+    const times = (documents?.production ?? []).filter((doc) => doc._type !== 'publishLog').map((doc) => doc._updatedAt)
+    return times.length > 0 ? times.reduce((latest, time) => (time > latest ? time : latest)) : undefined
+  }, [documents])
+  const awaitingBuild = !!bulkRun && currentStep(bulkRun)?.key === 'build'
+  const buildStamp = useBuildStamp(awaitingBuild ? liveUpdatedAt : undefined, true)
+  const built = builtSince(buildStamp, liveUpdatedAt)
+  useEffect(() => {
+    const current = bulkRef.current
+    if (!current || currentStep(current)?.key !== 'build' || !liveUpdatedAt || built !== true) return
+    if (Date.parse(liveUpdatedAt) < current.startedAt - 60_000) return
+    updateBulk(buildDone(current))
+  }, [built, liveUpdatedAt, updateBulk])
+  const rebuildSlow = awaitingBuild && !!bulkRun?.finishedAt && Date.now() - bulkRun.finishedAt > REBUILD_SLOW_MS
   const togglePick = useCallback((id: string) => {
     setPicked((current) => {
       const next = new Set(current)
@@ -246,46 +281,55 @@ export function CollectionPane(props: {options?: Record<string, unknown>; childI
   const pickedIds = useMemo(() => shown.filter((row) => picked.has(row.id)).map((row) => row.id), [shown, picked])
   const allPicked = shown.length > 0 && pickedIds.length === shown.length
 
-  // One action over several items, one at a time through the same route as
-  // the publishing control; the items that fail stay selected and are named
+  // One action over several items, in one request to the same route as the
+  // publishing control: each item is checked on its own and the ones that
+  // pass are written together; the items refused stay selected and are named
   const runBulk = useCallback(
     async (action: BulkAction, ids: string[]) => {
-      if (bulkBusy || ids.length === 0) return
+      if (isBusy(bulkRef.current) || ids.length === 0) return
       setConfirm(null)
       // Only roles that may write run it; anyone else is told so, and nothing is sent
       if (!gate.allow(RESTRICTED[action])) return
-      setBulkBusy(true)
-      const run = {live: publishLive, staging: publishStaging, unpublish, delete: deleteDocument}[action]
-      const failed: {id: string; title: string; reason: string; denied: boolean}[] = []
-      for (const id of ids) {
-        try {
-          await run(client, id)
-        } catch (err) {
-          failed.push({id, title: rows.find((row) => row.id === id)?.title ?? id, reason: failText(err), denied: isPermissionError(err)})
-        }
+      lastBulk.current = {action, ids}
+      const call = {live: publishLive, staging: publishStaging, unpublish, delete: deleteDocument}[action]
+      const kind = action === 'live' ? 'live' : action === 'staging' ? 'staging' : action
+      let run = startRun(kind, `${ids.length} ${ids.length === 1 ? singular : lowerTitle}`)
+      updateBulk(run)
+      const step = (change: (current: Run) => Run) => {
+        run = change(run)
+        updateBulk(run)
       }
-      setBulkBusy(false)
-      setPicked(new Set(failed.map((item) => item.id)))
-      if (action === 'delete' && selectedId && ids.includes(selectedId) && !failed.some((item) => item.id === selectedId)) showAll()
-      const done = ids.length - failed.length
-      const what = (count: number) => (count === 1 ? singular : lowerTitle)
-      // A refusal because of the user's role is the dialog, not a technical list
-      if (failed.some((item) => item.denied)) gate.deny(RESTRICTED[action])
-      if (failed.length > 0 && failed.every((item) => item.denied)) return
-      if (failed.length === 0) {
-        toast.push({status: 'success', closable: true, title: `${ids.length} ${what(ids.length)} ${BULK_DONE[action]}`})
-      } else {
-        toast.push({
-          status: done > 0 ? 'warning' : 'error',
-          closable: true,
-          duration: 15000,
-          title: `${done} of ${ids.length} ${what(ids.length)} ${BULK_DONE[action]}`,
-          description: failed.map((item) => `${item.title}: ${item.denied ? 'not permitted for your role' : item.reason}`).join('\n'),
-        })
+      try {
+        const result = await call(client, {id: ids[0], ids}, (phase: Phase) => step((current) => advance(current, phase)))
+        // A site whose route predates bulk actions took the first item alone:
+        // the rest go one by one, as before
+        const covered = new Set([...result.published, ...result.failed.map((item) => item.id)])
+        const failed: FailedDocument[] = [...result.failed]
+        const published = [...result.published]
+        for (const id of ids.filter((item) => !covered.has(item))) {
+          try {
+            await call(client, {id})
+            published.push(id)
+          } catch (error) {
+            if (isPermissionError(error)) throw error
+            failed.push({id, error: failText(error)})
+          }
+        }
+        step((current) => finishRun(current, {published, failed, ms: result.ms}))
+        setPicked(new Set(failed.map((item) => item.id)))
+        if (action === 'delete' && selectedId && published.includes(selectedId)) showAll()
+      } catch (error) {
+        // A refusal because of the user's role is the dialog, not a technical message
+        if (isPermissionError(error)) {
+          updateBulk(null)
+          gate.deny(RESTRICTED[action])
+        } else step((current) => failRun(current, failText(error), error instanceof PublishError ? error.phases : []))
       }
     },
-    [bulkBusy, client, rows, selectedId, showAll, singular, lowerTitle, toast, gate],
+    [client, selectedId, showAll, singular, lowerTitle, gate, updateBulk],
   )
+  const retryBulk = useCallback(() => lastBulk.current && runBulk(lastBulk.current.action, lastBulk.current.ids), [runBulk])
+  const titles = useMemo(() => Object.fromEntries(rows.map((row) => [row.id, row.title])), [rows])
 
   return (
     <Flex direction="column" height="fill" data-tomrow-collection={compact ? 'compact' : 'table'}>
@@ -347,7 +391,7 @@ export function CollectionPane(props: {options?: Record<string, unknown>; childI
           <Flex align="center" gap={2} wrap="wrap">
             <Box flex={1}>
               <Text size={1} muted={pickedIds.length === 0}>
-                {bulkBusy ? 'Working…' : pickedIds.length === 0 ? `Tick the ${lowerTitle} to act on` : `${pickedIds.length} selected`}
+                {pickedIds.length === 0 ? `Tick the ${lowerTitle} to act on` : `${pickedIds.length} selected`}
               </Text>
             </Box>
             <Button text="Publish live" className="tomrow-cta" fontSize={1} padding={2} disabled={bulkBusy || pickedIds.length === 0} onClick={() => runBulk('live', pickedIds)} />
@@ -355,6 +399,11 @@ export function CollectionPane(props: {options?: Record<string, unknown>; childI
             <Button text="Unpublish" mode="ghost" tone="critical" fontSize={1} padding={2} disabled={bulkBusy || pickedIds.length === 0} onClick={() => gate.allow('unpublish') && setConfirm({action: 'unpublish', ids: pickedIds})} />
             <Button text="Delete" mode="ghost" tone="critical" icon={TrashIcon} fontSize={1} padding={2} disabled={bulkBusy || pickedIds.length === 0} onClick={() => gate.allow('delete') && setConfirm({action: 'delete', ids: pickedIds})} />
           </Flex>
+        </Card>
+      )}
+      {!compact && bulkRun && (
+        <Card borderBottom>
+          <PublishProgress run={bulkRun} names={titles} rebuildSlow={rebuildSlow} onRetry={retryBulk} onDismiss={() => updateBulk(null)} />
         </Card>
       )}
 
@@ -454,13 +503,6 @@ type BulkAction = 'live' | 'staging' | 'unpublish' | 'delete'
 
 const RESTRICTED: Record<BulkAction, RestrictedAction> = {live: 'publish', staging: 'publish', unpublish: 'unpublish', delete: 'delete'}
 
-const BULK_DONE: Record<BulkAction, string> = {
-  live: 'published live',
-  staging: 'published to staging',
-  unpublish: 'unpublished',
-  delete: 'deleted',
-}
-
 function confirmText(confirm: {action: 'unpublish' | 'delete'; ids: string[]}, rows: Row[], singular: string, plural: string) {
   const names = confirm.ids.map((id) => rows.find((row) => row.id === id)?.title ?? id)
   const which = names.length === 1 ? <b>{names[0]}</b> : <b>{`${names.length} ${plural}`}</b>
@@ -482,7 +524,7 @@ function confirmText(confirm: {action: 'unpublish' | 'delete'; ids: string[]}, r
 const Table = styled.table`
   width: 100%;
   border-collapse: collapse;
-  font-size: 13px;
+  font-size: 14px;
   line-height: 1.3;
 
   th,

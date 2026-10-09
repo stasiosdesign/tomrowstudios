@@ -54,12 +54,12 @@ const WASH_SELECTED = 'rgba(255, 255, 255, 0.1)'
    - A field with a problem stays tinted red with a red edge; the keyboard
      focus ring is Sanity's own.
    Icon-only buttons (bleed: menus, close, chevrons) stay flat, as before. */
-const FIELD = '#1a1a1a' // white at 10% on black: --tomrow-selected, the tool switch's track
-const FIELD_HOVER = '#262626'
-const FIELD_PRESSED = '#333333'
+const FIELD = '#161718' // a step up from the ground (#08090a): apart from it, but of a piece with it
+const FIELD_HOVER = '#212223'
+const FIELD_PRESSED = '#2c2d2e'
 const FIELD_DISABLED = '#0d0d0d'
 const DISABLED_FG = '#4d4d4d'
-const PLACEHOLDER = '#8c8c8c' // 5:1 on FIELD
+const PLACEHOLDER = '#8c8c8c' // 5.4:1 on FIELD
 const RED = '#dd341d' // --cta-accent-color in src/styles/style.css
 
 /* Rules and edges (a pane's dividers, a list's rows, a header's underline):
@@ -147,9 +147,16 @@ function studioColors(color: NonNullable<StudioTheme['color']>): NonNullable<Stu
   return next as unknown as NonNullable<StudioTheme['color']>
 }
 
+/* Corners close to square, on Sanity's own controls too. Sanity UI picks a
+   radius from this scale by index (a button's radius={2}, a card's 2 or 3,
+   a dialog's 3): its own steps run 0, 1, 3, 6, 9, 12, 21px; here they stop
+   at the Studio's few (studio.css: controls 2px, cards 3px). */
+const RADIUS = [0, 1, 2, 3, 3, 4, 6]
+
 // One typeface throughout: the site's Inter Tight, for labels too
 export const theme: StudioTheme = {
   ...base,
+  radius: RADIUS,
   color: base.color && studioColors(base.color),
   fonts: {
     ...fonts,

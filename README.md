@@ -126,7 +126,17 @@ changed; Unpublish asks first.
 Every action goes to the site's server route, `/api/publish` on staging
 (`src/sanity/publish/`), which checks the caller's Studio session with Sanity
 and their role, then writes with its own token, `SANITY_API_WRITE_TOKEN`. All
-its checks run before the first write, so a refusal changes nothing.
+its checks run before the first write, so a refusal changes nothing. However
+many documents an action takes (one item, the whole static site, a
+selection), the route reads and checks them all in parallel and then writes
+each dataset once: one transaction to `staging`, one to `production`. It
+answers stage by stage, as a stream of lines (staging done, live done, then
+the result), and the Studio draws those stages under the control as they
+land (`PublishProgress`, `studio/lib/run.ts`): Checking, Staging, Live site
+and, for a live publish, Site rebuild, which it watches through the site's
+build stamp. A stage is marked done only when it is; a failure after staging
+was written says so, and the row offers Try again. The button waits while an
+action runs, so nothing is sent twice.
 
 - **Publish live**: the version in the editor (the draft, or else the
   published document, pinned by its revision) is published in `staging`,
@@ -190,11 +200,15 @@ Sanity's), one row like Linear's: at its left, as wide as the Content
 sidebar under it and ruled off at the sidebar's edge, the website's favicon
 (from www.tomrowstudios.com, `studio/static/site-favicon.png`), a hairline
 and "CMS", which open the project menu (Manage project and Invite members
-on sanity.io, and Sign out); then the open tool's name ("Content"); and at
-the right, Content and the Visual editor as one switch, the active one
-white on a grey track, sliding across when it changes (`ToolToggle`). It has
-no search, New document, Tasks, help, presence or user menu. The sidebar has
-no header row of its own, so its entries start right under the bar.
+on sanity.io, and Sign out); then, on the panes' 14px inset, the two tools
+as two plain buttons, **Content** and **Visual Editor**, the open one white
+with black text, the other dimmed like any tab that isn't chosen; and in the
+Visual editor, centred in the room left, the name of the page in the
+preview, a menu of the page editor's pages. The brand's rule is drawn as
+Sanity draws a pane's edge (a 1px shadow outside the box), so it meets the
+sidebar's rule and the bar's in one line. It has no search, New document,
+Tasks, help, presence or user menu. The sidebar has no header row of its
+own, so its entries start right under the bar.
 
 No scrollbars are drawn (`studio.css`): every area still scrolls by wheel,
 trackpad, touch and keyboard. A CMS item's form, the one long enough to
@@ -223,19 +237,21 @@ are lists of rounded entries (`navItem` in `components/tab.ts`), 14px
 medium type with dimmed icons. Tabs and view choices share one look: the
 chosen one white on the grey highlight, the others dimmed, lighter under the
 pointer (the sidebar's and compact list's entries too, and the Visual
-editor's views). Corners stay close to square: controls and navigation
-entries 3px (Sanity's own controls too), the Overview's cards, menus,
-popovers, dialogs and the Publish button's outer corners 4px
-(`--tomrow-nav-radius`, `--tomrow-card-radius`). The cards are plain
+editor's views). Corners stay close to square: controls, navigation
+entries and the Publish button's outer corners 2px (Sanity's own controls
+too, through the theme's radius scale), the Overview's cards, menus,
+popovers and dialogs 3px (`--tomrow-radius`, `--tomrow-nav-radius`,
+`--tomrow-card-radius`). The cards are plain
 rectangles a shade lighter than the page, edged with a hairline, both a
 little brighter under the pointer.
 A collection's image columns show small cropped thumbnails. The theme (`theme.ts`) keeps
 text and icons white on hover, press and selection.
 
 Every control is a filled surface, never a thin outline: fields and
-secondary buttons grey (lighter on hover and when pressed), primary buttons
-white, destructive ones and Publish red, icon buttons flat, all with the same
-3px corners; a field with a problem is tinted red, and keyboard focus keeps
+secondary buttons grey (`#161718`, a step up from the ground, lighter on
+hover and when pressed), primary buttons white, destructive ones and Publish
+red, icon buttons flat, all with the same 2px corners (the theme's radius
+scale sets Sanity's own); a field with a problem is tinted red, and keyboard focus keeps
 Sanity's ring. The theme's field and button colours do most of it
 (`theme.ts`); `studio.css` fills the few parts Sanity draws as outlined
 boxes (lists, file and image fields, rich text, true/false fields, "Used on N
@@ -252,8 +268,10 @@ the controls and gets a dialog saying they don't have permission and to ask a
 project administrator; nothing is sent.
 
 Collections also have a **Select** mode: tick items for a bulk Publish live,
-Publish staging only, Unpublish or Delete; each item goes through the same
-route, and the ones that fail stay ticked and are named.
+Publish staging only, Unpublish or Delete, sent to the route as one request
+(`ids`): each item is checked on its own, the ones that pass are written
+together, and the ones refused stay ticked and are named under the Select
+bar, with the action's stages.
 
 The status (`publishStatus` in `studio/lib/status.ts`, the same in the
 collection table and the publishing control) says where the latest saved
@@ -267,11 +285,17 @@ edits the working draft: the Published / Drafts switch is hidden, since
 drafts never reach the ordinary sites anyway.
 
 A Sanity webhook, **Rebuild the site on publish**, on the `production`
-dataset (filter `count(string::split(_id, ".")) == 1`: published documents),
-calls a Vercel deploy hook that rebuilds `main`. Production shows a live
-publish about a minute later; the control watches the site's build stamp
-(`/build.json`, written by every production build) and says when. Staging
-needs no rebuild.
+dataset, calls a Vercel deploy hook that rebuilds `main`. Production is
+static, so a live publish genuinely needs that build: it shows about a
+minute later, and the control watches the site's build stamp (`/build.json`,
+written by every production build) and says when. Staging needs no rebuild.
+The route writes one marker document, `publish-log.site-build`, in every
+production transaction (a publish, an unpublish, a delete), and the webhook
+should filter on it alone, `_id == "publish-log.site-build"`, so each live
+action queues one build however many documents it took (the earlier filter,
+`count(string::split(_id, ".")) == 1`, fired once per document: seven builds
+for a site publish). A Sanity webhook is delivered once per matching
+document per transaction, which is why the marker exists.
 
 ## Search engines
 
@@ -326,9 +350,9 @@ links and the build stamp it watches.
   *Protection Bypass for Automation* secret, saved once in the Studio's
   **Vercel Protection Bypass** tool.
 - **Deploy hook** "Sanity publish" on `main`, called by the Sanity webhook
-  above (which should filter on `string::startsWith(_id, "live-")`, so only a live
-  publish or unpublish rebuilds the site). Its URL is a secret: it lives only
-  in the webhook.
+  above (filter `_id == "publish-log.site-build"`, the route's marker, so a
+  live publish, unpublish or delete rebuilds the site once). Its URL is a
+  secret: it lives only in the webhook.
 - **`/build.json`** is served with `Access-Control-Allow-Origin: *` and
   `Cache-Control: no-store` (`vercel.ts`), so the Studio can read the build
   stamp from its own origin.
@@ -375,8 +399,9 @@ src/
   styles/style.css         global stylesheet, imported once by the layout
 studio/                    Sanity Studio, with its own package.json
   schemaTypes/             documents/ (homePage, project, client), pages/ (one per fixed page), objects/, shared/
-  components/              CollectionPane (the tables), PublishControls (the publishing control), DocumentLayout, ContentSidebar, ContentHome (the Overview's cards), the page editor's form parts
-  lib/publish.ts           the publishing actions, sent to /api/publish
+  components/              CollectionPane (the tables), PublishControls (the publishing control), PublishProgress (an action's stages), DocumentLayout, StudioNavbar (the top bar), ContentSidebar, ContentHome (the Overview's cards), the page editor's form parts
+  lib/publish.ts           the publishing actions, sent to /api/publish; reads its streamed answer
+  lib/run.ts               an action's stages, as the progress shows them (tested in run.test.ts)
   lib/status.ts            the publishing status rules (tested in status.test.ts)
   lib/watch.ts             keeps what the two datasets hold current (tested in watch.test.ts)
   lib/site.ts              the two sites' addresses and each document's page
@@ -412,9 +437,11 @@ vercel.ts                  Vercel: build, clean URLs, redirects, staging's noind
    beside every entry (**Overview**, then the two groups, each folding open
    on its own with its pages or collections under it, their icons under the
    group's name), and beside it whatever is open, filling the rest of the
-   window. Content opens on the **Overview**: the Studio's name, then the
-   same two groups as sections of cards, one per page or collection with its
-   icon and what it holds; a card opens it like its sidebar entry does. The
+   window. Content opens on the **Overview**: the same two groups as
+   sections of cards, each headed by its icon in a square (the Page Editor's
+   white, the CMS Collections' grey) and a line saying what kind of content
+   it holds, one card per page or collection with its icon and what it
+   holds; a card opens it like its sidebar entry does. The
    names, icons and descriptions are written once,
    in `studio/structure.ts`, for both (`studio/components/ContentSidebar.tsx`,
    `studio/components/ContentHome.tsx`):

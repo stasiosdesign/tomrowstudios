@@ -65,7 +65,7 @@ export default defineConfig({
   plugins: [
     structureTool({structure, title: 'Content'}),
     presentationTool({
-      title: 'Visual editor',
+      title: 'Visual Editor',
       icon: DesktopIcon,
       // No bar above the preview: its Edit switch and phone view move into
       // the side panel's header row (components/PreviewControls.tsx), and the

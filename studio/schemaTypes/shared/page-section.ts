@@ -1,5 +1,5 @@
 import {defineArrayMember, defineField, type FieldDefinition} from 'sanity'
-import {SectionField} from '../../components/SectionField'
+import {CollapsibleField, SectionField} from '../../components/SectionField'
 import {optionalAltTextField} from './alt-text'
 
 // The building blocks of the page documents (schemaTypes/pages): one section
@@ -52,6 +52,14 @@ export const imageField = (description?: string, name = 'image', title = 'Photo'
 /** The words on a button; where it leads stays in the site's code, so say so in the description. */
 export const buttonField = (description: string, name = 'button', title = 'Button label') =>
   defineField({name, title, type: 'string', description, validation: (rule) => rule.required()})
+
+/**
+ * A page's written text (Privacy, Terms) as a section of the page's form: a folded row like the
+ * sections around it (CollapsibleField), holding the one rich-text field. The field itself is
+ * bodyField's, so the document and the site's queries are unchanged.
+ */
+export const textSection = (title: string, description: string) =>
+  defineField({...bodyField(), title, description, components: {field: CollapsibleField}})
 
 /** A page's written text (Privacy, Terms): headings, paragraphs, lists and links. Optional. */
 export const bodyField = () =>

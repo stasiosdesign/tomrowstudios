@@ -6,8 +6,9 @@ import {useToast} from '@sanity/ui/toast'
 import {useCallback, useEffect, useMemo, useRef, useState} from 'react'
 import {useClient, useEditState, useSchema, useSyncState, useValidationStatus, type SanityDocument} from 'sanity'
 import {styled} from 'styled-components'
-import {API_VERSION, datasetClients, failText, publishLive, publishStaging, unpublish} from '../lib/publish'
-import {fetchBuildStamp, isPageType, LIVE_ORIGIN, routeFor, STAGING_ORIGIN, type BuildStamp} from '../lib/site'
+import {API_VERSION, datasetClients, failText, PublishError, publishLive, publishStaging, unpublish, type Phase, type PublishResult} from '../lib/publish'
+import {advance, buildDone, currentStep, failRun, finishRun, hasFailed, isActive, isBusy, LINGER_MS, REBUILD_SLOW_MS, startRun, type Run, type RunKind} from '../lib/run'
+import {isPageType, LIVE_ORIGIN, routeFor, STAGING_ORIGIN} from '../lib/site'
 import {groupById, groupStatus, logId, publishStatus, STATUS_LABEL, type PublishLog, type PublishStatus, type UnpublishLog} from '../lib/status'
 import {LISTEN_OPTIONS, watchReads} from '../lib/watch'
 import {PAGES} from '../schemaTypes/pages'
@@ -15,12 +16,16 @@ import {AnimatedMenuButton} from './AnimatedMenuButton'
 import {ConfirmDialog} from './ConfirmDialog'
 import {formatDate} from './format'
 import {isPermissionError, usePermissionGate} from './PermissionDialog'
+import {PublishProgress} from './PublishProgress'
 import {Chip, StatusChip} from './Status'
+import {builtSince, useBuildStamp} from './useBuildStamp'
 
 /* The publishing control at the top right of every document (DocumentLayout),
    in Content, in the page editor and in the Visual editor alike: the
    document's status on the left, and a "Publish Live" split button whose menu
-   holds the three actions and the links to both sites.
+   holds the three actions and the links to both sites. While an action runs,
+   and until the live site has caught up, its stages show in a row under it
+   (PublishProgress).
 
    The status (lib/status.ts, publishStatus) says where the version in the
    editor is published: Live, Staging, Changes in draft or Unpublished. It is
@@ -31,7 +36,11 @@ import {Chip, StatusChip} from './Status'
    staging and the live site, Publish staging only on staging alone, and
    Unpublish takes it off both (the Studio keeps it as a draft). Both publish
    actions stay available when nothing has changed: publishing again simply
-   runs again. Each action runs once at a time; Unpublish asks first.
+   runs again. One action runs at a time: the buttons wait while it does,
+   then a failed one can be tried again from the progress row. The route
+   reports each stage as it completes (lib/run.ts), and the live site's
+   rebuild is watched through its build stamp, so what the row says is what
+   has happened.
 
    The static pages (the page editor's singletons) publish together, the way a
    site builder publishes a site: on any of them, Publish live and Publish
@@ -46,8 +55,6 @@ import {Chip, StatusChip} from './Status'
 
 /** The static site: every page's document ID (a singleton's ID is its type) */
 const SITE = PAGES.map((page) => page.type)
-
-type Busy = 'staging' | 'live' | 'unpublish' | null
 
 type SiteState = {live: SanityDocument | null; liveLog: PublishLog | null; stagingLog: UnpublishLog | null}
 
@@ -96,25 +103,8 @@ function useSiteGroup(enabled: boolean): SiteGroup | null {
   return group
 }
 
-// The live site's build stamp: read when the live copy changes, then every 15
-// seconds while the site is older than it (a rebuild is awaited) or the stamp
-// couldn't be read; not at all for a document that isn't live
-function useBuildStamp(liveUpdatedAt: string | undefined): BuildStamp | null | undefined {
-  const [stamp, setStamp] = useState<BuildStamp | null | undefined>(undefined)
-  const again = !!liveUpdatedAt && (stamp === null || (!!stamp && stamp.builtAt < liveUpdatedAt))
-  useEffect(() => {
-    if (!liveUpdatedAt || !LIVE_ORIGIN) return undefined
-    let cancelled = false
-    const load = () => fetchBuildStamp(LIVE_ORIGIN).then((result) => !cancelled && setStamp(result))
-    load()
-    const timer = again ? setInterval(load, 15_000) : undefined
-    return () => {
-      cancelled = true
-      clearInterval(timer)
-    }
-  }, [liveUpdatedAt, again])
-  return stamp
-}
+/** One action, as it can be run and run again: what it is, what it takes, and who may */
+type Attempt = {kind: RunKind; what: string; restricted: 'publish' | 'unpublish'; action: (onPhase: (phase: Phase) => void) => Promise<PublishResult>}
 
 export function PublishControls({documentId, documentType}: {documentId: string; documentType: string}) {
   const schema = useSchema()
@@ -141,13 +131,12 @@ export function PublishControls({documentId, documentType}: {documentId: string;
   // A static page shows the site's status, never its own: the pages publish together
   const status = isSite ? (siteGroup?.status ?? null) : publishStatus({draft, published, live, liveLog, stagingLog})
 
-  const liveUpdatedAt = live?._updatedAt
-  const buildStamp = useBuildStamp(liveUpdatedAt)
-  const siteBehind = !!liveUpdatedAt && !!buildStamp && buildStamp.builtAt < liveUpdatedAt
-  const waitedLong = siteBehind && Date.now() - Date.parse(liveUpdatedAt) > 5 * 60_000
-
-  const [busy, setBusy] = useState<Busy>(null)
-  const [confirmUnpublish, setConfirmUnpublish] = useState(false)
+  // The action running, or just run: its stages, kept until it clears itself
+  // or is dismissed (lib/run.ts). A ref too, so the handlers below read the
+  // latest without being remade.
+  const [run, setRun] = useState<Run | null>(null)
+  const runRef = useRef<Run | null>(null)
+  const attempt = useRef<Attempt | null>(null)
   const mounted = useRef(true)
   useEffect(() => {
     mounted.current = true
@@ -155,33 +144,64 @@ export function PublishControls({documentId, documentType}: {documentId: string;
       mounted.current = false
     }
   }, [])
-  const fail = useCallback((title: string, error: unknown) => toast.push({status: 'error', title, description: failText(error), closable: true, duration: 9000}), [toast])
+  const update = useCallback((next: Run | null) => {
+    runRef.current = next
+    if (mounted.current) setRun(next)
+  }, [])
+  const busy = isBusy(run)
+  const awaitingBuild = !!run && currentStep(run)?.key === 'build'
 
-  // One action at a time (a ref, so a quick second click can't slip past a
-  // stale state), the result a toast. The buttons never lock: a click while
-  // one runs is ignored, and busy is cleared however the action ends.
-  const running = useRef(false)
-  const run = useCallback(
-    async (kind: Exclude<Busy, null>, action: () => Promise<unknown>, success: {title: string; description?: string}, failure: string) => {
-      if (running.current) return
+  // The live site's rebuild, watched through its build stamp: the last stage
+  // of a live publish is done once the site was built after the live copy
+  // changed (for the site, every page changes in the one transaction)
+  const liveUpdatedAt = live?._updatedAt
+  const buildStamp = useBuildStamp(liveUpdatedAt, awaitingBuild)
+  const built = builtSince(buildStamp, liveUpdatedAt)
+  const siteBehind = built === false
+  const waitedLong = siteBehind && Date.now() - Date.parse(liveUpdatedAt ?? '') > REBUILD_SLOW_MS
+  useEffect(() => {
+    const current = runRef.current
+    if (!current || currentStep(current)?.key !== 'build' || !liveUpdatedAt || built !== true) return
+    // The live copy must be this publish's, not an older one's
+    if (Date.parse(liveUpdatedAt) < current.startedAt - 60_000) return
+    update(buildDone(current))
+  }, [built, liveUpdatedAt, update])
+
+  // A finished run clears itself after a moment; a failed one stays until dismissed
+  useEffect(() => {
+    if (!run || isActive(run) || hasFailed(run)) return undefined
+    const timer = setTimeout(() => runRef.current === run && update(null), LINGER_MS)
+    return () => clearTimeout(timer)
+  }, [run, update])
+
+  // One action at a time (the ref, so a quick second click can't slip past a
+  // stale state); each stage lands as the route reports it, and how it ends
+  // is kept for the row under the control
+  const start = useCallback(
+    async (next: Attempt) => {
+      if (isBusy(runRef.current)) return
       // Only roles that may write run it; anyone else is told so, and nothing is sent
-      const restricted = kind === 'unpublish' ? 'unpublish' : 'publish'
-      if (!gate.allow(restricted)) return
-      running.current = true
-      setBusy(kind)
+      if (!gate.allow(next.restricted)) return
+      attempt.current = next
+      let current = startRun(next.kind, next.what)
+      update(current)
+      const step = (change: (run: Run) => Run) => {
+        current = change(current)
+        update(current)
+      }
       try {
-        await action()
-        toast.push({status: 'success', closable: true, ...success})
+        const result = await next.action((phase) => step((run) => advance(run, phase)))
+        step((run) => finishRun(run, result))
       } catch (error) {
-        if (isPermissionError(error)) gate.deny(restricted)
-        else fail(failure, error)
-      } finally {
-        running.current = false
-        if (mounted.current) setBusy(null)
+        if (isPermissionError(error)) {
+          update(null)
+          gate.deny(next.restricted)
+        } else step((run) => failRun(run, failText(error), error instanceof PublishError ? error.phases : []))
       }
     },
-    [toast, fail, gate],
+    [gate, update],
   )
+  const retry = useCallback(() => attempt.current && start(attempt.current), [start])
 
   // On a static page, both publish actions take the whole static site. They
   // are always available, even with nothing to publish (it runs again); only
@@ -192,31 +212,15 @@ export function PublishControls({documentId, documentType}: {documentId: string;
     toast.push({status: 'warning', closable: true, title: 'Fix the problems in the form first', description: `${errors.length} ${errors.length === 1 ? 'field needs' : 'fields need'} attention before publishing.`})
     return true
   }
+  const what = isSite ? 'the site' : itemTitle
   const doPublishLive = () =>
-    current &&
-    !blocked() &&
-    run(
-      'live',
-      () => publishLive(client, documentId, current._rev, site),
-      isSite
-        ? {title: 'Site published live', description: 'Every page’s latest changes are on staging and going live; the live site rebuilds in about a minute.'}
-        : {title: `${itemTitle} published live`, description: 'Staging has it now; the live site rebuilds in about a minute.'},
-      'Not published live',
-    )
+    current && !blocked() && start({kind: 'live', what, restricted: 'publish', action: (onPhase) => publishLive(client, {id: documentId, rev: current._rev, site}, onPhase)})
   const doPublishStaging = () =>
-    current &&
-    !blocked() &&
-    run(
-      'staging',
-      () => publishStaging(client, documentId, current._rev, site),
-      isSite
-        ? {title: 'Site published to staging', description: 'Every page’s latest changes are on staging. The live site is not changed.'}
-        : {title: `${itemTitle} published to staging`, description: 'The live site is not changed.'},
-      'Not published to staging',
-    )
+    current && !blocked() && start({kind: 'staging', what, restricted: 'publish', action: (onPhase) => publishStaging(client, {id: documentId, rev: current._rev, site}, onPhase)})
+  const [confirmUnpublish, setConfirmUnpublish] = useState(false)
   const doUnpublish = () => {
     setConfirmUnpublish(false)
-    return run('unpublish', () => unpublish(client, documentId), {title: `${itemTitle} unpublished`, description: 'It is off staging and the live site, and stays here to edit.'}, 'Not unpublished')
+    return start({kind: 'unpublish', what: itemTitle, restricted: 'unpublish', action: (onPhase) => unpublish(client, {id: documentId}, onPhase)})
   }
 
   // The detail behind the status (dates, the live site's rebuild; for the
@@ -235,13 +239,13 @@ export function PublishControls({documentId, documentType}: {documentId: string;
   const saving = isSyncing ? 'Saving…' : errors.length > 0 ? `${errors.length} ${errors.length === 1 ? 'problem' : 'problems'} to fix` : null
 
   // Unpublishing is per CMS item: the static pages only publish, together
-  const canUnpublish = !isSite && ready && (!!published || !!live) && busy === null
+  const canUnpublish = !isSite && ready && (!!published || !!live) && !busy
   const route = routeFor(current as {_type?: string; slug?: {current?: string}} | null)
   const versionLine = current ? `the version saved ${formatDate(current._updatedAt, true)}` : ''
 
   return (
     <Bar data-tomrow-publish>
-      <Flex align="center" gap={3} wrap="wrap">
+      <Row align="center" gap={3} wrap="wrap">
         <Flex flex={1} align="center" gap={3} wrap="wrap" style={{minWidth: 160}}>
           {!ready || (isSite && !siteGroup) ? (
             <Chip $tone="muted">Loading…</Chip>
@@ -250,7 +254,8 @@ export function PublishControls({documentId, documentType}: {documentId: string;
           ) : (
             <StatusChip status={status} title={details.join('\n') || undefined} />
           )}
-          {status === 'live' && siteBehind && <Chip $tone="muted">{waitedLong ? 'Live site not rebuilt yet' : 'Live site rebuilding…'}</Chip>}
+          {/* The rebuild shows in the progress row while there is one */}
+          {status === 'live' && siteBehind && !run && <Chip $tone="muted">{waitedLong ? 'Live site not rebuilt yet' : 'Live site rebuilding…'}</Chip>}
           {saving && (
             <Chip $tone={errors.length > 0 ? 'critical' : 'muted'} title={errors.length > 0 ? 'Publishing waits until the form is valid' : undefined}>
               {saving}
@@ -261,14 +266,15 @@ export function PublishControls({documentId, documentType}: {documentId: string;
           <Split>
             <Button
               className="tomrow-cta"
-              text={busy === 'live' ? 'Publishing…' : busy === 'staging' ? 'Publishing to staging…' : busy === 'unpublish' ? 'Unpublishing…' : isSite ? 'Publish Site' : 'Publish Live'}
-              aria-busy={busy !== null}
-              title={isSite ? 'Publish every page’s latest changes to the live site and staging' : `Publish ${versionLine} to the live site and staging`}
+              text={isSite ? 'Publish Site' : 'Publish Live'}
+              disabled={busy}
+              aria-busy={busy || undefined}
+              title={busy ? 'Publishing…' : isSite ? 'Publish every page’s latest changes to the live site and staging' : `Publish ${versionLine} to the live site and staging`}
               onClick={doPublishLive}
             />
             <AnimatedMenuButton
               id={`tomrow-publish-${documentId}`}
-              button={<Button className="tomrow-cta tomrow-cta--arrow" icon={ChevronDownIcon} aria-label="More publishing options" />}
+              button={<Button className="tomrow-cta tomrow-cta--arrow" icon={ChevronDownIcon} aria-label="More publishing options" disabled={busy} aria-busy={busy || undefined} />}
               popover={{portal: true, placement: 'bottom-end'}}
               menu={
                 <Menu data-tomrow-publish-menu>
@@ -291,7 +297,8 @@ export function PublishControls({documentId, documentType}: {documentId: string;
             />
           </Split>
         )}
-      </Flex>
+      </Row>
+      {run && <PublishProgress run={run} rebuildSlow={waitedLong} onRetry={retry} onDismiss={() => update(null)} />}
 
       {gate.dialog}
       {confirmUnpublish && (
@@ -304,32 +311,35 @@ export function PublishControls({documentId, documentType}: {documentId: string;
 }
 
 // As tall as the Content sidebar's header beside it (--tomrow-bar-height,
-// studio.css), and on the 14px inset of the title and rows beneath
+// studio.css), its row on the 14px inset of the title and rows beneath; the
+// progress row, when there is one, under it on the grid
 const Bar = styled.div`
   flex-shrink: 0;
-  box-sizing: border-box;
   display: flex;
   flex-direction: column;
-  justify-content: center;
-  min-height: var(--tomrow-bar-height);
-  padding: 10px 14px;
   border-bottom: 1px solid var(--card-border-color);
   background: var(--card-bg-color);
 `
 
-// One button in two halves: the outer corners subtly rounded, the edge where
-// the halves meet square and marked by a dark hairline
+const Row = styled(Flex)`
+  box-sizing: border-box;
+  min-height: var(--tomrow-bar-height);
+  padding: 10px 14px;
+`
+
+// One button in two halves: the outer corners the controls' (--tomrow-radius),
+// the edge where the halves meet square and marked by a dark hairline
 const Split = styled.div`
   display: inline-flex;
   align-items: stretch;
 
   & > button:first-child {
-    border-radius: 4px 0 0 4px;
+    border-radius: var(--tomrow-radius) 0 0 var(--tomrow-radius);
   }
 
   & > *:last-child button,
   & > button:last-child {
-    border-radius: 0 4px 4px 0;
+    border-radius: 0 var(--tomrow-radius) var(--tomrow-radius) 0;
     box-shadow: inset 1px 0 0 rgb(0 0 0 / 0.25);
   }
 `

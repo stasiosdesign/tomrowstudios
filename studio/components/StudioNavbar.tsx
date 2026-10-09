@@ -2,35 +2,37 @@ import {AddUserIcon} from '@sanity/icons/AddUser'
 import {CheckmarkIcon} from '@sanity/icons/Checkmark'
 import {ChevronDownIcon} from '@sanity/icons/ChevronDown'
 import {CogIcon} from '@sanity/icons/Cog'
-import {DocumentsIcon} from '@sanity/icons/Documents'
 import {LeaveIcon} from '@sanity/icons/Leave'
 import {Card, Flex, Text} from '@sanity/ui'
 import {Menu, MenuButton, MenuDivider, MenuItem} from '@sanity/ui/menu'
-import type {ComponentProps, ComponentType} from 'react'
-import {useWorkspace} from 'sanity'
+import type {ComponentProps, ComponentType, MouseEvent} from 'react'
+import {ToolLink, useWorkspace} from 'sanity'
 import {useRouter, useRouterState} from 'sanity/router'
-import {styled} from 'styled-components'
+import {css, styled} from 'styled-components'
 import {SIDEBAR_WIDTH} from '../page'
 import {PAGE_LINKS} from '../structure'
 import {cmsItemPath, pageEditorPath, placeOf, visualEditorPath} from './navigation'
 import {StudioIcon} from './StudioIcon'
-import {TAB_MOTION} from './tab'
-import {ToolToggle} from './ToolToggle'
 
 /* The Studio's top bar (sanity.config.ts, studio.components.navbar): one
    row, like Linear's.
 
-   - At the left, as wide as the Content sidebar under it and ruled off at
-     its edge: the website's favicon, a hairline and "CMS". It opens the
-     project menu: Manage project and Invite members (on sanity.io, in a new
-     tab, as in Sanity's own menu) and Sign out.
-   - Then the open tool's name, on the panes' 14px inset; in the Visual
-     editor, All pages beside it: the page editor's pages, the one in the
-     preview ticked, each opening the Visual editor on that page.
-   - At the right, the switch between Content and the Visual editor
-     (ToolToggle), which takes what is open across: a page in the page
-     editor opens the Visual editor on that page, and the Visual editor's
-     page (or CMS item) opens in Content.
+   - At the left, as wide as the Content sidebar under it and ruled off on
+     the sidebar's own rule: the website's favicon, a hairline and "CMS". It
+     opens the project menu: Manage project and Invite members (on
+     sanity.io, in a new tab, as in Sanity's own menu) and Sign out.
+   - Then, on the panes' 14px inset, the two tools as two plain buttons,
+     Content and Visual Editor: the open one white with black text, the
+     other dimmed like any tab that isn't chosen (tab.ts: the same greys,
+     lighter under the pointer). Each is Sanity's own tool link, so
+     switching, the address and each tool's state work as before, and the
+     open one is marked aria-current. Where the bar knows a place in the
+     other tool for what is open (the same page in the Visual editor, from
+     the page editor, and back: pathFor), the button goes there instead of
+     to the tool's start.
+   - In the Visual editor, the page in the preview is named in the middle
+     of the room left: a menu of the page editor's pages, the one shown
+     ticked, each opening the Visual editor on that page.
 
    It stands in for Sanity's own bar, whose other parts this Studio does
    without: search, New document, who is here, the user menu, help and
@@ -38,7 +40,6 @@ import {ToolToggle} from './ToolToggle'
 export function StudioNavbar() {
   const {auth, projectId, title, tools} = useWorkspace()
   const activeToolName = useRouterState((state) => (typeof state.tool === 'string' ? state.tool : undefined))
-  const activeTool = tools.find((tool) => tool.name === activeToolName)
   const manageUrl = `https://www.sanity.io/manage/project/${projectId}`
   const router = useRouter()
 
@@ -49,6 +50,12 @@ export function StudioNavbar() {
     if (toolName === 'presentation') return place.page && visualEditorPath(place.page)
     if (toolName === 'structure') return place.item ? cmsItemPath(place.item.type, place.item.id) : place.page && pageEditorPath(place.page)
     return undefined
+  }
+  // A plain click stays in the Studio; a new tab or window gets the address
+  const follow = (event: MouseEvent<HTMLAnchorElement>, path: string) => {
+    if (event.metaKey || event.ctrlKey || event.shiftKey || event.button !== 0) return
+    event.preventDefault()
+    router.navigateUrl({path})
   }
 
   return (
@@ -89,40 +96,55 @@ export function StudioNavbar() {
             popover={{placement: 'bottom-start', portal: true}}
           />
         </Brand>
-        {activeTool && <Title>{activeTool.title}</Title>}
-        {activeToolName === 'presentation' && (
-          <MenuButton
-            id="tomrow-all-pages"
-            button={
-              <PagesButton type="button">
-                <Icon icon={DocumentsIcon} />
-                <span>All pages</span>
-                <Icon icon={ChevronDownIcon} />
-              </PagesButton>
-            }
-            menu={
-              <Menu>
-                {PAGE_LINKS.map((page) => {
-                  const current = place.page?.type === page.type
-                  return (
-                    <MenuItem
-                      key={page.type}
-                      icon={page.icon}
-                      iconRight={current ? CheckmarkIcon : undefined}
-                      selected={current}
-                      text={page.title}
-                      onClick={() => router.navigateUrl({path: visualEditorPath(page)})}
-                    />
-                  )
-                })}
-              </Menu>
-            }
-            popover={{placement: 'bottom-start', portal: true}}
-          />
-        )}
-        <Tools>
-          <ToolToggle tools={tools} activeToolName={activeToolName} pathFor={pathFor} />
-        </Tools>
+        <Rest>
+          <Modes aria-label="Studio tools">
+            {tools.map((tool) => {
+              const selected = tool.name === activeToolName
+              const path = selected ? undefined : pathFor(tool.name)
+              const label = tool.title || tool.name
+              return path ? (
+                <PlaceMode key={tool.name} href={path} onClick={(event) => follow(event, path)}>
+                  {label}
+                </PlaceMode>
+              ) : (
+                <Mode key={tool.name} name={tool.name} aria-current={selected ? 'page' : undefined} data-selected={selected ? '' : undefined}>
+                  {label}
+                </Mode>
+              )
+            })}
+          </Modes>
+          {activeToolName === 'presentation' && (
+            <Middle>
+              <MenuButton
+                id="tomrow-all-pages"
+                button={
+                  <PagesButton type="button" aria-label="Page shown in the preview">
+                    <span>{place.page?.title ?? 'All pages'}</span>
+                    <Icon icon={ChevronDownIcon} />
+                  </PagesButton>
+                }
+                menu={
+                  <Menu>
+                    {PAGE_LINKS.map((page) => {
+                      const current = place.page?.type === page.type
+                      return (
+                        <MenuItem
+                          key={page.type}
+                          icon={page.icon}
+                          iconRight={current ? CheckmarkIcon : undefined}
+                          selected={current}
+                          text={page.title}
+                          onClick={() => router.navigateUrl({path: visualEditorPath(page)})}
+                        />
+                      )
+                    })}
+                  </Menu>
+                }
+                popover={{placement: 'bottom', portal: true}}
+              />
+            </Middle>
+          )}
+        </Rest>
       </Bar>
     </Card>
   )
@@ -149,10 +171,12 @@ const Bar = styled.div`
   display: flex;
   align-items: center;
   height: 64px;
-  padding-right: 14px;
 `
 
-// The sidebar's width, its rule the sidebar's edge; on a phone, as wide as it needs
+/* The sidebar's width, with the sidebar's own rule: Sanity draws a pane's
+   right edge as a 1px line just outside its box (box-shadow, not a border),
+   so the rule here is drawn the same way, and the two meet the bar's rule
+   below in one line. On a phone, as wide as it needs, and no rule. */
 const Brand = styled.div`
   display: flex;
   flex: none;
@@ -161,11 +185,11 @@ const Brand = styled.div`
   box-sizing: border-box;
   width: ${SIDEBAR_WIDTH}px;
   padding: 0 10px;
-  border-right: 1px solid var(--card-border-color);
+  box-shadow: 1px 0 0 var(--card-border-color);
 
   @media (max-width: 599px) {
     width: auto;
-    border-right: 0;
+    box-shadow: none;
   }
 `
 
@@ -180,7 +204,6 @@ const ProjectButtonRoot = styled.button`
   border-radius: var(--tomrow-nav-radius);
   color: #ffffff;
   cursor: pointer;
-  transition: background-color ${TAB_MOTION};
 
   @media (hover: hover) {
     &:hover {
@@ -195,10 +218,6 @@ const ProjectButtonRoot = styled.button`
   &:focus-visible {
     outline: 2px solid var(--card-focus-ring-color);
     outline-offset: 2px;
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    transition: none;
   }
 `
 
@@ -214,7 +233,7 @@ const MenuLogo = styled(Logo)`
   height: 32px;
 `
 
-// "CMS", and the open tool's name: the bar's two names, set alike
+// "CMS", and the page's name in the Visual editor: the bar's names, set alike
 const name = `
   font-size: 15px;
   font-weight: 600;
@@ -229,44 +248,105 @@ const Label = styled.span`
   border-left: 1px solid rgb(255 255 255 / 0.2);
 `
 
-const Title = styled.span`
-  ${name}
-  padding-left: 14px;
-  color: #ffffff;
+/* The rest of the bar, after the brand (the sidebar's rule is between): the
+   tool buttons at its left, and in the middle of all of it, the page's name
+   in the Visual editor, in a column of its own between two equal ones, so
+   it is centred on this room whatever is beside it */
+const Rest = styled.div`
+  display: grid;
+  flex: 1;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  min-width: 0;
+  height: 100%;
+  padding: 0 14px 0 15px;
+`
+
+const Modes = styled.nav`
+  display: flex;
+  gap: 4px;
+  justify-self: start;
+`
+
+/* A tool's button: a plain rectangle, the controls' small corners, no motion.
+   The open tool white with black text; the other the dimmed grey of a tab
+   that isn't chosen, lighter and faintly washed under the pointer. */
+const mode = css`
+  display: inline-flex;
+  align-items: center;
+  box-sizing: border-box;
+  height: 28px;
+  padding: 0 12px;
+  border-radius: var(--tomrow-radius);
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1;
+  color: var(--tomrow-tab-fg);
+  text-decoration: none;
+  white-space: nowrap;
+
+  @media (hover: hover) {
+    &:not([data-selected]):hover {
+      color: var(--tomrow-tab-fg-hover);
+      background-color: var(--tomrow-hover);
+    }
+  }
+
+  &[data-selected] {
+    color: #000000;
+    background-color: #ffffff;
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--card-focus-ring-color);
+    outline-offset: 2px;
+  }
+`
+
+// Sanity's own tool link, or a plain link to a place in the other tool (pathFor)
+const Mode = styled(ToolLink)`
+  ${mode}
+`
+
+const PlaceMode = styled.a`
+  ${mode}
+`
+
+const Middle = styled.div`
+  grid-column: 2;
+  min-width: 0;
 
   @media (max-width: 599px) {
     display: none;
   }
 `
 
-// All pages: a quiet control beside the tool's name, the tabs' grey (tab.ts),
-// lighter under the pointer, a faint wash while its list is open
+// The page's name, white as the bar's names are, with a small chevron: a
+// quiet control, faintly washed under the pointer and while its list is open
 const PagesButtonRoot = styled.button`
   all: unset;
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  margin-left: 10px;
-  padding: 5px 8px;
+  gap: 4px;
+  max-width: 100%;
+  padding: 4px 6px 4px 10px;
   border-radius: var(--tomrow-radius);
-  font-size: 13px;
-  font-weight: 500;
-  line-height: 20px;
-  color: var(--tomrow-tab-fg);
+  color: #ffffff;
   cursor: pointer;
-  transition:
-    color ${TAB_MOTION},
-    background-color ${TAB_MOTION};
+
+  & > span:first-child {
+    ${name}
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
 
   @media (hover: hover) {
     &:hover {
-      color: var(--tomrow-tab-fg-hover);
       background-color: var(--tomrow-hover);
     }
   }
 
   &[aria-expanded='true'] {
-    color: #ffffff;
     background-color: var(--tomrow-selected);
   }
 
@@ -274,18 +354,11 @@ const PagesButtonRoot = styled.button`
     outline: 2px solid var(--card-focus-ring-color);
     outline-offset: 2px;
   }
-
-  @media (prefers-reduced-motion: reduce) {
-    transition: none;
-  }
 `
 
 const IconBox = styled.span`
   display: flex;
   font-size: 19px;
   line-height: 0;
-`
-
-const Tools = styled.div`
-  margin-left: auto;
+  color: var(--tomrow-tab-fg);
 `

@@ -39,13 +39,13 @@ const iconOf = (type: string): ComponentType | undefined =>
 
 /** The pages, in the sidebar's order and with its names; each described for its card on the overview */
 const PAGE_ITEMS: {type: string; title: string; description: string}[] = [
-  {type: 'homePage', title: 'Home', description: 'The hero, client logos, photo slider, recognition and galleries.'},
-  {type: 'influencePage', title: 'Influence', description: 'The opening, reach figures, approach, origins, insights and the book.'},
-  {type: 'architecturePage', title: 'Architectural', description: 'The header above the projects, which are a collection.'},
-  {type: 'shopPage', title: 'Shop', description: 'The opening, catalogue heading, testimonials and FAQ.'},
-  {type: 'partnersPage', title: 'Partner', description: 'The opening, clients, services, results and enquiry.'},
-  {type: 'privacyPage', title: 'Privacy policy', description: 'The privacy policy: its heading and text.'},
-  {type: 'termsPage', title: 'Terms of use', description: 'The terms of use: their heading and text.'},
+  {type: 'homePage', title: 'Home', description: 'The hero and its dial, the client logo band, the photo slider, recognition and the galleries.'},
+  {type: 'influencePage', title: 'Influence', description: 'The opening, the reach figures, the approach, origins and insights sections, and the book.'},
+  {type: 'architecturePage', title: 'Architectural', description: 'The heading and text above the project slider. The projects themselves are a collection.'},
+  {type: 'shopPage', title: 'Shop', description: 'The opening, the catalogue heading, the testimonials and the FAQ. The products are a collection.'},
+  {type: 'partnersPage', title: 'Partner', description: 'The opening, the client logos, the services, the results and the enquiry form’s words.'},
+  {type: 'privacyPage', title: 'Privacy policy', description: 'The privacy policy page: its heading, and the policy text in a section of its own.'},
+  {type: 'termsPage', title: 'Terms of use', description: 'The terms of use page: its heading, and the terms text in a section of its own.'},
 ].filter((item) => PAGES.some((page) => page.type === item.type))
 
 /** The collections, in the sidebar's order */
@@ -60,7 +60,7 @@ export const COLLECTIONS: Collection[] = [
     nameField: 'title',
     orderField: 'sortOrder',
     icon: ProjectsIcon,
-    description: 'The architecture projects: the Architecture slider and each project’s page.',
+    description: 'One record per architecture project: its photos, text and credits. Each fills the slider on the Architectural page and a page of its own.',
     listedOn: 'architecturePage',
   },
   {
@@ -70,7 +70,7 @@ export const COLLECTIONS: Collection[] = [
     nameField: 'title',
     orderField: 'sortOrder',
     icon: BasketIcon,
-    description: 'The products, each with its own page in the shop.',
+    description: 'One record per product: its card, header, details and write-up. Each is a card on the Shop page and a page of its own.',
     listedOn: 'shopPage',
   },
   {
@@ -80,7 +80,7 @@ export const COLLECTIONS: Collection[] = [
     nameField: 'name',
     orderField: 'sortOrder',
     icon: UsersIcon,
-    description: 'Partner case studies, on the Partners page and its archive.',
+    description: 'One record per partner case study: its logo, story and results. Each is listed on the Partner page and in the partners archive.',
     listedOn: 'partnersPage',
   },
 ].filter((collection) => schemaTypes.some((schemaType) => schemaType.name === collection.type))
@@ -104,14 +104,16 @@ const GROUPS: SidebarGroup[] = [
     id: 'pages',
     title: 'Page Editor',
     icon: DocumentsIcon,
-    description: 'The site’s fixed pages, one document each.',
+    description:
+      'Edit what belongs to each page of the website: its own words, photos and buttons, section by section, and the repeatable parts built into it, like the home page’s dial slides or the shop’s FAQ. The pages publish together as one site.',
     items: PAGE_ITEMS.map((page) => ({id: page.type, title: page.title, icon: iconOf(page.type) ?? DocumentIcon, description: page.description})),
   },
   {
     id: 'collections',
     title: 'CMS Collections',
     icon: DatabaseIcon,
-    description: 'The repeatable content: every item of a type, as a table.',
+    description:
+      'Manage content that exists as separate records: the projects, the shop’s products and the partner case studies. Each record is edited on its own, apart from the page that lists it, and is published on its own: add one, and the page shows it.',
     items: COLLECTIONS.map((collection) => ({id: collectionId(collection.type), title: collection.title, icon: collection.icon, description: collection.description})),
   },
 ]

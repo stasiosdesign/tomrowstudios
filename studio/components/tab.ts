@@ -4,7 +4,7 @@ import {css} from 'styled-components'
    Studio shows. The Visual editor's views use it as it is; the Content
    sidebar's entries and a collection's compact list as navigation entries
    (navItem, below); the top bar's Content / Visual editor switch
-   (ToolToggle) keeps its chosen side white.
+   (StudioNavbar) keeps its chosen side white.
    A tab is chosen when it carries aria-current, aria-selected="true" or
    data-selected.
 

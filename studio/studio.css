@@ -31,19 +31,21 @@
      Content sidebar and a collection's compact list are lists of entries
      with no rules between them, a little shorter than the grid's rows; a
      group's heading in the sidebar a little taller. Corners stay close to
-     square throughout: entries and controls 3px (Sanity's own controls'
-     too), the overview's cards 4px. */
+     square throughout: entries and controls 2px (Sanity's own controls'
+     too: the radius scale in theme.ts), the overview's cards, menus,
+     popovers and dialogs 3px. */
   --tomrow-nav-row: 32px;
   --tomrow-nav-heading-row: 36px;
-  --tomrow-nav-radius: 3px;
-  --tomrow-card-radius: 4px;
-  /* Filled controls: the grey of every field and secondary button, lighter
-     under the pointer and when pressed (FIELD... in theme.ts, which sets
-     Sanity's own; these are for the parts the theme doesn't reach) */
-  --tomrow-field: #1a1a1a;
-  --tomrow-field-hover: #262626;
-  --tomrow-field-pressed: #333333;
-  --tomrow-radius: 3px;
+  --tomrow-nav-radius: 2px;
+  --tomrow-card-radius: 3px;
+  /* Filled controls: the grey of every field and secondary button, a step
+     up from the ground, lighter under the pointer and when pressed (FIELD...
+     in theme.ts, which sets Sanity's own; these are for the parts the theme
+     doesn't reach) */
+  --tomrow-field: #161718;
+  --tomrow-field-hover: #212223;
+  --tomrow-field-pressed: #2c2d2e;
+  --tomrow-radius: 2px;
 }
 
 /* Hovered and selected states on menus, lists, buttons and cards: the
@@ -73,7 +75,7 @@
 }
 
 /* Menus, popovers and dialogs close to square like every other surface here
-   (4px, as the overview's cards; Sanity rounds them 6px) */
+   (3px, as the overview's cards; Sanity rounds them 6px) */
 [data-ui='Popover'],
 [data-ui='MenuButton__popover'],
 [data-ui='DialogCard'] {
@@ -123,16 +125,23 @@ button.tomrow-cta {
     --card-bg-color: color-mix(in srgb, #dd341d 88%, #000000);
   }
 
-  &[aria-busy='true'] {
-    cursor: progress;
-  }
-
   &:disabled {
     --card-bg-color: #0d0d0d;
     --card-fg-color: #4d4d4d;
     --card-icon-color: #4d4d4d;
     background-color: var(--card-bg-color);
     box-shadow: none;
+  }
+
+  /* While its action runs (PublishControls: the button waits, so it can't
+     be pressed twice): still red, a shade quieter, with the wait cursor */
+  &[aria-busy='true']:disabled {
+    --card-bg-color: color-mix(in srgb, #dd341d 70%, #08090a);
+    --card-fg-color: rgb(255 255 255 / 0.85);
+    --card-icon-color: rgb(255 255 255 / 0.85);
+    color: rgb(255 255 255 / 0.85) !important;
+    background-color: var(--card-bg-color);
+    cursor: progress;
   }
 
   &:focus-visible {
