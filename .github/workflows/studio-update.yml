@@ -1,0 +1,74 @@
+# A new release of the shared CMS, taken at once: the package's release
+# workflow sends a `cms-release` event with the version (or run it by hand
+# from the Actions tab). On main, it installs that version in studio/, runs
+# the Studio's checks, deploys the hosted Studio
+# (the appId in studio/sanity.cli.ts), then commits the new version to main
+# and merges main into staging, so both branches say what is deployed. Only
+# studio/ changes; the site itself is the same.
+#
+# Needs the SANITY_AUTH_TOKEN secret: a Sanity token for this project with
+# permission to deploy Studios (sanity.io/manage → API → Tokens, "Deploy
+# Studio"). Without it, nothing is deployed and the run fails saying so.
+name: Studio update
+on:
+  repository_dispatch:
+    types: [cms-release]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'CMS version to install (e.g. 1.3.0); empty for the latest'
+        required: false
+permissions:
+  contents: write
+  packages: read
+concurrency: studio-update
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            studio/package-lock.json
+          registry-url: https://npm.pkg.github.com
+          scope: '@stasiosdesign'
+      - name: The deploy token is set
+        env:
+          SANITY_AUTH_TOKEN: ${{ secrets.SANITY_AUTH_TOKEN }}
+        run: test -n "$SANITY_AUTH_TOKEN" || { echo "::error::Set the SANITY_AUTH_TOKEN secret (see this file's top comment)"; exit 1; }
+      # The site's own packages too: the Studio's build reads the root tsconfig
+      - run: npm ci
+      - name: Install the release
+        working-directory: studio
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VERSION: ${{ github.event.client_payload.version || inputs.version || 'latest' }}
+        run: |
+          npm ci
+          npm install --save-exact "@stasiosdesign/sanity-cms@$VERSION"
+          node -p "'@stasiosdesign/sanity-cms ' + require('@stasiosdesign/sanity-cms/package.json').version"
+      - run: npm run check
+        working-directory: studio
+      - name: Deploy the Studio
+        working-directory: studio
+        env:
+          SANITY_AUTH_TOKEN: ${{ secrets.SANITY_AUTH_TOKEN }}
+        run: npx sanity deploy --yes
+      - name: Commit the version to main and staging
+        run: |
+          git diff --quiet -- studio/package.json studio/package-lock.json && { echo "Already on this version"; exit 0; }
+          version=$(node -p "require('./studio/node_modules/@stasiosdesign/sanity-cms/package.json').version")
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit -m "Studio: the shared CMS $version (deployed)" -- studio/package.json studio/package-lock.json
+          git push origin main
+          git switch staging
+          git merge --no-edit main
+          git push origin staging
