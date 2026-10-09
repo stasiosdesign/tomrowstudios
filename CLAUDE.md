@@ -63,7 +63,7 @@ The Studio is the shared CMS package `@stasiosdesign/sanity-cms` (private,
 GitHub Packages; source in the `sanity-cms` repository, checked out on the
 development machine at `3 - Claude/1 - HQ/shared-sanity-cms`, with its own
 CLAUDE.md) set up for this website. This repository lives in its client
-folder, `3 - Claude/tomrowstudios/tomrowstudios-website`; shared changes are
+folder, `3 - Claude/Tomrowstudios/tomrowstudios-website`; shared changes are
 never made from here.
 
 | Kind of change | Where |
