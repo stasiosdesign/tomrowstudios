@@ -176,7 +176,11 @@ export const POST: APIRoute = async ({ request }) => {
     const user = await auth;
     const timings: Record<string, number> = { checks: ms(checksStarted), prepared: ms(started) };
     if (checked instanceof Error) throw checked;
-    const { passed, failed } = checked;
+    const { failed } = checked;
+    // A live publish takes the published documents the pages link to along
+    // with it (a client in the logo strip, say), so the live site never
+    // holds a broken link; they are already on staging (prepare checks that)
+    const passed = publishing && live ? await withLinked(staging, production, checked.passed as Prepared[]) : checked.passed;
 
     // The writes, stage by stage; streamed as they complete when asked for
     const work = async (send: Send) => {
@@ -289,13 +293,11 @@ function prepare(staging: SanityClient, production: SanityClient, id: string, re
       source = revision;
     }
 
-    const references = documentReferences(source);
-    const [missingStaging, missingLive] = await Promise.all([missingIn(staging, staging, references), live ? missingIn(staging, production, references) : []]);
+    // Everything it links to must be published on staging; a live publish
+    // then takes those documents along to the live site (withLinked)
+    const missingStaging = await missingIn(staging, staging, documentReferences(source));
     if (missingStaging.length > 0) {
       throw new PublishError(422, 'This links to content that is not published on staging yet. Publish that first.', { missing: missingStaging });
-    }
-    if (missingLive.length > 0) {
-      throw new PublishError(422, 'This links to content that is not on the live site yet. Publish that live first.', { missing: missingLive });
     }
     return { id, draft: draft ?? null, source };
   }, page ? pageName(id) : id);
@@ -510,6 +512,31 @@ function collectRefs(value: unknown, found = new Set<string>()): Set<string> {
 
 const documentReferences = (doc: unknown) => [...collectRefs(doc)].filter((ref) => !isAssetRef(ref));
 const assetReferences = (doc: unknown) => [...collectRefs(doc)].filter(isAssetRef);
+
+/**
+ * The prepared documents plus every published document they link to that
+ * the live site lacks (and what those link to in turn), as prepared
+ * documents of their own: published on the live site in the same
+ * transaction, at their staging version. A document already in the set is
+ * not added twice.
+ */
+async function withLinked(staging: SanityClient, production: SanityClient, prepared: Prepared[]): Promise<Prepared[]> {
+  const all = [...prepared];
+  const seen = new Set(all.map((item) => item.id));
+  let frontier = all.flatMap((item) => documentReferences(item.source)).filter((id) => !seen.has(id));
+  while (frontier.length > 0) {
+    const wanted = [...new Set(frontier)].filter((id) => !seen.has(id));
+    for (const id of wanted) seen.add(id);
+    if (wanted.length === 0) break;
+    const present: string[] = await production.fetch(`*[_id in $ids]._id`, { ids: wanted });
+    const missing = wanted.filter((id) => !present.includes(id));
+    if (missing.length === 0) break;
+    const linked: SanityDocument[] = await staging.fetch(`*[_id in $ids]`, { ids: missing });
+    for (const doc of linked) all.push({ id: doc._id, draft: null, source: doc });
+    frontier = linked.flatMap((doc) => documentReferences(doc)).filter((id) => !seen.has(id));
+  }
+  return all;
+}
 
 /** Referenced documents that are not published in the target dataset (staging or production), named from staging */
 async function missingIn(staging: SanityClient, target: SanityClient, ids: string[]): Promise<Missing[]> {
