@@ -52,10 +52,15 @@ The README explains the system; these are the working rules.
   `studio/scripts/` are then for the user to run.
 - Every query lives in `src/sanity/queries.ts`. After changing a query or the
   schema, run `npm run typegen`.
-- The hosted Studio is deployed by hand (`npm run studio:deploy`), from
-  whichever branch is checked out, and serves both environments. Deploy it
-  after schema or Studio changes, and keep schema changes backward-compatible
-  with the code on `main` (they share one dataset).
+- The hosted Studio (https://tomrowstudios.sanity.studio) serves both
+  environments and is always the `staging` branch's Studio, as pushed to
+  GitHub, on the latest CMS release (workspace `CLAUDE.md`, "How changes
+  reach the hosted Studios"). After a schema or Studio change: commit, push
+  `staging`, then `npm run studio:deploy`. Its check
+  (`studio/scripts/check-deploy.mjs`) refuses another branch, an out-of-date
+  folder, uncommitted Studio changes or an old CMS, and says what to do.
+  Never run `npx sanity deploy`. Keep schema changes backward-compatible with
+  the code on `main` (they share one dataset).
 
 ## The CMS
 
@@ -64,7 +69,11 @@ GitHub Packages; source in the `sanity-cms` repository, checked out on the
 development machine at `3 - Claude/1 - HQ/shared-sanity-cms`, with its own
 CLAUDE.md) set up for this website. This repository lives in its client
 folder, `3 - Claude/Tomrowstudios/tomrowstudios-website`; shared changes are
-never made from here.
+never made from here. Before writing any Studio code, decide whether it's
+for every Studio or only this one, using the workspace `CLAUDE.md` ("Every
+Studio, or only this one? Claude decides"), and say the decision in one line.
+Dashboard behaviour wanted only here goes in the package as an option that is
+off by default, switched on in `studio/project.ts`.
 
 | Kind of change | Where |
 | --- | --- |
@@ -79,8 +88,8 @@ never made from here.
   changes are developed elsewhere.
 - A CMS release updates this Studio by itself: `.github/workflows/studio-update.yml`
   (started by the package's release, or by hand from the Actions tab)
-  installs the version, runs the checks, deploys the hosted Studio and
-  commits the version to `main`, then merges `main` into `staging`. The user
+  installs the version on `main`, runs the checks, merges `main` into
+  `staging`, deploys the hosted Studio from `staging`, then pushes both. The user
   chose this (2026-10-09): releasing is the approval. It needs the
   `SANITY_AUTH_TOKEN` secret (a deploy token for this site's Sanity project,
   the user's to create). Dependabot pull requests stay as a fallback. Read the package's CHANGELOG.md for what a version asks of the site.

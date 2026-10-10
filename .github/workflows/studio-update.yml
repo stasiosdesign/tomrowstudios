@@ -1,10 +1,15 @@
 # A new release of the shared CMS, taken at once: the package's release
 # workflow sends a `cms-release` event with the version (or run it by hand
-# from the Actions tab). On main, it installs that version in studio/, runs
-# the Studio's checks, deploys the hosted Studio
-# (the appId in studio/sanity.cli.ts), then commits the new version to main
-# and merges main into staging, so both branches say what is deployed. Only
-# studio/ changes; the site itself is the same.
+# from the Actions tab, which also redeploys the Studio from staging when
+# the version is already installed). It installs that version on main and
+# runs the Studio's checks, merges main into staging and checks again, then
+# deploys the hosted Studio (the appId in studio/sanity.cli.ts) from staging,
+# and only then pushes both branches, so they say what is deployed.
+#
+# The hosted Studio is always staging's Studio on the latest release: a
+# deploy by hand (`npm run studio:deploy`) is held to the same rule by
+# studio/scripts/check-deploy.mjs, so neither way undoes the other. Only
+# studio/ changes; the site itself is the same (vercel.ts skips the build).
 #
 # Needs the SANITY_AUTH_TOKEN secret: a Sanity token for this project with
 # permission to deploy Studios (sanity.io/manage → API → Tokens, "Deploy
@@ -22,6 +27,8 @@ permissions:
   contents: write
   packages: read
 concurrency: studio-update
+env:
+  NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 jobs:
   update:
     runs-on: ubuntu-latest
@@ -43,32 +50,38 @@ jobs:
         env:
           SANITY_AUTH_TOKEN: ${{ secrets.SANITY_AUTH_TOKEN }}
         run: test -n "$SANITY_AUTH_TOKEN" || { echo "::error::Set the SANITY_AUTH_TOKEN secret (see this file's top comment)"; exit 1; }
-      # The site's own packages too: the Studio's build reads the root tsconfig
-      - run: npm ci
-      - name: Install the release
-        working-directory: studio
+      - name: Install the release on main
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           VERSION: ${{ github.event.client_payload.version || inputs.version || 'latest' }}
+        # The site's own packages too: the Studio's checks read the root tsconfig
         run: |
           npm ci
+          cd studio
+          npm ci
           npm install --save-exact "@stasiosdesign/sanity-cms@$VERSION"
-          node -p "'@stasiosdesign/sanity-cms ' + require('@stasiosdesign/sanity-cms/package.json').version"
-      - run: npm run check
-        working-directory: studio
-      - name: Deploy the Studio
+          npm run check
+          version=$(node -p "require('@stasiosdesign/sanity-cms/package.json').version")
+          echo "CMS_VERSION=$version" >> "$GITHUB_ENV"
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          if git diff --quiet -- package.json package-lock.json; then
+            echo "main already pins $version"
+          else
+            git commit -m "Studio: the shared CMS $version (deployed)" -- package.json package-lock.json
+          fi
+      - name: Merge main into staging
+        run: |
+          git switch staging
+          git merge --no-edit main
+          npm ci
+          cd studio
+          npm ci
+          npm run check
+          node -p "'staging runs @stasiosdesign/sanity-cms ' + require('@stasiosdesign/sanity-cms/package.json').version"
+      - name: Deploy the Studio from staging
         working-directory: studio
         env:
           SANITY_AUTH_TOKEN: ${{ secrets.SANITY_AUTH_TOKEN }}
         run: npx sanity deploy --yes
-      - name: Commit the version to main and staging
-        run: |
-          git diff --quiet -- studio/package.json studio/package-lock.json && { echo "Already on this version"; exit 0; }
-          version=$(node -p "require('./studio/node_modules/@stasiosdesign/sanity-cms/package.json').version")
-          git config user.name 'github-actions[bot]'
-          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git commit -m "Studio: the shared CMS $version (deployed)" -- studio/package.json studio/package-lock.json
-          git push origin main
-          git switch staging
-          git merge --no-edit main
-          git push origin staging
+      - name: Push main and staging
+        run: git push origin main staging
