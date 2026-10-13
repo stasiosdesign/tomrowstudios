@@ -31,18 +31,27 @@ const hasCaseStudy = (partner: Partner) => Boolean(partner.caseStudy?.title);
 
 <section class="section">
   <div class="container">
-    <div class="section-title">
-      <h2 data-page-field="archive.heading">{page?.archive?.heading ?? D.archive.heading}</h2>
-      <p class="lead" data-page-field="archive.lead">{page?.archive?.lead ?? D.archive.lead}</p>
+    <div class="section-head">
+      <div class="section-head__main">
+        <p class="tagline">Archive</p>
+        <h2 class="page-hero-title" data-page-field="archive.heading">{page?.archive?.heading ?? D.archive.heading}</h2>
+      </div>
+      <div class="section-head__side">
+        <p class="lead" data-page-field="archive.lead">{page?.archive?.lead ?? D.archive.lead}</p>
+      </div>
     </div>
 
+    <!-- One partner to a column, each with its number and name under it -->
     <div class="archive-grid">
-      {partners.map((partner) => {
-        const picture = <img {...imageAttrs(partner.coverImage, 1200)} alt={partner.coverImage.alt ?? `Case study — ${partner.name}`} loading="lazy" decoding="async">;
+      {partners.map((partner, i) => {
+        const inner = <>
+          <span class="archive-card__media"><img {...imageAttrs(partner.coverImage, 1200)} alt={partner.coverImage.alt ?? `Case study — ${partner.name}`} loading="lazy" decoding="async"></span>
+          <span class="archive-card__label"><span class="archive-card__index">{String(i + 1).padStart(2, '0')}</span><span class="archive-card__name">{partner.name}</span></span>
+        </>;
         return hasCaseStudy(partner) ? (
-          <a href={`#case-${partner.slug}`} data-panel-open={`case-${partner.slug}`} data-barba-prevent="self">{picture}</a>
+          <a class="archive-card" href={`#case-${partner.slug}`} data-panel-open={`case-${partner.slug}`} data-barba-prevent="self">{inner}</a>
         ) : (
-          <div>{picture}</div>
+          <div class="archive-card">{inner}</div>
         );
       })}
     </div>

@@ -16,21 +16,16 @@ const pad = (n: number) => String(n).padStart(2, '0');
 <BaseLayout title="Architecture — Tomrow Studios" namespace="architecture" pageName="Architecture" mainClass="arch-page" pageDoc="architecturePage">
 <SiteNav />
 
-<!-- One screen, moving sideways. The projects run off the right-hand edge and
-     are reached by dragging, by the arrows, or by scrolling up and down —
-     which the slider reads as left and right. -->
+<!-- One screen, moving sideways. The projects run off the right-hand edge, two
+     columns of the grid each, and are reached by dragging, by the arrows, or
+     by scrolling up and down — which the slider reads as left and right. -->
 <section class="arch-stage">
 
   <div data-parallax-init class="parallax-slider__group arch-stage__group">
 
-    <div class="arch-stage__head">
-      <p class="tagline" data-page-field="header.label">{page?.header?.label ?? D.header.label}</p>
-      <p class="arch-stage__count"><strong data-parallax-counter>01</strong> / {pad(projects.length)}</p>
-    </div>
-
     <div class="arch-stage__slider">
       <div class="parallax-slider__collection">
-        <div data-parallax-slider data-parallax-infinite="false" data-parallax-snap="false" data-parallax-amount="10" data-parallax-lerp="0.2" class="parallax-slider__list">
+        <div data-parallax-slider data-parallax-infinite="false" data-parallax-snap="false" data-parallax-amount="0" data-parallax-lerp="0.2" class="parallax-slider__list">
 
           {projects.map((project, i) => (
           <div class="parallax-slider__item">
@@ -41,11 +36,9 @@ const pad = (n: number) => String(n).padStart(2, '0');
                 </div>
               </div>
               <div class="parallax-slider__item-label">
-                <div>
-                  <p class="parallax-slider__item-name">{project.name}</p>
-                  <p class="parallax-slider__item-meta">{[pad(i + 1), project.context, project.year].filter(Boolean).join(' — ')}</p>
-                </div>
-                <span class="parallax-slider__item-cta" aria-hidden="true"></span>
+                <span class="parallax-slider__item-meta">{pad(i + 1)}</span>
+                <p class="parallax-slider__item-name">{project.name}</p>
+                <span class="parallax-slider__item-meta">{[project.context, project.year].filter(Boolean).join(' — ')}</span>
               </div>
             </a>
           </div>
@@ -57,9 +50,12 @@ const pad = (n: number) => String(n).padStart(2, '0');
 
     <div class="arch-stage__foot">
       <h1 class="arch-stage__title" data-page-field="header.heading">{page?.header?.heading ?? D.header.heading}</h1>
-      <div class="arch-arrows">
-        <button type="button" data-parallax-prev class="arch-arrow is--prev is--disabled" aria-label="Previous project"></button>
-        <button type="button" data-parallax-next class="arch-arrow is--next" aria-label="Next project"></button>
+      <div class="arch-stage__controls">
+        <p class="arch-stage__count"><strong data-parallax-counter>01</strong> / {pad(projects.length)}</p>
+        <div class="arch-arrows">
+          <button type="button" data-parallax-prev class="arch-arrow is--prev is--disabled" aria-label="Previous project"></button>
+          <button type="button" data-parallax-next class="arch-arrow is--next" aria-label="Next project"></button>
+        </div>
       </div>
     </div>
 

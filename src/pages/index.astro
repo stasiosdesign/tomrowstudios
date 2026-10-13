@@ -23,13 +23,15 @@ if (!hero?.slides?.length || !logoWall || !practice || !slider?.images?.length |
   throw new Error('A home page section is missing in Sanity (Home page document)');
 }
 
-// The four photo bands, each with the page its button leads to
+// The four photo bands, each with the page its button leads to and the
+// page's name over its heading
 const galleries = [
-  { name: 'influence', gallery: influence, href: '/influence' },
-  { name: 'partners', gallery: partners, href: '/partner' },
-  { name: 'projects', gallery: projects, href: '/architecture' },
-  { name: 'courses', gallery: courses, href: '/shop' },
+  { name: 'influence', label: 'Influence', gallery: influence, href: '/influence' },
+  { name: 'partners', label: 'Partners', gallery: partners, href: '/partner' },
+  { name: 'projects', label: 'Architecture', gallery: projects, href: '/architecture' },
+  { name: 'courses', label: 'Shop', gallery: courses, href: '/shop' },
 ];
+const pad = (n: number) => String(n).padStart(2, '0');
 ---
 <BaseLayout title="Tomrow Studios" namespace="index" pageName="Home">
 <!-- Home hero, in the reveal-parallax wrapper: the section after it slides
@@ -142,9 +144,9 @@ const galleries = [
 
 <SiteNav overHero />
 
-<!-- Practice -->
+<!-- Practice: the label in the first column, the statement across the rest -->
 <section class="section" data-home-section="practice">
-  <div class="container container-narrow">
+  <div class="container lede-row">
     <p class="tagline">{practice.label}</p>
     <h2>{practice.statement}</h2>
   </div>
@@ -172,12 +174,12 @@ const galleries = [
 <!-- Recognition -->
 <section class="section" data-home-section="recognition">
   <div class="container">
-    <div class="two-col">
-      <div>
+    <div class="section-head">
+      <div class="section-head__main">
         <p class="tagline">{recognition.label}</p>
         <h2>{recognition.heading}</h2>
       </div>
-      <div class="two-col-offset">
+      <div class="section-head__side">
         <p class="lead">{recognition.lead}</p>
         <div class="actions">
           <Button href="/influence" label={recognition.button ?? ''} />
@@ -185,11 +187,12 @@ const galleries = [
       </div>
     </div>
 
-    <!-- Three cards, each a step lower than the one before -->
+    <!-- One card to a column, in the last three -->
     <div class="cards">
       {recognition.cards.map((card, i) => (
-      <div class:list={['card', i > 0 && `card-offset-${i}`]}>
-        {card.image && <img class="card-img" src={urlFor(card.image).width(1200).url()} alt={card.image.alt ?? ''}>}
+      <div class="card">
+        <span class="tagline card__index">{pad(i + 1)}</span>
+        {card.image && <img class="card-img" src={urlFor(card.image).width(1200).url()} alt={card.image.alt ?? ''} loading="lazy" decoding="async">}
         <h3>{card.title}</h3>
         <p>{card.text}</p>
       </div>
@@ -199,20 +202,25 @@ const galleries = [
 </section>
 
 <!-- The four photo bands: Influence, Partners, Architecture and the Shop -->
-{galleries.map(({ name, gallery, href }) => (
+{galleries.map(({ name, label, gallery, href }, i) => (
 <section class="section" data-home-section={name}>
   <div class="container">
-    <div class="section-title">
-      <h2>{gallery.heading}</h2>
-      <p class="lead">{gallery.lead}</p>
+    <div class="section-head">
+      <div class="section-head__main">
+        <p class="tagline">{pad(i + 1)} — {label}</p>
+        <h2>{gallery.heading}</h2>
+      </div>
+      <div class="section-head__side">
+        <p class="lead">{gallery.lead}</p>
+        <div class="actions">
+          <Button href={href} label={gallery.button ?? ''} />
+        </div>
+      </div>
     </div>
     <div class="gallery">
       {gallery.images?.map((image) => (
-      <img src={urlFor(image).width(1200).url()} alt={image.alt ?? ''}>
+      <img src={urlFor(image).width(1200).url()} alt={image.alt ?? ''} loading="lazy" decoding="async">
       ))}
-    </div>
-    <div class="actions actions-end">
-      <Button href={href} label={gallery.button ?? ''} />
     </div>
   </div>
 </section>

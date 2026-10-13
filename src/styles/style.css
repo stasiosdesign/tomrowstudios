@@ -159,8 +159,7 @@ body {
    the face, which is the one that lines its numbers up. */
 .panel-form-step .step-number,
 .insights-row__index,
-.slide-card__index,
-.product-card::before {
+.slide-card__index {
   font-family: var(--font-label);
   text-transform: uppercase;
   font-size: var(--size-label);
@@ -168,6 +167,10 @@ body {
 }
 
 img { display: block; max-width: 100%; }
+
+/* A picture still on its way in (image-reveal.js) waits unseen, then fades up */
+img.is--loading { opacity: 0; }
+img.is--loaded { transition: opacity 0.7s ease; }
 a { color: inherit; }
 
 /* Controls do not inherit the page's face — the browser hands them its own,
@@ -282,7 +285,8 @@ textarea { font-family: inherit; }
 .project-hero,
 .project-grid,
 .project-note,
-.project-close {
+.project-close,
+.site-footer {
   background-image: linear-gradient(
     to right,
     var(--grid-line) 0 var(--grid-line-width),
@@ -441,8 +445,19 @@ textarea { font-family: inherit; }
 .col-span-3 { grid-column: span 3; }
 .col-span-4 { grid-column: span 4; }
 
+/* One column, line to line, measured on the viewport rather than a parent
+   box, so a slide or a card sized with it lands on the page's columns from
+   any container. The scrollbar is hidden site-wide, so 100vw is the page. */
+:root {
+  --col-vw: calc((100vw - var(--site-gutter) * 2) / var(--grid-columns));
+  /* The vertical rhythm between bands */
+  --section-space: 12rem;
+}
+@media screen and (max-width: 991px) { :root { --section-space: 8rem; } }
+@media screen and (max-width: 767px) { :root { --section-space: 6.4rem; } }
+
 .section {
-  padding: 8rem var(--site-inset);
+  padding: var(--section-space) var(--site-inset);
   /* Colour only: the grid is a background *image* on this same element, and a
      `background` shorthand here would wipe it. Every background on a section
      that carries the grid is written as `background-color` for that reason. */
@@ -478,7 +493,7 @@ textarea { font-family: inherit; }
    A block that wants more than bare clearance opts out here rather than
    fighting this rule — it is more specific than a single class, so it would
    otherwise win and pin the block's top padding to the height of the bar. */
-main:not(:has(.home-hero)) .site-nav + *:not(.project-hero):not(.page-header) { padding-top: var(--nav-height); }
+main:not(:has(.home-hero)) .site-nav + *:not(.project-hero):not(.page-header):not(.shop-hero) { padding-top: var(--nav-height); }
 
 /* ---------- Typography ---------- */
 /* .tagline is the site's eyebrow, and it is set further down with the rest of
@@ -502,38 +517,93 @@ h3 {
 }
 .lead { font-size: 1.8rem; margin: 0 0 2.4rem; }
 
+/* Titles start on the first column, like everything else on the page */
 .section-title {
   max-width: var(--grid-col-2);
-  margin: 0 auto 5.6rem;
-  text-align: center;
+  margin: 0 0 5.6rem;
 }
 .section-title h2 { margin-bottom: 2.4rem; }
 .section-title .lead { margin-bottom: 0; }
 
-/* ---------- Two column (Recognition) ---------- */
+/* ---------- Section head ----------
+   The opening of most bands: the label and the heading across the first two
+   columns, the standfirst and the button across the last two, the two
+   halves sitting on a common baseline at the foot of the row. */
+.section-head {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--grid-gap);
+  align-items: end;
+  margin-bottom: 6.4rem;
+}
+.section-head__main { grid-column: 1 / span 2; min-width: 0; }
+.section-head__main h2 { margin: 0; }
+.section-head__side { grid-column: 3 / span 2; min-width: 0; }
+.section-head__side .lead { margin: 0; max-width: 48rem; }
+.section-head__side .actions { margin-top: 3.2rem; }
+/* Opening a page: the head is the hero, so it takes more room under it */
+.section-head.is--hero { margin-bottom: 8rem; }
+.section-head:last-child { margin-bottom: 0; }
+.section-head.is--hero .lead { font-size: 2rem; line-height: 1.4; }
+
+/* A label in the first column and a statement across the other three */
+.lede-row {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--grid-gap);
+  align-items: start;
+}
+.lede-row > .tagline { grid-column: 1; margin: 1.2rem 0 0; }
+.lede-row > h2 { grid-column: 2 / -1; margin: 0; }
+
+@media screen and (max-width: 991px) {
+  .section-head { grid-template-columns: 1fr; gap: 2.4rem; margin-bottom: 4.8rem; }
+  .section-head__main,
+  .section-head__side { grid-column: 1 / -1; }
+  .lede-row { grid-template-columns: 1fr; gap: 0; }
+  .lede-row > .tagline,
+  .lede-row > h2 { grid-column: 1 / -1; }
+  .lede-row > .tagline { margin: 0 0 1.6rem; }
+}
+
+/* ---------- Two column ---------- */
 .two-col { display: grid; grid-template-columns: repeat(2, 1fr); gap: var(--grid-gap); margin-bottom: 5.6rem; }
-.two-col-offset { padding-top: 10rem; }
 .two-col h2 { margin-bottom: 0; }
 
-/* ---------- Staggered cards ---------- */
-.cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--grid-gap); align-items: start; }
-.card-offset-1 { padding-top: 6.4rem; }
-.card-offset-2 { padding-top: 12.8rem; }
+/* ---------- Recognition cards ----------
+   One card to a column, in the last three, under the head's right half
+   and the column before it */
+.cards {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--grid-gap);
+  align-items: start;
+}
+.card { min-width: 0; }
+.card:first-child { grid-column-start: 2; }
+.card__index {
+  display: block;
+  margin-bottom: 1.6rem;
+  color: rgba(255, 255, 255, 0.45);
+}
 .card-img {
   width: 100%;
-  aspect-ratio: 394 / 240;
+  height: auto;
+  aspect-ratio: 3 / 2;
   object-fit: cover;
   border-radius: var(--radius);
   margin-bottom: 2.4rem;
 }
-.card p { margin: 0; }
+.card h3 { margin-bottom: 1.2rem; font-size: 2.4rem; line-height: var(--leading-title); letter-spacing: var(--track-title); }
+.card p { margin: 0; color: rgba(255, 255, 255, 0.6); }
 
 /* ---------- Galleries ---------- */
 .gallery { display: grid; grid-template-columns: repeat(var(--grid-columns), minmax(0, 1fr)); gap: var(--grid-gap); }
 .gallery img {
   min-width: 0;
   width: 100%;
-  aspect-ratio: 1 / 1;
+  height: auto;
+  aspect-ratio: 4 / 5;
   object-fit: cover;
   border-radius: var(--radius);
 }
@@ -641,13 +711,44 @@ h3 {
 .archive-grid {
   display: grid;
   grid-template-columns: repeat(var(--grid-columns), minmax(0, 1fr));
-  gap: var(--grid-gap);
+  gap: 6.4rem var(--grid-gap);
 }
-.archive-grid img {
-  width: 100%;
-  aspect-ratio: 296 / 395;
-  object-fit: cover;
+.archive-card {
+  display: block;
+  min-width: 0;
+  color: inherit;
+  text-decoration: none;
+}
+.archive-card__media {
+  display: block;
+  aspect-ratio: 3 / 4;
+  overflow: hidden;
   border-radius: var(--radius);
+  background: #ececec;
+}
+.archive-card__media img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.8s var(--cta-ease), opacity 0.7s ease;
+}
+.archive-card__label {
+  display: flex;
+  align-items: baseline;
+  gap: 1.6rem;
+  padding-top: 1.6rem;
+  margin-top: 1.6rem;
+  border-top: 1px solid var(--rule);
+}
+.archive-card__index {
+  font-family: var(--font-label);
+  font-size: var(--size-label);
+  letter-spacing: var(--track-label);
+  color: rgba(10, 10, 10, 0.45);
+}
+.archive-card__name { font-size: 1.8rem; letter-spacing: var(--track-title); }
+@media (hover: hover) and (pointer: fine) {
+  a.archive-card:hover .archive-card__media img { transform: scale(1.03); }
 }
 
 /* ---------- Page transition overlay ---------- */
@@ -861,42 +962,57 @@ h3 {
 .rich-text p { margin: 0 0 1.6rem; }
 .panel-wide-img { width: 100%; height: auto; aspect-ratio: 1280 / 738; object-fit: cover; border-radius: var(--radius); }
 
-/* ---------- Product cards ---------- */
-.product-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--grid-gap); align-items: stretch; }
-.product-card {
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  background: #1a1a1a;
-  border-radius: var(--radius);
+.tag-dark { background: rgba(255, 255, 255, 0.1); color: #ffffff; }
+
+
+/* ---------- FAQ (native details/summary) ----------
+   accordion.js animates the opening and the closing; without it the
+   questions still open, at once. */
+.faq { border-bottom: 1px solid var(--rule); }
+.faq details {
+  border-top: 1px solid var(--rule);
   overflow: hidden;
 }
-.product-img { width: 100%; height: auto; aspect-ratio: 405 / 270; object-fit: cover; }
-.product-body { display: flex; flex-direction: column; gap: 1.6rem; padding: 2.4rem; flex: 1; }
-.product-info { display: flex; gap: 1.6rem; align-items: center; }
-.product-meta { font-size: 1.4rem; font-weight: var(--weight-ui); --wght: var(--weight-ui); }
-.tag-dark { background: rgba(255, 255, 255, 0.1); color: #ffffff; }
-.product-card h5 { margin: 0; font-size: 2.4rem; line-height: var(--leading-title); letter-spacing: var(--track-title); font-weight: var(--weight-strong); --wght: var(--weight-strong); }
-.product-card p { margin: 0; }
-.actions-end { justify-content: flex-end; margin-top: 5.6rem; }
-
-
-/* ---------- FAQ (native details/summary) ---------- */
-.faq { max-width: 76.8rem; margin: 0 auto; border-bottom: 1px solid rgba(255, 255, 255, 0.2); }
-.faq details { border-top: 1px solid rgba(255, 255, 255, 0.2); }
 .faq summary {
-  padding: 2rem 0;
-  font-size: 1.8rem;
-  font-weight: var(--weight-ui); --wght: var(--weight-ui);
+  position: relative;
+  display: block;
+  padding: 2.8rem 6.4rem 2.8rem 0;
+  font-size: 2.4rem;
+  line-height: var(--leading-title);
+  letter-spacing: var(--track-title);
   cursor: pointer;
   list-style: none;
+  transition: color 0.3s;
 }
 .faq summary::-webkit-details-marker { display: none; }
-.faq summary::after { content: "+"; float: right; font-weight: 400; }
-.faq details[open] summary::after { content: "–"; }
-.faq details p { margin: 0; padding-bottom: 2.4rem; }
-.faq-footer { max-width: 56rem; margin: 5.6rem auto 0; text-align: center; }
-.faq-footer h3 { font-size: 2.4rem; letter-spacing: var(--track-title); margin-bottom: 1.6rem; }
+/* A plus drawn in two hairlines; the upright turns flat as the answer opens */
+.faq summary::before,
+.faq summary::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  right: 0.8rem;
+  width: 1.6rem;
+  height: 1px;
+  background: currentColor;
+  transition: transform 0.45s cubic-bezier(0.65, 0.05, 0, 1);
+}
+.faq summary::after { transform: rotate(90deg); }
+.faq details[open]:not(.is--closing) summary::after { transform: rotate(0deg); }
+@media (hover: hover) and (pointer: fine) {
+  .faq summary:hover { color: rgba(255, 255, 255, 0.6); }
+}
+.faq details p {
+  margin: 0;
+  max-width: 64rem;
+  padding-bottom: 3.2rem;
+  font-size: 1.8rem;
+  line-height: 1.5;
+  color: rgba(255, 255, 255, 0.65);
+}
+.faq-footer { margin-top: 5.6rem; }
+.faq-footer h3 { font-size: 2.4rem; letter-spacing: var(--track-title); margin-bottom: 1.2rem; }
+.faq-footer .lead { color: rgba(255, 255, 255, 0.65); margin-bottom: 3.2rem; }
 
 /* ---------- Full-bleed page header (dark image) ---------- */
 .page-header {
@@ -1017,12 +1133,15 @@ h3 {
   .site-nav { padding: 2.4rem var(--site-inset) 1.8rem; }
   .form-row { flex-direction: column; }
   /* every grid collapses to a single column */
-  .two-col, .cards, .gallery,
-  .feature-split, .contact-split, .product-grid, 
+  .two-col,
+  .feature-split, .contact-split,
   .project-gallery, .rich-split, .page-header-body {
     grid-template-columns: 1fr;
     gap: var(--grid-gap);
   }
+  /* Card and picture rows keep the page's own columns, two here */
+  .cards, .gallery { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .card:first-child { grid-column-start: auto; }
   .archive-grid { grid-template-columns: 1fr 1fr; gap: var(--grid-gap); }
   .page-header { flex-direction: column; align-items: flex-start; }
   .page-header-body { align-items: flex-start; }
@@ -1038,9 +1157,11 @@ h3 {
   .panel-dialog { width: 100%; }
   .panel .section, .panel-form, .panel-form-header { padding-left: 2.4rem; padding-right: 2.4rem; }
   .panel-form-header h2 { font-size: 3.2rem; }
-  .two-col-offset, .card-offset-1, .card-offset-2 { padding-top: 0; }
   h2 { font-size: 3.2rem; }
   h3 { font-size: 2.4rem; }
+}
+@media (max-width: 767px) {
+  .cards { grid-template-columns: 1fr; gap: 4.8rem; }
 }
 
 /* ---------- Open-menu backdrop blur + scrollable menu ---------- */
@@ -1821,6 +1942,7 @@ h3 {
   grid-row-gap: 7.5em;
   letter-spacing: -.02em;
   background-color: #e9e9e9;
+  --grid-line: var(--grid-line-color-dark);
   color: #201d1d;
   flex-flow: column;
   justify-content: space-between;
@@ -1842,10 +1964,12 @@ h3 {
   font-weight: var(--weight-ui); --wght: var(--weight-ui);
 }
 
+/* The link columns sit on the page's columns: pages, socials, then contact
+   across the last two, where the address has room */
 .site-footer__links-row {
-  grid-column-gap: 2.5em;
-  grid-row-gap: 2.5em;
-  display: flex;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--grid-gap);
 }
 
 .site-footer__logo-row {
@@ -1859,9 +1983,10 @@ h3 {
   grid-column-gap: 3em;
   grid-row-gap: 3em;
   flex-flow: column;
-  width: calc(33.3333% - 1.66667em);
+  min-width: 0;
   display: flex;
 }
+.site-footer__col:last-child { grid-column: 3 / span 2; }
 
 .site-footer__links {
   grid-column-gap: .25em;
@@ -1879,23 +2004,28 @@ h3 {
   margin: 0;
 }
 
+/* Set to run the content width exactly, first column to last: the line is
+   7.23 times its type size long, so the size is the width over that, with a
+   hair to spare */
 .site-footer__wordmark {
   margin: 0;
-  font-size: 6.5em;
+  font-size: calc((100vw - var(--site-inset) * 2) / 7.24);
+  white-space: nowrap;
   line-height: .85;
   letter-spacing: -.03em;
   font-weight: var(--weight-strong); --wght: var(--weight-strong);
 }
 
 .site-footer__legal {
-  display: flex;
-  justify-content: space-between;
-  gap: 1.5em;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 1.5em var(--grid-gap);
   margin-top: 1.5em;
 }
+.site-footer__legal > .footer-eyebrow { grid-column: 1 / span 2; }
 
 .site-footer__legal-links {
+  grid-column: 3 / span 2;
   display: flex;
   gap: 1.5em;
 }
@@ -1912,20 +2042,16 @@ h3 {
 }
 
 @media screen and (max-width: 991px) {
-  .site-footer__links-row {
-    flex-flow: column;
-  }
+  .site-footer__links-row,
+  .site-footer__legal { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .site-footer__col:last-child,
+  .site-footer__legal > .footer-eyebrow,
+  .site-footer__legal-links { grid-column: 1 / -1; }
 
   .site-footer__logo-row {
     grid-column-gap: 1.5em;
     grid-row-gap: 1.5em;
   }
-
-  .site-footer__col {
-    width: 100%;
-  }
-
-  .site-footer__wordmark { font-size: 4em; }
 }
 
 @media screen and (max-width: 767px) {
@@ -1942,8 +2068,6 @@ h3 {
   .site-footer__a {
     font-size: 1.5em;
   }
-
-  .site-footer__wordmark { font-size: 2.5em; }
 }
 
 /* ------------------------- Underline Link [https://osmo.supply/] -------------------------  */
@@ -2398,12 +2522,11 @@ h3 {
 
 /* On light surfaces the lines flip to dark — the grid's own dark-on-light
    hairline, not a separate bold colour, for the same reason as above. These
-   four surfaces don't carry the page grid themselves, so this names the
+   surfaces don't carry the page grid themselves, so this names the
    colour directly rather than relying on an inherited --grid-line. */
 .theme-light .cta,
 .panel .cta,
-.site-footer .cta,
-.product-card .cta {
+.site-footer .cta {
   --grid-line: var(--grid-line-color-dark);
 }
 
@@ -2691,6 +2814,18 @@ body{
   margin-right: calc(-1 * var(--gap));
 }
 
+/* On a page, one slide to a column of the grid: a column wide, line to line,
+   less the gap on its right, so each card fills a column's content width and
+   the next one starts on the next line's pad */
+.swiper-group:not([data-swiper-per-view]) .swiper-slide {
+  --gap: var(--grid-gap);
+  width: var(--col-vw);
+  max-width: none;
+}
+@media screen and (max-width: 767px) {
+  .swiper-group:not([data-swiper-per-view]) .swiper-slide { width: calc(var(--col-vw) * 0.8); }
+}
+
 .swiper-pagination {
   pointer-events: auto;
   z-index: 0 !important;
@@ -2813,12 +2948,17 @@ body{
 }
 
 /* ---------- Headline figure (total followers) ---------- */
+/* The label in the first column, the figure and its caption from the second,
+   as the statement under it sits */
 .figure-lead {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  column-gap: var(--grid-gap);
+  align-items: start;
 }
+.figure-lead > .tagline { grid-column: 1; grid-row: 1 / span 2; margin: 1.2rem 0 0; }
 .figure-lead__number {
+  grid-column: 2 / -1;
   margin: 0 0 2.4rem;
   font-size: 16rem;
   line-height: 1;
@@ -2826,10 +2966,18 @@ body{
   font-weight: var(--weight-strong); --wght: var(--weight-strong);
 }
 .figure-lead__label {
-  /* Two of the four columns, so the caption sits under the first half */
-  max-width: var(--grid-col-2);
+  grid-column: 2 / span 2;
   margin: 0;
   font-size: 1.8rem;
+  color: rgba(255, 255, 255, 0.65);
+}
+@media screen and (max-width: 991px) {
+  .figure-lead { grid-template-columns: 1fr; }
+  .figure-lead > .tagline,
+  .figure-lead__number,
+  .figure-lead__label { grid-column: 1 / -1; grid-row: auto; }
+  .figure-lead > .tagline { margin: 0 0 1.6rem; }
+  .figure-lead__number { font-size: 9.6rem; }
 }
 
 /* ---------- Insights (in-depth analytics) ---------- */
@@ -3407,9 +3555,12 @@ body{
   display: flex;
 }
 
+/* Each slide is two columns, line to line, and the slider centres the current
+   one on the page's middle line: it fills the second and third columns, and
+   its neighbours run out from the first and the fourth. */
 .centered-slider-slide {
   flex: none;
-  padding: 1.2rem;
+  padding: 1.2rem var(--grid-pad);
   cursor: pointer;
   transition: opacity .25s cubic-bezier(.77, 0, .175, 1);
   position: relative;
@@ -3418,27 +3569,25 @@ body{
 .centered-slider-slide__inner {
   position: relative;
   display: flex;
-  width: 36rem;
-  min-height: 26rem;
-  padding: 2.4rem;
+  width: calc(var(--col-vw) * 2 - var(--grid-gap));
+  min-height: 30rem;
+  padding: 3.2rem;
   flex-direction: column;
   justify-content: space-between;
   align-items: flex-start;
-  gap: 2.4rem;
-  /* A flat neutral grey. The card used to be a translucent white over the
-     section tint, which picked the blue out of it and read as navy. */
+  gap: 4rem;
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: var(--radius);
-  background-color: #1f1f1f;
+  background-color: #161616;
 }
 
 .centered-slider-row:has(.centered-slider-slide.active) .centered-slider-slide:not(.active) {
-  opacity: 0.45;
+  opacity: 0.35;
 }
 
-/* Corner brackets on the active slide */
+/* Corner brackets on the active slide, round the card itself */
 /* https://css-tip.com/corner-only-border-image/ */
-.centered-slider-slide::after {
+.centered-slider-slide__inner::after {
   --size: 1.6rem; /* corner size */
   --width: 1px;   /* border width */
   --gap: 0.2rem;  /* gap */
@@ -3458,15 +3607,17 @@ body{
     linear-gradient(#000 0 0) content-box;
   transition: all 0.4s cubic-bezier(0.65, 0.05, 0, 1);
 }
-.centered-slider-slide.active::after {
+.centered-slider-slide.active .centered-slider-slide__inner::after {
   outline-offset: calc(-1*var(--width));
   opacity: 1;
 }
 
 .slide-demo__description {
   margin: 0;
-  font-size: 1.6rem;
-  line-height: 1.4;
+  max-width: 52rem;
+  font-size: 2.4rem;
+  line-height: 1.3;
+  letter-spacing: var(--track-title);
 }
 
 .slide-demo__details {
@@ -3582,11 +3733,17 @@ body{
   width: 2rem;
 }
 
-@media screen and (max-width: 479px) {
+@media screen and (max-width: 991px) {
+  .centered-slider-slide__inner { width: 70vw; }
+}
+@media screen and (max-width: 767px) {
+  .centered-slider-slide { padding-left: 0.8rem; padding-right: 0.8rem; }
   .centered-slider-slide__inner {
-    width: 78vw;
+    width: 80vw;
     min-height: 0;
+    padding: 2.4rem;
   }
+  .slide-demo__description { font-size: 1.8rem; }
 }
 
 /* =============================================================
@@ -3612,118 +3769,181 @@ main section + section,
 }
 .theme-light .tagline { color: rgba(10, 10, 10, 0.55); }
 
-/* ---------- Shop hero ---------- */
+/* ---------- Shop hero ----------
+   One screen: the copy across the first two columns, sitting on the foot of
+   the photograph, which fills the last two from under the bar to the foot. */
 .shop-hero {
   display: flex;
-  flex-direction: column;
-  justify-content: center;
-  gap: 8rem;
-  /* No tall minimum: the hero is now as tall as the square plate inside it
-     plus its padding, which keeps the whole thing inside one screen instead
-     of running past the fold and following you into the catalogue. The top
-     clearance comes from the site-wide nav rule, not from here. */
-  min-height: 0;
-  padding: 8rem var(--site-inset);
+  height: 100vh;
+  height: 100svh;
+  min-height: 64rem;
+  max-height: 110rem;
+  padding: calc(var(--nav-height) + 4.8rem) var(--site-inset) 4.8rem;
   background: #000000;
 }
 
 .shop-hero__body {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: var(--grid-gap);
-  align-items: center;
+  align-items: end;
   width: 100%;
 }
 
-.shop-hero__copy { min-width: 0; }
+.shop-hero__copy { grid-column: 1 / span 2; min-width: 0; }
 .shop-hero h1 {
   margin: 0 0 2.4rem;
-  font-size: 6.4rem;
-  line-height: 1.05;
-  letter-spacing: -0.03em;
+  font-size: 8rem;
+  line-height: 0.98;
+  letter-spacing: -0.04em;
   font-weight: var(--weight-strong); --wght: var(--weight-strong);
 }
-.shop-hero .lead { max-width: 48rem; margin-bottom: 0; }
-.shop-hero .social-proof { margin-top: 4rem; }
-.shop-hero .actions { margin-top: 4rem; }
+.shop-hero .lead { max-width: 48rem; margin-bottom: 0; color: rgba(255, 255, 255, 0.7); }
+.shop-hero .social-proof { margin-top: 3.2rem; }
+.shop-hero .actions { margin-top: 4.8rem; }
 
-.shop-hero__media { min-width: 0; }
-/* Square, and the column it sits in is two of the four, so both edges stay
-   on the grid lines */
+.shop-hero__media {
+  grid-column: 3 / span 2;
+  align-self: stretch;
+  min-width: 0;
+  min-height: 0;
+}
+/* height as well as width: the file's own height attribute would otherwise
+   size the picture, which is what ran it a screen and a half tall */
 .shop-hero__media img {
   width: 100%;
-  aspect-ratio: 1;
+  height: 100%;
   object-fit: cover;
   border-radius: var(--radius);
 }
 
 
-/* ---------- Product cards ---------- */
-/* Four products, one to each column of the page grid. The gap is the grid gap
-   and the section already carries the gutter, so a card lands exactly inside
-   a column of the grid its section draws rather than near it. White card, black text — the
-   catalogue is the one place on the page that should read as printed stock. */
+/* ---------- Product cards ----------
+   One to a column of the page grid: a light plate, the number and the kind
+   on a strip at the top, the picture, the name with its format under it, and
+   the call to action on a ruled foot. The whole card is the link. */
 .product-grid {
-  counter-reset: product;
-  grid-template-columns: repeat(var(--grid-columns), minmax(0, 1fr));
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: var(--grid-gap);
+  align-items: stretch;
 }
 
 .product-card {
-  background: #ffffff;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  background: #e4e4e4;
   color: #0a0a0a;
-  border: 1px solid rgba(10, 10, 10, 0.1);
   border-radius: var(--radius);
-  padding: 2rem;
-  gap: 1.6rem;
-  counter-increment: product;
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  text-decoration: none;
+  transition: transform 0.5s var(--cta-ease), background-color 0.3s;
 }
-.product-card:hover {
-  transform: translateY(-0.4rem);
-  box-shadow: 0 1.6rem 4rem rgba(0, 0, 0, 0.35);
+.product-card__top {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 2rem 2rem 0;
 }
-.product-card::before {
-  content: counter(product, decimal-leading-zero);
+.product-card__index,
+.product-card__tag,
+.product-card__cta {
+  font-family: var(--font-label);
+  font-size: var(--size-label);
+  letter-spacing: var(--track-label);
+  text-transform: uppercase;
   font-weight: var(--weight-label); --wght: var(--weight-label);
-  color: rgba(10, 10, 10, 0.4);
+  line-height: 1;
 }
-.product-img { border-radius: calc(var(--radius) - 1px); }
-.product-body { padding: 0; gap: 1.2rem; }
-/* Descriptions run to different lengths, so drop the CTAs to a common line */
-.product-body .cta { margin-top: auto; align-self: flex-start; }
-
-/* On white, the dark tag and the meta line have to flip out of the
-   white-on-dark defaults they inherit from the rest of the page */
-.product-card .tag-dark {
+.product-card__index { margin-right: 0.4rem; }
+.product-card__tag {
+  padding: 0.4rem 0.7rem;
+  border-radius: var(--radius);
   background: #0a0a0a;
   color: #ffffff;
 }
-.product-card .product-meta { color: rgba(10, 10, 10, 0.55); }
-.product-card p { color: rgba(10, 10, 10, 0.68); font-size: 1.5rem; line-height: 1.45; }
-.product-card h5 { font-size: 2rem; }
+.product-card__media {
+  display: block;
+  margin: 2rem 2rem 0;
+  aspect-ratio: 4 / 3;
+  overflow: hidden;
+  border-radius: var(--radius);
+  background: #d4d4d4;
+}
+.product-card__media img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.8s var(--cta-ease), opacity 0.7s ease;
+}
+.product-card__body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  padding: 2rem 2rem 2.4rem;
+  flex: 1;
+}
+.product-card__name {
+  font-size: 2rem;
+  line-height: var(--leading-title);
+  letter-spacing: var(--track-title);
+}
+.product-card__meta {
+  font-size: 1.6rem;
+  color: rgba(10, 10, 10, 0.5);
+}
+.product-card__foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.6rem;
+  padding: 1.6rem 2rem;
+  border-top: 1px solid rgba(10, 10, 10, 0.1);
+}
+.product-card__arrow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 3.6rem;
+  height: 3.6rem;
+  border-radius: 50%;
+  background: #ffffff;
+  transition: background-color 0.3s, color 0.3s;
+}
+.product-card__arrow svg { width: 1.2rem; height: 1.2rem; }
 
-@media screen and (max-width: 1199px) {
-  /* Four columns of card at this width leaves no room for the copy */
-  .product-grid { grid-template-columns: repeat(2, 1fr); }
+@media (hover: hover) and (pointer: fine) {
+  .product-card:hover { transform: translateY(-0.8rem); background: #ededed; }
+  .product-card:hover .product-card__media img { transform: scale(1.04); }
+  .product-card:hover .product-card__arrow { background: var(--cta-accent-color); color: #ffffff; }
 }
-@media screen and (max-width: 599px) {
-  .product-grid { grid-template-columns: 1fr; }
-}
+.product-card:focus-visible { outline: 1px solid #ffffff; outline-offset: 0.4rem; }
 
 @media screen and (max-width: 991px) {
   .shop-hero {
+    height: auto;
     min-height: 0;
-    gap: 5.6rem;
-    padding-top: 12rem;
-    padding-bottom: 8rem;
+    max-height: none;
+    padding-top: calc(var(--nav-height) + 4rem);
   }
-  .shop-hero__body { grid-template-columns: 1fr; }
-  .shop-hero h1 { font-size: 4rem; }
+  .shop-hero__body { grid-template-columns: 1fr; gap: 4.8rem; }
+  .shop-hero__copy,
+  .shop-hero__media { grid-column: 1 / -1; }
+  .shop-hero__media { order: -1; }
+  .shop-hero__media img { height: auto; aspect-ratio: 4 / 3; }
+  .shop-hero h1 { font-size: 5.6rem; }
   .shop-hero .lead { max-width: none; }
 
-  /* Single column: the cards keep their own frames, they just stack */
-  .product-card { padding: 1.6rem; }
+  .product-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media screen and (max-width: 767px) {
+  .shop-hero h1 { font-size: 4.4rem; }
+}
+@media screen and (max-width: 479px) {
+  .product-grid { grid-template-columns: 1fr; }
 }
 
 /* =============================================================
@@ -3978,26 +4198,6 @@ main section + section,
 .book-feature__body { min-width: 0; }
 .book-feature__body .lead { margin-bottom: 4rem; }
 
-
-/* ---------- Closing CTA ---------- */
-.final-cta {
-  border-top: 1px solid var(--rule);
-  background-color: #0a0a0a;
-  text-align: center;
-}
-.final-cta__title {
-  margin: 0 auto 2.4rem;
-  font-size: 8rem;
-  line-height: 1;
-  letter-spacing: -0.04em;
-  font-weight: var(--weight-strong); --wght: var(--weight-strong);
-}
-.final-cta__lead {
-  max-width: var(--grid-col-2);
-  margin: 0 auto 4.8rem;
-}
-.final-cta .actions { justify-content: center; }
-
 @media screen and (max-width: 991px) {
   .map-spread__cover {
     position: static;
@@ -4008,27 +4208,11 @@ main section + section,
     grid-template-columns: 1fr;
     padding-top: 5.6rem;
   }
-  .final-cta__title { font-size: 4.8rem; }
-  .final-cta__lead { max-width: none; }
-}
-
-@media screen and (max-width: 479px) {
-  .final-cta__title { font-size: 4rem; }
 }
 
 /* =============================================================
-   Influence hero, the book plate on white
+   Influence: the atlas band
    ============================================================= */
-
-/* The lead sits straight under the statement rather than across the
-   grid from it, so the two read as one block */
-.influence-hero { max-width: var(--grid-col-3); }
-.influence-hero h2 { margin-bottom: 2.4rem; }
-/* A reading measure, not a column count. This sits inside the block above
-   rather than in the container, so a column token would resolve against the
-   block and cap it at a width that means nothing on the page grid — the same
-   48rem the other standfirsts use says what is actually intended. */
-.influence-hero__lead { max-width: 48rem; margin-bottom: 0; }
 
 /* ---------- The atlas band, on black ---------- */
 /* The Influence page runs black end to end, so the band around the plate is
@@ -4043,8 +4227,6 @@ main section + section,
 .book-feature__body .lead { margin-bottom: 4rem; }
 
 @media screen and (max-width: 991px) {
-  .influence-hero,
-  .influence-hero__lead { max-width: none; }
   .map-spread.is--influence { padding-bottom: 6.4rem; }
 }
 
@@ -4446,44 +4628,6 @@ strong, b, th { font-weight: var(--weight-strong); --wght: var(--weight-strong);
   .step-timeline.is--roomy .step-timeline__list { gap: 6.4rem; }
 }
 
-/* ---------- Closing CTA: portrait set into the line ---------- */
-.final-cta__eyebrow { text-align: center; }
-.final-cta__title {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: center;
-  gap: 2rem;
-  margin: 0 auto 3.2rem;
-}
-/* "Talk to" is far wider than "Tom", so centring the line as a whole left
-   the card sitting right of centre. Giving the two words equal flex share
-   and pushing them against the card centres the card itself. */
-.final-cta__title > span:not(.final-cta__portrait) {
-  flex: 1 1 0;
-  min-width: max-content;
-}
-.final-cta__title > span:first-child { text-align: right; }
-.final-cta__title > span:last-child { text-align: left; }
-
-/* The card interrupts the line rather than sitting beside it, so it runs
-   taller than the cap height */
-.final-cta__portrait {
-  display: block;
-  width: 13.2rem;
-  height: 17.4rem;
-  border: 2px solid #ffffff;
-  border-radius: var(--radius);
-  overflow: hidden;
-  flex: none;
-}
-.final-cta__portrait img { width: 100%; height: 100%; object-fit: cover; }
-
-@media screen and (max-width: 991px) {
-  .final-cta__title { gap: 1.4rem; }
-  .final-cta__portrait { width: 8.4rem; height: 11rem; border-radius: var(--radius); }
-}
-
 /* ---------- Step timeline on a light surface ---------- */
 /* The component was drawn for the dark Influence page: a white line, a white
    fill and a white active marker all vanish on the Partners page, so invert
@@ -4622,10 +4766,41 @@ strong, b, th { font-weight: var(--weight-strong); --wght: var(--weight-strong);
   border-radius: 0;
 }
 
-/* ---------- Masonry block ---------- */
+/* ---------- Image band ----------
+   One picture to a column: the band carries the page inset, so each frame
+   lands inside a column of the grid it draws. Pairs take two columns each. */
 .project-grid {
   padding: 0 var(--project-inset);
   margin: 0 0 var(--project-rhythm);
+}
+.project-grid__list {
+  display: grid;
+  grid-template-columns: repeat(var(--grid-columns), minmax(0, 1fr));
+  gap: var(--grid-gap);
+  align-items: start;
+}
+.project-grid.is--pairs .project-grid__list { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.project-grid__item {
+  min-width: 0;
+  overflow: hidden;
+  border-radius: var(--radius);
+  background: #111111;
+}
+.project-grid__item.is--wide { aspect-ratio: 3 / 2; }
+.project-grid__item.is--square { aspect-ratio: 1; }
+.project-grid__item.is--tall { aspect-ratio: 2 / 3; }
+.project-grid__item img {
+  width: 100%;
+  height: auto;
+}
+.project-grid__item:is(.is--wide, .is--square, .is--tall) img {
+  height: 100%;
+  object-fit: cover;
+}
+@media screen and (max-width: 767px) {
+  .project-grid__list,
+  .project-grid.is--pairs .project-grid__list { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.6rem; }
+  .project-grid.is--pairs .project-grid__list { grid-template-columns: 1fr; }
 }
 
 /* ---------- Overview ----------
@@ -4759,35 +4934,12 @@ strong, b, th { font-weight: var(--weight-strong); --wght: var(--weight-strong);
 /* Integration with the page it sits on: the block around it already carries
    the grid padding, so the component must not add its own on top, and the
    corners take the site radius rather than the component's default. */
-.section .masonry-wrap,
-.project-grid .masonry-wrap {
+.section .masonry-wrap {
   padding-left: 0;
   padding-right: 0;
   padding-bottom: 0;
 }
 .masonry-item__visual { border-radius: var(--radius); }
-
-/* Columns and gap are the component's own controls, and here they are handed
-   the page's own grid: the column count the lines are drawn from, and the gap
-   that separates them. Because the block is inset by gutter + pad, every tile
-   lands exactly inside a column of the grid the section is drawing — a tile
-   edge is a column line less its padding. Two columns means a tile spans two
-   of them, one means it spans all four; both stay on the lines. */
-.project-grid [data-masonry-list] {
-  --masonry-col: var(--grid-columns);
-  --masonry-gap: var(--grid-gap);
-}
-
-/* Half as many, twice as wide — for spreads too wide to read at a quarter of
-   the page, and for the pair that closes a set. Written out rather than
-   derived: the component reads this value as a string, so it has to arrive as
-   a plain number. The full-width grid needs no such override — it follows the
-   page's column count down through the breakpoints on its own. */
-.project-grid.is--pairs [data-masonry-list] { --masonry-col: 2; }
-
-@media screen and (max-width: 767px) {
-  .project-grid.is--pairs [data-masonry-list] { --masonry-col: 1; }
-}
 
 /* =============================================================
    Click to zoom (supplied component)
@@ -4884,29 +5036,8 @@ body:has(.arch-page) {
   flex-direction: column;
 }
 
-.arch-stage__head {
-  flex: none;
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 2.4rem;
-  /* The strip clears the fixed bar above it and stands off the cards below.
-     Paired with the foot's matching values: the two end strips are the same
-     shape, so the band the slider centres its cards in sits square in what is
-     left of the screen rather than being pushed up or down by them. */
-  padding: 4rem var(--site-inset) 3.2rem;
-}
-.arch-stage__head .tagline { margin: 0; }
-.arch-stage__count {
-  margin: 0;
-  font-weight: var(--weight-label); --wght: var(--weight-label);
-  text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.55);
-}
-.arch-stage__count strong { font-weight: 400; color: #ffffff; }
-
-/* The slider takes whatever is left between the heading strip and the footer
-   row, so the cards grow and shrink with the window instead of overflowing it */
+/* The slider takes everything between the bar and the foot, and centres the
+   cards in it, so they sit in the middle of what is left of the screen */
 .arch-stage__slider {
   flex: 1;
   min-height: 0;
@@ -4914,18 +5045,15 @@ body:has(.arch-page) {
   align-items: center;
 }
 
+/* The title on the first column; the count and the arrows closing on the
+   last line */
 .arch-stage__foot {
   flex: none;
   display: flex;
   align-items: flex-end;
   justify-content: space-between;
   gap: 2.4rem;
-  /* The stage now reserves the progress bar's strip, so this no longer has to
-     hold 6.4rem of empty space at the bottom to stay clear of it. Matching the
-     head's 4rem / 3.2rem: the title and the arrows stand off the cards above
-     them by the same measure the label stands off them, and off the bar below
-     by the same measure again. */
-  padding: 3.2rem var(--site-inset) 3.2rem;
+  padding: 0 var(--site-inset) 3.2rem;
 }
 .arch-stage__title {
   margin: 0;
@@ -4934,11 +5062,24 @@ body:has(.arch-page) {
   letter-spacing: -0.03em;
   font-weight: var(--weight-strong); --wght: var(--weight-strong);
 }
+.arch-stage__controls {
+  display: flex;
+  align-items: center;
+  gap: 2.4rem;
+}
+.arch-stage__count {
+  margin: 0;
+  font-weight: var(--weight-label); --wght: var(--weight-label);
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.55);
+}
+.arch-stage__count strong { font-weight: 400; color: #ffffff; }
 
-.arch-arrows { display: flex; gap: 1.2rem; }
+.arch-arrows { display: flex; gap: 0.8rem; }
 .arch-arrow {
-  width: 5.6rem;
-  height: 5.6rem;
+  width: 3.6rem;
+  height: 3.6rem;
+  padding: 0;
   border: 1px solid rgba(255, 255, 255, 0.3);
   border-radius: 50%;
   background: transparent;
@@ -4946,7 +5087,8 @@ body:has(.arch-page) {
   cursor: pointer;
   transition: background-color 0.25s, border-color 0.25s, opacity 0.25s;
 }
-.arch-arrow:hover { background: rgba(255, 255, 255, 0.1); border-color: #ffffff; }
+.arch-arrow:hover { background: #ffffff; border-color: #ffffff; }
+.arch-arrow:hover::after { border-color: #0a0a0a; }
 /* The run has two ends; a dead arrow says so rather than pretending */
 .arch-arrow.is--disabled { opacity: 0.25; pointer-events: none; }
 .arch-arrow::after {
@@ -4954,8 +5096,8 @@ body:has(.arch-page) {
   position: absolute;
   top: 50%;
   left: 50%;
-  width: 1rem;
-  height: 1rem;
+  width: 0.7rem;
+  height: 0.7rem;
   border-top: 1px solid #ffffff;
   border-right: 1px solid #ffffff;
 }
@@ -4993,111 +5135,93 @@ body:has(.arch-page) {
 .parallax-slider__group,
 .parallax-slider__collection { width: 100%; }
 
+/* The track starts on the first grid line. Each item is two columns, line to
+   line, and carries the column pad on both sides, so every card lands on the
+   page's columns: the first fills the first two, the next the last two. The
+   slider's setOffset takes this padding off again, so the run still ends
+   with the last card on the last line. */
 .parallax-slider__list {
   width: 100%;
   display: flex;
   align-items: center;
   overflow: hidden;
   cursor: grab;
-  /* The track starts on the same line as the heading and the page title
-     rather than hard against the viewport edge. The item's own 1em is part
-     of that inset, so it comes off here; the slider's setOffset subtracts
-     this padding again so the run still ends flush on the right. */
-  padding-left: calc(var(--site-inset) - 1em);
+  padding-left: var(--site-gutter);
 }
 .parallax-slider__list:active { cursor: grabbing; }
 
+/* Two columns wide, 3:2. A short window would push the label into the foot,
+   so the height caps the width there, and the card only then comes off its
+   columns. */
 .parallax-slider__item {
+  --arch-card: min(calc(var(--col-vw) * 2 - var(--grid-gap)), calc((100svh - var(--nav-height) - 24rem) * 1.5));
   flex: none;
-  padding-left: 1em;
-  padding-right: 1em;
+  padding-left: var(--grid-pad);
+  padding-right: var(--grid-pad);
   position: relative;
 }
 
-/* Landscape, and sized off the stage height so the card plus its label
-   always clears the footer row. Smaller than it was: at half the viewport a
-   single project filled the screen and the run read as one image at a time
-   rather than as a body of work. */
 .parallax-slider__item-inner {
   aspect-ratio: 3 / 2;
   border-radius: var(--radius);
-  width: min(32vw, 60rem);
-  max-height: 38vh;
+  width: var(--arch-card);
   position: relative;
   overflow: clip;
-  background: #05080b;
+  background: #111111;
 }
+/* The picture fills its frame and stays put: no drift inside the card */
 .parallax-slider__item-img {
   object-fit: cover;
   -webkit-user-select: none;
   user-select: none;
   -webkit-user-drag: none;
-  width: 160%;
+  width: 100%;
   max-width: none;
   height: 100%;
   position: absolute;
-  left: -30%;
+  inset: 0;
+  transition: transform 0.9s var(--cta-ease), opacity 0.7s ease;
 }
 .parallax-slider__item-visual {
-  will-change: transform;
   width: 100%;
   height: 100%;
   position: absolute;
   inset: 0%;
 }
 
-/* Without a label a card is just a picture. The name, the index and the
-   arrow are what say this opens a page of its own. */
+/* The number, the name and the context in one row under the picture */
 .parallax-slider__item-link {
   display: block;
   text-decoration: none;
   -webkit-user-drag: none;
 }
+/* The number takes the first twelfth of the design grid (Shift + G) and the
+   name starts on the second, so the row keeps the fine grid as well */
 .parallax-slider__item-label {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1.6rem;
+  display: grid;
+  grid-template-columns: calc((var(--col-vw) - var(--grid-gap) * 2.1) / 3) minmax(0, 1fr) auto;
+  align-items: baseline;
+  column-gap: calc(var(--grid-gap) * 0.55);
+  width: var(--arch-card);
   margin-top: 1.6rem;
 }
 .parallax-slider__item-name {
   margin: 0;
-  font-size: 1.8rem;
-  font-weight: 400;
+  font-size: 2rem;
   line-height: 1.2;
+  letter-spacing: var(--track-title);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .parallax-slider__item-meta {
-  margin: 0.4rem 0 0;
   font-weight: var(--weight-label); --wght: var(--weight-label);
   text-transform: uppercase;
   color: rgba(255, 255, 255, 0.5);
+  white-space: nowrap;
 }
-.parallax-slider__item-cta {
-  flex: none;
-  width: 3.2rem;
-  height: 3.2rem;
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  border-radius: 50%;
-  position: relative;
-  transition: background-color 0.25s, border-color 0.25s;
-}
-.parallax-slider__item-cta::after {
-  content: "";
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 0.7rem;
-  height: 0.7rem;
-  border-top: 1px solid #ffffff;
-  border-right: 1px solid #ffffff;
-  transform: translate(-70%, -50%) rotate(45deg);
-}
-.parallax-slider__item-link:hover .parallax-slider__item-cta {
-  background: #ffffff;
-  border-color: #ffffff;
-}
-.parallax-slider__item-link:hover .parallax-slider__item-cta::after {
-  border-color: #0a0a0a;
+@media (hover: hover) and (pointer: fine) {
+  .parallax-slider__item-link:hover .parallax-slider__item-img { transform: scale(1.03); }
 }
 
 /* Smooothy never loaded — the track scrolls natively instead */
@@ -5106,27 +5230,26 @@ body:has(.arch-page) {
   scroll-snap-type: x mandatory;
   scrollbar-width: none;
 }
-.parallax-slider__list.is--fallback .parallax-slider__item { scroll-snap-align: center; }
+.parallax-slider__list.is--fallback .parallax-slider__item { scroll-snap-align: start; }
 
 @media screen and (max-width: 991px) {
-  .arch-stage__head { padding: 4rem var(--site-inset) 3.2rem; }
-  .arch-stage__foot { padding: 3.2rem var(--site-inset) 3.2rem; }
   .arch-stage__title { font-size: 4.8rem; }
-  .parallax-slider__item-inner { width: 62vw; }
+  /* One column of two here would be too small; the card takes most of the
+     screen and the next one shows past it */
+  .parallax-slider__item { --arch-card: min(78vw, calc((100svh - var(--nav-height) - 22rem) * 1.5)); }
 }
 @media screen and (max-width: 767px) {
-  .arch-stage__head { padding: 3.2rem var(--site-inset) 2.4rem; }
   .arch-stage__foot {
     flex-direction: column;
     align-items: flex-start;
     gap: 2rem;
-    padding: 2.8rem var(--site-inset) 2.8rem;
+    padding-bottom: 2.8rem;
   }
   .arch-stage__title { font-size: 3.6rem; }
-  .parallax-slider__item { padding-left: 0.5em; padding-right: 0.5em; }
-  .parallax-slider__item-inner { width: 78vw; max-height: 38vh; }
-  /* The item's own padding shrinks here, so the track inset follows it */
-  .parallax-slider__list { padding-left: calc(var(--site-inset) - 0.5em); }
+  .parallax-slider__item { --arch-card: min(74vw, calc((100svh - var(--nav-height) - 24rem) * 1.5)); }
+  .parallax-slider__item-label { grid-template-columns: 3.2rem minmax(0, 1fr); row-gap: 0.6rem; }
+  .parallax-slider__item-name { white-space: normal; }
+  .parallax-slider__item-label > .parallax-slider__item-meta:last-child { grid-column: 2; }
 }
 
 
@@ -5139,22 +5262,12 @@ body:has(.arch-page) {
    column of the grid its section draws. Built on the same idea as the Shop card: a light
    plate on the page, a small label strip at the top, the thing that matters
    in the middle, and a quiet footer under a rule. */
-.results-section .two-col { align-items: flex-end; }
-.results-note {
-  max-width: 32rem;
-  margin: 0 0 0 auto;
-  font-size: 1.6rem;
-  line-height: 1.45;
-  color: rgba(10, 10, 10, 0.55);
-  text-align: right;
-}
-
 .results-grid {
   list-style: none;
   display: grid;
   grid-template-columns: repeat(var(--grid-columns), minmax(0, 1fr));
   gap: var(--grid-gap);
-  margin: 8rem 0 0;
+  margin: 0;
   padding: 0;
 }
 
@@ -5230,9 +5343,7 @@ body:has(.arch-page) {
 
 @media screen and (max-width: 991px) {
   /* Two across keeps the figures big rather than shrinking four into a row */
-  .results-grid { grid-template-columns: repeat(2, 1fr); margin-top: 5.6rem; }
-  .results-note { margin: 2.4rem 0 0; text-align: left; max-width: none; }
-  .results-section .two-col { align-items: flex-start; }
+  .results-grid { grid-template-columns: repeat(2, 1fr); }
   .results-card__top { margin-bottom: 3.2rem; }
 }
 
@@ -5463,82 +5574,80 @@ body:has(.arch-page) {
    Closing CTA — set on the grid rather than centred
    ============================================================= */
 
-/* Was a centred stack with the portrait wedged into the middle of the line,
-   which left it floating. It sits on the page's four columns now: label and
-   title across the left three, the portrait in the fourth, and the standfirst
-   and the button on a ruled row beneath. */
+/* On the page's four columns: the label over the first, the title across the
+   first three, the portrait filling the fourth, and the standfirst and the
+   button on a ruled row beneath, the button in the portrait's column. */
 .final-cta {
   border-top: 1px solid var(--rule);
   background-color: #0a0a0a;
-  text-align: left;
 }
 .final-cta__inner {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: var(--grid-gap);
   align-items: end;
 }
 .final-cta__eyebrow {
   grid-column: 1 / -1;
-  text-align: left;
-  margin: 0 0 3.2rem;
+  margin: 0;
 }
 .final-cta__title {
   grid-column: 1 / span 3;
-  display: block;
   margin: 0;
-  font-size: 9.6rem;
-  line-height: 0.94;
-  letter-spacing: -0.04em;
+  font-size: 12rem;
+  line-height: 0.9;
+  letter-spacing: -0.045em;
   font-weight: var(--weight-strong); --wght: var(--weight-strong);
 }
 .final-cta__portrait {
-  grid-column: 4 / span 1;
+  grid-column: 4;
   display: block;
   width: 100%;
-  height: auto;
-  aspect-ratio: 3 / 4;
-  border: 0;
+  aspect-ratio: 4 / 5;
   border-radius: var(--radius);
   overflow: hidden;
-  justify-self: end;
-  max-width: 22rem;
 }
 .final-cta__portrait img { width: 100%; height: 100%; object-fit: cover; }
 
 .final-cta__foot {
   grid-column: 1 / -1;
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: var(--grid-gap);
   align-items: end;
-  margin-top: 6.4rem;
+  margin-top: 1.6rem;
   padding-top: 3.2rem;
   border-top: 1px solid var(--rule);
 }
 .final-cta__lead {
   grid-column: 1 / span 2;
-  max-width: 44rem;
+  max-width: 48rem;
   margin: 0;
+  color: rgba(255, 255, 255, 0.7);
 }
 .final-cta .actions {
-  grid-column: 4 / span 1;
-  justify-content: flex-end;
+  grid-column: 4;
   margin: 0;
 }
 
 @media screen and (max-width: 991px) {
-  .final-cta__title { font-size: 5.6rem; grid-column: 1 / span 3; }
-  .final-cta__portrait { max-width: none; }
-  .final-cta__foot { grid-template-columns: 1fr; gap: 2.4rem; }
-  .final-cta__lead { grid-column: 1 / -1; max-width: none; }
-  .final-cta .actions { grid-column: 1 / -1; justify-content: flex-start; }
+  .final-cta__inner { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .final-cta__title { grid-column: 1; font-size: 6.4rem; }
+  .final-cta__portrait { grid-column: 2; }
+  .final-cta__foot { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .final-cta__lead { grid-column: 1; }
+  .final-cta .actions { grid-column: 2; }
 }
 
 @media screen and (max-width: 767px) {
-  .final-cta__inner { grid-template-columns: 1fr; }
-  .final-cta__title { font-size: 4rem; grid-column: 1 / -1; }
-  .final-cta__portrait { grid-column: 1 / -1; justify-self: start; max-width: 18rem; }
+  .final-cta__inner,
+  .final-cta__foot { grid-template-columns: 1fr; }
+  .final-cta__title,
+  .final-cta__portrait,
+  .final-cta__lead,
+  .final-cta .actions { grid-column: 1 / -1; }
+  .final-cta__title { font-size: 5.6rem; }
+  .final-cta__portrait { max-width: 24rem; }
 }
 
 
@@ -5631,12 +5740,20 @@ body:has(.arch-page) {
   min-height: 78vh;
   padding: calc(var(--nav-height) + 8rem) var(--site-inset) 8rem;
 }
+/* With no photograph (the legal pages) the header is just the title */
+.page-header:not(:has(.page-header-img)) { min-height: 0; }
+.page-header:not(:has(.page-header-img)) h1 { font-size: 8rem; letter-spacing: -0.04em; }
 .page-header-body {
   grid-template-columns: repeat(4, 1fr);
   gap: var(--grid-gap);
 }
 .page-header-main { grid-column: 1 / span 2; }
-.page-header-body .panel-meta { grid-column: 3 / span 2; }
+/* The facts two to a row, one to each of the last two columns */
+.page-header-body .panel-meta {
+  grid-column: 3 / span 2;
+  max-width: none;
+  column-gap: var(--grid-gap);
+}
 
 /* A flat brightness knock-down dulled the whole picture, including the part
    with nothing on it. A gradient leaves the top of the frame alone and puts
@@ -5692,11 +5809,8 @@ body:has(.arch-page) {
 }
 .related-courses .product-grid {
   grid-column: 2 / span 3;
-  grid-template-columns: repeat(3, 1fr);
-  counter-reset: none;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
 }
-/* The Shop numbers its catalogue; a related set is not a numbered list */
-.related-courses .product-card::before { content: none; }
 
 @media screen and (max-width: 991px) {
   .page-header { min-height: 0; padding-top: calc(var(--nav-height) + 5.6rem); }
@@ -5709,10 +5823,10 @@ body:has(.arch-page) {
   .related-courses { grid-template-columns: 1fr; gap: 4rem; }
   .related-courses__head,
   .related-courses .product-grid { grid-column: 1 / -1; }
-  .related-courses .product-grid { grid-template-columns: repeat(2, 1fr); }
+  .related-courses .product-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 
-@media screen and (max-width: 599px) {
+@media screen and (max-width: 479px) {
   .related-courses .product-grid { grid-template-columns: 1fr; }
 }
 
@@ -5808,7 +5922,6 @@ body:has(.arch-page) {
 .shop-hero__body,
 .logo-strip__head,
 .logo-strip__note,
-.arch-stage__head,
 .arch-stage__foot,
 .map-spread__head,
 .map-spread__footer,

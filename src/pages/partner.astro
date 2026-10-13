@@ -43,11 +43,16 @@ const img = (image: SanityImage | null | undefined, fallback: ImageDefault, widt
 <!-- Intro gallery -->
 <section class="section">
   <div class="container">
-    <div class="section-title section-title-left">
-      <h2 class="page-hero-title" data-page-field="intro.heading">{page?.intro?.heading ?? D.intro.heading}</h2>
-      <p class="lead" data-page-field="intro.lead">{page?.intro?.lead ?? D.intro.lead}</p>
-      <div class="actions">
-        <Button href="#contact" data-panel-open="contact" data-barba-prevent="self" data-page-field="intro.button" label={page?.intro?.button ?? D.intro.button} />
+    <div class="section-head is--hero">
+      <div class="section-head__main">
+        <p class="tagline">Partner</p>
+        <h2 class="page-hero-title" data-page-field="intro.heading">{page?.intro?.heading ?? D.intro.heading}</h2>
+      </div>
+      <div class="section-head__side">
+        <p class="lead" data-page-field="intro.lead">{page?.intro?.lead ?? D.intro.lead}</p>
+        <div class="actions">
+          <Button href="#contact" data-panel-open="contact" data-barba-prevent="self" data-page-field="intro.button" label={page?.intro?.button ?? D.intro.button} />
+        </div>
       </div>
     </div>
     <div data-swiper-group class="swiper-group">
@@ -229,17 +234,17 @@ const img = (image: SanityImage | null | undefined, fallback: ImageDefault, widt
      site's own odometer, so they count up on scroll like the ones on Influence. -->
 <section class="section theme-light results-section">
   <div class="container">
-    <div class="two-col two-col-flat">
-      <div>
+    <div class="section-head">
+      <div class="section-head__main">
         <p class="tagline" data-page-field="results.label">{page?.results?.label ?? D.results.label}</p>
         <h2 data-page-field="results.heading">{page?.results?.heading ?? D.results.heading}</h2>
+      </div>
+      <div class="section-head__side">
+        <p class="lead" data-page-field="results.note">{page?.results?.note ?? D.results.note}</p>
         <div class="actions">
           <Button href="#contact" data-panel-open="contact" data-barba-prevent="self" label="Get Started" />
           <Button href="/partners-archive" label="View Work" secondary />
         </div>
-      </div>
-      <div>
-        <p class="results-note" data-page-field="results.note">{page?.results?.note ?? D.results.note}</p>
       </div>
     </div>
     <ul data-odometer-group data-odometer-stagger="0.1" class="results-grid">

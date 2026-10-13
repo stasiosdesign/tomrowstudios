@@ -5,6 +5,7 @@ import SiteFooter from '../components/SiteFooter.astro';
 import ContactPanel from '../components/ContactPanel.astro';
 import Button from '../components/Button.astro';
 import GetInTouch from '../components/GetInTouch.astro';
+import ProductCard from '../components/ProductCard.astro';
 import { imageAttrs, type SanityImage } from '../sanity/image';
 import { SHOP_ITEMS_QUERY, SHOP_PAGE_QUERY } from '../sanity/queries';
 import { FAQ_DEFAULTS, PAGE_DEFAULTS, type ImageDefault } from '../sanity/page-defaults';
@@ -58,29 +59,18 @@ const img = (image: SanityImage | null | undefined, fallback: ImageDefault, widt
   </div>
 </header>
 
-<!-- Products -->
+<!-- Products: one card to a column -->
 <section class="section section-alt" id="catalogue">
   <div class="container">
-    <div class="section-title section-title-left">
-      <p class="tagline" data-page-field="catalogue.label">{page?.catalogue?.label ?? D.catalogue.label}</p>
-      <h2 data-page-field="catalogue.heading">{page?.catalogue?.heading ?? D.catalogue.heading}</h2>
+    <div class="section-head">
+      <div class="section-head__main">
+        <p class="tagline" data-page-field="catalogue.label">{page?.catalogue?.label ?? D.catalogue.label}</p>
+        <h2 data-page-field="catalogue.heading">{page?.catalogue?.heading ?? D.catalogue.heading}</h2>
+      </div>
     </div>
 
     <div class="product-grid">
-      {items.map((item) => (
-      <article class="product-card">
-        {item.card?.image?.asset && <img class="product-img" {...imageAttrs(item.card.image, 1200)} loading="lazy" decoding="async" alt={item.card.image.alt ?? ''}>}
-        <div class="product-body">
-          <div class="product-info">
-            {item.card?.kind && <span class="tag tag-dark">{item.card.kind}</span>}
-            {item.card?.meta && <span class="product-meta">{item.card.meta}</span>}
-          </div>
-          <h5>{item.title}</h5>
-          <p>{item.card?.text}</p>
-          <Button href={`/${item.slug}`} label={item.card?.button ?? 'View'} />
-        </div>
-      </article>
-      ))}
+      {items.map((item, i) => <ProductCard item={item} index={i + 1} />)}
     </div>
   </div>
 </section>
@@ -88,9 +78,14 @@ const img = (image: SanityImage | null | undefined, fallback: ImageDefault, widt
 <!-- Testimonials -->
 <section class="section section-alt">
   <div class="container">
-    <div class="section-title">
-      <h2 data-page-field="testimonials.heading">{page?.testimonials?.heading ?? D.testimonials.heading}</h2>
-      <p class="lead" data-page-field="testimonials.lead">{page?.testimonials?.lead ?? D.testimonials.lead}</p>
+    <div class="section-head">
+      <div class="section-head__main">
+        <p class="tagline">Testimonials</p>
+        <h2 data-page-field="testimonials.heading">{page?.testimonials?.heading ?? D.testimonials.heading}</h2>
+      </div>
+      <div class="section-head__side">
+        <p class="lead" data-page-field="testimonials.lead">{page?.testimonials?.lead ?? D.testimonials.lead}</p>
+      </div>
     </div>
 
     <div data-slider-autoplay-duration="4" aria-label="Testimonial Slider" data-centered-slider="wrapper" data-slider-autoplay="true" class="centered-slider-group">

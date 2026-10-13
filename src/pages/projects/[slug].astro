@@ -79,21 +79,17 @@ const framingClass = { wide: 'is--wide', square: 'is--square', tall: 'is--tall',
   <img data-click-zoom {...imageAttrs(section)} loading="lazy" decoding="async" alt={section.alt ?? ''}>
 </section>
 )}
-{/* Image band, on the four-column grid (or two across, for pairs) */}
+{/* Image band, one picture to a column of the grid (or two across, for
+    pairs). A plain grid: every frame's size is known before its picture
+    arrives, so nothing moves while they load. */}
 {section._type === 'imageGallery' && (
 <section class:list={['project-grid', { 'is--pairs': section.layout === 'pairs' }]}>
-  <div class="masonry-wrap">
-    <div class="masonry-collection">
-      <div data-masonry-list data-masonry-shuffle="false" class="masonry-list">
-        {section.images?.map((image) => (
-        <div class="masonry-item">
-          <div data-click-zoom class:list={['masonry-item__visual', framingClass[section.framing ?? 'wide']]}>
-            <img {...imageAttrs(image)} loading="lazy" decoding="async" alt={image.alt ?? ''} class="masonry-item__visual-img">
-          </div>
-        </div>
-        ))}
-      </div>
+  <div class="project-grid__list">
+    {section.images?.map((image) => (
+    <div data-click-zoom class:list={['project-grid__item', framingClass[section.framing ?? 'wide']]}>
+      <img {...imageAttrs(image)} loading="lazy" decoding="async" alt={image.alt ?? ''}>
     </div>
+    ))}
   </div>
 </section>
 )}

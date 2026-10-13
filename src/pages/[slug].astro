@@ -16,6 +16,7 @@ import SiteFooter from '../components/SiteFooter.astro';
 import ContactPanel from '../components/ContactPanel.astro';
 import Button from '../components/Button.astro';
 import GetInTouch from '../components/GetInTouch.astro';
+import ProductCard from '../components/ProductCard.astro';
 import { sanityClient } from '../sanity/client';
 import { imageAttrs, type SanityImage } from '../sanity/image';
 import { SHOP_ITEMS_QUERY, SHOP_ITEM_QUERY } from '../sanity/queries';
@@ -145,20 +146,7 @@ const atlasImg = img(item.atlas?.image, 1600);
         <p>Three more ways to sharpen how the work is drawn, written and shown.</p>
       </div>
       <div class="product-grid">
-        {related.map((other) => (
-        <article class="product-card">
-          {other.card?.image?.asset && <img class="product-img" {...imageAttrs(other.card.image, 1200)} loading="lazy" decoding="async" alt={other.card.image.alt ?? ''}>}
-          <div class="product-body">
-            <div class="product-info">
-              {other.card?.kind && <span class="tag tag-dark">{other.card.kind}</span>}
-              {other.card?.meta && <span class="product-meta">{other.card.meta}</span>}
-            </div>
-            <h5>{other.title}</h5>
-            <p>{other.card?.text}</p>
-            <Button href={`/${other.slug}`} label={other.card?.button ?? 'View'} />
-          </div>
-        </article>
-        ))}
+        {related.map((other) => <ProductCard item={other} index={items.indexOf(other) + 1} />)}
       </div>
     </div>
   </div>

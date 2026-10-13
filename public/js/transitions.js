@@ -62,6 +62,7 @@ function initAfterEnterFunctions(next) {
   if (typeof initParallaxImageSlider === "function") initParallaxImageSlider();
   if (typeof initMasonryGrid === "function") initMasonryGrid();
   if (typeof initScrollToNextPage === "function") initScrollToNextPage();
+  if (typeof initImageReveal === "function") initImageReveal(nextPage);
   /* The nav is outside the container and survives the navigation, but the
      trigger tying it to the home hero does not — `afterLeave` kills the
      page's triggers. Rebinding here restores it when we arrive on home, and

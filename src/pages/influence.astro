@@ -26,10 +26,14 @@ const img = (image: SanityImage | null | undefined, fallback: ImageDefault, widt
 <section class="section-alt">
   <div class="section">
     <div class="container">
-      <div class="influence-hero">
-        <p class="tagline" data-page-field="hero.label">{page?.hero?.label ?? D.hero.label}</p>
-        <h2 class="page-hero-title" data-page-field="hero.heading">{page?.hero?.heading ?? D.hero.heading}</h2>
-        <p class="lead influence-hero__lead" data-page-field="hero.lead">{page?.hero?.lead ?? D.hero.lead}</p>
+      <div class="section-head is--hero">
+        <div class="section-head__main">
+          <p class="tagline" data-page-field="hero.label">{page?.hero?.label ?? D.hero.label}</p>
+          <h2 class="page-hero-title" data-page-field="hero.heading">{page?.hero?.heading ?? D.hero.heading}</h2>
+        </div>
+        <div class="section-head__side">
+          <p class="lead" data-page-field="hero.lead">{page?.hero?.lead ?? D.hero.lead}</p>
+        </div>
       </div>
     </div>
   </div>
@@ -50,9 +54,9 @@ const img = (image: SanityImage | null | undefined, fallback: ImageDefault, widt
   </div>
 </section>
 
-<!-- Approach -->
+<!-- Approach: the label in the first column, the statement across the rest -->
 <section class="section">
-  <div class="container container-narrow">
+  <div class="container lede-row">
     <p class="tagline" data-page-field="approach.label">{page?.approach?.label ?? D.approach.label}</p>
     <h2 data-page-field="approach.statement">{page?.approach?.statement ?? D.approach.statement}</h2>
   </div>
@@ -112,12 +116,12 @@ const img = (image: SanityImage | null | undefined, fallback: ImageDefault, widt
 <!-- Insights / analytics -->
 <section class="section">
   <div class="container">
-    <div class="two-col two-col-flat">
-      <div>
+    <div class="section-head">
+      <div class="section-head__main">
         <p class="tagline" data-page-field="insights.label">{page?.insights?.label ?? D.insights.label}</p>
         <h2 data-page-field="insights.heading">{page?.insights?.heading ?? D.insights.heading}</h2>
       </div>
-      <div>
+      <div class="section-head__side">
         <p class="lead" data-page-field="insights.lead">{page?.insights?.lead ?? D.insights.lead}</p>
       </div>
     </div>
