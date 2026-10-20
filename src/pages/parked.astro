@@ -1,0 +1,227 @@
+---
+/* Parked: sections taken off the site for now and kept here, whole and
+   working, so they can be brought back. Not linked from anywhere. Staging
+   and development only: a production build sends the address to the home
+   page and leaves it out of the sitemap (astro.config.mjs).
+
+   Parked on 19 October 2026: the home page's hero as it was — the
+   photographs crossfading behind it, the runner across the middle, the dial
+   and its captions, the headline and the two buttons. Its words and
+   photographs still come from the Home page document in the Studio, and
+   its styles and scripts are the ones it always used (.home-hero in
+   style.css; hero-dial.js, hero-runner.js, hero-nav.js), so moving the
+   markup back to index.astro is all a return takes.
+
+   Parked on 19 October 2026 too: the home page's four full-bleed scroll
+   panels (Partnerships, Architectural Projects, Courses and Resources,
+   Architecture and Influence), with their photographs and the leads they
+   take from the Home page document. Their styles (.seq in style.css) and
+   script (sequence.js) are site-wide and untouched: moving the markup and
+   its `sequence` list back to index.astro brings them back. */
+import BaseLayout from '../layouts/BaseLayout.astro';
+import SiteNav from '../components/SiteNav.astro';
+import ContactPanel from '../components/ContactPanel.astro';
+import Button from '../components/Button.astro';
+import { srcSet, urlFor } from '../sanity/image';
+import { HOME_PAGE_QUERY } from '../sanity/queries';
+
+if (__DEPLOYMENT__ === 'production') return Astro.redirect('/');
+
+const home = await Astro.locals.sanity.fetch(HOME_PAGE_QUERY);
+if (!home) throw new Error('The Home page document is missing in Sanity');
+const hero = home.hero;
+if (!hero?.slides?.length) throw new Error('The Home page document has no hero slides in Sanity');
+const { influence, partners, projects, courses } = home;
+if (!influence || !partners || !projects || !courses) throw new Error('A home page section is missing in Sanity (Home page document)');
+
+const asset = (_id: string) => ({ asset: { _id } });
+// The full-bleed sequence's four panels, in scroll order: partners,
+// projects, the shop, influence. One photograph for each, picked from the
+// library for the part it stands for: the ATN summit's partner wall, an
+// axonometric from the architecture work, drawing at the desk, a full lecture
+// hall. They are assets other documents already use, named by ID; `position`
+// is where each is anchored when the frame crops it.
+const sequence = [
+  { title: 'Partnerships', href: '/partner', lead: partners.lead, image: asset('image-a00d1c365cb7a685baf37010760d42e5a33983ac-1200x1600-jpg'), position: '50% 32%' },
+  { title: 'Architectural Projects', href: '/architecture', lead: projects.lead, image: asset('image-05c3aebb2fae5bf56205ba05fc4d7794e3dfb1ee-1600x902-jpg'), position: '50% 40%' },
+  { title: 'Courses and Resources', href: '/shop', lead: courses.lead, image: asset('image-32f6587fecc90408d07ee9d441da7a5e71510f55-1200x675-jpg'), position: '50% 30%' },
+  { title: 'Architecture and Influence', href: '/influence', lead: influence.lead, image: asset('image-1c80025f86f03a2003a732e54957e79278518f24-1200x671-jpg'), position: '50% 30%' },
+];
+const pad = (n: number) => String(n).padStart(2, '0');
+
+// The hero's photographs. The dial opens on its fourth line (--dial-column
+// in the stylesheet): that slide's photographs are the first screen, so they
+// are fetched first and the first load waits for them (revealPage in
+// transitions.js). The other four slides' photographs are not on screen
+// until the dial turns, five seconds in: they carry their sources as
+// data-src / data-srcset, and hero-dial.js fetches them once the page has
+// loaded. Each is offered at a few widths for the size it shows at: the
+// backgrounds the full screen, the dial's round frame about a tenth of it
+// (and nothing below 992px, where the dial is hidden — hence lazy).
+type HeroImage = Parameters<typeof urlFor>[0];
+const heroPhoto = (image: HeroImage, i: number, widths: number[], sizes: string, initial: Record<string, string>) => {
+  const srcset = srcSet(image, widths);
+  const src = urlFor(image).width(widths[widths.length - 2] ?? widths[0]).url();
+  return i === 3 ? { src, srcset, sizes, ...initial } : { 'data-src': src, 'data-srcset': srcset, sizes };
+};
+const heroBackground = (image: HeroImage, i: number) =>
+  heroPhoto(image, i, [750, 1080, 1440, 1920, 2500], '100vw', { fetchpriority: 'high', 'data-reveal-wait': '' });
+const dialPhoto = (image: HeroImage, i: number) =>
+  heroPhoto(image, i, [200, 400, 600], '10vw', { loading: 'lazy', 'data-reveal-wait': '' });
+---
+<BaseLayout title="Parked — Tomrow Studios" namespace="parked" pageName="Parked">
+<div class="page-surface" data-page-surface>
+<!-- The home hero, parked -->
+<!-- Home hero, in the reveal-parallax wrapper: the section after it slides
+     up over it (footer.js) -->
+<div data-hero-parallax class="home-hero-wrap">
+<section data-hero-parallax-inner class="home-hero">
+  <!-- The hero's backgrounds, one per line of the dial. hero-dial.js
+       crossfades them as the dial moves — the layered-slider treatment, on
+       the dial's own index. Each is its slide's background photo in the
+       Studio (Home page → Dial slides). -->
+  <div class="hero-slides" data-hero-slides aria-hidden="true">
+    {hero.slides.map((slide, i) => (
+    <div data-hero-slide-bg class="hero-slides__item">{slide.background && <img class="hero-slides__img" alt="" decoding="async" {...heroBackground(slide.background, i)}>}</div>
+    ))}
+    <!-- A flat darkening over whichever photograph is up, so the grid, the
+         dial and the copy stand off it. Over the photographs in the stack. -->
+    <div class="hero-slides__dark"></div>
+  </div>
+  <div class="home-hero__content">
+    <!-- The nav lives in the fixed .site-nav below, which sits in this slot -->
+    <div class="home-hero__top"></div>
+    <!-- The runner: a fine rule of short vertical strokes through the middle
+         of the hero, bent by the pointer. Empty in the markup — hero-runner.js
+         puts a canvas in it. -->
+    <div class="hero-runner" data-hero-runner aria-hidden="true"></div>
+    <!-- The dial: a ring of radial ticks and a framed photograph, fixed on
+         the intersection of the runner and the fourth of its five strong
+         lines. The ticks light in turn, clockwise, over five seconds — the
+         autoplay's clock, drawn — and at the full circle hero-dial.js moves
+         on to the next of its five states, whose photographs the hero and
+         the dial's centre change to; the pointer over the dial holds the
+         clock. One caption per state, in column order, swapped with the
+         photographs; captions and photographs are the Studio's Dial slides. -->
+    <div class="hero-dial" data-hero-dial>
+      <!-- The centre: a round frame with one photograph per column line,
+           slid across it by hero-dial.js in step with the backgrounds. Before
+           the face in the markup so the face's pointer circle sits over it. -->
+      <div data-hero-dial-mask class="hero-dial__mask" data-runner-gap>
+        {hero.slides.map((slide, i) => (
+        <div data-hero-dial-mask-item class="hero-dial__mask-item">{slide.photo && <img draggable="false" class="hero-dial__mask-img" alt="" decoding="async" {...dialPhoto(slide.photo, i)}>}</div>
+        ))}
+      </div>
+      <!-- The face: the clock's 72 ticks, one every 5 degrees, the four on
+           the quarters drawn longer, and a fine graduation halfway between
+           each pair that stays at rest. The quarter ticks at three and nine
+           o'clock lie on the runner's axis; the runner leaves room for them
+           (data-runner-gap, hero-runner.js), so the dial interrupts the
+           runner rather than being laid over it. -->
+      <svg class="hero-dial__face" viewBox="-250 -250 500 500" aria-hidden="true" focusable="false">
+        <g class="hero-dial__minor">
+          {Array.from({ length: 72 }, (_, i) => (
+            <line x1="0" y1="-230" x2="0" y2="-221" transform={`rotate(${i * 5 + 2.5})`} />
+          ))}
+        </g>
+        <g class="hero-dial__ticks">
+          {Array.from({ length: 72 }, (_, i) => (
+            <line x1="0" y1="-230" x2="0" y2={i % 18 === 0 ? -196 : -206} transform={`rotate(${i * 5})`} data-runner-gap={i === 18 || i === 54 ? '' : undefined} />
+          ))}
+        </g>
+        <circle class="hero-dial__pause" r="230" />
+      </svg>
+      <div class="hero-dial__note">
+        <span class="hero-dial__note-marker"></span>
+        <div class="hero-dial__captions">
+          {hero.slides.map((slide) => (
+            <p data-hero-dial-caption>{slide.caption}</p>
+          ))}
+        </div>
+      </div>
+    </div>
+    <div class="home-hero__bottom">
+      <div class="home-hero__copy">
+        <div class="home-hero__col">
+          <div class="home-hero__reveal-mask" data-hero-parallax-lead="0.5">
+            <h1 class="home-hero__title home-hero__reveal">{hero.headline}</h1>
+          </div>
+        </div>
+        <!-- The CTAs take the right-hand half of the grid: one site column
+             each, so Collaborate sits on dev columns 7–9 and About on 10–12.
+             The `.actions` rules pull the first out to the column line and
+             the last out to the gutter line. -->
+        <div class="home-hero__col is--end">
+          <div class="home-hero__reveal-mask is--actions">
+            <div class="actions home-hero__reveal">
+              <Button href="#contact" data-panel-open="contact" data-barba-prevent="self" label={hero.primaryButton ?? 'Collaborate'} />
+              <Button href="/influence" label={hero.secondaryButton ?? 'About'} />
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+<div data-hero-parallax-dark class="home-hero-wrap__dark"></div>
+</div>
+
+<!-- The home page's scroll panels, parked -->
+<!-- The four parts of the practice, full bleed, one after another as the page
+     scrolls (sequence.js): a tall section holding a sticky stage, the panels
+     stacked in it. Crossing a quarter of the scroll brings the next panel up
+     over the last; the bars at the foot fill with the scroll, and each
+     panel's title runs as a ticker. Each panel's line is the lead of its
+     section in the Home page document; the titles, the links and the one
+     photograph chosen for each stay here. -->
+<section class="seq" data-seq style={`--seq-count: ${sequence.length}`}>
+  <div class="seq__stage">
+    <div class="seq__panels">
+      {sequence.map(({ title, lead, href, image, position }, i) => (
+      <div class="seq__panel" data-seq-panel>
+        <a href={href} class="seq__link">
+          <div class="seq__dummy">
+            <div class="seq__media">
+              <img src={urlFor(image).width(1920).url()} srcset={srcSet(image, [750, 1280, 1920, 2400])} sizes="100vw" alt="" loading="lazy" decoding="async" class="seq__img" style={`--seq-img-position: ${position}`}>
+              <div class="seq__gradient"></div>
+            </div>
+            <div class="seq__content">
+              <div class="seq__meta"><span class="tagline seq__index">{pad(i + 1)}</span>{lead && <p class="seq__lead">{lead}</p>}</div>
+              <div class="seq__heading">
+                <h3 class="visually-hidden">{title}</h3>
+                <div class="seq__scrollmove" data-seq-scrollmove>
+                  <div class="seq__ticker" data-seq-ticker aria-hidden="true">
+                    <div class="seq__title"><span class="seq__unit">{title}</span></div>
+                    <div class="seq__title"><span class="seq__unit">{title}</span></div>
+                    <div class="seq__title"><span class="seq__unit">{title}</span></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </a>
+      </div>
+      ))}
+    </div>
+    <div class="seq__nav" aria-hidden="true">
+      <div class="seq__nav-wrapper">
+        {sequence.map(() => (
+        <div class="seq__progress" data-seq-progress><div class="seq__bar"></div></div>
+        ))}
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container">
+    <p class="tagline label-pill">Parked</p>
+    <p class="lead">The home page's hero as it was until 19 October 2026 (the photographs, the runner, the dial and the buttons) and its four full-bleed scroll panels (Partnerships, Architectural Projects, Courses and Resources, Architecture and Influence). Kept here, working, to bring back.</p>
+  </div>
+</section>
+
+<SiteNav overHero />
+</div>
+
+<ContactPanel />
+</BaseLayout>

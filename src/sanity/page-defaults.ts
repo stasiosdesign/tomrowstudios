@@ -54,12 +54,8 @@ export const PAGE_DEFAULTS = {
 
   shopPage: {
     hero: {
-      label: 'Shop',
-      heading: 'Tools for a clearer Practice',
+      heading: 'Tools for a clearer practice',
       lead: 'Courses, books and resources built for working architects — the methods behind the drawings, the writing and the presentations.',
-      image: { path: '/assets/photos/studio/studio-05.jpg', alt: '' },
-      primaryButton: 'Browse the shop',
-      secondaryButton: 'Read the book',
     },
     catalogue: { label: 'Catalogue', heading: 'Everything in the shop' },
     testimonials: {

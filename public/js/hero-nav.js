@@ -25,6 +25,11 @@ function initHeroNav() {
      in the right state rather than flashing through the wrong one. */
   nav.classList.toggle("is--over-hero", hero.getBoundingClientRect().bottom > 0);
 
+  /* Barba runs this on the first load as well as the page's own startup:
+     one trigger per hero */
+  if (hero.__heroNav) return;
+  hero.__heroNav = true;
+
   ScrollTrigger.create({
     trigger: hero,
     /* The bottom edge of the hero reaching the top of the screen: the first

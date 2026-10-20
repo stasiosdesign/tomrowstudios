@@ -1,3 +1,5 @@
+// Each marquee loops forever, so it is stopped when its page is left
+// (lifecycle.js) rather than left looping off-page.
 function initMarqueeScrollDirection() {
   document.querySelectorAll('[data-marquee-scroll-direction-target]').forEach((marquee) => {
     // Barba re-runs this on every navigation; the content must only be
@@ -52,11 +54,13 @@ function initMarqueeScrollDirection() {
     // Set initial marquee status
     marquee.setAttribute('data-marquee-status', 'normal');
 
-    // ScrollTrigger logic for direction inversion
-    ScrollTrigger.create({
+    // ScrollTrigger logic for direction inversion. The loop also runs only
+    // while the strip is on screen.
+    const inView = ScrollTrigger.create({
       trigger: marquee,
       start: 'top bottom',
       end: 'bottom top',
+      onToggle: (self) => (self.isActive ? animation.play() : animation.pause()),
       onUpdate: (self) => {
         const isInverted = self.direction === 1; // Scrolling down
         const currentDirection = isInverted ? -marqueeDirectionAttr : marqueeDirectionAttr;
@@ -66,6 +70,8 @@ function initMarqueeScrollDirection() {
         marquee.setAttribute('data-marquee-status', isInverted ? 'normal' : 'inverted');
       }
     });
+    // Below the fold at load (or already scrolled past): wait until it is in view
+    if (!inView.isActive) animation.pause();
 
     // Extra speed effect on scroll
     const tl = gsap.timeline({
@@ -81,6 +87,11 @@ function initMarqueeScrollDirection() {
     const scrollEnd = -scrollStart;
 
     tl.fromTo(marqueeScroll, { x: `${scrollStart}vw` }, { x: `${scrollEnd}vw`, ease: 'none' });
+
+    onPageLeave(() => {
+      animation.kill();
+      tl.kill();
+    });
   });
 }
 

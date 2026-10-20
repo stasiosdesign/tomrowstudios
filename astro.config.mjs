@@ -73,7 +73,9 @@ export default defineConfig({
   adapter: onDemand ? vercel() : undefined,
 
   integrations: [
-    ...(deployment === 'production' ? [sitemap(), buildStamp()] : []),
+    // /parked holds sections taken off the site; on production it only
+    // sends visitors home, so it stays out of the sitemap
+    ...(deployment === 'production' ? [sitemap({ filter: (page) => !new URL(page).pathname.startsWith('/parked') }), buildStamp()] : []),
     ...(onDemand ? [draftModeRoutes()] : []),
   ],
 

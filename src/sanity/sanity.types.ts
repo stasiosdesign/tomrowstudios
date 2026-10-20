@@ -495,19 +495,8 @@ export type ShopPage = {
   _updatedAt: string;
   _rev: string;
   hero?: {
-    label?: string;
     heading?: string;
     lead?: string;
-    image?: {
-      asset?: SanityImageAssetReference;
-      media?: unknown;
-      hotspot?: SanityImageHotspot;
-      crop?: SanityImageCrop;
-      alt?: string;
-      _type: "image";
-    };
-    primaryButton?: string;
-    secondaryButton?: string;
   };
   catalogue?: {
     label?: string;
@@ -1192,22 +1181,6 @@ export type HOME_PAGE_QUERY_RESULT =
     }
   | {
       hero: {
-        headline: null;
-        slides: null;
-        primaryButton: string | null;
-        secondaryButton: string | null;
-      } | null;
-      logoWall: null;
-      practice: null;
-      slider: null;
-      recognition: null;
-      influence: null;
-      partners: null;
-      projects: null;
-      courses: null;
-    }
-  | {
-      hero: {
         headline: string | null;
         slides: Array<{
           _key: string;
@@ -1454,23 +1427,10 @@ export type INFLUENCE_PAGE_QUERY_RESULT =
     }
   | {
       hero: {
-        label: string | null;
+        label: null;
         heading: string | null;
         lead: string | null;
-        image: {
-          asset: {
-            _id: string;
-            metadata: {
-              dimensions: {
-                width: number | null;
-                height: number | null;
-              } | null;
-            } | null;
-          } | null;
-          crop: SanityImageCrop | null;
-          hotspot: SanityImageHotspot | null;
-          alt: string | null;
-        } | null;
+        image: null;
       } | null;
       reach: null;
       approach: null;
@@ -1544,7 +1504,7 @@ export type INFLUENCE_PAGE_QUERY_RESULT =
 
 // Source: ../src/sanity/queries.ts
 // Variable: SHOP_PAGE_QUERY
-// Query: *[_id == "shopPage"][0] {  hero { label, heading, lead, image { asset->{ _id, metadata { dimensions { width, height } } }, crop, hotspot, alt }, primaryButton, secondaryButton },  catalogue { label, heading },  testimonials { heading, lead },  faq { label, heading, note, questions[] { _key, question, answer }, helpHeading, helpLead, helpButton }}
+// Query: *[_id == "shopPage"][0] {  hero { heading, lead },  catalogue { label, heading },  testimonials { heading, lead },  faq { label, heading, note, questions[] { _key, question, answer }, helpHeading, helpLead, helpButton }}
 export type SHOP_PAGE_QUERY_RESULT =
   | {
       hero: null;
@@ -1554,12 +1514,8 @@ export type SHOP_PAGE_QUERY_RESULT =
     }
   | {
       hero: {
-        label: null;
         heading: null;
         lead: null;
-        image: null;
-        primaryButton: string | null;
-        secondaryButton: string | null;
       } | null;
       catalogue: null;
       testimonials: null;
@@ -1567,25 +1523,8 @@ export type SHOP_PAGE_QUERY_RESULT =
     }
   | {
       hero: {
-        label: string | null;
         heading: string | null;
         lead: string | null;
-        image: {
-          asset: {
-            _id: string;
-            metadata: {
-              dimensions: {
-                width: number | null;
-                height: number | null;
-              } | null;
-            } | null;
-          } | null;
-          crop: SanityImageCrop | null;
-          hotspot: SanityImageHotspot | null;
-          alt: string | null;
-        } | null;
-        primaryButton: null;
-        secondaryButton: null;
       } | null;
       catalogue: null;
       testimonials: null;
@@ -1593,25 +1532,8 @@ export type SHOP_PAGE_QUERY_RESULT =
     }
   | {
       hero: {
-        label: string | null;
         heading: string | null;
         lead: string | null;
-        image: {
-          asset: {
-            _id: string;
-            metadata: {
-              dimensions: {
-                width: number | null;
-                height: number | null;
-              } | null;
-            } | null;
-          } | null;
-          crop: SanityImageCrop | null;
-          hotspot: SanityImageHotspot | null;
-          alt: string | null;
-        } | null;
-        primaryButton: string | null;
-        secondaryButton: string | null;
       } | null;
       catalogue: {
         label: string | null;
@@ -2323,19 +2245,8 @@ export type PAGE_LIVE_QUERY_RESULT =
       _updatedAt: string;
       _rev: string;
       hero?: {
-        label?: string;
         heading?: string;
         lead?: string;
-        image?: {
-          asset?: SanityImageAssetReference;
-          media?: unknown;
-          hotspot?: SanityImageHotspot;
-          crop?: SanityImageCrop;
-          alt?: string;
-          _type: "image";
-        };
-        primaryButton?: string;
-        secondaryButton?: string;
       };
       catalogue?: {
         label?: string;
@@ -2497,7 +2408,7 @@ declare global {
     '*[_id == "homePage"][0].getInTouch {\n  label,\n  title,\n  portrait { asset->{ _id, metadata { dimensions { width, height } } }, crop, hotspot, alt },\n  lead,\n  button\n}': GET_IN_TOUCH_QUERY_RESULT;
     '*[_id == "architecturePage"][0] {\n  header { label, heading }\n}': ARCHITECTURE_PAGE_QUERY_RESULT;
     '*[_id == "influencePage"][0] {\n  hero { label, heading, lead, image { asset->{ _id, metadata { dimensions { width, height } } }, crop, hotspot, alt } },\n  reach { label, number, text },\n  approach { label, statement },\n  origins { label, heading },\n  insights { label, heading, lead },\n  atlas { label, heading },\n  book { label, heading, lead, button }\n}': INFLUENCE_PAGE_QUERY_RESULT;
-    '*[_id == "shopPage"][0] {\n  hero { label, heading, lead, image { asset->{ _id, metadata { dimensions { width, height } } }, crop, hotspot, alt }, primaryButton, secondaryButton },\n  catalogue { label, heading },\n  testimonials { heading, lead },\n  faq { label, heading, note, questions[] { _key, question, answer }, helpHeading, helpLead, helpButton }\n}': SHOP_PAGE_QUERY_RESULT;
+    '*[_id == "shopPage"][0] {\n  hero { heading, lead },\n  catalogue { label, heading },\n  testimonials { heading, lead },\n  faq { label, heading, note, questions[] { _key, question, answer }, helpHeading, helpLead, helpButton }\n}': SHOP_PAGE_QUERY_RESULT;
     '*[_id == "partnersPage"][0] {\n  intro { heading, lead, button },\n  clients { label, heading, note },\n  statement { heading, image { asset->{ _id, metadata { dimensions { width, height } } }, crop, hotspot, alt }, lead, button },\n  services { label, lead },\n  results { label, heading, note },\n  enquire { label, heading, lead },\n  archive { heading, lead }\n}': PARTNERS_PAGE_QUERY_RESULT;
     '*[_id == "privacyPage"][0] {\n  header { heading },\n  body\n}': PRIVACY_PAGE_QUERY_RESULT;
     '*[_id == "termsPage"][0] {\n  header { heading },\n  body\n}': TERMS_PAGE_QUERY_RESULT;

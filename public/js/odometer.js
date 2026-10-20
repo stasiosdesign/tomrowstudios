@@ -34,28 +34,37 @@ function initNumberOdometer() {
     const triggerStart = group.getAttribute('data-odometer-trigger-start') || defaults.triggerStart
     const elementStagger = parseFloat(group.getAttribute('data-odometer-stagger')) || defaults.elementStagger
 
-    const elementData = elements.map(el => {
+    // In passes — every reading, then every DOM change, then the widths, then
+    // the collapse — rather than element by element, where each measurement
+    // came straight after the previous element's changes and forced a fresh
+    // layout every time
+    const prepared = elements.map(el => {
       const originalText = el.textContent.trim()
       const hasExplicitStart = el.hasAttribute('data-odometer-start')
       const startValue = parseFloat(el.getAttribute('data-odometer-start')) || 0
       const duration = parseFloat(el.getAttribute('data-odometer-duration')) || defaults.duration
       const step = getLineHeightRatio(el)
+      const fontSize = parseFloat(getComputedStyle(el).fontSize)
 
       let segments = parseSegments(originalText)
       segments = mapStartDigits(segments, startValue)
       segments = markHiddenSegments(segments, startValue)
 
       const grow = shouldGrow(el, hasExplicitStart, startValue, segments)
-      const { rollers, revealEls } = buildRollerDOM(el, segments, step, grow)
+      return { el, originalText, duration, step, fontSize, segments, grow }
+    })
 
-      const fontSize = parseFloat(getComputedStyle(el).fontSize)
-      const revealData = revealEls.map(revealEl => {
-        const widthEm = revealEl.offsetWidth / fontSize
-        gsap.set(revealEl, { width: 0, overflow: 'hidden' })
-        return { el: revealEl, widthEm }
-      })
+    prepared.forEach(item => {
+      Object.assign(item, buildRollerDOM(item.el, item.segments, item.step, item.grow))
+    })
 
-      return { el, rollers, duration, step, revealData, originalText }
+    const elementData = prepared.map(({ el, rollers, revealEls, duration, step, fontSize, originalText }) => ({
+      el, rollers, duration, step, originalText,
+      revealData: revealEls.map(revealEl => ({ el: revealEl, widthEm: revealEl.offsetWidth / fontSize }))
+    }))
+
+    elementData.forEach(({ revealData }) => {
+      revealData.forEach(({ el: revealEl }) => gsap.set(revealEl, { width: 0, overflow: 'hidden' }))
     })
 
     const ordered = applyStaggerOrder(elementData, staggerOrder)

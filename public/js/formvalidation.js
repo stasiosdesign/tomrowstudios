@@ -157,14 +157,25 @@ function initBasicFormValidation() {
       }
     });
 
-    /* The reference relies on Webflow to post the form and swap in its own
-       done/fail blocks. There is no endpoint behind these pages yet, so a
-       valid submit is caught here and the success state is shown in place —
-       swap this for the real post once a handler exists. */
+    /* Sending. A valid form goes as form data to the address in contact.ts
+       (data-endpoint on the form), asking for JSON back. Only a successful
+       answer (2xx) counts: then, and only then, the fields give way to the
+       thank-you. Anything else (an error, no answer within fifteen seconds,
+       or no endpoint set yet) keeps what was typed and says plainly that
+       nothing was sent, with the enquiry ready to go by email to the site's
+       address (data-email) instead. While it is on its way the button is
+       held, so it cannot go twice. It never pretends. */
     const successBlock = formContainer.querySelector('[data-form-success]');
     const errorBlock = formContainer.querySelector('[data-form-error]');
+    const endpoint = (form.dataset.endpoint || '').trim();
+    const address = form.dataset.email || '';
+    const submitLabel = dataSubmit.querySelector('[data-cta-label]');
+    const idleLabel = submitLabel ? submitLabel.textContent : '';
+    let sending = false;
 
-    function showNotification(type, message) {
+    // An error stays up when it carries the email to send instead (`stay`),
+    // and goes after a few seconds when it is only a nudge
+    function showNotification(type, message, stay) {
       const block = type === 'error' ? errorBlock : successBlock;
       if (!block) return;
       if (message) {
@@ -174,16 +185,98 @@ function initBasicFormValidation() {
       block.classList.add('is--visible');
       if (type === 'error') {
         clearTimeout(block.__hideTimer);
-        block.__hideTimer = setTimeout(() => block.classList.remove('is--visible'), 6000);
+        if (!stay) block.__hideTimer = setTimeout(() => block.classList.remove('is--visible'), 6000);
       }
     }
 
-    form.addEventListener('submit', function (event) {
-      const action = form.getAttribute('action');
-      if (action && action !== '#') return; // a real endpoint takes over
+    function hideError() {
+      if (!errorBlock) return;
+      clearTimeout(errorBlock.__hideTimer);
+      errorBlock.classList.remove('is--visible');
+    }
+
+    // The enquiry as an email: what was typed, ready to send. Every filled
+    // field under its own label (whatever the form asks for: the contact
+    // panel's name and company, the Partner page's first and last name,
+    // role and project type; a chosen option under its group's legend), the
+    // message last; the subject is the form's (data-subject, else "Project
+    // enquiry"), with the sender's name
+    function enquiryMailto() {
+      const lines = [];
+      let message = '';
+      Array.from(form.elements).forEach((el) => {
+        if (!el.name || el.disabled || ['submit', 'button', 'checkbox', 'hidden'].includes(el.type)) return;
+        if (el.type === 'radio' && !el.checked) return;
+        const value = (el.tagName === 'SELECT' ? (el.value ? el.options[el.selectedIndex].text : '') : el.value).trim();
+        if (!value) return;
+        if (el.name === 'message') { message = value; return; }
+        const group = el.type === 'radio' && el.closest('fieldset');
+        const label = group ? group.querySelector('legend') : el.id && form.querySelector(`label[for="${el.id}"]`);
+        lines.push(`${label ? label.textContent.replace(/\*/g, '').trim() : el.name}: ${value}`);
+      });
+      const field = (name) => (form.elements.namedItem(name) || {}).value || '';
+      const name = (field('name') || [field('first-name'), field('last-name')].join(' ')).trim();
+      const subject = `${form.dataset.subject || 'Project enquiry'}${name ? ` from ${name}` : ''}`;
+      lines.push('', message);
+      return `mailto:${address}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(lines.join('\n'))}`;
+    }
+
+    // Not sent: says so, then offers the email (when the form has an address)
+    function showNotSent(words, emailWords) {
+      showNotification('error', address ? `${words} ${emailWords}` : words, true);
+      const p = errorBlock && errorBlock.querySelector('.form-notification-p');
+      if (!p || !address) return;
+      const link = document.createElement('a');
+      link.href = enquiryMailto();
+      link.textContent = address;
+      p.append(' ', link, '.');
+    }
+
+    function hold(on) {
+      sending = on;
+      if (on) {
+        form.setAttribute('aria-busy', 'true');
+        dataSubmit.setAttribute('aria-disabled', 'true');
+      } else {
+        form.removeAttribute('aria-busy');
+        dataSubmit.removeAttribute('aria-disabled');
+      }
+      if (submitLabel) submitLabel.textContent = on ? 'Sending…' : idleLabel;
+    }
+
+    // What the error said no longer holds once the form is changed
+    form.addEventListener('input', hideError);
+
+    form.addEventListener('submit', async function (event) {
       event.preventDefault();
-      form.classList.add('is--sent');
-      showNotification('success');
+      if (sending) return;
+
+      if (!endpoint) {
+        showNotSent('This form is not connected yet, so nothing was sent.', 'Please email your enquiry to');
+        return;
+      }
+
+      hold(true);
+      hideError();
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), 15000);
+      try {
+        const response = await fetch(endpoint, {
+          method: 'POST',
+          body: new FormData(form),
+          headers: { Accept: 'application/json' },
+          signal: controller.signal,
+        });
+        if (!response.ok) throw new Error(`The endpoint answered ${response.status}`);
+        form.classList.add('is--sent');
+        showNotification('success');
+        if (successBlock) successBlock.focus({ preventScroll: true });
+      } catch (error) {
+        showNotSent('Your enquiry could not be sent just now.', 'Please try again, or email it to');
+      } finally {
+        clearTimeout(timer);
+        hold(false);
+      }
     });
   });
 }

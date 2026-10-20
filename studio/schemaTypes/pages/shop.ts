@@ -1,6 +1,6 @@
 import {defineArrayMember, defineField, defineType} from 'sanity'
 import {BasketIcon} from '@sanity/icons/Basket'
-import {buttonField, headingField, imageField, labelField, leadField, pageSection} from '../shared/page-section'
+import {buttonField, headingField, labelField, leadField, pageSection} from '../shared/page-section'
 
 // The Shop page: the hero, the headings of the catalogue and the
 // testimonials, and the FAQ with its questions (a repeatable block within
@@ -12,13 +12,9 @@ export const shopPage = defineType({
   type: 'document',
   icon: BasketIcon,
   fields: [
-    pageSection('hero', 'Opening', 'The introduction, its two buttons and the photo beside it.', [
-      labelField(),
+    pageSection('hero', 'Opening', 'The heading and the introduction under it. The cards below them are the products.', [
       headingField(),
       leadField(),
-      imageField('The square photo beside the introduction.'),
-      buttonField('Scrolls down to the catalogue.', 'primaryButton', 'First button label'),
-      buttonField('Links to the Book page.', 'secondaryButton', 'Second button label'),
     ]),
     pageSection('catalogue', 'Catalogue', 'The heading above the products. The products stay in the site’s code.', [
       labelField(),

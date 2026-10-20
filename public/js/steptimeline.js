@@ -9,7 +9,10 @@ function setupStepTimeline(root) {
   const line = root.querySelector("[data-step-timeline-line]");
   const fill = root.querySelector("[data-step-timeline-fill]");
   const items = Array.from(root.querySelectorAll("[data-step-timeline-item]"));
-  if (!line || !fill || !items.length) return;
+  // Barba runs this on the first load as well as DOMContentLoaded: once per
+  // timeline
+  if (!line || !fill || !items.length || root.__stepTimeline) return;
+  root.__stepTimeline = true;
 
   const anchors = items.map(
     (item) => item.querySelector("[data-step-timeline-marker]") || item
@@ -108,7 +111,8 @@ function setupStepTimeline(root) {
     }
 
     const refresh = () => ScrollTrigger.refresh();
-    window.addEventListener("load", refresh);
+    // Once more when the page has loaded, unless it already has
+    if (document.readyState !== "complete") window.addEventListener("load", refresh, { once: true });
     if (document.fonts && document.fonts.ready) document.fonts.ready.then(refresh);
 
     // The steps are measured the moment they are set up, which on a cold load
@@ -138,6 +142,9 @@ function setupStepTimeline(root) {
     gsap.set(fill, { scaleY: 1 });
     setCurrentIndex(lastIndex);
   });
+
+  // Its observers, listeners and triggers go with the page (lifecycle.js)
+  onPageLeave(() => mediaQueries.revert());
 }
 
 // Initialize Step-by-step Timeline

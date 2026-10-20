@@ -3,7 +3,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 import SiteNav from '../components/SiteNav.astro';
 import SiteFooter from '../components/SiteFooter.astro';
 import ContactPanel from '../components/ContactPanel.astro';
-import GetInTouch from '../components/GetInTouch.astro';
+import ServiceCards from '../components/ServiceCards.astro';
 import CaseStudyPanel from '../components/CaseStudyPanel.astro';
 import { imageAttrs } from '../sanity/image';
 import { PARTNERS_PAGE_QUERY, PARTNERS_QUERY } from '../sanity/queries';
@@ -24,7 +24,9 @@ const partners = allPartners.filter((partner): partner is Shown => Boolean(partn
 // A partner with a case study to open: one with a title
 const hasCaseStudy = (partner: Partner) => Boolean(partner.caseStudy?.title);
 ---
-<BaseLayout title="Archive — Tomrow Studios" namespace="partners-archive" pageName="Archive" pageDoc="partnersPage">
+<BaseLayout title="Archive — Tomrow Studios" namespace="partners-archive" pageName="Archive" pageDoc="partnersPage" navSection="/partner">
+<!-- The page itself, which shrinks into the footer as the footer arrives (footer.js) -->
+<div class="page-surface" data-page-surface>
 <SiteNav />
 
 <div class="theme-light">
@@ -33,7 +35,7 @@ const hasCaseStudy = (partner: Partner) => Boolean(partner.caseStudy?.title);
   <div class="container">
     <div class="section-head">
       <div class="section-head__main">
-        <p class="tagline">Archive</p>
+        <p class="tagline label-pill">Archive</p>
         <h2 class="page-hero-title" data-page-field="archive.heading">{page?.archive?.heading ?? D.archive.heading}</h2>
       </div>
       <div class="section-head__side">
@@ -49,7 +51,7 @@ const hasCaseStudy = (partner: Partner) => Boolean(partner.caseStudy?.title);
           <span class="archive-card__label"><span class="archive-card__index">{String(i + 1).padStart(2, '0')}</span><span class="archive-card__name">{partner.name}</span></span>
         </>;
         return hasCaseStudy(partner) ? (
-          <a class="archive-card" href={`#case-${partner.slug}`} data-panel-open={`case-${partner.slug}`} data-barba-prevent="self">{inner}</a>
+          <a class="archive-card" href={`#case-${partner.slug}`} data-case-open={`case-${partner.slug}`} data-barba-prevent="self" data-cursor-label="View Case Study">{inner}</a>
         ) : (
           <div class="archive-card">{inner}</div>
         );
@@ -60,8 +62,10 @@ const hasCaseStudy = (partner: Partner) => Boolean(partner.caseStudy?.title);
 
 </div>
 
-<GetInTouch />
+<ServiceCards />
 
+
+</div>
 
 <SiteFooter />
 

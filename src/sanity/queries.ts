@@ -147,7 +147,7 @@ export const INFLUENCE_PAGE_QUERY = defineQuery(`*[_id == "influencePage"][0] {
 }`);
 
 export const SHOP_PAGE_QUERY = defineQuery(`*[_id == "shopPage"][0] {
-  hero { label, heading, lead, image { ${IMAGE} }, primaryButton, secondaryButton },
+  hero { heading, lead },
   catalogue { label, heading },
   testimonials { heading, lead },
   faq { label, heading, note, questions[] { _key, question, answer }, helpHeading, helpLead, helpButton }

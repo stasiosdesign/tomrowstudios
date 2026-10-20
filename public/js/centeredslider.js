@@ -1,4 +1,8 @@
-gsap.registerPlugin(CustomEase, ScrollTrigger, Draggable, InertiaPlugin);
+// Draggable and InertiaPlugin are used only here, so they are loaded with
+// the first slider (lifecycle.js) rather than on every page. Each slider's
+// timeline, drag and autoplay are taken down when the page is left: the
+// autoplay is a delayed call that would otherwise keep stepping a slider
+// that is no longer there.
 
 // transitions.js already owns "osmo"; this slider ships its own curve
 if (!CustomEase.get("osmo-ease")) {
@@ -6,144 +10,158 @@ if (!CustomEase.get("osmo-ease")) {
 }
 
 function initCenteredSliders() {
-  const sliderWrappers = gsap.utils.toArray(document.querySelectorAll('[data-centered-slider="wrapper"]'));
+  const sliderWrappers = gsap.utils.toArray(document.querySelectorAll('[data-centered-slider="wrapper"]'))
+    .filter((wrapper) => !wrapper.__centeredSlider);
+  if (!sliderWrappers.length) return;
+  sliderWrappers.forEach((wrapper) => { wrapper.__centeredSlider = true; });
 
-  sliderWrappers.forEach((sliderWrapper) => {
-    // Barba re-runs this on every navigation; never build the same slider twice
-    if (sliderWrapper.__centeredSlider) return;
-    sliderWrapper.__centeredSlider = true;
+  let left = false;
+  onPageLeave(() => { left = true; });
+  loadScript(VENDOR.draggable)
+    .then(() => loadScript(VENDOR.inertia))
+    .then(() => {
+      if (left) return;
+      gsap.registerPlugin(Draggable, InertiaPlugin);
+      sliderWrappers.forEach(buildCenteredSlider);
+    })
+    .catch((error) => console.error(error));
+}
 
-    const slides = gsap.utils.toArray(sliderWrapper.querySelectorAll('[data-centered-slider="slide"]'));
-    const bullets = gsap.utils.toArray(sliderWrapper.querySelectorAll('[data-centered-slider="bullet"]'));
-    const prevButton = sliderWrapper.querySelector('[data-centered-slider="prev-button"]');
-    const nextButton = sliderWrapper.querySelector('[data-centered-slider="next-button"]');
-    if (!slides.length) return;
+function buildCenteredSlider(sliderWrapper) {
+  const slides = gsap.utils.toArray(sliderWrapper.querySelectorAll('[data-centered-slider="slide"]'));
+  const bullets = gsap.utils.toArray(sliderWrapper.querySelectorAll('[data-centered-slider="bullet"]'));
+  const prevButton = sliderWrapper.querySelector('[data-centered-slider="prev-button"]');
+  const nextButton = sliderWrapper.querySelector('[data-centered-slider="next-button"]');
+  if (!slides.length) return;
 
-    let activeElement;
-    let activeBullet;
-    let currentIndex = 0;
-    let autoplay;
+  let activeElement;
+  let activeBullet;
+  let currentIndex = 0;
+  let autoplay;
 
-    // Autoplay is enabled/disabled via a boolean attribute.
-    const autoplayEnabled = sliderWrapper.getAttribute('data-slider-autoplay') === 'true';
+  // Autoplay is enabled/disabled via a boolean attribute.
+  const autoplayEnabled = sliderWrapper.getAttribute('data-slider-autoplay') === 'true';
 
-    // If enabled, get the autoplay duration (in seconds) from the separate attribute.
-    const autoplayDuration = autoplayEnabled ? parseFloat(sliderWrapper.getAttribute('data-slider-autoplay-duration')) || 0 : 0;
+  // If enabled, get the autoplay duration (in seconds) from the separate attribute.
+  const autoplayDuration = autoplayEnabled ? parseFloat(sliderWrapper.getAttribute('data-slider-autoplay-duration')) || 0 : 0;
 
-    // Dynamically assign unique IDs to slides
-    slides.forEach((slide, i) => {
-      slide.setAttribute("id", `slide-${i}`);
+  // Dynamically assign unique IDs to slides
+  slides.forEach((slide, i) => {
+    slide.setAttribute("id", `slide-${i}`);
+  });
+
+  // Set ARIA attributes on bullets if they exist
+  if (bullets && bullets.length > 0) {
+    bullets.forEach((bullet, i) => {
+      bullet.setAttribute("aria-controls", `slide-${i}`);
+      bullet.setAttribute("aria-selected", i === currentIndex ? "true" : "false");
     });
+  }
 
-    // Set ARIA attributes on bullets if they exist
-    if (bullets && bullets.length > 0) {
-      bullets.forEach((bullet, i) => {
-        bullet.setAttribute("aria-controls", `slide-${i}`);
-        bullet.setAttribute("aria-selected", i === currentIndex ? "true" : "false");
-      });
-    }
+  const loop = horizontalLoop(slides, {
+    paused: true,
+    draggable: true,
+    center: true,
+    onChange: (element, index) => {
+      currentIndex = index;
 
-    const loop = horizontalLoop(slides, {
-      paused: true,
-      draggable: true,
-      center: true,
-      onChange: (element, index) => {
-        currentIndex = index;
+      if (activeElement) activeElement.classList.remove("active");
+      element.classList.add("active");
+      activeElement = element;
 
-        if (activeElement) activeElement.classList.remove("active");
-        element.classList.add("active");
-        activeElement = element;
-
-        if (bullets && bullets.length > 0) {
-          if (activeBullet) activeBullet.classList.remove("active");
-          if (bullets[index]) {
-            bullets[index].classList.add("active");
-            activeBullet = bullets[index];
-          }
-          bullets.forEach((bullet, i) => {
-            bullet.setAttribute("aria-selected", i === index ? "true" : "false");
-          });
+      if (bullets && bullets.length > 0) {
+        if (activeBullet) activeBullet.classList.remove("active");
+        if (bullets[index]) {
+          bullets[index].classList.add("active");
+          activeBullet = bullets[index];
         }
-
+        bullets.forEach((bullet, i) => {
+          bullet.setAttribute("aria-selected", i === index ? "true" : "false");
+        });
       }
-    });
 
-    // On initialization, center the slider
-    loop.toIndex(2, { duration: 0.01 });
+    }
+  });
 
-    function startAutoplay() {
-      if (autoplayDuration > 0 && !autoplay) {
-        const repeat = () => {
-          loop.next({ ease: "osmo-ease", duration: 0.725 });
-          autoplay = gsap.delayedCall(autoplayDuration, repeat);
-        };
+  // On initialization, center the slider
+  loop.toIndex(2, { duration: 0.01 });
+
+  function startAutoplay() {
+    if (autoplayDuration > 0 && !autoplay) {
+      const repeat = () => {
+        loop.next({ ease: "osmo-ease", duration: 0.725 });
         autoplay = gsap.delayedCall(autoplayDuration, repeat);
-      }
+      };
+      autoplay = gsap.delayedCall(autoplayDuration, repeat);
     }
+  }
 
-    function stopAutoplay() {
-      if (autoplay) {
-        autoplay.kill();
-        autoplay = null;
-      }
+  function stopAutoplay() {
+    if (autoplay) {
+      autoplay.kill();
+      autoplay = null;
     }
+  }
 
-    // Start/stop autoplay based on viewport visibility via ScrollTrigger
-    ScrollTrigger.create({
-      trigger: sliderWrapper,
-      start: "top bottom",
-      end: "bottom top",
-      onEnter: startAutoplay,
-      onLeave: stopAutoplay,
-      onEnterBack: startAutoplay,
-      onLeaveBack: stopAutoplay
+  // Start/stop autoplay based on viewport visibility via ScrollTrigger
+  ScrollTrigger.create({
+    trigger: sliderWrapper,
+    start: "top bottom",
+    end: "bottom top",
+    onEnter: startAutoplay,
+    onLeave: stopAutoplay,
+    onEnterBack: startAutoplay,
+    onLeaveBack: stopAutoplay
+  });
+
+  // Pause autoplay on mouse hover over the slider
+  sliderWrapper.addEventListener("mouseenter", stopAutoplay);
+  sliderWrapper.addEventListener("mouseleave", () => {
+    if (ScrollTrigger.isInViewport(sliderWrapper)) startAutoplay();
+  });
+
+  // Slide click event for direct navigation
+  slides.forEach((slide, i) => {
+    slide.addEventListener("click", () => {
+      loop.toIndex(i, { ease: "osmo-ease", duration: 0.725 });
     });
+  });
 
-    // Pause autoplay on mouse hover over the slider
-    sliderWrapper.addEventListener("mouseenter", stopAutoplay);
-    sliderWrapper.addEventListener("mouseleave", () => {
-      if (ScrollTrigger.isInViewport(sliderWrapper)) startAutoplay();
-    });
-
-    // Slide click event for direct navigation
-    slides.forEach((slide, i) => {
-      slide.addEventListener("click", () => {
+  // Bullets click event for direct navigation (if available)
+  if (bullets && bullets.length > 0) {
+    bullets.forEach((bullet, i) => {
+      bullet.addEventListener("click", () => {
         loop.toIndex(i, { ease: "osmo-ease", duration: 0.725 });
-      });
-    });
-
-    // Bullets click event for direct navigation (if available)
-    if (bullets && bullets.length > 0) {
-      bullets.forEach((bullet, i) => {
-        bullet.addEventListener("click", () => {
-          loop.toIndex(i, { ease: "osmo-ease", duration: 0.725 });
-          if (activeBullet) activeBullet.classList.remove("active");
-          bullet.classList.add("active");
-          activeBullet = bullet;
-          bullets.forEach((b, j) => {
-            b.setAttribute("aria-selected", j === i ? "true" : "false");
-          });
+        if (activeBullet) activeBullet.classList.remove("active");
+        bullet.classList.add("active");
+        activeBullet = bullet;
+        bullets.forEach((b, j) => {
+          b.setAttribute("aria-selected", j === i ? "true" : "false");
         });
       });
-    }
+    });
+  }
 
-    // Prev/Next button listeners (if the buttons exist)
-    if (prevButton) {
-      prevButton.addEventListener("click", () => {
-        let newIndex = currentIndex - 1;
-        if (newIndex < 0) newIndex = slides.length - 1;
-        loop.toIndex(newIndex, { ease: "osmo-ease", duration: 0.725 });
-      });
-    }
+  // Prev/Next button listeners (if the buttons exist)
+  if (prevButton) {
+    prevButton.addEventListener("click", () => {
+      let newIndex = currentIndex - 1;
+      if (newIndex < 0) newIndex = slides.length - 1;
+      loop.toIndex(newIndex, { ease: "osmo-ease", duration: 0.725 });
+    });
+  }
 
-    if (nextButton) {
-      nextButton.addEventListener("click", () => {
-        let newIndex = currentIndex + 1;
-        if (newIndex >= slides.length) newIndex = 0;
-        loop.toIndex(newIndex, { ease: "osmo-ease", duration: 0.725 });
-      });
-    }
+  if (nextButton) {
+    nextButton.addEventListener("click", () => {
+      let newIndex = currentIndex + 1;
+      if (newIndex >= slides.length) newIndex = 0;
+      loop.toIndex(newIndex, { ease: "osmo-ease", duration: 0.725 });
+    });
+  }
 
+  onPageLeave(() => {
+    stopAutoplay();
+    loop.revertLoop();
   });
 }
 
@@ -157,7 +175,7 @@ function horizontalLoop(items, config) {
   let timeline;
   items = gsap.utils.toArray(items);
   config = config || {};
-  gsap.context(() => {
+  const ctx = gsap.context(() => {
     let onChange = config.onChange,
       lastIndex = 0,
       tl = gsap.timeline({repeat: config.repeat, onUpdate: onChange && function() {
@@ -337,6 +355,9 @@ function horizontalLoop(items, config) {
     timeline = tl;
     return () => window.removeEventListener("resize", onResize);
   });
+  // Takes down everything the loop made — its tweens, the drag, the resize
+  // listener — when the page is left
+  timeline.revertLoop = () => ctx.revert();
   return timeline;
 
 }

@@ -13,6 +13,8 @@ const page = await Astro.locals.sanity.fetch(PRIVACY_PAGE_QUERY);
 const D = PAGE_DEFAULTS.privacyPage;
 ---
 <BaseLayout title="Privacy — Tomrow Studios" namespace="privacy" pageName="Privacy" pageDoc="privacyPage">
+<!-- The page itself, which shrinks into the footer as the footer arrives (footer.js) -->
+<div class="page-surface" data-page-surface>
 <SiteNav />
 
 
@@ -34,6 +36,8 @@ const D = PAGE_DEFAULTS.privacyPage;
 </section>
 ) : null}
 
+
+</div>
 
 <SiteFooter />
 

@@ -1,50 +1,87 @@
 ---
-/* Footer with the parallax reveal (footer.js). Pages without a footer —
-   the architecture index and the project pages — simply leave it out. */
+/* The footer, revealed from under the page (footer.js): as it comes up, the
+   page above shrinks into it and rounds its lower corners while the footer
+   settles from a fifth of its height above, and once it is a tenth of the
+   way in, every line of it rises through its own mask. Each line is a
+   footer-reveal (its mask) holding a footer-reveal__item (the part that
+   rises); in a link the item is also what the hover roll splits.
+
+   Laid out as the agency reference: the wordmark on the left, four columns
+   on the right (contact, pages, the four parts of the practice, socials),
+   the legal line across the foot, and under it all a ticker of "Get in
+   touch" running the full width, which opens the contact panel. Pages
+   without a footer — the architecture index and the project pages — simply
+   leave it out. */
+import { pages, socials, email } from './site-links';
+type Link = { label: string; href: string; panel?: boolean; external?: boolean };
+const columns: { heading: string; links: Link[] }[] = [
+  {
+    heading: 'Contact',
+    links: [
+      { label: email, href: `mailto:${email}` },
+      { label: 'Start a project', href: '#contact', panel: true },
+    ],
+  },
+  {
+    heading: 'Pages',
+    links: pages,
+  },
+  {
+    heading: 'Expertise',
+    links: [
+      { label: 'Partnerships', href: '/partner' },
+      { label: 'Architectural Projects', href: '/architecture' },
+      { label: 'Courses and Resources', href: '/shop' },
+      { label: 'Architecture and Influence', href: '/influence' },
+    ],
+  },
+  {
+    heading: 'Links',
+    links: socials.map((link) => ({ ...link, external: true })),
+  },
+];
+const legal = [
+  { label: 'Privacy', href: '/privacy' },
+  { label: 'Terms of use', href: '/terms' },
+  { label: 'Cookie settings', href: '#' },
+];
 ---
-<!-- Footer -->
-<div data-footer-parallax class="footer-wrap">
-  <footer data-footer-parallax-inner class="site-footer">
-    <div class="site-footer__links-row">
-      <div class="site-footer__col">
-        <p class="footer-eyebrow">( Pages )</p>
-        <div class="site-footer__links">
-          <a data-underline-link data-scramble-hover="link" href="/" class="site-footer__a">Home</a>
-          <a data-underline-link data-scramble-hover="link" href="/influence" class="site-footer__a">Influence</a>
-          <a data-underline-link data-scramble-hover="link" href="/architecture" class="site-footer__a">Architecture</a>
-          <a data-underline-link data-scramble-hover="link" href="/shop" class="site-footer__a">Shop</a>
-          <a data-underline-link data-scramble-hover="link" href="/partner" class="site-footer__a">Partner</a>
+<!-- Footer: its ground (the dark grey, the column lines and the grain, one
+     surface reaching a screen up behind the page, so what shows beside the
+     page as it shrinks is the footer itself), and over it the footer's
+     content, which settles into place as it comes (footer.js) -->
+<div data-footer class="footer-wrap">
+  <div class="footer-ground" aria-hidden="true"></div>
+  <footer data-footer-inner class="site-footer">
+    <div class="site-footer__top">
+      <a href="/" class="site-footer__logo" aria-label="Tomrow Studios, home"><span class="footer-reveal"><span class="footer-reveal__item">tomrowstudios<sup>©</sup></span></span></a>
+      <div class="site-footer__cols">
+        {columns.map(({ heading, links }) => (
+        <div class="site-footer__col">
+          <p class="site-footer__heading"><span class="footer-reveal"><span class="footer-reveal__item">{heading}</span></span></p>
+          <ul class="site-footer__list" role="list" data-dim-group>
+            {links.map((link) => (
+            <li><a data-split-hover="link" href={link.href} class="site-footer__a" {...(link.panel ? { 'data-panel-open': 'contact', 'data-barba-prevent': 'self' } : {})} {...(link.external ? { target: '_blank', rel: 'noopener' } : {})}><span class="footer-reveal"><span class="footer-reveal__item" data-split-hover="target">{link.label}</span></span></a></li>
+            ))}
+          </ul>
         </div>
-      </div>
-      <div class="site-footer__col">
-        <p class="footer-eyebrow">( Socials )</p>
-        <div class="site-footer__links">
-          <a data-underline-link data-scramble-hover="link" href="https://www.youtube.com/@tomrowstudios" target="_blank" rel="noopener" class="site-footer__a">Instagram</a>
-          <a data-underline-link data-scramble-hover="link" href="https://www.youtube.com/@tomrowstudios" target="_blank" rel="noopener" class="site-footer__a">LinkedIn</a>
-          <a data-underline-link data-scramble-hover="link" href="https://www.youtube.com/@tomrowstudios" target="_blank" rel="noopener" class="site-footer__a">X/Twitter</a>
-          <a data-underline-link data-scramble-hover="link" href="https://www.youtube.com/@tomrowstudios" target="_blank" rel="noopener" class="site-footer__a">YouTube</a>
-        </div>
-      </div>
-      <div class="site-footer__col">
-        <p class="footer-eyebrow">( Contact )</p>
-        <div class="site-footer__links">
-          <a data-underline-link data-scramble-hover="link" href="mailto:hello@tomrowstudios.com" class="site-footer__a">hello@tomrowstudios.com</a>
-          <a data-underline-link data-scramble-hover="link" href="#contact" data-panel-open="contact" data-barba-prevent="self" class="site-footer__a">Start a project</a>
-        </div>
+        ))}
       </div>
     </div>
-    <div class="site-footer__logo-row">
-      <p class="footer-eyebrow">Architecture, content and education for a global audience</p>
-      <p class="site-footer__wordmark">tomrowstudios ©</p>
-      <div class="site-footer__legal">
-        <p class="footer-eyebrow">© 2025 Tomrowstudios. All rights reserved.</p>
-        <div class="site-footer__legal-links">
-          <a data-underline-link data-scramble-hover="link" href="/privacy" class="footer-eyebrow">Privacy</a>
-          <a data-underline-link data-scramble-hover="link" href="/terms" class="footer-eyebrow">Terms of use</a>
-          <a data-underline-link data-scramble-hover="link" href="#" class="footer-eyebrow">Cookie settings</a>
-        </div>
+    <div class="site-footer__bottom">
+      <p class="site-footer__note"><span class="footer-reveal"><span class="footer-reveal__item">© 2025 Tomrowstudios. All rights reserved.</span></span></p>
+      <div class="site-footer__legal" data-dim-group>
+        {legal.map(({ label, href }) => (
+        <a data-split-hover="link" href={href} class="site-footer__note"><span class="footer-reveal"><span class="footer-reveal__item" data-split-hover="target">{label}</span></span></a>
+        ))}
       </div>
     </div>
+    <a href="#contact" data-panel-open="contact" data-barba-prevent="self" class="site-footer__cta" aria-label="Get in touch">
+      <span class="footer-reveal"><span class="footer-reveal__item" aria-hidden="true">
+        <span class="site-footer__ticker">
+          <span>Get in touch</span><span>Get in touch</span><span>Get in touch</span>
+        </span>
+      </span></span>
+    </a>
   </footer>
-  <div data-footer-parallax-dark class="footer-wrap__dark"></div>
 </div>

@@ -31,9 +31,10 @@
 // reverted when it is torn down, so however many moves run, the markup never
 // grows and a move made mid-swap simply takes over from where it is.
 //
-// Lifecycle as the runner's: `initHeroDial()` tears down any instance and
-// builds one if the dial is on the page. transitions.js calls it on every
-// navigation; DOMContentLoaded covers the first load.
+// Lifecycle as the runner's: `initHeroDial()` builds one if the dial is on
+// the page, and takes it down when the page is left (lifecycle.js).
+// transitions.js calls it on every navigation; DOMContentLoaded covers the
+// first load.
 
 (function () {
   const AUTOPLAY = 5;            // seconds between moves: one turn of the ring
@@ -85,6 +86,9 @@
             opacity: backgroundOpacity,
             zIndex: Math.round(backgroundOpacity * 100)
           });
+          // On a layer of its own only while it is fading, so the fade is
+          // composited; at rest (shown or hidden) it is not held on the GPU
+          background.style.willChange = backgroundOpacity > 0 && backgroundOpacity < 1 ? "opacity" : "";
         }
 
         const maskItem = maskItems[i];
@@ -109,19 +113,27 @@
     const tickRest = parseFloat(tickStyles.getPropertyValue("--tick-opacity-rest")) || 0.3;
     const tickLit = parseFloat(tickStyles.getPropertyValue("--tick-opacity-lit")) || 1;
     const tickLines = Array.from(ticks.children);
+    // Written only when the count of lit ticks changes, a few times a second,
+    // rather than all 72 on every frame
+    let litCount = -1;
     const renderRing = (progress) => {
       const lit = Math.floor(progress * tickLines.length);
+      if (lit === litCount) return;
+      litCount = lit;
       for (let i = 0; i < tickLines.length; i++) {
         tickLines[i].style.opacity = i < lit ? tickLit : tickRest;
       }
     };
 
     let hovering = 0;
+    // The hero scrolled out of view: the clock stops there too
+    let offscreen = false;
     let autoTween = null;
+    const held = () => hovering > 0 || offscreen;
     const startAutoplay = () => {
       if (!autoTween) return;
       autoTween.restart(true);
-      if (hovering > 0) autoTween.pause();
+      if (held()) autoTween.pause();
     };
 
     // The captions, split into masked words once. Without SplitText they
@@ -210,17 +222,35 @@
     }
     renderRing(reduced ? 1 : 0);
 
-    // Autoplay pauses only while the dial is hovered
+    // Autoplay pauses while the dial is hovered, and while the hero is out
+    // of view
     const onEnter = () => {
       hovering++;
       if (autoTween) autoTween.pause();
     };
     const onLeave = () => {
       hovering = Math.max(0, hovering - 1);
-      if (autoTween && hovering === 0) autoTween.resume();
+      if (autoTween && !held()) autoTween.resume();
     };
     face.addEventListener("pointerenter", onEnter);
     face.addEventListener("pointerleave", onLeave);
+
+    const hero = dial.closest(".home-hero") || dial;
+    const inView = window.ScrollTrigger
+      ? ScrollTrigger.create({
+          trigger: hero,
+          start: "top bottom",
+          end: "bottom top",
+          onToggle: (self) => {
+            offscreen = !self.isActive;
+            if (!autoTween) return;
+            if (held()) autoTween.pause();
+            else autoTween.resume();
+          }
+        })
+      : null;
+    // A reload partway down the page starts with the hero already gone
+    if (inView) offscreen = !inView.isActive;
 
     const onResize = () => {
       measure();
@@ -236,6 +266,7 @@
     function destroy() {
       if (slideTween) slideTween.kill();
       if (autoTween) autoTween.kill();
+      if (inView) inView.kill();
       window.removeEventListener("resize", onResize);
       face.removeEventListener("pointerenter", onEnter);
       face.removeEventListener("pointerleave", onLeave);
@@ -251,17 +282,51 @@
     return { dial, state, ring, destroy };
   }
 
-  function initHeroDial() {
-    if (window.heroDial) {
-      window.heroDial.destroy();
-      window.heroDial = null;
-    }
+  // The slides the hero does not open on keep their photographs as
+  // data-src / data-srcset (index.astro), so the first screen is not
+  // competing with four more full-screen downloads. They are fetched once
+  // the page has loaded and the browser is idle — well before the dial's
+  // first turn, five seconds in. The dial's own photographs only when the
+  // dial is shown (it is hidden below 992px), checked again on resize.
+  function fetchDeferredPhotos(backgrounds, maskFrame, maskItems) {
+    const promote = (img) => {
+      if (img.dataset.srcset) img.srcset = img.dataset.srcset;
+      img.src = img.dataset.src;
+      img.removeAttribute("data-src");
+      img.removeAttribute("data-srcset");
+    };
+    const deferred = (items) => items.flatMap((item) => Array.from(item.querySelectorAll("img[data-src]")));
 
+    const run = () => {
+      deferred(backgrounds).forEach(promote);
+      if (!maskFrame) return;
+      const fetchMask = () => {
+        if (!maskFrame.offsetParent) return false;
+        deferred(maskItems).forEach(promote);
+        return true;
+      };
+      if (fetchMask()) return;
+      const onResize = () => {
+        if (fetchMask()) window.removeEventListener("resize", onResize);
+      };
+      window.addEventListener("resize", onResize);
+      onPageLeave(() => window.removeEventListener("resize", onResize));
+    };
+    const whenIdle = () => (window.requestIdleCallback ? requestIdleCallback(run, { timeout: 1500 }) : setTimeout(run, 200));
+
+    if (document.readyState === "complete") whenIdle();
+    else window.addEventListener("load", whenIdle, { once: true });
+  }
+
+  function initHeroDial() {
     if (typeof gsap === "undefined") return;
 
     const dial = document.querySelector("[data-hero-dial]");
     const face = dial && dial.querySelector(".hero-dial__face");
-    if (!dial || !face) return;
+    // Barba runs this on the first load as well as the page's own startup:
+    // build once per page
+    if (!dial || !face || dial.__heroDial) return;
+    dial.__heroDial = true;
 
     const backgrounds = Array.from(document.querySelectorAll("[data-hero-slide-bg]"));
     const maskFrame = dial.querySelector("[data-hero-dial-mask]");
@@ -270,7 +335,13 @@
     if (!ticks) return;
     const captions = Array.from(dial.querySelectorAll("[data-hero-dial-caption]"));
 
-    window.heroDial = createHeroDial(dial, face, backgrounds, maskFrame, maskItems, ticks, captions);
+    const instance = createHeroDial(dial, face, backgrounds, maskFrame, maskItems, ticks, captions);
+    window.heroDial = instance;
+    fetchDeferredPhotos(backgrounds, maskFrame, maskItems);
+    onPageLeave(() => {
+      instance.destroy();
+      if (window.heroDial === instance) window.heroDial = null;
+    });
   }
 
   window.initHeroDial = initHeroDial;

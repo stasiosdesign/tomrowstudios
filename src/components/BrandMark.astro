@@ -1,0 +1,17 @@
+---
+/* The studio's mark, wherever the site shows one: at the top left of every
+   page (HeroNav.astro) and as the floating bar's home link (FloatingNav.astro).
+   Drawn in the text colour, so it follows each page's theme; its box is the
+   drawing's own proportion (aspect-ratio, below), so whatever holds it sets
+   its height alone.
+
+   A placeholder (the Framer logo) until Tomrow Studios' own mark is
+   supplied: replace the drawing here, its viewBox cropped to the drawing and
+   the aspect ratio to match, keeping it in currentColor, and every place
+   has it. */
+interface Props {
+  class?: string;
+}
+const { class: className } = Astro.props;
+---
+<svg class={className} viewBox="5 3 13.34 20" style="aspect-ratio: 13.34 / 20" fill="none" aria-hidden="true" focusable="false"><path d="M5 3H18.33V9.67H11.66L5 3ZM5 9.67H11.67L18.34 16.34H5V9.67ZM5 16.33H11.67V23L5 16.33Z" fill="currentColor"/></svg>

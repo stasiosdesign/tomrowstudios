@@ -1,16 +1,20 @@
 ---
 /* Site-wide page shell.
 
-   Everything outside <main> survives a Barba navigation — the transition
-   overlay, the grain, the grid overlay, the lightbox target and the scripts —
-   so it lives here once. Each page fills the Barba container.
+   Everything outside <main> survives a Barba navigation — the floating
+   navigation, the grid overlay, the lightbox target and the
+   scripts — so it lives here once. Each page fills the Barba container;
+   the page transition moves the containers themselves (transitions.js).
 
    The scripts are the site's original files, served from public/js as
    classic scripts (is:inline). They share one global scope by design:
    transitions.js calls the other files' init functions by name on every
    navigation, so they must not be bundled into modules. */
 import '../styles/style.css';
-import StepNav from '../components/StepNav.astro';
+import FloatingNav from '../components/FloatingNav.astro';
+import ScrollBar from '../components/ScrollBar.astro';
+import ReelLightbox from '../components/ReelLightbox.astro';
+import { REEL_SRC } from '../components/reel';
 import DraftModeLabel from '../components/DraftModeLabel.astro';
 
 interface Props {
@@ -25,9 +29,17 @@ interface Props {
   pageDoc?: string;
   /** The document's _type when it is not its ID (a collection item, such as a shop item): data-page-type. */
   pageType?: string;
+  /** The name the floating navigation shows for the page, when not pageName (data-nav-title). */
+  navTitle?: string;
+  /** The page the floating menu marks as current, when not this one: a shop item belongs to /shop (data-nav-section). */
+  navSection?: string;
+  /** The marquee over the floating navigation's bar on this page (data-nav-promo, FloatingNav.astro): the book's, or Contact Tom's. A part of the page can ask for another, or none, with its own data-nav-promo. */
+  navPromo?: 'book' | 'contact';
+  /** The page's scrollbar in sight from the start and throughout, rather than only while it scrolls (scrollbar.js). */
+  pinScrollbar?: boolean;
 }
 
-const { title, namespace, pageName, mainClass, pageDoc, pageType } = Astro.props;
+const { title, namespace, pageName, mainClass, pageDoc, pageType, navTitle, navSection, navPromo, pinScrollbar } = Astro.props;
 
 // Production is the one canonical site: every build, staging included, names
 // production's address for the page (Astro.site, from SITE_URL), in its clean
@@ -37,6 +49,10 @@ const canonical = Astro.site && new URL(path, Astro.site).href;
 // Anything but production asks search engines to stay away (so does every
 // response header there: src/middleware.ts, vercel.ts)
 const noindex = __DEPLOYMENT__ !== 'production';
+// The design grid overlay is a development aid: never on production
+const showGridOverlay = __DEPLOYMENT__ !== 'production';
+// The reel's player goes where its card does: on production, once there is a reel (reel.ts)
+const showReel = Boolean(REEL_SRC) || __DEPLOYMENT__ !== 'production';
 ---
 <!DOCTYPE html>
 <html lang="en">
@@ -50,36 +66,38 @@ const noindex = __DEPLOYMENT__ !== 'production';
 <meta property="og:type" content="website">
 <meta property="og:title" content={title}>
 {canonical && <meta property="og:url" content={canonical}>}
-<!-- Lenis smooth scroll -->
-<link rel="stylesheet" href="https://unpkg.com/lenis@1.3.17/dist/lenis.css">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@12/swiper-bundle.min.css"/>
+<!-- The first load is held back until the fonts, the scripts and the photos
+     marked data-reveal-wait are ready, then faded in (revealPage in
+     transitions.js), so it never paints in a fallback face or in the state
+     the scripts are about to change. Only with scripts on: without them the
+     class is never set. The timeout shows the page anyway if a script fails
+     to arrive. -->
+<script is:inline>
+  document.documentElement.classList.add('is--loading');
+  setTimeout(() => document.documentElement.classList.remove('is--loading'), 4000);
+  // Every page opens at its top (resetPage in transitions.js), the home
+  // page under its opening: the browser is told here, before it has laid
+  // anything out, not to put a reloaded page back where it was, which it
+  // would otherwise do before the scripts at the foot of the page run
+  if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
+</script>
+<!-- Open the connections to the font and script hosts while the page is
+     still being read. Typekit serves its stylesheet plainly and its fonts
+     with CORS, two separate connections. Lenis's few rules are in
+     style.css, and Swiper's stylesheet comes with Swiper, on the pages that
+     use it (swiper.js), so the fonts are the only stylesheet from elsewhere
+     that holds up the first paint. -->
+<link rel="preconnect" href="https://use.typekit.net">
+<link rel="preconnect" href="https://use.typekit.net" crossorigin>
+<link rel="preconnect" href="https://cdn.jsdelivr.net">
 <link rel="stylesheet" href="https://use.typekit.net/nqu1vih.css">
 </head>
 <body data-barba="wrapper">
 
-<!-- Page transition overlay (outside the Barba container so it survives a navigation) -->
-<div data-transition-wrap class="transition">
-  <div class="transition__panels">
-    <div data-transition-column class="transition__panel is--gutter"></div>
-    <div data-transition-column class="transition__panel"></div>
-    <div data-transition-column class="transition__panel"></div>
-    <div data-transition-column class="transition__panel"></div>
-    <div data-transition-column class="transition__panel"></div>
-    <div data-transition-column class="transition__panel is--gutter"></div>
-  </div>
-  <span data-transition-label class="transition__label">
-    <span>[&nbsp;</span>
-    <span data-transition-label-text>Welcome</span>
-    <span>&nbsp;]</span>
-  </span>
-</div>
-
-<!-- Film grain overlay (outside the Barba container so it persists) -->
-<div class="grain" data-grain-animate="true"></div>
-
-<!-- Temporary 12-column design grid overlay (Shift + G). Outside the Barba
-     container so it survives a navigation, like the grain above it. -->
-<div data-animated-grid class="grid-overlay">
+<!-- Temporary 12-column design grid overlay (Shift + G), a design aid for
+     development and staging only: a production build leaves it out. Outside
+     the Barba container so it survives a navigation. -->
+{showGridOverlay && <div data-animated-grid class="grid-overlay">
   <div class="container is--full-height">
     <div class="grid-overlay__row">
       <div data-animated-grid-col class="grid-overlay__col"></div>
@@ -96,44 +114,55 @@ const noindex = __DEPLOYMENT__ !== 'production';
       <div data-animated-grid-col class="grid-overlay__col"></div>
     </div>
   </div>
+</div>}
+
+<!-- The cursor's label: what a click does, beside the arrow, over an
+     element marked data-cursor-label (cursor.js, "Cursor label" in
+     style.css); the words twice, for the marquee. Outside the Barba
+     container so it survives a navigation. -->
+<div class="cursor-label" data-cursor-label-el aria-hidden="true">
+  <span class="cursor-label__box"><span class="cursor-label__window"><span class="cursor-label__track"><span class="cursor-label__text"></span><span class="cursor-label__text"></span></span></span></span>
 </div>
 
 <!-- Click-to-zoom target (outside the Barba container so it persists) -->
 <div data-click-zoom-lightbox class="click-zoom__lightbox"></div>
 
-<main data-barba="container" data-barba-namespace={namespace} data-page-name={pageName} data-page-doc={pageDoc} data-page-type={pageType} class={mainClass}>
+<main data-barba="container" data-barba-namespace={namespace} data-page-name={pageName} data-page-doc={pageDoc} data-page-type={pageType} data-nav-title={navTitle} data-nav-section={navSection} data-nav-promo={navPromo} data-scrollbar-pinned={pinScrollbar ? '' : undefined} class={mainClass}>
 <slot />
 </main>
 
-<!-- Scrolled-state navigation: the Menu control and the stepped menu. Outside
-     the Barba container so it survives a navigation; stepnav.js binds it once
-     and re-ties it to each page's hero. -->
-<StepNav />
+<!-- Scrolled-state navigation: the floating bar at the foot of the screen
+     and its menu. Outside the Barba container so it survives a navigation;
+     floatingnav.js binds it once and re-ties it to each page. -->
+<FloatingNav />
+<!-- The page's scrollbar, at the right edge; outside the container so it
+     lasts across pages (scrollbar.js) -->
+<ScrollBar />
+<!-- The reel's player, grown out of the Play Reel card in the menu (reel.js) -->
+{showReel && <ReelLightbox />}
 
 
 <script is:inline src="https://cdn.jsdelivr.net/npm/@barba/core@2.10.3/dist/barba.umd.min.js"></script>
 <script is:inline src="https://cdn.jsdelivr.net/npm/lenis@1.3.17/dist/lenis.min.js"></script>
-<script is:inline src="https://cdn.jsdelivr.net/npm/swiper@12/swiper-bundle.min.js"></script>
 <script is:inline src="https://cdn.jsdelivr.net/npm/gsap@3.15/dist/gsap.min.js"></script>
 <script is:inline src="https://cdn.jsdelivr.net/npm/gsap@3.15/dist/CustomEase.min.js"></script>
 <script is:inline src="https://cdn.jsdelivr.net/npm/gsap@3.15/dist/ScrollTrigger.min.js"></script>
-<script is:inline src="https://cdn.jsdelivr.net/npm/gsap@3.15/dist/Observer.min.js"></script>
 <script is:inline src="https://cdn.jsdelivr.net/npm/gsap@3.15/dist/SplitText.min.js"></script>
-<script is:inline src="https://cdn.jsdelivr.net/npm/gsap@3.15/dist/ScrambleTextPlugin.min.js"></script>
-<script is:inline src="https://cdn.jsdelivr.net/npm/gsap@3.15/dist/Draggable.min.js"></script>
-<script is:inline src="https://cdn.jsdelivr.net/npm/gsap@3.15/dist/InertiaPlugin.min.js"></script>
-<script is:inline src="https://unpkg.com/smooothy@0.0.35"></script>
+<!-- Shared first: the page lifecycle and the on-demand loader -->
+<script is:inline src="/js/lifecycle.js"></script>
 <script is:inline src="/js/hero-nav.js"></script>
-<script is:inline src="/js/stepnav.js"></script>
+<script is:inline src="/js/social-copy.js"></script>
+<script is:inline src="/js/floatingnav.js"></script>
+<script is:inline src="/js/enquiry.js"></script>
 <script is:inline src="/js/hero-runner.js"></script>
 <script is:inline src="/js/hero-dial.js"></script>
 <script is:inline src="/js/sidepanel.js"></script>
+<script is:inline src="/js/casepanel.js"></script>
 <script is:inline src="/js/swiper.js"></script>
 <script is:inline src="/js/footer.js"></script>
-<script is:inline src="/js/scramble.js"></script>
+<script is:inline src="/js/split-hover.js"></script>
 <script is:inline src="/js/button.js"></script>
 <script is:inline src="/js/marquee.js"></script>
-<script is:inline src="/js/gallery.js"></script>
 <script is:inline src="/js/odometer.js"></script>
 <script is:inline src="/js/steptimeline.js"></script>
 <script is:inline src="/js/hotspot.js"></script>
@@ -141,14 +170,26 @@ const noindex = __DEPLOYMENT__ !== 'production';
 <script is:inline src="/js/partners.js"></script>
 <script is:inline src="/js/formvalidation.js"></script>
 <script is:inline src="/js/archslider.js"></script>
-<script is:inline src="/js/masonry.js"></script>
 <script is:inline src="/js/scrollnext.js"></script>
+<script is:inline src="/js/scrollbar.js"></script>
 <script is:inline src="/js/transitions.js"></script>
 <script is:inline src="/js/lightbox.js"></script>
 <script is:inline src="/js/accordion.js"></script>
 <script is:inline src="/js/image-reveal.js"></script>
-<!-- Temporary development grid overlay -->
-<script is:inline src="/js/grid-overlay.js"></script>
+<script is:inline src="/js/text-highlight.js"></script>
+<script is:inline src="/js/sequence.js"></script>
+<script is:inline src="/js/scroll-list.js"></script>
+<script is:inline src="/js/home-reel.js"></script>
+<script is:inline src="/js/hero-tint.js"></script>
+<script is:inline src="/js/home-list.js"></script>
+<script is:inline src="/js/influence.js"></script>
+<script is:inline src="/js/logo-carousel.js"></script>
+<script is:inline src="/js/loader.js"></script>
+<script is:inline src="/js/cursor.js"></script>
+<script is:inline src="/js/bunny-lightbox.js"></script>
+<script is:inline src="/js/reel.js"></script>
+<!-- Temporary development grid overlay (development and staging only) -->
+{showGridOverlay && <script is:inline src="/js/grid-overlay.js"></script>}
 <!-- Staging and development only: inside the Studio's Visual editor (the page
      in a frame), load the click-to-edit layer and live drafts. The deployment
      is fixed at build time, so a production build leaves all of it out. -->

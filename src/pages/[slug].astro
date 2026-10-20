@@ -15,7 +15,7 @@ import SiteNav from '../components/SiteNav.astro';
 import SiteFooter from '../components/SiteFooter.astro';
 import ContactPanel from '../components/ContactPanel.astro';
 import Button from '../components/Button.astro';
-import GetInTouch from '../components/GetInTouch.astro';
+import ServiceCards from '../components/ServiceCards.astro';
 import ProductCard from '../components/ProductCard.astro';
 import { sanityClient } from '../sanity/client';
 import { imageAttrs, type SanityImage } from '../sanity/image';
@@ -52,7 +52,9 @@ const overviewImg = img(item.overview?.image, 1200);
 const whatYouGetImg = img(item.whatYouGet?.image, 1200);
 const atlasImg = img(item.atlas?.image, 1600);
 ---
-<BaseLayout title={`${item.title} — Tomrow Studios`} namespace={item.slug ?? slug} pageName={item.title ?? ''} pageDoc={item._id} pageType="shopItem">
+<BaseLayout title={`${item.title} — Tomrow Studios`} namespace={item.slug ?? slug} pageName={item.title ?? ''} pageDoc={item._id} pageType="shopItem" navTitle="Shop" navSection="/shop">
+<!-- The page itself, which shrinks into the footer as the footer arrives (footer.js) -->
+<div class="page-surface" data-page-surface>
 <SiteNav />
 
 
@@ -78,10 +80,10 @@ const atlasImg = img(item.atlas?.image, 1600);
       {cta?.label && cta.href && (
       <div><dt data-page-field="details.cta.rowLabel">{cta.rowLabel}</dt><dd>
         {cta.opensContact
-          ? <a href="#contact" data-panel-open="contact" data-barba-prevent="self" data-scramble-hover="link" data-page-field="details.cta.label">{cta.label}</a>
+          ? <a href="#contact" data-panel-open="contact" data-barba-prevent="self" data-split-hover="link" data-page-field="details.cta.label">{cta.label}</a>
           : external
-            ? <a href={cta.href} target="_blank" rel="noreferrer" data-scramble-hover="link" data-page-field="details.cta.label">{cta.label}</a>
-            : <a href={cta.href} data-scramble-hover="link" data-page-field="details.cta.label">{cta.label}</a>}
+            ? <a href={cta.href} target="_blank" rel="noreferrer" data-split-hover="link" data-page-field="details.cta.label">{cta.label}</a>
+            : <a href={cta.href} data-split-hover="link" data-page-field="details.cta.label">{cta.label}</a>}
       </dd></div>
       )}
     </dl>
@@ -97,7 +99,7 @@ const atlasImg = img(item.atlas?.image, 1600);
         {item.overview?.body?.length ? <PortableText value={item.overview.body} /> : null}
       </div>
     </div>
-    {overviewImg && <img data-click-zoom class="panel-wide-img" data-page-field="overview.image" data-page-width="1200" {...overviewImg} loading="lazy" decoding="async">}
+    {overviewImg && <img data-click-zoom data-cursor-label="Enlarge" class="panel-wide-img" data-page-field="overview.image" data-page-width="1200" {...overviewImg} loading="lazy" decoding="async">}
   </div>
 </section>
 
@@ -117,7 +119,7 @@ const atlasImg = img(item.atlas?.image, 1600);
         ) : null}
       </div>
     </div>
-    {whatYouGetImg && <img data-click-zoom class="panel-wide-img" data-page-field="whatYouGet.image" data-page-width="1200" {...whatYouGetImg} loading="lazy" decoding="async">}
+    {whatYouGetImg && <img data-click-zoom data-cursor-label="Enlarge" class="panel-wide-img" data-page-field="whatYouGet.image" data-page-width="1200" {...whatYouGetImg} loading="lazy" decoding="async">}
   </div>
 </section>
 
@@ -153,8 +155,10 @@ const atlasImg = img(item.atlas?.image, 1600);
 </section>
 ) : null}
 
-<GetInTouch />
+<ServiceCards />
 
+
+</div>
 
 <SiteFooter />
 

@@ -35,9 +35,9 @@
 //   - colours and geometry are read from CSS custom properties on the runner,
 //     so the treatment is tuned in the stylesheet with everything else
 //
-// Lifecycle: `initHeroRunner()` is safe to call on any page and as often as
-// the router likes. It tears down whatever instance exists, then builds one if
-// the hero is present. transitions.js calls it on every navigation; the
+// Lifecycle: `initHeroRunner()` is safe to call on any page. It builds an
+// instance if the hero is present and takes it down when the page is left
+// (lifecycle.js). transitions.js calls it on every navigation; the
 // DOMContentLoaded listener at the bottom covers the first load.
 //
 // This iteration is the visual construction and the pointer-driven fan only.
@@ -137,6 +137,7 @@
       config.reachFade = readNumber(styles, "--runner-reach-fade", DEFAULTS.reachFade);
       colour = styles.getPropertyValue("--runner-color").trim() || colour;
       config.strongWidth = readNumber(styles, "--runner-stroke-strong", config.strokeWidth);
+      config.strongRest = readNumber(styles, "--runner-rest-strong", config.restHeight);
       strongColour = styles.getPropertyValue("--runner-color-strong").trim() || colour;
     }
 
@@ -191,8 +192,27 @@
       grain: new Float32Array(0),
       // 1 for a stroke that sits on the start of one of the main columns —
       // the four strong grid lines — drawn thicker and brighter
-      strong: new Uint8Array(0)
+      strong: new Uint8Array(0),
+      // 1 for a stroke left out: something on the axis stands there instead
+      hidden: new Uint8Array(0)
     };
+
+    // The runner gives way to whatever the hero marks data-runner-gap on its
+    // axis: the dial's round photograph and its two quarter ticks at three
+    // and nine o'clock. No stroke is drawn across such an element's width,
+    // nor within one pitch of it, so the dial's tick carries the line on
+    // instead of being laid over its strokes. Measured from the elements
+    // themselves at every layout; a hidden dial (below the desktop grid)
+    // opens no gap.
+    function readGaps(canvasLeft) {
+      const gaps = [];
+      hero.querySelectorAll("[data-runner-gap]").forEach((el) => {
+        const r = el.getBoundingClientRect();
+        if (!r.width && !r.height) return;
+        gaps.push([r.left - canvasLeft, r.right - canvasLeft]);
+      });
+      return gaps;
+    }
 
     // The interaction. `x`/`y` are the pointer relative to the canvas; `centre`
     // is the eased field centre the renderer actually uses; `strength` is how
@@ -273,6 +293,7 @@
         strokes.target = new Float32Array(count);
         strokes.grain = new Float32Array(count);
         strokes.strong = new Uint8Array(count);
+        strokes.hidden = new Uint8Array(count);
       }
 
       // Which strokes sit on a column start: every `divisions`th stroke
@@ -280,6 +301,10 @@
       // gutter — so the five lines the dial visits at desktop
       const divisions = Math.max(1, Math.round(grid.column / step));
       const columns = Math.max(1, Math.round((width - grid.origin * 2) / grid.column));
+      // The gaps, against where the canvas stands once snapped, with one
+      // pitch of air either side
+      const gaps = readGaps(rect.left + snapX);
+      const air = step;
 
       for (let i = 0; i < count; i++) {
         const index = first + i;
@@ -293,29 +318,36 @@
         const onLine = index % divisions === 0;
         const column = index / divisions;
         strokes.strong[i] = onLine && column >= 0 && column <= columns ? 1 : 0;
+        strokes.hidden[i] = gaps.some(([from, to]) => x > from - air && x < to + air) ? 1 : 0;
       }
 
       computeTargets();
+      // Settled, the strokes simply take their heights: nothing would ease
+      // the column-line marks up to theirs until the pointer arrived
+      if (!ticking) strokes.current.set(strokes.target);
       draw();
     }
 
     // The field: every stroke's target height from the current centre
     function computeTargets() {
-      const { count, x, target, grain } = strokes;
+      const { count, x, target, grain, strong } = strokes;
       const rest = config.restHeight;
+      // The strokes on the column lines stand a little taller at rest: a
+      // mark where each of the grid's lines crosses the runner
+      const strongRest = Math.max(rest, config.strongRest);
       const lift = (config.maxHeight - rest) * pointer.strength;
       const radius = config.radius;
       const centre = pointer.centre;
 
       if (!pointer.active || lift <= 0) {
-        target.fill(rest);
+        for (let i = 0; i < count; i++) target[i] = strong[i] ? strongRest : rest;
         return;
       }
 
       for (let i = 0; i < count; i++) {
         const d = Math.abs(x[i] - centre);
         if (d >= radius) {
-          target[i] = rest;
+          target[i] = strong[i] ? strongRest : rest;
         } else {
           // A Gaussian bell in distance, quantised into a fixed number of
           // levels. The Gaussian gives the normal-distribution profile: a
@@ -333,6 +365,7 @@
           // Then each stroke's own grain: a fixed few percent over or under
           // the curve, so the terraces are not ruled lines
           target[i] = rest + lift * envelope * grain[i];
+          if (strong[i] && target[i] < strongRest) target[i] = strongRest;
         }
       }
     }
@@ -351,7 +384,7 @@
     function draw() {
       ctx.clearRect(0, 0, width, height);
 
-      const { count, x, current, strong } = strokes;
+      const { count, x, current, strong, hidden } = strokes;
       // A hairline on the device grid: offset by half a device pixel so a
       // 1px stroke fills exactly one column rather than two half-alpha ones
       const snap = 0.5 / dpr;
@@ -370,7 +403,7 @@
         ctx.beginPath();
 
         for (let i = 0; i < count; i++) {
-          if ((strong[i] === 1) !== wantStrong) continue;
+          if ((strong[i] === 1) !== wantStrong || hidden[i]) continue;
           const half = current[i] / 2;
           const px = x[i] + offset;
           ctx.moveTo(px, axisY - half);
@@ -516,18 +549,21 @@
   }
 
   function initHeroRunner() {
-    if (window.heroRunner) {
-      window.heroRunner.destroy();
-      window.heroRunner = null;
-    }
-
     if (typeof gsap === "undefined") return;
 
     const hero = document.querySelector(".home-hero");
     const root = hero && hero.querySelector("[data-hero-runner]");
-    if (!hero || !root) return;
+    // Barba runs this on the first load as well as the page's own startup:
+    // build once per page
+    if (!hero || !root || root.__heroRunner) return;
+    root.__heroRunner = true;
 
-    window.heroRunner = createHeroRunner(hero, root);
+    const instance = createHeroRunner(hero, root);
+    window.heroRunner = instance;
+    onPageLeave(() => {
+      instance.destroy();
+      if (window.heroRunner === instance) window.heroRunner = null;
+    });
   }
 
   window.initHeroRunner = initHeroRunner;

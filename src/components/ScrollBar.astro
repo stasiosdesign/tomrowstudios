@@ -1,0 +1,16 @@
+---
+/*
+  The page's scrollbar (after pensatori-irrazionali.com's): a short fixed
+  track at the right edge, in the middle of the screen, and a thumb that
+  runs down it as the page scrolls, squared rather than rounded. In the
+  layout, outside the Barba container, so it lasts across pages. Shown
+  while the page scrolls, and while it is hovered or dragged; always, on
+  a page that pins it (the home page).
+  Styles: "Scrollbar" in style.css. Behaviour: public/js/scrollbar.js.
+  Hidden from screen readers: the page scrolls as it always does.
+*/
+---
+<div class="scrollbar" data-scrollbar data-cursor="hover" aria-hidden="true">
+  <div class="scrollbar__track"></div>
+  <div class="scrollbar__thumb" data-scrollbar-thumb></div>
+</div>

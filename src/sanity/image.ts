@@ -24,6 +24,17 @@ export interface SanityImage {
 export const urlFor = (image: SanityImage) =>
   builder.image(image as SanityImageSource).auto('format').fit('max');
 
+/** A srcset at the given widths, so the browser fetches the size the layout
+    needs (with the `sizes` the caller sets) rather than one size for every
+    screen. Widths past the original are dropped — the CDN would only return
+    the original again — and the original takes their place once. */
+export function srcSet(image: SanityImage, widths: number[]) {
+  const original = image.asset?.metadata?.dimensions?.width ?? Infinity;
+  const fitting = widths.filter((w) => w < original);
+  if (fitting.length < widths.length && Number.isFinite(original)) fitting.push(Math.round(original));
+  return fitting.map((w) => `${urlFor(image).width(w).url()} ${w}w`).join(', ');
+}
+
 /** src, width and height for an <img>, at the given display width. */
 export function imageAttrs(image: SanityImage, width = 1600) {
   const dimensions = image.asset?.metadata?.dimensions;

@@ -1,35 +1,22 @@
 ---
-/* Fixed site bar. It lives inside the Barba container on every page: the
-   transition swaps it with the page, and hero-nav.js / footer.js rebind it.
-   `overHero` starts it transparent over the home hero on the first paint. */
+/* The bar at the top of every page but the home page: a black band carrying
+   the grid's lines and the hero's navigation (HeroNav.astro: the studio's
+   name and mark, the column of pages and the ways to Tom) exactly where the
+   home hero has it, so the header is one and the same throughout the site,
+   its colours alone following the page (dark over a light page). It
+   lives inside the Barba container on every page: the transition swaps it
+   with the page, and hero-nav.js / footer.js rebind it. `overHero` starts
+   it transparent over a hero on the first paint. */
+import HeroNav from './HeroNav.astro';
 interface Props { overHero?: boolean }
 const { overHero } = Astro.props;
 // The page being built, as the links name it, so its link carries aria-current.
 // The build sees /shop.html and /index.html (build.format 'file'); dev sees /shop and /.
 const page = Astro.url.pathname.replace(/\.html$/, '').replace(/\/index$/, '') || '/';
-const links = [
-  ['/', 'Home'],
-  ['/influence', 'Influence'],
-  ['/architecture', 'Architecture'],
-  ['/shop', 'Shop'],
-  ['/partner', 'Partner']
-];
 ---
 <!-- Navbar -->
 <header class={overHero ? "site-nav is--over-hero" : "site-nav"}>
-  <nav class="site-nav__inner">
-    <div class="site-nav__start">
-      <a href="/" data-scramble-hover="link" class="site-nav__link">tomrowstudios ©</a>
-    </div>
-    <div class="site-nav__end">
-      <div class="site-nav__links">
-        {links.map(([href, label]) => (
-          <a href={href} data-scramble-hover="link" class="site-nav__link" aria-current={page === href ? 'page' : undefined}>{label}</a>
-        ))}
-      </div>
-      <div class="site-nav__cta">
-        <a href="#contact" data-panel-open="contact" data-barba-prevent="self" data-scramble-hover="link" class="site-nav__link">Let's Talk</a>
-      </div>
-    </div>
-  </nav>
+  <div class="site-nav__inner">
+    <HeroNav current={page} />
+  </div>
 </header>

@@ -10,8 +10,8 @@
    - marks the parts it edits with data-sanity attributes and writes the drafts
      into them, and again whenever Barba brings a page in.
    That covers every section of the home page, its logos (each opens its
-   client), the Get in touch block on every page that ends with it, and on
-   every other page the parts its own document holds (each page names its
+   client), and on every other page the parts its own document holds (each
+   page names its
    document on <main>, and each part the field it shows: data-page-doc and
    data-page-field, see BaseLayout.astro and src/pages). The page underneath
    is rendered by staging in draft mode (src/sanity/draft-mode/), so
@@ -21,11 +21,10 @@ import { createQueryStore } from '@sanity/core-loader';
 import { createDataAttribute, enableVisualEditing } from '@sanity/visual-editing-standalone';
 import { sanityClient } from './client';
 import { urlFor, type SanityImage } from './image';
-import { CLIENT_LOGOS_QUERY, GET_IN_TOUCH_QUERY, HOME_PAGE_QUERY, PAGE_LIVE_QUERY } from './queries';
-import type { CLIENT_LOGOS_QUERY_RESULT, GET_IN_TOUCH_QUERY_RESULT, HOME_PAGE_QUERY_RESULT, PAGE_LIVE_QUERY_RESULT } from './sanity.types';
+import { CLIENT_LOGOS_QUERY, HOME_PAGE_QUERY, PAGE_LIVE_QUERY } from './queries';
+import type { CLIENT_LOGOS_QUERY_RESULT, HOME_PAGE_QUERY_RESULT, PAGE_LIVE_QUERY_RESULT } from './sanity.types';
 
 type Home = NonNullable<HOME_PAGE_QUERY_RESULT>;
-type Gallery = NonNullable<Home['influence']>;
 type Path = Parameters<typeof createDataAttribute>[0]['path'];
 type Doc = { id: string; type: string };
 type Value = string | null | undefined;
@@ -51,10 +50,16 @@ const setText = (el: Element | null | undefined, text: Value) => {
   if (el && text != null && el.textContent !== text) el.textContent = text;
 };
 
+// A draft photo replaces the published one at one width: the image's srcset
+// (and a deferred hero photo's data-src) would otherwise keep showing the old
 const setImage = (img: Element | null | undefined, image: SanityImage | null | undefined, width: number) => {
   if (!(img instanceof HTMLImageElement) || !image?.asset) return;
   const src = urlFor(image).width(width).url();
-  if (img.getAttribute('src') !== src) img.src = src;
+  if (img.getAttribute('src') === src) return;
+  img.removeAttribute('srcset');
+  img.removeAttribute('data-srcset');
+  img.removeAttribute('data-src');
+  img.src = src;
 };
 
 // A field shown as an element's text
@@ -63,23 +68,22 @@ const text = (el: Element | null | undefined, path: Path, value: Value, doc = HO
   setText(el, value);
 };
 
-// A button (Button.astro) and its label, which is also the text its hover
-// scramble settles on (scramble.js reads data-scramble-text on each hover)
+// A button (Button.astro) and its label. Rewriting the label replaces its
+// hover's split; split-hover.js splits the new text on the next hover.
 const button = (cta: Element | null | undefined, path: Path, label: Value, doc = HOME) => {
   mark(cta, path, doc);
-  const el = cta?.querySelector('.cta__label');
-  setText(el, label);
-  if (el instanceof HTMLElement && label != null) el.dataset.scrambleText = label;
+  setText(cta?.querySelector('.cta__label'), label);
 };
 
 // The same parts, sizes and order as src/pages/index.astro renders
 const section = (name: string) => document.querySelector(`[data-home-section="${name}"]`);
 
 function renderHero(hero: Home['hero']) {
-  const root = document.querySelector('.home-hero');
+  // The home page's reel (its headline a hidden heading), or the parked hero
+  const root = document.querySelector('.home-reel, .home-hero');
   if (!root || !hero) return;
 
-  text(root.querySelector('.home-hero__title'), ['hero', 'headline'], hero.headline);
+  text(root.querySelector('h1'), ['hero', 'headline'], hero.headline);
 
   const captions = root.querySelectorAll('[data-hero-dial-caption]');
   const photos = root.querySelectorAll('[data-hero-dial-mask-item]');
@@ -99,30 +103,13 @@ function renderHero(hero: Home['hero']) {
 
 function renderLogoWall(logoWall: Home['logoWall']) {
   const eyebrow = section('logoWall')?.querySelector('.logo-wall__eyebrow');
-  text(eyebrow, ['logoWall', 'label'], logoWall?.label != null ? `[ ${logoWall.label} ]` : null);
+  text(eyebrow, ['logoWall', 'label'], logoWall?.label ?? null);
 }
 
 function renderPractice(practice: Home['practice']) {
   const root = section('practice');
   if (!root || !practice) return;
-  text(root.querySelector('.tagline'), ['practice', 'label'], practice.label);
   text(root.querySelector('h2'), ['practice', 'statement'], practice.statement);
-}
-
-// Only the current slide takes the pointer (gallery.js), so only its outline
-// shows over the stack; each thumbnail opens its own photo
-function renderSlider(slider: Home['slider']) {
-  const root = section('slider');
-  if (!root || !slider) return;
-  const slides = root.querySelectorAll('[data-slideshow="slide"]');
-  const thumbs = root.querySelectorAll('[data-slideshow="thumb"]');
-  slider.images?.forEach((image, i) => {
-    const path: Path = ['slider', 'images', { _key: image._key }];
-    mark(slides[i], path);
-    mark(thumbs[i], path);
-    setImage(slides[i]?.querySelector('img'), image, 2000);
-    setImage(thumbs[i]?.querySelector('img'), image, 240);
-  });
 }
 
 function renderRecognition(recognition: Home['recognition']) {
@@ -144,59 +131,30 @@ function renderRecognition(recognition: Home['recognition']) {
   });
 }
 
-function renderGallery(name: 'influence' | 'partners' | 'projects' | 'courses', gallery: Gallery | null) {
-  const root = section(name);
-  if (!root || !gallery) return;
-  text(root.querySelector('h2'), [name, 'heading'], gallery.heading);
-  text(root.querySelector('.lead'), [name, 'lead'], gallery.lead);
-  const images = root.querySelectorAll('.gallery img');
-  gallery.images?.forEach((image, i) => {
-    mark(images[i], [name, 'images', { _key: image._key }]);
-    setImage(images[i], image, 1200);
-  });
-  button(root.querySelector('a.cta'), [name, 'button'], gallery.button);
-}
-
 function renderHome(home: Home) {
   renderHero(home.hero);
   renderLogoWall(home.logoWall);
   renderPractice(home.practice);
-  renderSlider(home.slider);
   renderRecognition(home.recognition);
-  renderGallery('influence', home.influence);
-  renderGallery('partners', home.partners);
-  renderGallery('projects', home.projects);
-  renderGallery('courses', home.courses);
 }
 
-// Each logo opens its client. marquee.js has cloned the row to loop it, so
-// every copy is marked, each only while it still matches the clients one for
-// one.
+// Each logo tile opens its client, while the grid still matches the clients
+// one for one
+// The clients: each name opens its client in the Studio and takes the
+// draft's name; its logo, in the frame beside the list, takes the draft's
+// logo. A client added or removed shows on the next build.
 function renderLogos(clients: CLIENT_LOGOS_QUERY_RESULT) {
-  section('logoWall')?.querySelectorAll('[data-marquee-collection-target]').forEach((row) => {
-    const items = row.querySelectorAll('.marquee-advanced__item-width');
-    if (items.length !== clients.length) return;
-    clients.forEach((client, i) => {
-      mark(items[i], ['logo'], { id: client._id, type: 'client' });
-      const img = items[i].querySelector('img');
-      if (!(img instanceof HTMLImageElement) || !client.logo?.asset) return;
-      const src = urlFor(client.logo).ignoreImageParams().width(600).height(240).url();
-      if (img.getAttribute('src') !== src) img.src = src;
-    });
+  const root = section('logoWall');
+  const items = root?.querySelectorAll('[data-scroll-list-item]');
+  if (!root || !items || items.length !== clients.length) return;
+  clients.forEach((client, i) => {
+    mark(items[i], ['name'], { id: client._id, type: 'client' });
+    setText(items[i], client.name ?? null);
+    const img = root.querySelector(`[data-scroll-list-panel="${i}"]`);
+    if (!(img instanceof HTMLImageElement) || !client.logo?.asset) return;
+    const src = urlFor(client.logo).ignoreImageParams().width(600).height(240).url();
+    if (img.getAttribute('src') !== src) img.src = src;
   });
-}
-
-// The same parts as src/components/GetInTouch.astro renders
-function renderGetInTouch(cta: NonNullable<GET_IN_TOUCH_QUERY_RESULT>) {
-  const root = document.querySelector('.final-cta');
-  if (!root) return;
-  text(root.querySelector('.final-cta__eyebrow'), ['getInTouch', 'label'], cta.label);
-  text(root.querySelector('.final-cta__title'), ['getInTouch', 'title'], cta.title);
-  const portrait = root.querySelector('.final-cta__portrait');
-  mark(portrait, ['getInTouch', 'portrait']);
-  setImage(portrait?.querySelector('img'), cta.portrait, 600);
-  text(root.querySelector('.final-cta__lead'), ['getInTouch', 'lead'], cta.lead);
-  button(root.querySelector('a.cta'), ['getInTouch', 'button'], cta.button);
 }
 
 // Every other page: its <main> names its document (data-page-doc, the type,
@@ -318,7 +276,6 @@ function live<T>(query: string, render: (data: NonNullable<T>) => void, params: 
 
 const home = live<HOME_PAGE_QUERY_RESULT>(HOME_PAGE_QUERY, renderHome);
 const logos = live<CLIENT_LOGOS_QUERY_RESULT>(CLIENT_LOGOS_QUERY, renderLogos);
-const getInTouch = live<GET_IN_TOUCH_QUERY_RESULT>(GET_IN_TOUCH_QUERY, renderGetInTouch);
 
 // One live query per page document, made the first time its page is shown
 // (keyed by the document's ID; the type is the ID unless <main> says otherwise)
@@ -338,7 +295,6 @@ function update() {
     home();
     logos();
   }
-  if (document.querySelector('.final-cta')) getInTouch();
   const main = document.querySelector('main[data-page-doc]');
   if (main instanceof HTMLElement && main.dataset.pageDoc) page(main.dataset.pageDoc, main.dataset.pageType || undefined);
 }
@@ -349,13 +305,12 @@ update();
 // (the CMS package's SectionField and PreviewControls post its field
 // name). The home page marks its sections with their field names
 // (data-home-section; the hero is .home-hero), other pages each part they
-// show (data-page-field, "hero.heading"...), and Get in touch ends most
-// pages. Only from the Studio framing this page; through Lenis where the
-// site scrolls smoothly, so the two never fight over the position.
+// show (data-page-field, "hero.heading"...). Only from the Studio framing
+// this page; through Lenis where the site scrolls smoothly, so the two never
+// fight over the position.
 const sectionNamed = (name: string): Element | null => {
   const field = CSS.escape(name);
   if (name === 'hero' && document.querySelector('.home-hero')) return document.querySelector('.home-hero');
-  if (name === 'getInTouch') return document.querySelector('.final-cta');
   const marked = document.querySelector(`[data-home-section="${field}"]`);
   if (marked) return marked;
   const part = document.querySelector(`main [data-page-field="${field}"], main [data-page-field^="${field}."]`);

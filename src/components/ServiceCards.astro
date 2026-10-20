@@ -1,0 +1,100 @@
+---
+/* The closing call to action that ends most pages: four cards, two by two,
+   one per part of the practice, each leading to its page: Partners &
+   Collabs, Architectural Projects, Shop & Courses, Architectural Influence. The titles and links
+   stay here, with the navigation's. The home page passes the Home page
+   document it has already fetched; every other page has it fetched here.
+
+   Architectural Projects shows Tom's own work as a drawing: the model of
+   one of his projects seen from above (a still in the library,
+   /assets/graphics/architecture-model-axon.webp, drawn white on nothing),
+   as it is, larger than the card, coming in at its lower middle and running
+   up and out to the right, the card cropping its ends, top and bottom.
+
+   Partners & Collabs shows who Tom has worked with: the clients' white
+   logos (the home page's logo wall, in its order) going round a flat,
+   slightly tilted ring in the card's right half, after Osmo's Orbit Tiles:
+   the one at the front large and bright, the rest smaller and darker
+   towards the back, every logo upright throughout. Five places on the
+   ring; a logo going round the back, out of sight, makes way for the next
+   client, so all of them come round in turn (logo-carousel.js).
+
+   Shop & Courses shows the shop itself instead: three of its products' pictures as
+   loosely fanned cards, from the card's lower middle up and out past its
+   top right corner, the card cropping them (the shop items' own card
+   pictures, in the Studio's order).
+
+   Architectural Influence shows the atlas instead (the Influence page's line
+   map, world-map.ts), whole and solid across the card: the Atlantic world,
+   the UK and Africa on the right, South America on the left, framed so the
+   heading stands over open ocean, the card's edges cropping the drawing. */
+import { srcSet, urlFor } from '../sanity/image';
+import { MAP_FINE, MAP_COARSE } from './world-map';
+import { explorePictures, MAP_BOX_WIDE } from './explore';
+import { CLIENT_LOGOS_QUERY, HOME_PAGE_QUERY, PROJECT_INDEX_QUERY, SHOP_ITEMS_QUERY } from '../sanity/queries';
+import type { HOME_PAGE_QUERY_RESULT } from '../sanity/sanity.types';
+
+interface Props {
+  home?: HOME_PAGE_QUERY_RESULT;
+  /** Without the page's column lines (the home page draws none) */
+  noGrid?: boolean;
+}
+
+const [home, shopItems, clients, projects] = await Promise.all([
+  Astro.props.home ?? Astro.locals.sanity.fetch(HOME_PAGE_QUERY),
+  Astro.locals.sanity.fetch(SHOP_ITEMS_QUERY),
+  Astro.locals.sanity.fetch(CLIENT_LOGOS_QUERY),
+  Astro.locals.sanity.fetch(PROJECT_INDEX_QUERY),
+]);
+const { noGrid } = Astro.props;
+// The cards' pictures, chosen in explore.ts (the home hero takes its projects photograph from there too)
+const { shopPictures, logoUrls, orbitPlaces, projectCover } = explorePictures(home, shopItems, clients, projects);
+const cards = [
+  // Set on two lines, the ampersand with the second, a size down
+  { title: 'Partners & Collabs', lines: ['Partners', '& Collabs'], href: '/partner', image: home?.partners?.images?.[0], kind: orbitPlaces.length ? 'logos' : 'photo' },
+  { title: 'Architectural Projects', href: '/architecture', image: projectCover, kind: 'axon' },
+  { title: 'Shop & Courses', href: '/shop', image: home?.courses?.images?.[0], kind: shopPictures.length === 3 ? 'fan' : 'photo' },
+  { title: 'Architectural Influence', href: '/influence', image: home?.influence?.images?.[0], kind: 'map' },
+];
+// The atlas's region for the card (explore.ts)
+const mapBox = MAP_BOX_WIDE;
+---
+<section class:list={['section', 'explore', { 'no-grid': noGrid }]}>
+  <div class="container">
+    <p class="tagline label-pill explore__label">Explore</p>
+    <div class="explore__grid">
+      {cards.map(({ title, lines, href, image, kind }) => (
+      <a href={href} class="explore-card" data-split-hover="link">
+        {kind === 'map' ? (
+          <svg class="explore-card__map" viewBox={mapBox} preserveAspectRatio="xMidYMin slice" fill="none" aria-hidden="true" focusable="false">
+            <path class="world-map__field is--fine" d={MAP_FINE.d}/>
+            <path class="world-map__field is--coarse" d={MAP_COARSE.d}/>
+          </svg>
+        ) : kind === 'axon' ? (
+          <span class="explore-card__axon" aria-hidden="true"><img src="/assets/graphics/architecture-model-axon.webp" width="1400" height="955" alt="" loading="lazy" decoding="async"></span>
+        ) : kind === 'logos' ? (
+          <span class="explore-card__logos" data-orbit-tiles-init data-orbit-pool={JSON.stringify(logoUrls)} aria-hidden="true">
+            <span class="explore-card__orbit" data-orbit-tiles-collection>
+              <span class="explore-card__orbit-list" data-orbit-tiles-list>
+                {orbitPlaces.map((src) => (
+                <span class="explore-card__logo" data-orbit-tiles-item><img src={src} alt="" loading="lazy" decoding="async"></span>
+                ))}
+              </span>
+            </span>
+          </span>
+        ) : kind === 'fan' ? (
+          <span class="explore-card__fan" aria-hidden="true">
+            {shopPictures.map((picture, i) => (
+            <span class="explore-card__sheet" style={`--n: ${i}`}><img src={urlFor(picture!).width(600).url()} srcset={srcSet(picture!, [400, 600, 900])} sizes="(max-width: 767px) 40vw, 18vw" alt="" loading="lazy" decoding="async"></span>
+            ))}
+          </span>
+        ) : image?.asset && <img src={urlFor(image).width(900).url()} srcset={srcSet(image, [600, 900, 1200])} sizes="(max-width: 767px) 100vw, 45vw" alt="" loading="lazy" decoding="async" class="explore-card__img">}
+        <span class="explore-card__body">
+          <span class:list={['explore-card__title', { 'is--lines': lines }]}>{lines ? lines.map((line, i) => <>{i > 0 && ' '}<span class="explore-card__title-line">{line}</span></>) : title}</span>
+          <span class="explore-card__button"><span data-split-hover="target">Learn more</span><svg class="explore-card__icon" viewBox="0 0 12 12" fill="none" aria-hidden="true"><path d="M3 9 9 3M4 3h5v5" stroke="currentColor" stroke-width="1.25" stroke-linecap="square"/></svg></span>
+        </span>
+      </a>
+      ))}
+    </div>
+  </div>
+</section>

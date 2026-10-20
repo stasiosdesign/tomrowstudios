@@ -1,69 +1,68 @@
 /* Slide-out side panels (case study + contact), animated with GSAP.
-   Triggers:  <a data-panel-open="contact">   Closers: [data-panel-close] or Escape */
+   Triggers:  <a data-panel-open="contact">   Closers: [data-panel-close] or Escape
 
-if (window.gsap && window.CustomEase) {
-  gsap.registerPlugin(CustomEase);
-  CustomEase.create("main", "0.65, 0.01, 0.05, 0.99");
-  gsap.defaults({ ease: "main", duration: 0.7 });
-}
+   Lifecycle. The panels are part of each page, so initSidePanels() binds the
+   incoming page's on every navigation (transitions.js); triggers are bound
+   once each. Nothing is set up front: a panel is display: none until it
+   opens, and opening it parks its parts before showing it, so a page with
+   many panels costs nothing until one is used. Escape is listened for once,
+   for whichever panel is open. A panel's own smooth scrolling (Lenis, which
+   runs a frame loop of its own) exists only while the panel is open. Leaving
+   the page with a panel open (lifecycle.js) gives the page its scrolling
+   back. Timing and easing are GSAP's defaults, set in transitions.js. */
 
-/* Smooth scrolling inside an element that scrolls on its own (a panel, the
-   menu). Lenis measures the viewport from the wrapper's client size and the
-   content from its scroll size, so the same element can serve as both. */
+let openPanel = null;
+
+/* Smooth scrolling inside the panel's own scroll area. Lenis measures the
+   viewport from the wrapper's client size and the content from its scroll
+   size, so the same element can serve as both. */
 function createNestedLenis(el) {
   if (!el || typeof window.Lenis === "undefined") return null;
-  if (el.__lenis) return el.__lenis;
-
-  el.__lenis = new Lenis({
-    wrapper: el,
-    content: el,
-    lerp: 0.165,
-    wheelMultiplier: 1.25,
-    autoRaf: true
-  });
-
+  if (!el.__lenis) {
+    el.__lenis = new Lenis({
+      wrapper: el,
+      content: el,
+      lerp: 0.165,
+      wheelMultiplier: 1.25,
+      autoRaf: true
+    });
+  }
   return el.__lenis;
 }
 
+function destroyNestedLenis(el) {
+  if (el && el.__lenis) {
+    el.__lenis.destroy();
+    el.__lenis = null;
+  }
+}
+
+/* The page's own Lenis hijacks the wheel for the whole document, so it is
+   paused while a panel is open — otherwise the page behind scrolls instead */
+function pausePageScroll() {
+  if (window.lenis) window.lenis.stop();
+  document.body.style.overflow = "hidden";
+}
+function resumePageScroll() {
+  if (window.lenis) window.lenis.start();
+  document.body.style.overflow = "";
+}
+
 function initSidePanels() {
-  var panels = document.querySelectorAll("[data-panel]");
-  if (!panels.length) return;
-
-  var hasGsap = !!window.gsap;
-  var openPanel = null;
-
-  // Lenis hijacks the wheel for the whole document, so pause it while a panel
-  // is open — otherwise the page behind scrolls instead of the panel.
-  function getLenis() {
-    if (window.lenis) return window.lenis;
-    try { return lenis; } catch (e) { return null; }
-  }
-  function pausePageScroll() {
-    var l = getLenis();
-    if (l && l.stop) l.stop();
-    document.body.style.overflow = "hidden";
-  }
-  function resumePageScroll() {
-    var l = getLenis();
-    if (l && l.start) l.start();
-    document.body.style.overflow = "";
-  }
+  const panels = document.querySelectorAll("[data-panel]");
+  const hasGsap = !!window.gsap;
 
   panels.forEach(function (panel) {
-    var dialog = panel.querySelector("[data-panel-dialog]");
-    var overlay = panel.querySelector("[data-panel-backdrop]");
-    var sheets = panel.querySelectorAll("[data-panel-bg]");
-    var content = panel.querySelector("[data-panel-inner]");
-    var closeBtn = panel.querySelector(".panel-close");
-    var reveal = closeBtn ? [content, closeBtn] : [content];
-    var tl = hasGsap ? gsap.timeline() : null;
+    if (panel.__panel) return;
+    panel.__panel = true;
 
-    // Park everything off-screen / hidden up front so nothing can paint on the
-    // frame where the panel becomes visible.
-    if (hasGsap) {
-      gsap.set(sheets, { xPercent: 101 });
-      gsap.set(reveal, { autoAlpha: 0 });
-    }
+    const dialog = panel.querySelector("[data-panel-dialog]");
+    const overlay = panel.querySelector("[data-panel-backdrop]");
+    const sheets = panel.querySelectorAll("[data-panel-bg]");
+    const content = panel.querySelector("[data-panel-inner]");
+    const closeBtn = panel.querySelector(".panel-close");
+    const reveal = closeBtn ? [content, closeBtn] : [content];
+    let tl = null;
 
     panel.open = function () {
       if (openPanel && openPanel !== panel) openPanel.close();
@@ -72,11 +71,10 @@ function initSidePanels() {
       pausePageScroll();
 
       // Smooth scrolling for the panel's own scroll area
-      var panelLenis = createNestedLenis(content);
+      const panelLenis = createNestedLenis(content);
       if (panelLenis) {
         panelLenis.scrollTo(0, { immediate: true });
         panelLenis.resize();
-        panelLenis.start();
       } else if (content) {
         content.scrollTop = 0;
       }
@@ -86,6 +84,7 @@ function initSidePanels() {
         return;
       }
 
+      tl = tl || gsap.timeline();
       tl.clear()
         .set(sheets, { xPercent: 101 })
         .set(reveal, { autoAlpha: 0 }, "<")
@@ -101,10 +100,10 @@ function initSidePanels() {
     panel.close = function () {
       panel.setAttribute("data-panel-state", "closed");
       resumePageScroll();
-      if (content && content.__lenis) content.__lenis.stop();
+      destroyNestedLenis(content);
       if (openPanel === panel) openPanel = null;
 
-      if (!hasGsap) {
+      if (!hasGsap || !tl) {
         panel.style.display = "none";
         return;
       }
@@ -124,21 +123,34 @@ function initSidePanels() {
         panel.close();
       });
     });
+
+    if (typeof onPageLeave === "function") {
+      onPageLeave(function () {
+        if (tl) tl.kill();
+        destroyNestedLenis(content);
+        if (openPanel === panel) {
+          openPanel = null;
+          resumePageScroll();
+        }
+      });
+    }
   });
 
   // Any link or button that opens a panel by id
   document.querySelectorAll("[data-panel-open]").forEach(function (trigger) {
+    if (trigger.__panelTrigger) return;
+    trigger.__panelTrigger = true;
     trigger.addEventListener("click", function (e) {
-      var target = document.getElementById(trigger.getAttribute("data-panel-open"));
-      if (!target) return; // fall through to the href so the link still works
+      const target = document.getElementById(trigger.getAttribute("data-panel-open"));
+      if (!target || typeof target.open !== "function") return; // fall through to the href
       e.preventDefault();
       target.open();
     });
   });
-
-  document.addEventListener("keydown", function (e) {
-    if (e.key === "Escape" && openPanel) openPanel.close();
-  });
 }
+
+document.addEventListener("keydown", function (e) {
+  if (e.key === "Escape" && openPanel) openPanel.close();
+});
 
 document.addEventListener("DOMContentLoaded", initSidePanels);

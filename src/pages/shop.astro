@@ -4,16 +4,16 @@ import SiteNav from '../components/SiteNav.astro';
 import SiteFooter from '../components/SiteFooter.astro';
 import ContactPanel from '../components/ContactPanel.astro';
 import Button from '../components/Button.astro';
-import GetInTouch from '../components/GetInTouch.astro';
+import ServiceCards from '../components/ServiceCards.astro';
 import ProductCard from '../components/ProductCard.astro';
-import { imageAttrs, type SanityImage } from '../sanity/image';
+import BrandMark from '../components/BrandMark.astro';
 import { SHOP_ITEMS_QUERY, SHOP_PAGE_QUERY } from '../sanity/queries';
-import { FAQ_DEFAULTS, PAGE_DEFAULTS, type ImageDefault } from '../sanity/page-defaults';
+import { FAQ_DEFAULTS, PAGE_DEFAULTS } from '../sanity/page-defaults';
 
-// The page's words and photo, from the Shop page document (or the page's
-// defaults), the FAQ's questions from the same document (or the five it was
-// built with), and the products from the shop items, in their order; the
-// quotes stay here. The questions carry their keys (data-page-item) so the
+// The page's words, from the Shop page document (or the page's defaults),
+// the FAQ's questions from the same document (or the five it was built
+// with), and the products from the shop items, in their order; the quotes
+// stay here. The questions carry their keys (data-page-item) so the
 // Studio's Visual editor can redraw the list as it is edited
 // (src/sanity/live-preview.ts).
 const [page, items] = await Promise.all([
@@ -22,39 +22,37 @@ const [page, items] = await Promise.all([
 ]);
 const D = PAGE_DEFAULTS.shopPage;
 const questions = page?.faq?.questions?.length ? page.faq.questions : FAQ_DEFAULTS;
-// An <img>'s src, size and alt: the photo set in the Studio, or the page's own file
-const img = (image: SanityImage | null | undefined, fallback: ImageDefault, width: number) =>
-  image?.asset ? { ...imageAttrs(image, width), alt: image.alt ?? fallback.alt } : { src: fallback.path, width: fallback.width, height: fallback.height, alt: fallback.alt };
+
+// The hero's arc, after Osmo's icon fan: nine square cards, left to right,
+// each the studio's mark with one word from the practice under it, the
+// middle one (Designing) the highest and in front. `n`: a card's place
+// from the middle.
+const arcWords = ['Sketching', 'Drawing', 'Modelling', 'Rendering', 'Designing', 'Visualising', 'Presenting', 'Learning', 'Detailing'];
+const arcCards = arcWords.map((word, i) => ({ word, n: i - (arcWords.length - 1) / 2 }));
 ---
 <BaseLayout title="Shop — Tomrow Studios" namespace="shop" pageName="Shop" pageDoc="shopPage">
+<!-- The page itself, which shrinks into the footer as the footer arrives (footer.js) -->
+<div class="page-surface" data-page-surface>
 <SiteNav />
 
-<!-- Hero -->
+<!-- Hero: the heading and the description under it, centred; below them
+     square cards in a wide, shallow arc across the page's full width,
+     overlapping, the middle one highest and in front, the rest stepping
+     down and turning outwards to either side, the whole kept clear of the
+     floating bar. A picture: hidden from screen readers. -->
 <header class="shop-hero">
   <div class="shop-hero__body">
     <div class="shop-hero__copy">
-      <p class="tagline" data-page-field="hero.label">{page?.hero?.label ?? D.hero.label}</p>
       <h1 data-page-field="hero.heading">{page?.hero?.heading ?? D.hero.heading}</h1>
       <p class="lead" data-page-field="hero.lead">{page?.hero?.lead ?? D.hero.lead}</p>
-      <div class="social-proof">
-        <div class="social-proof__avatars">
-          <img src="/assets/photos/portraits/portrait-02.jpg" alt="">
-          <img src="/assets/photos/portraits/portrait-06.jpg" alt="">
-          <img src="/assets/photos/portraits/portrait-09.jpg" alt="">
-          <img src="/assets/photos/portraits/portrait-11.jpg" alt="">
-        </div>
-        <div class="social-proof__body">
-          <img class="social-proof__stars" src="/assets/ui/stars.svg" alt="Rated five out of five">
-          <p class="social-proof__label">Join over <strong>12,000</strong> architects</p>
-        </div>
-      </div>
-      <div class="actions">
-        <Button href="#catalogue" data-barba-prevent="self" data-page-field="hero.primaryButton" label={page?.hero?.primaryButton ?? D.hero.primaryButton} />
-        <Button href="/book" data-page-field="hero.secondaryButton" label={page?.hero?.secondaryButton ?? D.hero.secondaryButton} secondary />
-      </div>
     </div>
-    <div class="shop-hero__media">
-      <img data-page-field="hero.image" data-page-width="1600" {...img(page?.hero?.image, D.hero.image, 1600)}>
+    <div class="shop-arc" aria-hidden="true">
+      {arcCards.map(({ word, n }) => (
+      <div class="shop-arc__card" style={`--n: ${n}; --a: ${Math.abs(n)}; z-index: ${10 - Math.abs(n)}`}>
+        <BrandMark class="shop-arc__mark" />
+        <span class="shop-arc__word">{word}</span>
+      </div>
+      ))}
     </div>
   </div>
 </header>
@@ -64,7 +62,7 @@ const img = (image: SanityImage | null | undefined, fallback: ImageDefault, widt
   <div class="container">
     <div class="section-head">
       <div class="section-head__main">
-        <p class="tagline" data-page-field="catalogue.label">{page?.catalogue?.label ?? D.catalogue.label}</p>
+        <p class="tagline label-pill" data-page-field="catalogue.label">{page?.catalogue?.label ?? D.catalogue.label}</p>
         <h2 data-page-field="catalogue.heading">{page?.catalogue?.heading ?? D.catalogue.heading}</h2>
       </div>
     </div>
@@ -80,7 +78,7 @@ const img = (image: SanityImage | null | undefined, fallback: ImageDefault, widt
   <div class="container">
     <div class="section-head">
       <div class="section-head__main">
-        <p class="tagline">Testimonials</p>
+        <p class="tagline label-pill">Testimonials</p>
         <h2 data-page-field="testimonials.heading">{page?.testimonials?.heading ?? D.testimonials.heading}</h2>
       </div>
       <div class="section-head__side">
@@ -204,8 +202,10 @@ const img = (image: SanityImage | null | undefined, fallback: ImageDefault, widt
   </div>
 </section>
 
-<GetInTouch />
+<ServiceCards />
 
+
+</div>
 
 <SiteFooter />
 

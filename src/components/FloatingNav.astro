@@ -1,0 +1,190 @@
+---
+/* The floating navigation, after fluid.glass: surfaces at the foot of the
+   screen, centred, there on every page from the moment it has loaded.
+
+   The bar: a dark, translucent rectangle holding the home link, the page's
+   name and the menu control, with the close control and a back-to-top arrow
+   waiting below its edge, clipped. Its background is its own element, so it
+   can narrow to a square around the close control without moving anything
+   on it.
+
+   The menu: a set of separate modules standing just above the bar, close
+   together, with no panel round them: the four parts of the practice as
+   tiles, two by two, each with the part it stands for under its name;
+   Home across the full width under them; and at the foot one row of two:
+   the Play Reel card, two thirds of the width, which grows into the
+   reel's player when pressed (reel.js), and Contact Tom, the last third,
+   in the off-white. Each module is its own surface, the dark ones a shade
+   apart from their neighbours; they rise into place from the bar, row by
+   row, as the menu opens.
+
+   The contact form: Contact Tom turns the menu itself into a panel holding
+   a short enquiry form (name, company, email, the project): the menu's
+   blocks give way, its panel reshapes into the form's, and the form's
+   fields rise in; closing runs it back into the menu. Every other way to
+   contact Tom on the site (the bar at the top's Let's talk, the footer's
+   Start a project and Get in touch) opens the same form, grown out of the
+   bar, and closing takes it back into the bar. floatingnav.js moves it,
+   enquiry.js checks and sends it (to the address in contact.ts).
+
+   The marquees: a narrow strip just above the bar and as wide as it,
+   running a line on a loop. One strip per message, each up only where the
+   page, or the part of it on screen, asks for it (data-nav-promo, read by
+   floatingnav.js): the book's, in the colours of the Architectural
+   Influence cover, a book between its titles that opens under the pointer,
+   leading to the book (the Influence page, where it grows into the band at
+   the head of the book section as that comes up, influence.js); and Contact
+   Tom's, on the off-white, opening the contact form (the home page, below
+   its hero). Changing message, one strip goes back behind the bar as the
+   other comes up, each still running; they go back while the menu is open
+   or a page transition runs.
+
+   Lives in the layout, outside the Barba container, so it survives a
+   navigation; floatingnav.js binds it once, ties the bar to each page's
+   footer, and takes the page's name and section from the container
+   (data-nav-title, data-nav-section, BaseLayout.astro). Styles: "Floating
+   navigation" in style.css. */
+import { pages, email } from './site-links';
+import { CONTACT_ENDPOINT } from './contact';
+import { REEL_SRC, REEL_FALLBACK_POSTER, reelPoster, reelPreview, reelPreviewSmall } from './reel';
+import { urlFor } from '../sanity/image';
+import BookIcon from './BookIcon.astro';
+import BrandMark from './BrandMark.astro';
+
+const tiles = ['/architecture', '/influence', '/shop', '/partner'].flatMap((href) => pages.filter((page) => page.href === href));
+const home = pages.find((page) => page.href === '/')!;
+// The reel's card: on production only once there is a reel (reel.ts). Its
+// still is cut to 16:9 here, so the card and the player's placeholder show
+// exactly the same picture as one grows into the other.
+const showReel = Boolean(REEL_SRC) || __DEPLOYMENT__ !== 'production';
+const reelStill = reelPoster || urlFor({ asset: { _id: REEL_FALLBACK_POSTER } }).width(1280).height(720).fit('crop').url();
+// The marquees' words, one strip each. Two identical halves of four, each
+// wider than the strip, so moving the pair by one half brings it back to
+// where it started.
+const promos = [
+  { key: 'book', label: 'Architectural Influence Book', href: '/book', contact: false },
+  { key: 'contact', label: 'Contact Tom', href: '#contact', contact: true },
+];
+// The contact form's single-line fields; the project's text follows them
+const fields: { name: string; label: string; type: 'text' | 'email'; autocomplete: 'name' | 'organization' | 'email'; required: boolean; half?: boolean }[] = [
+  { name: 'name', label: 'Name', type: 'text', autocomplete: 'name', required: true, half: true },
+  { name: 'company', label: 'Company', type: 'text', autocomplete: 'organization', required: false, half: true },
+  { name: 'email', label: 'Email address', type: 'email', autocomplete: 'email', required: true },
+];
+---
+<div class="fnav-backdrop" data-fnav-backdrop aria-hidden="true"></div>
+
+<div class:list={['fnav-menu', { 'has-reel': showReel }]} id="fnav-menu" data-fnav-menu aria-hidden="true" inert>
+  <nav class="fnav-menu__nav" aria-label="Site menu">
+    <ul class="fnav-menu__tiles" role="list">
+      {tiles.map(({ href, label, note }) => (
+        <li class="fnav-menu__cell" data-fnav-reveal data-fnav-item={href}>
+          <a href={href} class="fnav-tile" data-fnav-link data-split-hover="link">
+            <span class="fnav-tile__title" data-split-hover="target">{label}</span>
+            <span class="fnav-tile__note">{note}</span>
+          </a>
+        </li>
+      ))}
+      <li class="fnav-menu__cell is--wide" data-fnav-reveal data-fnav-item={home.href}>
+        <a href={home.href} class="fnav-tile is--wide" data-fnav-link data-split-hover="link">
+          <span class="fnav-tile__title" data-split-hover="target">{home.label}</span>
+          <span class="fnav-tile__note">{home.note}</span>
+        </a>
+      </li>
+    </ul>
+    <div class="fnav-menu__row">
+    {showReel && (
+    <div class="fnav-menu__reel" data-fnav-reveal>
+      <button type="button" class="fnav-reel" data-cursor="play" data-reel-card data-reel-src={REEL_SRC} data-reel-poster={reelStill} data-reel-preview={reelPreview} data-reel-preview-small={reelPreviewSmall || undefined} aria-haspopup="dialog" aria-label="Play the reel">
+        <span class="fnav-reel__media">
+          <img class="fnav-reel__still" src={reelStill} alt="" decoding="async">
+          <!-- The moving preview: no source until the first hover (reel.js);
+               crossorigin so the player can start from the frame it shows -->
+          <video class="fnav-reel__preview" data-reel-preview-video muted loop playsinline preload="none" crossorigin="anonymous" disablepictureinpicture aria-hidden="true"></video>
+        </span>
+        <span class="fnav-reel__label">Play reel</span>
+        <span class="fnav-reel__play"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M8 5.5v13l10.5-6.5z" fill="currentColor"/></svg></span>
+      </button>
+    </div>
+    )}
+    <a href="#contact" class="fnav-menu__contact" data-fnav-reveal data-fnav-button data-fnav-contact-open data-barba-prevent="self" aria-haspopup="dialog" aria-controls="fnav-contact" data-split-hover="link">
+      <span class="fnav-menu__contact-label" data-split-hover="target">Contact Tom</span>
+      <svg class="fnav-menu__contact-arrow" viewBox="0 0 12 12" fill="none" aria-hidden="true"><path d="M4 1.5 8.5 6 4 10.5" stroke="currentColor" stroke-width="1.25" stroke-linecap="square"/></svg>
+    </a>
+    </div>
+  </nav>
+</div>
+
+<div class="fnav-contact" id="fnav-contact" data-fnav-contact role="dialog" aria-modal="true" aria-labelledby="fnav-contact-title" aria-hidden="true" inert>
+  <div class="fnav-contact__inner" data-fnav-contact-inner data-lenis-prevent tabindex="-1">
+    <div class="fnav-contact__head" data-fnav-contact-reveal>
+      <h2 class="fnav-contact__title" id="fnav-contact-title">Get in touch</h2>
+      <button type="button" class="fnav-contact__close" data-fnav-contact-close aria-label="Close the contact form">
+        <svg viewBox="0 0 13 13" fill="none" aria-hidden="true"><path d="M0.354 11.667 11.667 0.354" stroke="currentColor"/><path d="M0.354 0.354 11.667 11.667" stroke="currentColor"/></svg>
+      </button>
+    </div>
+    <p class="fnav-contact__lead" data-fnav-contact-reveal>Tell Tom about your project.</p>
+    <form class="fnav-contact__form" data-enquiry-form data-endpoint={CONTACT_ENDPOINT} data-email={email} action={CONTACT_ENDPOINT || undefined} method="post" novalidate>
+      <div class="fnav-contact__fields">
+        {fields.map(({ name, label, type, autocomplete, required, half }) => (
+        <div class:list={['fnav-field', { 'is--half': half }]} data-fnav-contact-reveal data-enquiry-field>
+          <label class="fnav-field__label" for={`enquiry-${name}`}>{label}{required ? <span class="fnav-field__mark" aria-hidden="true"> *</span> : <span class="fnav-field__optional"> (optional)</span>}</label>
+          <input class="fnav-field__input" id={`enquiry-${name}`} name={name} type={type} autocomplete={autocomplete} maxlength="256" required={required} aria-describedby={`enquiry-${name}-error`} {...(type === 'email' ? { inputmode: 'email', autocapitalize: 'off', spellcheck: 'false' } : {})}>
+          <p class="fnav-field__error" id={`enquiry-${name}-error`}></p>
+        </div>
+        ))}
+        <div class="fnav-field" data-fnav-contact-reveal data-enquiry-field>
+          <label class="fnav-field__label" for="enquiry-message">Project information<span class="fnav-field__mark" aria-hidden="true"> *</span></label>
+          <textarea class="fnav-field__input is--area" id="enquiry-message" name="message" rows="5" maxlength="5000" required data-minlength="10" aria-describedby="enquiry-message-error" placeholder="What you are planning, who it is for and when"></textarea>
+          <p class="fnav-field__error" id="enquiry-message-error"></p>
+        </div>
+      </div>
+      <div class="fnav-contact__actions" data-fnav-contact-reveal>
+        <button type="submit" class="fnav-contact__submit" data-enquiry-submit>
+          <span class="fnav-contact__submit-label" data-enquiry-label>Submit Enquiry</span>
+          <svg class="fnav-contact__submit-arrow" viewBox="0 0 12 12" fill="none" aria-hidden="true"><path d="M4 1.5 8.5 6 4 10.5" stroke="currentColor" stroke-width="1.25" stroke-linecap="square"/></svg>
+        </button>
+        <div class="fnav-contact__status" data-enquiry-status role="status" aria-live="polite"></div>
+      </div>
+    </form>
+    <div class="fnav-contact__done" data-enquiry-done hidden tabindex="-1">
+      <p class="fnav-contact__done-title">Thank you.</p>
+      <p class="fnav-contact__done-text">Your enquiry has been sent to Tom.</p>
+    </div>
+  </div>
+  <div class="fnav-contact__background" data-fnav-contact-bg></div>
+</div>
+
+{promos.map(({ key, label, href, contact }) => (
+<a href={href} class={`fnav-promo is--${key}`} data-fnav-promo={key} aria-label={label} {...(contact ? { 'data-panel-open': 'contact', 'data-barba-prevent': 'self', 'aria-haspopup': 'dialog', 'aria-controls': 'fnav-contact' } : {})}>
+  <!-- The words' layer, which the book's strip scales as it grows into the
+       Influence page's book band (influence.js) -->
+  <span class="fnav-promo__scale">
+    <span class="fnav-promo__track" aria-hidden="true">
+      {[0, 1].map(() => (
+      <span class="fnav-promo__half">
+        {[0, 1, 2, 3].map(() => (
+        <span class="fnav-promo__item"><span class="fnav-promo__text">{label}</span>{key === 'book' ? <BookIcon /> : <span class="fnav-promo__mark"></span>}</span>
+        ))}
+      </span>
+      ))}
+    </span>
+  </span>
+</a>
+))}
+
+<div class="fnav" data-fnav data-cursor="hover">
+  <!-- The home link: the studio's mark (BrandMark.astro) -->
+  <a href="/" class="fnav__logo" aria-label="Tomrow Studios, home"><BrandMark class="fnav__logo-mark" /></a>
+  <div class="fnav__title" aria-hidden="true"><div class="fnav__title-inner" data-fnav-title></div></div>
+  <button type="button" class="fnav__burger" data-fnav-open aria-label="Open menu" aria-expanded="false" aria-controls="fnav-menu">
+    <svg class="fnav__burger-svg" viewBox="0 0 20 11" fill="none" aria-hidden="true"><path d="M0 0.5H20" stroke="currentColor"/><path d="M0 5.5H20" stroke="currentColor"/><path d="M0 10.5H20" stroke="currentColor"/></svg>
+  </button>
+  <button type="button" class="fnav__close" data-fnav-close aria-label="Close menu">
+    <svg class="fnav__close-svg" viewBox="0 0 13 13" fill="none" aria-hidden="true"><path d="M0.354 11.667 11.667 0.354" stroke="currentColor"/><path d="M0.354 0.354 11.667 11.667" stroke="currentColor"/></svg>
+  </button>
+  <button type="button" class="fnav__arrow" data-fnav-top aria-label="Back to top">
+    <svg class="fnav__arrow-svg" viewBox="0 0 11 12" fill="none" aria-hidden="true"><path d="M5.375 11.711V1.2M0.35 5.65 5.375 0.6l5.025 5.05" stroke="currentColor"/></svg>
+  </button>
+  <span class="fnav__background" data-fnav-bg></span>
+</div>

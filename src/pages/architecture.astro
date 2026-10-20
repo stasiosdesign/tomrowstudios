@@ -11,34 +11,46 @@ import { PAGE_DEFAULTS } from '../sanity/page-defaults';
 const { sanity } = Astro.locals;
 const [projects, page] = await Promise.all([sanity.fetch(PROJECT_INDEX_QUERY), sanity.fetch(ARCHITECTURE_PAGE_QUERY)]);
 const D = PAGE_DEFAULTS.architecturePage;
-const pad = (n: number) => String(n).padStart(2, '0');
 ---
 <BaseLayout title="Architecture — Tomrow Studios" namespace="architecture" pageName="Architecture" mainClass="arch-page" pageDoc="architecturePage">
 <SiteNav />
 
-<!-- One screen, moving sideways. The projects run off the right-hand edge, two
-     columns of the grid each, and are reached by dragging, by the arrows, or
-     by scrolling up and down — which the slider reads as left and right. -->
+<!-- One screen, moving sideways, after an editorial index: a single row of
+     small landscape pictures across the middle of the screen, a great deal
+     of room above and below, the page's name over the row under the
+     studio's name, and each project's name and context on its picture,
+     shown under the pointer or with the card focused. The pictures drift a
+     little in their frames as the row moves (Osmo's parallax slider,
+     archslider.js). The row is reached by dragging, by the arrows, or by
+     scrolling up and down, which the slider reads as left and right; a fine
+     line just above the floating bar says how far along it is. -->
 <section class="arch-stage">
 
   <div data-parallax-init class="parallax-slider__group arch-stage__group">
 
+    <div class="arch-stage__head">
+      <h1 class="arch-stage__title" data-page-field="header.heading">{page?.header?.heading ?? D.header.heading}</h1>
+      <div class="arch-arrows">
+        <button type="button" data-parallax-prev class="arch-arrow is--prev is--disabled" aria-label="Previous project"></button>
+        <button type="button" data-parallax-next class="arch-arrow is--next" aria-label="Next project"></button>
+      </div>
+    </div>
+
     <div class="arch-stage__slider">
       <div class="parallax-slider__collection">
-        <div data-parallax-slider data-parallax-infinite="false" data-parallax-snap="false" data-parallax-amount="0" data-parallax-lerp="0.2" class="parallax-slider__list">
+        <div data-parallax-slider data-parallax-infinite="false" data-parallax-snap="false" data-parallax-amount="10" data-parallax-lerp="0.2" class="parallax-slider__list">
 
-          {projects.map((project, i) => (
+          {projects.map((project) => (
           <div class="parallax-slider__item">
             <a href={`/projects/${project.slug}`} class="parallax-slider__item-link">
               <div class="parallax-slider__item-inner">
                 <div data-parallax-inner class="parallax-slider__item-visual">
-                  {project.coverImage && <img {...imageAttrs(project.coverImage)} draggable="false" alt={project.coverImage.alt || project.name || ''} class="parallax-slider__item-img">}
+                  {project.coverImage && <img {...imageAttrs(project.coverImage, 1600)} draggable="false" alt={project.coverImage.alt || project.name || ''} class="parallax-slider__item-img">}
                 </div>
-              </div>
-              <div class="parallax-slider__item-label">
-                <span class="parallax-slider__item-meta">{pad(i + 1)}</span>
-                <p class="parallax-slider__item-name">{project.name}</p>
-                <span class="parallax-slider__item-meta">{[project.context, project.year].filter(Boolean).join(' — ')}</span>
+                <div class="parallax-slider__item-label">
+                  <p class="parallax-slider__item-name">{project.name}</p>
+                  <span class="parallax-slider__item-meta">{[project.year, project.context].filter(Boolean).join(' / ')}</span>
+                </div>
               </div>
             </a>
           </div>
@@ -48,18 +60,8 @@ const pad = (n: number) => String(n).padStart(2, '0');
       </div>
     </div>
 
-    <div class="arch-stage__foot">
-      <h1 class="arch-stage__title" data-page-field="header.heading">{page?.header?.heading ?? D.header.heading}</h1>
-      <div class="arch-stage__controls">
-        <p class="arch-stage__count"><strong data-parallax-counter>01</strong> / {pad(projects.length)}</p>
-        <div class="arch-arrows">
-          <button type="button" data-parallax-prev class="arch-arrow is--prev is--disabled" aria-label="Previous project"></button>
-          <button type="button" data-parallax-next class="arch-arrow is--next" aria-label="Next project"></button>
-        </div>
-      </div>
-    </div>
-
-    <!-- Progress through the horizontal run, pinned to the bottom edge -->
+    <!-- How far along the row: a fine line just above the floating bar, as
+         wide as it; pressed, the row goes there -->
     <div data-parallax-progress-wrap class="progress-bar-wrap">
       <div data-parallax-progress class="progress-bar"></div>
     </div>

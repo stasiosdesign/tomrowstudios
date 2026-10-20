@@ -5,11 +5,11 @@
 // The CTA is complete without this file: its frame is drawn in and out by
 // CSS on :hover and :focus-visible, and it links, scrolls or opens whatever
 // its markup says. What this adds, on a fine pointer with motion allowed, is
-// the arrow stepping forward a few pixels. The label's scramble is not
-// implemented here — it is bound to the same `data-scramble-hover` markup
-// and the same shared engine (scramble.js) as every other link on the site,
-// so there is one scramble implementation, not one per component. Touch
-// devices and reduced motion get the CSS states only.
+// the arrow stepping forward a few pixels. The label's roll is not
+// implemented here — it is bound to the same `data-split-hover` markup and
+// the same shared engine (split-hover.js) as every other link on the site,
+// so there is one implementation, not one per component. Touch devices and
+// reduced motion get the CSS states only.
 
 function initCta() {
   const finePointer = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
@@ -28,8 +28,8 @@ function initCta() {
     const icon = button.querySelector('.cta__icon');
     if (!label) return;
 
-    if (typeof bindScrambleHover === 'function') {
-      bindScrambleHover(button, label);
+    if (typeof bindSplitHover === 'function' && typeof canSplitHover === 'function' && canSplitHover()) {
+      bindSplitHover(button, label);
     }
 
     const enter = () => {

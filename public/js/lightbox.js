@@ -60,6 +60,7 @@ function initClickToZoomBasic() {
     cloneEl = img.cloneNode(false);
     cloneEl.loading = "eager";
     cloneEl.removeAttribute("data-click-zoom");
+    cloneEl.removeAttribute("data-cursor-label");
 
     const srcComputed = window.getComputedStyle(img);
 

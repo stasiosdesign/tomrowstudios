@@ -10,7 +10,6 @@ const REVEAL_IMAGES = [
   ".parallax-slider__item-img",
   ".project-bleed img",
   ".project-grid img",
-  ".gallery img",
   ".card-img",
   ".product-card__media img",
   ".archive-card img",

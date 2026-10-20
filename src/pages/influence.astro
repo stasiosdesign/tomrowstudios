@@ -6,41 +6,102 @@ import ContactPanel from '../components/ContactPanel.astro';
 import Button from '../components/Button.astro';
 import WorldMapLines from '../components/WorldMapLines.astro';
 import AtlasHotspots from '../components/AtlasHotspots.astro';
-import GetInTouch from '../components/GetInTouch.astro';
-import { imageAttrs, type SanityImage } from '../sanity/image';
+import ServiceCards from '../components/ServiceCards.astro';
+import BookIcon from '../components/BookIcon.astro';
+import { srcSet, urlFor } from '../sanity/image';
 import { INFLUENCE_PAGE_QUERY } from '../sanity/queries';
-import { PAGE_DEFAULTS, type ImageDefault } from '../sanity/page-defaults';
+import { PAGE_DEFAULTS } from '../sanity/page-defaults';
+import { bookUrl } from '../components/site-links';
 
-// The page's words and photo, from the Influence page document (or the
-// page's defaults); the timeline, the numbers and the map stay here
+// The page's words, from the Influence page document (or the page's
+// defaults); the hero's photographs, the timeline, the numbers and the map
+// stay here
 const page = await Astro.locals.sanity.fetch(INFLUENCE_PAGE_QUERY);
 const D = PAGE_DEFAULTS.influencePage;
-// An <img>'s src, size and alt: the photo set in the Studio, or the page's own file
-const img = (image: SanityImage | null | undefined, fallback: ImageDefault, width: number) =>
-  image?.asset ? { ...imageAttrs(image, width), alt: image.alt ?? fallback.alt } : { src: fallback.path, width: fallback.width, height: fallback.height, alt: fallback.alt };
+
+// The hero's collage (style.css, "Influence: the hero"): thirteen
+// photographs from the library, in both datasets, on the geometry of ESE's
+// "Discover our history" (eseagency.ch/en/agency), measured from its page
+// at three widths. Each of the reference's thirteen frames in its order:
+// its left, top and width in vw and its shape (width over height) on a
+// desktop (measured at 1440px), a tablet (820px) and a phone (390px), and
+// its parallax speed (influence.js, the reference's own). The frames stand
+// round the name as they do round the reference's heading: their tops are
+// taken from the heading's middle (`head`: the reference heading's middle,
+// in vw from its section's top) and set from the name's middle, the middle
+// of the first screen. The reference moves a frame by its speed from where
+// it stands when the frame is in the middle of the screen, and this page
+// from where it stands at the top of the page, with the name in the
+// middle; so each frame is set where the reference has it at that moment
+// (its offset from the heading's middle, times its speed over ten), and
+// the scroll then moves it at the reference's rate. Each photograph is
+// placed in the frame nearest its own shape. `tail`: how far the
+// reference's section runs on below its heading's middle, in vw.
+type Frame = [left: number, top: number, width: number, shape: number];
+type Slot = { id: string; speed: number; desktop: Frame; tablet: Frame; phone: Frame };
+const layouts = {
+  desktop: { head: 74.1, tail: 85.9 },
+  tablet: { head: 69.6, tail: 90.4 },
+  phone: { head: 130.75, tail: 169.6 },
+};
+const slots: Slot[] = [
+  { id: 'bc89fe633a667a87e845c49f3c6ac5abb3420d2c-1200x1500-jpg', speed: -0.5, desktop: [57, 33.61, 20, 1.5], tablet: [57, 33.7, 20, 1.5], phone: [64.1, 60, 30, 1.5] },
+  { id: 'f2d502a355ce58d182036c092964d88dc081c3d2-1200x675-jpg', speed: -1.5, desktop: [33, 95.83, 30, 1.43], tablet: [33, 95.9, 30, 1.43], phone: [52.1, 173.1, 40, 1.43] },
+  { id: '0a01c4e2d3ccdc4a01a57a35a87ed4b6f05dc6a9-1600x1600-jpg', speed: 1, desktop: [7, 17.57, 15, 1.33], tablet: [7, 17.6, 15, 1.34], phone: [6.9, 39, 25.1, 1.34] },
+  { id: '6d3dd1b7a59b141b839bcaa8b6d932177ba26861-1200x1800-jpg', speed: 2, desktop: [36, 9.58, 20, 0.71], tablet: [36, 0, 20, 0.71], phone: [27.9, 9, 30, 0.7] },
+  { id: 'b3ccd88dbff4fe0c6663c9de5395ff04f81c8917-1200x1500-jpg', speed: -2, desktop: [8, 72.99, 20, 1.33], tablet: [3, 44.8, 20, 1.33], phone: [0, 93.1, 30, 1.33] },
+  { id: 'e4ea67de175d1e63042eb74536d7cae260fc749c-1200x1500-jpg', speed: 3, desktop: [75, 99.58, 25, 0.79], tablet: [75, 99.6, 25, 0.79], phone: [70, 202.3, 30, 0.79] },
+  { id: '5d77103834f2a3f7b2262e797616519e2013297c-1200x1500-jpg', speed: 2, desktop: [16, 52.22, 20, 1.5], tablet: [16, 36.8, 20, 1.5], phone: [15.9, 69, 30, 0.55] },
+  { id: 'd6ef53755a50343456775c9a40ee1ae7cb248a22-1200x1800-jpg', speed: 1.5, desktop: [29, 118.96, 20, 0.71], tablet: [29, 118.9, 20, 0.71], phone: [23.1, 227.9, 30, 0.71] },
+  { id: '36f402be0bf97c5317c7d97b747b6a6dab83c271-1200x799-jpg', speed: 1, desktop: [70, 64.79, 30, 1.5], tablet: [70, 48, 30, 1.5], phone: [60, 90, 40, 1.5] },
+  { id: '5cf058873169d56f24a8f1b8df4df4a5775e2394-1200x675-jpg', speed: 3, desktop: [48, 143.19, 30, 1.5], tablet: [48, 143.2, 30, 1.5], phone: [46.2, 279.7, 40, 1.5] },
+  { id: '3b3fee8b11e79a6ee109938ddbf2b463e8d45907-1200x2133-jpg', speed: 3, desktop: [-3, 90.83, 20, 0.56], tablet: [-2, 82.8, 20, 0.56], phone: [-2.1, 169, 30, 0.56] },
+  { id: '47972355868e5f78ced56cb0edee370ad0f508c3-1200x1600-jpg', speed: 4, desktop: [75, 14.38, 20, 0.71], tablet: [75, 14.4, 20, 0.71], phone: [66.2, 3.1, 30, 0.7] },
+  { id: 'c1d5861d068d9c3f91d90a5ebed6f1632ab6b40b-1200x1500-jpg', speed: 0.5, desktop: [5, 138.54, 25, 1.5], tablet: [5, 138.5, 25, 1.5], phone: [4.1, 274.4, 30, 1.5] },
+];
+// A frame's place from the name's middle, in vw, at the top of the page
+const fromHead = ([, top, width, shape]: Frame, head: number, speed: number) => {
+  const middle = top + width / shape / 2;
+  return +(top - head + ((middle - head) * speed) / 10).toFixed(2);
+};
+const shots = slots.map(({ id, speed, desktop, tablet, phone }) => {
+  const d = fromHead(desktop, layouts.desktop.head, speed);
+  const t = fromHead(tablet, layouts.tablet.head, speed);
+  const p = fromHead(phone, layouts.phone.head, speed);
+  return {
+    id,
+    speed,
+    style: [
+      `--x: ${desktop[0]}; --y: ${d}; --w: ${desktop[2]}; --r: ${desktop[3]};`,
+      `--tx: ${tablet[0]}; --ty: ${t}; --tw: ${tablet[2]}; --tr: ${tablet[3]};`,
+      `--mx: ${phone[0]}; --my: ${p}; --mw: ${phone[2]}; --mr: ${phone[3]};`,
+    ].join(' '),
+    sizes: `(max-width: 767px) ${phone[2]}vw, (max-width: 991px) ${tablet[2]}vw, ${desktop[2]}vw`,
+    // On or near the first screen: fetched at once
+    eager: d < 30,
+  };
+});
+const shotImage = (id: string) => ({ asset: { _id: `image-${id}` } });
+// The book band's words, twice four, as the strip over the bar has them
+const bookLabel = 'Architectural Influence Book';
 ---
-<BaseLayout title="Influence — Tomrow Studios" namespace="influence" pageName="Influence" pageDoc="influencePage">
+<BaseLayout title="Influence — Tomrow Studios" namespace="influence" pageName="Influence" pageDoc="influencePage" navPromo="book">
+<!-- The page itself, which shrinks into the footer as the footer arrives
+     (footer.js); no column lines on this page (is--gridless) -->
+<div class="page-surface is--gridless" data-page-surface>
 <SiteNav />
 
-<!-- Intro + lightbox -->
-<section class="section-alt">
-  <div class="section">
-    <div class="container">
-      <div class="section-head is--hero">
-        <div class="section-head__main">
-          <p class="tagline" data-page-field="hero.label">{page?.hero?.label ?? D.hero.label}</p>
-          <h2 class="page-hero-title" data-page-field="hero.heading">{page?.hero?.heading ?? D.hero.heading}</h2>
-        </div>
-        <div class="section-head__side">
-          <p class="lead" data-page-field="hero.lead">{page?.hero?.lead ?? D.hero.lead}</p>
-        </div>
-      </div>
-    </div>
+<!-- The hero: the page's name in the middle of the first screen, the
+     collage round it in parallax (influence.js) -->
+<section class="influence-hero" data-influence-hero style={`--tail: ${layouts.desktop.tail}; --ttail: ${layouts.tablet.tail}; --mtail: ${layouts.phone.tail};`}>
+  <div class="influence-hero__head">
+    <h1 class="influence-hero__title" data-page-field="hero.heading">{page?.hero?.heading ?? D.hero.heading}</h1>
   </div>
-  <div class="lightbox">
-    <img class="lightbox-img" data-page-field="hero.image" data-page-width="1600" {...img(page?.hero?.image, D.hero.image, 1600)}>
-    <img class="lightbox-play" src="/assets/ui/play.svg" alt="Play">
+  {shots.map(({ id, speed, style, sizes, eager }) => (
+  <div class="influence-hero__shot" data-speed={speed} style={style}>
+    <img class="influence-hero__img" src={urlFor(shotImage(id)).width(800).url()} srcset={srcSet(shotImage(id), [400, 800, 1200, 1600])} sizes={sizes} alt="" decoding="async" loading={eager ? 'eager' : 'lazy'}>
   </div>
+  ))}
 </section>
 
 <!-- Total followers — one headline figure -->
@@ -118,7 +179,7 @@ const img = (image: SanityImage | null | undefined, fallback: ImageDefault, widt
   <div class="container">
     <div class="section-head">
       <div class="section-head__main">
-        <p class="tagline" data-page-field="insights.label">{page?.insights?.label ?? D.insights.label}</p>
+        <p class="tagline label-pill" data-page-field="insights.label">{page?.insights?.label ?? D.insights.label}</p>
         <h2 data-page-field="insights.heading">{page?.insights?.heading ?? D.insights.heading}</h2>
       </div>
       <div class="section-head__side">
@@ -159,7 +220,7 @@ const img = (image: SanityImage | null | undefined, fallback: ImageDefault, widt
         </div>
         <div class="insights-row__value-group">
           <p class="insights-row__value is--words">Published Book</p>
-          <a href="/book" data-scramble-hover="link" class="insights-row__link"><span data-scramble-hover="target">See the book</span><span aria-hidden="true">&#8202;&#8594;</span></a>
+          <a href="/book" data-split-hover="link" class="insights-row__link"><span data-split-hover="target">See the book</span><span aria-hidden="true">&#8202;&#8594;</span></a>
         </div>
       </li>
       <li class="insights-row">
@@ -196,6 +257,21 @@ const img = (image: SanityImage | null | undefined, fallback: ImageDefault, widt
       <AtlasHotspots />
     </div>
   </div>
+  <!-- The book band: the strip over the floating bar, grown to the page's
+       width as the section comes up (influence.js), its head -->
+  <a href="/book" class="book-band" data-book-band aria-label={bookLabel}>
+    <span class="fnav-promo__scale">
+      <span class="fnav-promo__track" aria-hidden="true">
+        {[0, 1].map(() => (
+        <span class="fnav-promo__half">
+          {[0, 1, 2, 3].map(() => (
+          <span class="fnav-promo__item"><span class="fnav-promo__text">{bookLabel}</span><BookIcon /></span>
+          ))}
+        </span>
+        ))}
+      </span>
+    </span>
+  </a>
   <div class="book-feature">
     <div class="book-feature__intro">
       <p class="tagline" data-page-field="book.label">{page?.book?.label ?? D.book.label}</p>
@@ -204,14 +280,16 @@ const img = (image: SanityImage | null | undefined, fallback: ImageDefault, widt
     <div class="book-feature__body">
       <p class="lead" data-page-field="book.lead">{page?.book?.lead ?? D.book.lead}</p>
       <div class="actions">
-        <Button href="/book" data-page-field="book.button" label={page?.book?.button ?? D.book.button} />
+        <Button href={bookUrl} target="_blank" rel="noopener" data-page-field="book.button" label={page?.book?.button ?? D.book.button} />
       </div>
     </div>
   </div>
 </section>
 
-<GetInTouch />
+<ServiceCards />
 
+
+</div>
 
 <SiteFooter />
 

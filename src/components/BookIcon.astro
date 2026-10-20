@@ -1,0 +1,19 @@
+---
+/* The book mark between the titles of the book's marquees (the strip over
+   the floating bar, FloatingNav.astro; the band in the Influence page's book
+   section, influence.astro): the closed book, which opens under the pointer.
+   Both drawings are here, one over the other; style.css ("The book's
+   marquee") turns one into the other. Lines in the marquee's colour, a
+   pixel wide at any size. */
+---
+<span class="book-icon" aria-hidden="true">
+  <svg class="book-icon__closed" viewBox="0 0 24 24" fill="none">
+    <path d="M19 21.5H6.5L5 20V4L6.5 2.5H19V21.5Z" stroke="currentColor" stroke-miterlimit="10" vector-effect="non-scaling-stroke"/>
+    <path d="M5 18L6.5 16.5H19" stroke="currentColor" stroke-miterlimit="10" vector-effect="non-scaling-stroke"/>
+    <path d="M7 19H19" stroke="currentColor" stroke-miterlimit="10" vector-effect="non-scaling-stroke"/>
+  </svg>
+  <svg class="book-icon__open" viewBox="0 0 24 24" fill="none">
+    <path d="M12 6V21" stroke="currentColor" vector-effect="non-scaling-stroke"/>
+    <path d="M9 3H2V18H9L12 21L15 18H22V3H15L12 6L9 3Z" stroke="currentColor" vector-effect="non-scaling-stroke"/>
+  </svg>
+</span>

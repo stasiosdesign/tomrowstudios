@@ -43,7 +43,7 @@ const creditClass = { won: 'is--won', award: undefined, detail: 'is--meta' };
 // The gallery tiles' aspect ratio; "natural" leaves every picture uncropped
 const framingClass = { wide: 'is--wide', square: 'is--square', tall: 'is--tall', natural: undefined };
 ---
-<BaseLayout title={`${project.title} — Tomrow Studios`} namespace={`project-${project.slug}`} pageName={project.name ?? ''}>
+<BaseLayout title={`${project.title} — Tomrow Studios`} namespace={`project-${project.slug}`} pageName={project.name ?? ''} navTitle="Architecture" navSection="/architecture">
 <SiteNav />
 
 
@@ -76,7 +76,7 @@ const framingClass = { wide: 'is--wide', square: 'is--square', tall: 'is--tall',
 {/* Full bleed */}
 {section._type === 'featureImage' && (
 <section class="project-bleed">
-  <img data-click-zoom {...imageAttrs(section)} loading="lazy" decoding="async" alt={section.alt ?? ''}>
+  <img data-click-zoom data-cursor-label="Enlarge" {...imageAttrs(section)} loading="lazy" decoding="async" alt={section.alt ?? ''}>
 </section>
 )}
 {/* Image band, one picture to a column of the grid (or two across, for
@@ -86,7 +86,7 @@ const framingClass = { wide: 'is--wide', square: 'is--square', tall: 'is--tall',
 <section class:list={['project-grid', { 'is--pairs': section.layout === 'pairs' }]}>
   <div class="project-grid__list">
     {section.images?.map((image) => (
-    <div data-click-zoom class:list={['project-grid__item', framingClass[section.framing ?? 'wide']]}>
+    <div data-click-zoom data-cursor-label="Enlarge" class:list={['project-grid__item', framingClass[section.framing ?? 'wide']]}>
       <img {...imageAttrs(image)} loading="lazy" decoding="async" alt={image.alt ?? ''}>
     </div>
     ))}

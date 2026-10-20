@@ -1,0 +1,78 @@
+---
+/* The reel's player: Osmo Supply's Custom Bunny HLS Lightbox (Advanced),
+   its markup as supplied (bunny-lightbox.js; "Reel lightbox" in
+   style.css). Opened from the Play Reel card in the floating navigation and
+   the About picture in the home hero by reel.js, which grows the player out
+   of the card. In the layout, outside the Barba container, next to the
+   navigation it belongs with.
+
+   Set to the site, every data- attribute and class of Osmo's kept:
+     - cover mode (data-player-update-size="cover"): the player fills its
+       frame, which style.css sizes to nearly the whole screen;
+     - the controls are buttons, named, so they take focus and keys; the
+       timeline is a slider (its value kept by reel.js);
+     - the close control stands inside the frame, in its top right corner,
+       so it travels with the picture;
+     - the dialog's name and role (it takes focus as it opens, so Space
+       plays and pauses rather than pressing a control), and a line shown in place of the
+       controls while no reel source is set (reel.ts).
+   Its SVGs' `viewbox` is written `viewBox`, the same attribute, for the
+   type check. */
+---
+<div data-bunny-lightbox-status="not-active" class="bunny-lightbox" data-reel-lightbox role="dialog" aria-modal="true" aria-label="Reel" aria-hidden="true" tabindex="-1">
+  <div data-bunny-lightbox-control="close" class="bunny-lightbox__dark"></div>
+  <div data-bunny-lightbox-calc-height="" class="bunny-lightbox__calc">
+    <div data-bunny-lightbox-init="" data-player-muted="false" data-player-fullscreen="false" data-player-activated="false" data-player-autoplay="true" data-player-hover="idle" data-player-src="" data-player-status="idle" data-player-update-size="cover" class="bunny-lightbox-player">
+      <div data-player-before="" class="bunny-lightbox-player__before"></div>
+      <video preload="auto" width="1920" height="1080" playsinline="" class="bunny-lightbox-player__video"></video>
+      <img data-bunny-lightbox-placeholder="" src="" alt="" class="bunny-lightbox-player__placeholder">
+      <div class="bunny-lightbox-player__dark"></div>
+      <div data-player-control="playpause" class="bunny-lightbox-player__playpause">
+        <div class="bunny-lightbox-player__big-btn">
+          <svg xmlns="http://www.w3.org/2000/svg" width="100%" viewBox="0 0 24 24" fill="none" class="bunny-lightbox-player__pause-svg"><path d="M16 5V19" stroke="currentColor" stroke-width="3" stroke-miterlimit="10"></path><path d="M8 5V19" stroke="currentColor" stroke-width="3" stroke-miterlimit="10"></path></svg>
+          <svg xmlns="http://www.w3.org/2000/svg" width="100%" viewBox="0 0 24 24" fill="none" class="bunny-lightbox-player__play-svg"><path d="M6 12V5.01109C6 4.05131 7.03685 3.4496 7.87017 3.92579L14 7.42855L20.1007 10.9147C20.9405 11.3945 20.9405 12.6054 20.1007 13.0853L14 16.5714L7.87017 20.0742C7.03685 20.5503 6 19.9486 6 18.9889V12Z" fill="currentColor"></path></svg>
+        </div>
+      </div>
+      <div class="bunny-lightbox-player__interface">
+        <div class="bunny-lightbox-player__interface-fade"></div>
+        <div class="bunny-lightbox-player__interface-bottom">
+          <button type="button" data-player-control="playpause" class="bunny-lightbox-player__toggle-playpause" aria-label="Play or pause">
+            <svg xmlns="http://www.w3.org/2000/svg" width="100%" viewBox="0 0 24 24" fill="none" class="bunny-lightbox-player__pause-svg"><path d="M16 5V19" stroke="currentColor" stroke-width="3" stroke-miterlimit="10"></path><path d="M8 5V19" stroke="currentColor" stroke-width="3" stroke-miterlimit="10"></path></svg>
+            <svg xmlns="http://www.w3.org/2000/svg" width="100%" viewBox="0 0 24 24" fill="none" class="bunny-lightbox-player__play-svg"><path d="M6 12V5.01109C6 4.05131 7.03685 3.4496 7.87017 3.92579L14 7.42855L20.1007 10.9147C20.9405 11.3945 20.9405 12.6054 20.1007 13.0853L14 16.5714L7.87017 20.0742C7.03685 20.5503 6 19.9486 6 18.9889V12Z" fill="currentColor"></path></svg>
+          </button>
+          <div class="bunny-lightbox-player__time" aria-hidden="true">
+            <p data-player-time-progress="" class="bunny-lightbox-player__text">00:00</p>
+            <p class="bunny-lightbox-player__text is--transparent">/</p>
+            <p data-player-time-duration="" class="bunny-lightbox-player__text is--transparent">00:00</p>
+          </div>
+          <div data-player-timeline="" class="bunny-lightbox-player__timeline" role="slider" tabindex="0" aria-label="Position in the reel" aria-valuemin="0" aria-valuemax="0" aria-valuenow="0" aria-valuetext="0:00 of 0:00">
+            <div class="bunny-lightbox-player__timeline-bar">
+              <div class="bunny-lightbox-player__timeline-bg"></div>
+              <div data-player-buffered="" class="bunny-lightbox-player__timeline-buffered"></div>
+              <div data-player-progress="" class="bunny-lightbox-player__timeline-progress"></div>
+            </div>
+            <div data-player-timeline-handle="" class="bunny-lightbox-player__timeline-handle"></div>
+          </div>
+          <div class="bunny-lightbox-player__interface-btns">
+            <button type="button" data-player-control="mute" class="bunny-lightbox-player__toggle-mute" aria-label="Sound on or off">
+              <svg xmlns="http://www.w3.org/2000/svg" width="100%" viewBox="0 0 24 24" fill="none" class="bunny-lightbox-player__volume-up-svg"><path d="M3 8.99998V15H7L12 20V3.99998L7 8.99998H3ZM16.5 12C16.5 10.23 15.48 8.70998 14 7.96998V16.02C15.48 15.29 16.5 13.77 16.5 12ZM14 3.22998V5.28998C16.89 6.14998 19 8.82998 19 12C19 15.17 16.89 17.85 14 18.71V20.77C18.01 19.86 21 16.28 21 12C21 7.71998 18.01 4.13998 14 3.22998Z" fill="currentColor"></path></svg>
+              <svg xmlns="http://www.w3.org/2000/svg" width="100%" viewBox="0 0 24 24" fill="none" class="bunny-lightbox-player__volume-mute-svg"><path d="M16.5 12C16.5 10.23 15.48 8.71 14 7.97V10.18L16.45 12.63C16.48 12.43 16.5 12.22 16.5 12ZM19 12C19 12.94 18.8 13.82 18.46 14.64L19.97 16.15C20.63 14.91 21 13.5 21 12C21 7.72 18.01 4.14 14 3.23V5.29C16.89 6.15 19 8.83 19 12ZM4.27 3L3 4.27L7.73 9H3V15H7L12 20V13.27L16.25 17.52C15.58 18.04 14.83 18.45 14 18.7V20.76C15.38 20.45 16.63 19.81 17.69 18.95L19.73 21L21 19.73L12 10.73L4.27 3ZM12 4L9.91 6.09L12 8.18V4Z" fill="currentColor"></path></svg>
+            </button>
+            <button type="button" data-player-control="fullscreen" class="bunny-lightbox-player__toggle-fullscreen" aria-label="Full screen">
+              <svg xmlns="http://www.w3.org/2000/svg" width="100%" viewBox="0 0 24 24" fill="none" class="bunny-lightbox-player__fullscreen-scale-svg"><rect x="3" y="14" width="2" height="7" fill="currentColor"></rect><rect x="3" y="3" width="2" height="7" fill="currentColor"></rect><rect x="19" y="3" width="2" height="7" fill="currentColor"></rect><rect x="19" y="14" width="2" height="7" fill="currentColor"></rect><rect x="3" y="19" width="7" height="2" fill="currentColor"></rect><rect x="14" y="19" width="7" height="2" fill="currentColor"></rect><rect x="3" y="3" width="7" height="2" fill="currentColor"></rect><rect x="14" y="3" width="7" height="2" fill="currentColor"></rect></svg>
+              <svg xmlns="http://www.w3.org/2000/svg" width="100%" viewBox="0 0 24 24" fill="none" class="bunny-lightbox-player__fullscreen-shrink-svg"><rect x="7" y="2" width="2" height="7" fill="currentColor"></rect><rect x="15" y="2" width="2" height="7" fill="currentColor"></rect><rect x="15" y="15" width="2" height="7" fill="currentColor"></rect><rect x="8" y="15" width="2" height="7" fill="currentColor"></rect><rect x="2" y="7" width="7" height="2" fill="currentColor"></rect><rect x="3" y="15" width="7" height="2" fill="currentColor"></rect><rect x="15" y="7" width="7" height="2" fill="currentColor"></rect><rect x="15" y="15" width="7" height="2" fill="currentColor"></rect></svg>
+            </button>
+          </div>
+        </div>
+      </div>
+      <div class="bunny-lightbox-player__loading">
+        <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" id="L9" x="0px" y="0px" viewBox="0 0 100 100" enable-background="new 0 0 0 0" xml:space="preserve" width="100%" class="bunny-lightbox-player__loading-svg" fill="none"><path fill="currentColor" d="M73,50c0-12.7-10.3-23-23-23S27,37.3,27,50 M30.9,50c0-10.5,8.5-19.1,19.1-19.1S69.1,39.5,69.1,50"></path><animatetransform attributename="transform" attributetype="XML" type="rotate" dur="1s" from="0 50 50" to="360 50 50" repeatcount="indefinite"></animatetransform></svg>
+      </div>
+      <p class="bunny-lightbox__note">The reel is on its way</p>
+    </div>
+    <button data-bunny-lightbox-control="close" class="bunny-lightbox__close" aria-label="Close the reel">
+      <div class="bunny-lightbox__close-bar"></div>
+      <div class="bunny-lightbox__close-bar is--duplicate"></div>
+    </button>
+  </div>
+</div>

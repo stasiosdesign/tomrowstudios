@@ -1,0 +1,42 @@
+---
+/* The Architectural Projects stack: the home hero's picture for the
+   architecture work, in place of a photograph. A dark card holding the
+   first three projects' covers as a stack of sheets, the first in front
+   and the others rising behind it, each a little smaller and dimmer than
+   the one before — a collection to open, rather than one more photograph.
+   Purely a picture: no words on it; the name and the line about it stand
+   beside it in the hero, as the photographs' do.
+
+   Pressed in the hero, it opens into the Architecture page: the card grows
+   to fill the screen and the sheets fly out to the first three cards of
+   the page (the "folder" transition, transitions.js). The sheets are the
+   very covers those cards show, in the Studio's order.
+
+   Everything in it is measured in the card's own width (container units),
+   so the same markup serves the hero's large card, its small waiting one
+   and the home page's opening. Styles: "The projects folder" in
+   style.css. */
+import { srcSet, urlFor } from '../sanity/image';
+import type { PROJECT_INDEX_QUERY_RESULT } from '../sanity/sanity.types';
+
+interface Props {
+  projects: PROJECT_INDEX_QUERY_RESULT;
+  class?: string;
+}
+
+const { projects, class: className } = Astro.props;
+// Back to front in the markup, so the first project is drawn on top; each
+// sheet behind is dimmed a step further (--dim, read by the transition too)
+const DIM = [0, 0.42, 0.64];
+const sheets = projects.filter((project) => project.coverImage?.asset).slice(0, 3);
+const ordered = sheets.map((project, i) => ({ project, i })).reverse();
+---
+<div class:list={['folder', className]} data-folder>
+  <div class="folder__stack">
+    {ordered.map(({ project, i }) => (
+    <div class="folder__sheet" data-folder-sheet={i} style={`--n: ${i}; --dim: ${DIM[i] ?? 0.7}`}>
+      <img class="folder__img" src={urlFor(project.coverImage!).width(960).url()} srcset={srcSet(project.coverImage!, [480, 720, 960, 1440])} sizes="(max-width: 991px) 70vw, 30vw" alt="" decoding="async" draggable="false">
+    </div>
+    ))}
+  </div>
+</div>
