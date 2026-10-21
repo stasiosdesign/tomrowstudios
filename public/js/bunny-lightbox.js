@@ -20,7 +20,11 @@
 //      power) puts the play button back up, rather than leaving the
 //      spinner turning for ever;
 //   5. the timeline follows every seek, playing or not (the keys' too,
-//      reel.js), and the controls wake for the keyboard as for the pointer.
+//      reel.js), and the controls wake for the keyboard as for the pointer;
+//   6. the loading state is a bar (ReelLightbox.astro) filled from the
+//      film's buffered range, in place of the spinner.
+// This file is fetched by reel.js on first need (lifecycle.js, loadScript),
+// not by the layout on every page.
 
 function initBunnyLightboxPlayer() {
   var player = document.querySelector('[data-bunny-lightbox-init]');
@@ -353,16 +357,25 @@ function initBunnyLightboxPlayer() {
     if (!video.paused && !video.ended) rafId = requestAnimationFrame(loop);
   }
 
-  // Buffered bar (not in rAF)
+  // Buffered bar (not in rAF). [Tomrow integration] 6: the loading bar
+  // (in place of the spinner) takes the same reading, the film's own
+  // buffered range as a share of its length — real progress, nothing
+  // invented; empty until the length is known
+  var loadingFill = player.querySelector('[data-player-loading-fill]');
   function updateBufferedBar() {
-    if (!bufferedBar || !video.duration || !video.buffered.length) return;
+    if (!video.duration || !isFinite(video.duration) || !video.buffered.length) {
+      if (loadingFill) loadingFill.style.transform = 'scaleX(0)';
+      return;
+    }
     var end = video.buffered.end(video.buffered.length - 1);
     var buffPct = (end / video.duration) * 100;
-    bufferedBar.style.transform = 'translateX(' + (-100 + buffPct) + '%)';
+    if (bufferedBar) bufferedBar.style.transform = 'translateX(' + (-100 + buffPct) + '%)';
+    if (loadingFill) loadingFill.style.transform = 'scaleX(' + Math.min(1, Math.max(0, end / video.duration)).toFixed(4) + ')';
   }
   video.addEventListener('progress', updateBufferedBar);
   video.addEventListener('loadedmetadata', updateBufferedBar);
   video.addEventListener('durationchange', updateBufferedBar);
+  video.addEventListener('emptied', updateBufferedBar);
 
   // Media event wiring
   video.addEventListener('play', function() { setActivated(true); cancelAnimationFrame(rafId); loop(); setStatus('playing'); });

@@ -33,7 +33,7 @@ const linkedin = socials.find((social) => social.icon === 'linkedin')!;
 <!-- The mark and the name both lead home; the name is the one a keyboard
      or a screen reader meets -->
 <a href="/" class="hero-nav__logo" tabindex="-1" aria-hidden="true"><BrandMark class="hero-nav__logo-mark" /></a>
-<a href="/" class="hero-nav__brand" aria-label="Tomrow Studios, home"><span aria-hidden="true">Tomrowstudios<span class="hero-nav__copy">©</span></span></a>
+<a href="/" class="hero-nav__brand" aria-label="Tomrowstudios, home"><span aria-hidden="true">tomrowstudios<span class="hero-nav__copy">©</span></span></a>
 <nav class="hero-nav__links site-nav__links" aria-label="Pages" data-dim-group>
   {pages.map(({ href, label }) => <a href={href} data-split-hover="link" class="site-nav__link" aria-current={href === current ? 'page' : undefined}>{label}</a>)}
 </nav>

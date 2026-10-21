@@ -47,7 +47,9 @@ function initInfluenceHero(scope) {
   gsap.registerPlugin(ScrollTrigger);
 
   const tl = gsap.timeline({
-    scrollTrigger: { trigger: hero, start: 'top top', end: 'bottom top', scrub: true, invalidateOnRefresh: true },
+    // From the collage's top coming in at the foot of the screen (it is
+    // the section under the page's hero) to its foot leaving at the top
+    scrollTrigger: { trigger: hero, start: 'top bottom', end: 'bottom top', scrub: true, invalidateOnRefresh: true },
   });
   hero.querySelectorAll('[data-speed]').forEach((shot) => {
     const img = shot.querySelector('img');

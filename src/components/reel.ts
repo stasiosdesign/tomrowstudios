@@ -20,8 +20,14 @@
 /** The Bunny Stream HLS playlist, e.g. https://vz-xxxxxxxx-xxx.b-cdn.net/<video id>/playlist.m3u8 */
 export const REEL_SRC = 'https://vz-ab77e32b-ab5.b-cdn.net/90484583-5020-4664-8895-f25877ae8ac6/playlist.m3u8';
 
-/** The card's still and the player's placeholder; empty: Bunny's thumbnail.jpg */
-export const REEL_POSTER = '';
+/** The card's still and the player's placeholder; empty: Bunny's thumbnail.jpg. The site's own:
+    Tom sketching (public/assets/images/reel, from the master in source-assets/photos/reel) */
+export const REEL_POSTER = '/assets/images/reel/reel-poster-1750.avif';
+
+/** The same still at smaller sizes, for the Play Reel card, which shows it about a third of the screen across at most */
+export const REEL_POSTER_SRCSET = REEL_POSTER
+  ? [640, 1280, 1750].map((width) => `/assets/images/reel/reel-poster-${width}.avif ${width}w`).join(', ')
+  : '';
 
 /** The card's moving preview on hover, a video file played muted; empty: Bunny's MP4 renditions */
 export const REEL_PREVIEW = '';

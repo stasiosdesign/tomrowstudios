@@ -8,13 +8,9 @@
 // anything. This keeps the rest in step with the scroll:
 //   - the lit part: the one whose picture is nearest the middle of the
 //     screen. Its values on the right split into place, line by line in
-//     their masks, the old part's leaving the other way (SplitText); its
-//     number on the gauge is lit;
-//   - how far through the list the page is, 0 to 1: the gauge, a column
-//     of the grid's own squares drawn on a canvas under the studio's mark,
-//     lit along the way the page has come, one square bright where it is;
-//   - the opening's hand-over (loader.js, home:arrive): the gauge's column
-//     drawn down and the values rising in as the squares become pictures;
+//     their masks, the old part's leaving the other way (SplitText);
+//   - the opening's hand-over (loader.js, home:arrive): the values rising
+//     in as the squares become pictures;
 //   - the clients' band below coming up over the hero, the hero's last
 //     picture and its type going up at half the speed under it, shaded;
 //   - the grid behind, tinted with the lit picture's colours (hero-tint.js);
@@ -33,8 +29,6 @@
 //     it reaches (or, past either end of the list, simply on). On a touch
 //     screen the page's own scroll already does this, and is left alone.
 //     A drag never ends in a press, nor drags a picture out or selects;
-//   - the gauge, pressed or dragged (a finger too), scrolls the list to that
-//     point, settling on the nearer picture when let go;
 //   - a press on a waiting picture (the one showing below or above), or
 //     tabbing to it, brings it to the middle rather than opening it; the lit
 //     one opens as ever, and a ctrl-, cmd- or shift-press opens any.
@@ -54,8 +48,6 @@ function initHomeList(scope) {
   const list = root.querySelector('[data-list]');
   const items = Array.from(root.querySelectorAll('[data-list-item]'));
   const shots = items.map((item) => item.querySelector('[data-list-shot]'));
-  const gauge = root.querySelector('[data-list-gauge]');
-  const marks = Array.from(root.querySelectorAll('[data-list-mark]'));
   // Each photograph's own layer, which drifts in its frame
   const drifts = items.map((item) => item.querySelector('[data-list-drift]'));
   const n = items.length;
@@ -73,7 +65,7 @@ function initHomeList(scope) {
   const DRIFT = 10;
   const DRIFT_MAX = 13;
   // The hand's smoothing, Smooothy's own (its lerp, 0.3): the page closes
-  // on where a drag or the gauge puts it by this share a frame, so it
+  // on where a drag puts it by this share a frame, so it
   // follows the hand softly rather than jumping with it
   const HAND_LERP = 0.3;
 
@@ -84,7 +76,6 @@ function initHomeList(scope) {
     const top = list.getBoundingClientRect().top + window.scrollY;
     first = top;
     pitch = n > 1 ? items[1].getBoundingClientRect().top - items[0].getBoundingClientRect().top : items[0].offsetHeight || 1;
-    sizeRuler();
     update();
   }
 
@@ -98,14 +89,12 @@ function initHomeList(scope) {
   function light(k) {
     const was = active;
     active = k;
-    marks.forEach((mark, i) => mark.classList.toggle('is--active', i === k));
     shots.forEach((shot, i) => shot && shot.classList.toggle('is--active', i === k));
     swapValues(was, k);
     if (tint) tint.show(k);
   }
 
   let frame = 0;
-  let share = 0;
   function update() {
     frame = 0;
     if (root.closest('[data-page-leaving]')) return;
@@ -114,85 +103,6 @@ function initHomeList(scope) {
     const p = Math.min(Math.max(r, 0), n - 1);
     const k = Math.round(p);
     if (k !== active) light(k);
-    share = n > 1 ? p / (n - 1) : 0;
-    drawRuler();
-  }
-
-  // ---- The gauge: a column of the grid's own squares, one cell wide,
-  // drawn on its canvas, running down the margin from just under the
-  // studio's mark (two cells clear of it) to three cells above the foot of
-  // the screen; the gauge stands on the mark's line, so each square is one
-  // of the background's, lit. Unlit, the squares are barely there, the
-  // parts' a little more (on the rows nearest their even spread down the
-  // column, their numbers level with them); the way the page has come is
-  // lit, filling square by square; and where the page is, a square stands
-  // bright, the light passing from one square into the next as the page
-  // moves, so it travels smoothly rather than stepping. `grown` (0 to 1)
-  // draws the column down from the top as the opening hands over.
-  const ruler = root.querySelector('[data-list-ruler]');
-  const pen = ruler ? ruler.getContext('2d') : null;
-  const tick = { pitch: 7, rows: [0, 0], parts: [], w: 0, h: 0, dpr: 1, ink: '#f4f4f4' };
-  // A row's square: its top (the line above it is the grid's) and its middle
-  const rowTop = (j) => j * tick.pitch + 1;
-  const rowMid = (j) => j * tick.pitch + (tick.pitch + 1) / 2;
-  let grown = 1;
-  function sizeRuler() {
-    if (!pen) return;
-    const box = gauge.getBoundingClientRect();
-    const styles = getComputedStyle(gauge);
-    const p = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--grid-pitch')) || 7;
-    // From two cells under the mark (its top three cells down, its height
-    // five cells) to three cells above the foot
-    const from = 10;
-    const to = Math.max(from + 1, Math.floor((box.height - 3 * p) / p) - 1);
-    const parts = Array.from({ length: n }, (_, k) => Math.round(from + (n > 1 ? (k * (to - from)) / (n - 1) : 0)));
-    Object.assign(tick, {
-      pitch: p,
-      rows: [from, to],
-      ink: styles.getPropertyValue('--list-ink').trim() || '#f4f4f4',
-      parts,
-      w: box.width,
-      h: box.height,
-      dpr: Math.min(2, window.devicePixelRatio || 1),
-    });
-    marks.forEach((mark, k) => { mark.style.top = `${rowMid(parts[k])}px`; });
-    ruler.width = Math.max(1, Math.round(tick.w * tick.dpr));
-    ruler.height = Math.max(1, Math.round(tick.h * tick.dpr));
-    drawn = -1;
-  }
-  // Drawn again only when what it shows has moved (the page past the hero,
-  // or held at either end of the list, leaves it as it is)
-  let drawn = -1;
-  const UNLIT = 0.08;
-  const UNLIT_PART = 0.2;
-  const PASSED = 0.26;
-  const PASSED_PART = 0.45;
-  function drawRuler() {
-    if (!pen || !tick.h) return;
-    const key = share * 1e4 + grown;
-    if (key === drawn) return;
-    drawn = key;
-    const { pitch: p, rows: [from, to], parts, w, h, dpr } = tick;
-    pen.setTransform(dpr, 0, 0, dpr, 0, 0);
-    pen.clearRect(0, 0, w, h);
-    pen.fillStyle = tick.ink;
-    const start = rowMid(parts[0]);
-    const at = start + share * (rowMid(parts[parts.length - 1]) - start);
-    const count = to - from + 1;
-    for (let j = from; j <= to; j++) {
-      const y = rowMid(j);
-      const isPart = parts.includes(j);
-      // How much of this square the page has passed, and how near it is
-      const passed = Math.min(1, Math.max(0, (at - y) / p + 0.5));
-      const head = Math.max(0, 1 - Math.abs(y - at) / p);
-      const rest = isPart ? UNLIT_PART : UNLIT;
-      const lit = rest + ((isPart ? PASSED_PART : PASSED) - rest) * passed;
-      // Drawn down from the top as the opening hands over
-      const shown = Math.min(1, Math.max(0, grown * count * 1.15 - (j - from)));
-      pen.globalAlpha = (lit + (0.95 - lit) * head) * shown;
-      if (pen.globalAlpha > 0.004) pen.fillRect(0, rowTop(j), p - 1, p - 1);
-    }
-    pen.globalAlpha = 1;
   }
 
   // ---- The fields' values, split into lines in their masks (SplitText,
@@ -287,11 +197,9 @@ function initHomeList(scope) {
   }
 
   // ---- The opening's hand-over (loader.js): while it runs, the values
-  // and the gauge wait; as its squares become the pictures it says so
-  // (home:arrive), and the hero's own type comes in with them — the gauge's
-  // column drawn down from the top, the lit values rising into their masks.
-  // Arriving any other way (a page change, the opening done or never run),
-  // all of it is simply there.
+  // wait; as its squares become the pictures it says so (home:arrive), and
+  // the lit values rise into their masks. Arriving any other way (a page
+  // change, the opening done or never run), they are simply there.
   const html = document.documentElement;
   let arrived = !html.classList.contains('is--intro');
   function arrive() {
@@ -300,26 +208,17 @@ function initHomeList(scope) {
     root.classList.add('is--arrived');
     hidden = false;
     if (tint) tint.reveal();
-    if (typeof gsap === 'undefined' || reduced) {
-      grown = 1;
-      drawRuler();
-      return;
-    }
+    if (typeof gsap === 'undefined' || reduced) return;
     const lines = linesOf(active);
     stop(active);
     moving.set(active, gsap.fromTo(lines, { yPercent: AWAY }, { yPercent: 0, duration: 0.9, ease: 'expo.out', stagger: 0.07, delay: 0.15 }));
-    const g = { v: 0 };
-    gsap.to(g, { v: 1, duration: 1.1, ease: 'expo.out', onUpdate: () => { grown = g.v; drawRuler(); } });
   }
   const introWatch = arrived ? null : new MutationObserver(() => {
     if (!html.classList.contains('is--intro')) arrive();
   });
   if (introWatch) introWatch.observe(html, { attributes: true, attributeFilter: ['class'] });
   document.addEventListener('home:arrive', arrive);
-  if (!arrived) {
-    hidden = true;
-    grown = 0;
-  }
+  if (!arrived) hidden = true;
 
   // ---- The grid behind, tinted by the lit picture (hero-tint.js): its
   // colours come in with the hero's own type, and turn as the part does.
@@ -580,35 +479,6 @@ function initHomeList(scope) {
     if (drag && event.pointerId === drag.id) endDrag(null);
   };
 
-  // The gauge: pressed or dragged, the list to that point at once; let go,
-  // to the nearer picture
-  let scrub = null;
-  function scrubTo(event) {
-    const box = gauge.getBoundingClientRect();
-    const top = rowMid(tick.parts[0] || 0);
-    const span = Math.max(1, rowMid(tick.parts[tick.parts.length - 1] || 0) - top);
-    const to = Math.min(1, Math.max(0, (event.clientY - box.top - top) / span));
-    followTo(first + to * (n - 1) * pitch);
-  }
-  function onGaugeDown(event) {
-    if (!event.isPrimary || event.button !== 0 || busy()) return;
-    event.preventDefault();
-    scrub = event.pointerId;
-    catchGlide();
-    clearTimeout(timer);
-    try { gauge.setPointerCapture(scrub); } catch (_) {}
-    scrubTo(event);
-  }
-  function onGaugeMove(event) {
-    if (event.pointerId === scrub) scrubTo(event);
-  }
-  function onGaugeUp(event) {
-    if (event.pointerId !== scrub) return;
-    scrub = null;
-    try { gauge.releasePointerCapture(event.pointerId); } catch (_) {}
-    glideTo(Math.min(n - 1, Math.max(0, Math.round(along()))));
-  }
-
   // A press: after a drag, nothing; on a waiting picture, it comes to the
   // middle; on the lit one (or the one on its way there), its own
   function onClick(event) {
@@ -667,12 +537,6 @@ function initHomeList(scope) {
   list.addEventListener('click', onClick, true);
   list.addEventListener('focusin', onFocus);
   list.addEventListener('dragstart', onDragStart);
-  if (gauge) {
-    gauge.addEventListener('pointerdown', onGaugeDown);
-    gauge.addEventListener('pointermove', onGaugeMove);
-    gauge.addEventListener('pointerup', onGaugeUp);
-    gauge.addEventListener('pointercancel', onGaugeUp);
-  }
   window.addEventListener('blur', onBlur);
   window.addEventListener('wheel', onWheel, { passive: true });
   document.addEventListener('keydown', onKey);
@@ -702,12 +566,6 @@ function initHomeList(scope) {
     list.removeEventListener('click', onClick, true);
     list.removeEventListener('focusin', onFocus);
     list.removeEventListener('dragstart', onDragStart);
-    if (gauge) {
-      gauge.removeEventListener('pointerdown', onGaugeDown);
-      gauge.removeEventListener('pointermove', onGaugeMove);
-      gauge.removeEventListener('pointerup', onGaugeUp);
-      gauge.removeEventListener('pointercancel', onGaugeUp);
-    }
     window.removeEventListener('blur', onBlur);
     window.removeEventListener('wheel', onWheel);
     document.removeEventListener('keydown', onKey);

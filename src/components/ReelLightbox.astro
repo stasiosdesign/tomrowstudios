@@ -15,7 +15,11 @@
        so it travels with the picture;
      - the dialog's name and role (it takes focus as it opens, so Space
        plays and pauses rather than pressing a control), and a line shown in place of the
-       controls while no reel source is set (reel.ts).
+       controls while no reel source is set (reel.ts);
+     - the loading state is a bar filled by the film's buffered range, in
+       place of Osmo's spinner.
+   Its script, bunny-lightbox.js, is fetched by reel.js on first need (a
+   card hovered, focused or pressed), not on every page.
    Its SVGs' `viewbox` is written `viewBox`, the same attribute, for the
    type check. */
 ---
@@ -65,11 +69,18 @@
           </div>
         </div>
       </div>
-      <div class="bunny-lightbox-player__loading">
-        <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" id="L9" x="0px" y="0px" viewBox="0 0 100 100" enable-background="new 0 0 0 0" xml:space="preserve" width="100%" class="bunny-lightbox-player__loading-svg" fill="none"><path fill="currentColor" d="M73,50c0-12.7-10.3-23-23-23S27,37.3,27,50 M30.9,50c0-10.5,8.5-19.1,19.1-19.1S69.1,39.5,69.1,50"></path><animatetransform attributename="transform" attributetype="XML" type="rotate" dur="1s" from="0 50 50" to="360 50 50" repeatcount="indefinite"></animatetransform></svg>
+      <!-- Loading: in place of Osmo's turning spinner, a bar across the
+           foot of the frame filled by how much of the film is actually in
+           (its buffered range, bunny-lightbox.js); shown while the player
+           waits for the film -->
+      <div class="bunny-lightbox-player__loading" aria-hidden="true">
+        <div class="bunny-lightbox-player__loading-track"><div data-player-loading-fill class="bunny-lightbox-player__loading-fill"></div></div>
       </div>
       <p class="bunny-lightbox__note">The reel is on its way</p>
     </div>
+    <!-- The card's own picture, over the player while it grows out of a
+         card on the page and back into it (reel.js) -->
+    <img data-reel-picture class="bunny-lightbox__picture" alt="" decoding="async">
     <button data-bunny-lightbox-control="close" class="bunny-lightbox__close" aria-label="Close the reel">
       <div class="bunny-lightbox__close-bar"></div>
       <div class="bunny-lightbox__close-bar is--duplicate"></div>

@@ -5,10 +5,10 @@
 /** The five pages, in the order every navigation lists them, each with the
     part of the practice it stands for (the footer's Expertise column) */
 export const pages = [
-  { href: '/', label: 'Home', note: 'Tomrow Studios' },
-  { href: '/influence', label: 'Influence', note: 'Architecture and influence' },
+  { href: '/', label: 'Home', note: 'Tomrowstudios' },
+  { href: '/influence', label: 'Influence', note: 'Architecture & influence' },
   { href: '/architecture', label: 'Architecture', note: 'Architectural projects' },
-  { href: '/shop', label: 'Shop', note: 'Courses and resources' },
+  { href: '/shop', label: 'Shop', note: 'Courses & resources' },
   { href: '/partner', label: 'Partner', note: 'Partnerships' },
 ];
 

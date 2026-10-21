@@ -69,7 +69,7 @@ const heroBackground = (image: HeroImage, i: number) =>
 const dialPhoto = (image: HeroImage, i: number) =>
   heroPhoto(image, i, [200, 400, 600], '10vw', { loading: 'lazy', 'data-reveal-wait': '' });
 ---
-<BaseLayout title="Parked — Tomrow Studios" namespace="parked" pageName="Parked">
+<BaseLayout title="Parked — Tomrowstudios" namespace="parked" pageName="Parked">
 <div class="page-surface" data-page-surface>
 <!-- The home hero, parked -->
 <!-- Home hero, in the reveal-parallax wrapper: the section after it slides
@@ -224,4 +224,13 @@ const dialPhoto = (image: HeroImage, i: number) =>
 </div>
 
 <ContactPanel />
+<!-- This page's own scripts, loaded here alone rather than on every page
+     (the layout's scripts, transitions.js among them, run after these and
+     call their init functions by name): the bar over the hero, the runner,
+     the dial and the scroll panels. Only ever reached by a fresh load, so
+     they run on the first page as the layout's do. -->
+<script is:inline src="/js/hero-nav.js"></script>
+<script is:inline src="/js/hero-runner.js"></script>
+<script is:inline src="/js/hero-dial.js"></script>
+<script is:inline src="/js/sequence.js"></script>
 </BaseLayout>

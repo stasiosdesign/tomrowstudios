@@ -1,9 +1,20 @@
-// Each marquee loops forever, so it is stopped when its page is left
-// (lifecycle.js) rather than left looping off-page.
+// Osmo Supply's Marquee with Scroll Direction, as supplied, with four
+// additions for this site, each marked [Tomrow integration]:
+//   1. bound once per element, however often Barba runs it;
+//   2. the loop runs only while the strip is on screen, and is stopped
+//      when its page is left (lifecycle.js) rather than left looping;
+//   3. the cloned collections are hidden from screen readers (the first
+//      one reads the names out);
+//   4. [data-marquee-pause-hover] holds the strip still under a pointer
+//      that can hover; and with reduced motion nothing moves at all (the
+//      stylesheet lets the strip be scrolled sideways instead).
 function initMarqueeScrollDirection() {
+  // [Tomrow integration] 4: reduced motion, no marquee
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
   document.querySelectorAll('[data-marquee-scroll-direction-target]').forEach((marquee) => {
-    // Barba re-runs this on every navigation; the content must only be
-    // duplicated once, or each visit would clone the row again
+    // [Tomrow integration] 1: Barba re-runs this on every navigation; the
+    // content must only be duplicated once, or each visit would clone the
+    // row again
     if (marquee.__marquee) return;
     marquee.__marquee = true;
 
@@ -32,7 +43,10 @@ function initMarqueeScrollDirection() {
     if (duplicateAmount > 0) {
       const fragment = document.createDocumentFragment();
       for (let i = 0; i < duplicateAmount; i++) {
-        fragment.appendChild(marqueeContent.cloneNode(true));
+        const clone = marqueeContent.cloneNode(true);
+        // [Tomrow integration] 3: the repeats are not read out
+        clone.setAttribute('aria-hidden', 'true');
+        fragment.appendChild(clone);
       }
       marqueeScroll.appendChild(fragment);
     }
@@ -54,13 +68,21 @@ function initMarqueeScrollDirection() {
     // Set initial marquee status
     marquee.setAttribute('data-marquee-status', 'normal');
 
-    // ScrollTrigger logic for direction inversion. The loop also runs only
-    // while the strip is on screen.
+    // [Tomrow integration] 2 and 4: the loop runs only while the strip is
+    // on screen, and not under a hovering pointer where the strip asks
+    let onScreen = false;
+    let hovered = false;
+    const sync = () => (onScreen && !hovered ? animation.play() : animation.pause());
+
+    // ScrollTrigger logic for direction inversion
     const inView = ScrollTrigger.create({
       trigger: marquee,
       start: 'top bottom',
       end: 'bottom top',
-      onToggle: (self) => (self.isActive ? animation.play() : animation.pause()),
+      onToggle: (self) => {
+        onScreen = self.isActive;
+        sync();
+      },
       onUpdate: (self) => {
         const isInverted = self.direction === 1; // Scrolling down
         const currentDirection = isInverted ? -marqueeDirectionAttr : marqueeDirectionAttr;
@@ -70,8 +92,12 @@ function initMarqueeScrollDirection() {
         marquee.setAttribute('data-marquee-status', isInverted ? 'normal' : 'inverted');
       }
     });
-    // Below the fold at load (or already scrolled past): wait until it is in view
-    if (!inView.isActive) animation.pause();
+    onScreen = inView.isActive;
+    sync();
+    if (marquee.hasAttribute('data-marquee-pause-hover') && window.matchMedia('(hover: hover) and (pointer: fine)').matches) {
+      marquee.addEventListener('pointerenter', () => { hovered = true; sync(); });
+      marquee.addEventListener('pointerleave', () => { hovered = false; sync(); });
+    }
 
     // Extra speed effect on scroll
     const tl = gsap.timeline({

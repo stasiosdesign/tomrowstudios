@@ -5,8 +5,8 @@
    home hero has it, so the header is one and the same throughout the site,
    its colours alone following the page (dark over a light page). It
    lives inside the Barba container on every page: the transition swaps it
-   with the page, and hero-nav.js / footer.js rebind it. `overHero` starts
-   it transparent over a hero on the first paint. */
+   with the page. `overHero` starts it transparent over a hero on the
+   first paint (the parked home hero alone, /parked, with hero-nav.js). */
 import HeroNav from './HeroNav.astro';
 interface Props { overHero?: boolean }
 const { overHero } = Astro.props;

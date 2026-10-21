@@ -54,10 +54,21 @@ const services = [
   { name: 'Reporting', text: 'Turning what a channel did into something a team can actually act on next quarter.' },
 ];
 ---
-<BaseLayout title="Partners — Tomrow Studios" namespace="partner" pageName="Partners" pageDoc="partnersPage" navTitle="Partner">
+<BaseLayout title="Partners — Tomrowstudios" namespace="partner" pageName="Partners" pageDoc="partnersPage" navTitle="Partner">
 <!-- The page itself, which shrinks into the footer as the footer arrives (footer.js) -->
 <div class="page-surface" data-page-surface>
 <SiteNav />
+
+<!-- The hero, laid out as the Shop and Influence pages' (.shop-hero): the
+     page's name large on the black, flush left on the studio's name in the
+     bar above -->
+<header class="shop-hero is--partner theme-light">
+  <div class="shop-hero__body">
+    <div class="shop-hero__copy">
+      <h1 data-page-field="intro.heading">{page?.intro?.heading ?? D.intro.heading}</h1>
+    </div>
+  </div>
+</header>
 
 <div class="theme-light">
 
@@ -65,10 +76,7 @@ const services = [
 <section class="section">
   <div class="container">
     <div class="section-head is--hero">
-      <div class="section-head__main">
-        <p class="tagline">Partner</p>
-        <h2 class="page-hero-title" data-page-field="intro.heading">{page?.intro?.heading ?? D.intro.heading}</h2>
-      </div>
+      <div class="section-head__main"></div>
       <div class="section-head__side">
         <p class="lead" data-page-field="intro.lead">{page?.intro?.lead ?? D.intro.lead}</p>
         <div class="actions">

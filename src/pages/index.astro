@@ -3,25 +3,21 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 import SiteFooter from '../components/SiteFooter.astro';
 import ContactPanel from '../components/ContactPanel.astro';
 import ServiceCards from '../components/ServiceCards.astro';
-import ProjectsFolder from '../components/ProjectsFolder.astro';
-import HeroNav from '../components/HeroNav.astro';
-import { srcSet, urlFor } from '../sanity/image';
-import { CLIENT_LOGOS_QUERY, HOME_PAGE_QUERY, PROJECT_INDEX_QUERY } from '../sanity/queries';
-import { REEL_SRC, REEL_FALLBACK_POSTER, reelPoster, reelPreview, reelFilm } from '../components/reel';
-import { heroPalette } from '../components/hero-palette';
-
+import HomeHero from '../components/HomeHero.astro';
+import StatementBlock from '../components/StatementBlock.astro';
+import { homeHero, reelImage } from '../components/home-hero';
+import { urlFor } from '../sanity/image';
+import { CLIENT_LOGOS_QUERY, HOME_PAGE_QUERY } from '../sanity/queries';
 
 // Every section's words and photos, from the Home page document in Sanity,
-// and the logo wall's clients in the order set in the Studio, and the
-// architecture projects, whose covers fill the hero's folder (the same list,
-// in the same order, as the Architecture page). The navigation,
+// and the logo wall's clients in the order set in the Studio. The navigation,
 // the footer and where each button leads stay here. Each section below the
 // hero carries data-home-section, its field name in the document: opened in
 // the Studio's Presentation tool, src/sanity/live-preview.ts finds the
 // sections by it, marks their parts editable and swaps in drafts as they are
 // typed.
 const { sanity } = Astro.locals;
-const [home, clients, projectIndex] = await Promise.all([sanity.fetch(HOME_PAGE_QUERY), sanity.fetch(CLIENT_LOGOS_QUERY), sanity.fetch(PROJECT_INDEX_QUERY)]);
+const [home, clients] = await Promise.all([sanity.fetch(HOME_PAGE_QUERY), sanity.fetch(CLIENT_LOGOS_QUERY)]);
 if (!home) throw new Error('The Home page document is missing in Sanity');
 // The document's Influence, Partners, Projects and Courses sections no longer
 // have bands of their own on the page: their leads describe the hero's four
@@ -34,85 +30,20 @@ if (!hero?.headline || !logoWall || !practice || !influence || !partners || !pro
   throw new Error('A home page section is missing in Sanity (Home page document)');
 }
 
-const asset = (_id: string) => ({ asset: { _id } });
+// The hero's parts, their pictures and the mosaic's palettes (home-hero.ts,
+// HomeHero.astro); the opening below draws the same pictures
+const heroData = await homeHero(Astro.site?.href ?? Astro.url.origin);
+const { reel } = heroData;
 
-// The logo row's half: every client once, and the first ones again until
-// there are ten, so a half is wider than any screen and the loop never
-// shows its end
+// The logo row's collection: every client once, and the first ones again
+// until there are ten, so the collection is wider than any screen and the
+// loop (marquee.js clones it once) never shows its end
 const logoClients = clients.filter((client) => client.logo?.asset);
 const logoCount = logoClients.length ? Math.max(10, logoClients.length) : 0;
 const logoCells = Array.from({ length: logoCount }, (_, i) => ({ client: logoClients[i % logoClients.length], repeat: i >= logoClients.length }));
 
-// The hero: About first, then the four parts of the practice, one picture
-// each, in this order, every one shown 4:5. About is not a page: it is the
-// film about Tom (the reel, reel.ts), its still in the hero, and pressing
-// it opens the reel's player out of the picture (reel.js), as the menu's
-// Play Reel card does; its line on the right is set here. The rest are a
-// photograph (in the row and column layouts the architecture work is the
-// folder of its projects instead, ProjectsFolder.astro, opened into the
-// Architecture page when pressed). Photographs other documents hold, named
-// by ID, chosen for being sharp at the size the hero shows them, each in
-// both datasets, and none of them the closing cards': Tom speaking at the
-// summit, Tom drawing at his desk, a stack of architecture books, the
-// partners' wall at the summit (the Partners gallery). `position` anchors
-// each in its frame; `about` is the two sentences or so under its name
-// in the list (all five 135 to 150 characters, so they set alike).
-// `lines` is the part's name as the hero sets it beside its picture, one
-// entry a line (About's says what Tom does), every line flush left.
-type ReelEntry = { title: string; lines: string[]; href: string; about: string; image?: ReturnType<typeof asset>; position?: string; folder?: boolean; film?: boolean; cursor: string };
-const reel: ReelEntry[] = [
-  { title: 'About', lines: ['Architecture, content', '& education for a global', 'audience'], href: '#about', cursor: 'Play Video', about: 'Architectural designer, author and content strategist Tom Rowntree. Press play for the short film on his work and the way he approaches it.', position: '68% 50%', film: true },
-  { title: 'Architectural Influence', lines: ['Architectural', 'Influence'], href: '/influence', cursor: 'View Influence', about: 'Content and a personal brand that build authority in architecture, through long-form explainers, walkthroughs and interviews shared online.', image: asset('image-6b3dfc2f6d11aa49eb24e70206b58f1ff5dcf713-1200x1500-jpg'), position: '42% 40%' },
-  { title: 'Architectural Projects', lines: ['Architectural', 'Projects'], href: '/architecture', cursor: 'View Projects', about: 'Tom’s own design work, from early studies to his dissertation, with the drawings and the thinking behind each project gathered in one place.', image: asset('image-a2f9b72281aa74b764781ef4805a68f54712a0ad-1200x2133-jpg'), position: '50% 50%', folder: true },
-  { title: 'Shop & Courses', lines: ['Shop', '& Courses'], href: '/shop', cursor: 'View Shop', about: 'Courses, a book and practical resources for working architects, drawn from Tom’s own experience of studying, practising and teaching architecture.', image: asset('image-dd7d2aa611a35f4f1859fc294ce43f75b14537ae-1066x1599-jpg'), position: '50% 50%' },
-  { title: 'Partners & Collabs', lines: ['Partners', '& Collabs'], href: '/partner', cursor: 'View Partners', about: 'Content and strategy for architecture, design and technology brands, made with Tom for an audience that cares about how buildings are made.', image: asset('image-68bfe2a930688e62f30dd69e0141002b68e669f4-1200x1800-jpg'), position: '50% 18%' },
-];
-// About's picture: the film's still, the one the player opens on
-const showFilm = Boolean(REEL_SRC) || __DEPLOYMENT__ !== 'production';
-const filmStill = reelPoster || urlFor({ asset: { _id: REEL_FALLBACK_POSTER } }).width(1280).height(720).fit('crop').url();
-if (!showFilm) reel.shift();
-const pad = (n: number) => String(n).padStart(2, '0');
-// The hero's layout: "list" (after GSP's list: the pictures one under
-// another, their right edge the middle of the screen, the page scrolling
-// through them; home-list.js), "row" (after t11.com: a loop of landscape
-// pictures across the screen, swiped, dragged or scrolled through), or
-// "column" (the pictures down the middle, scrolled through; both
-// home-reel.js). The opening reads it too.
-const reelLayout = 'list' as 'list' | 'row' | 'column';
-const year = new Date().getFullYear();
-// One photograph's sources, the reel's and the opening's alike, so the
-// opening's photographs are the very files the reel then shows. The list
-// draws each a good deal taller than its frame (the frame 5:7, the picture
-// 130% of its height so the drift never shows an edge: .home-list__img), so
-// there each is asked for at that shape, cut round its `position`, at the
-// frame's width and no wider than the original allows: the screen's pixels,
-// never a small file stretched to cover a taller box.
-const LIST_SHAPE = 1.4 * 1.3;
-// The list's cut of a photograph, at any width
-const listCut = (image: ReturnType<typeof asset>, position = '50% 50%') => {
-  const [x, y] = position.split(' ').map((v) => parseFloat(v) / 100);
-  return (width: number) => urlFor(image).width(width).height(Math.round(width * LIST_SHAPE)).fit('crop').crop('focalpoint').focalPoint(x, y).url();
-};
-const reelImage = (image: ReturnType<typeof asset>, position = '50% 50%') => {
-  if (reelLayout !== 'list') {
-    return { src: urlFor(image).width(960).url(), srcset: srcSet(image, [480, 720, 960, 1200]), sizes: '(max-width: 991px) 80vw, 36vw' };
-  }
-  const [w, h] = image.asset._id.match(/-(\d+)x(\d+)-\w+$/)!.slice(1).map(Number);
-  const widest = Math.floor(Math.min(w, h / LIST_SHAPE));
-  const at = listCut(image, position);
-  const widths = [480, 720, 960, 1200].filter((width) => width < widest).concat(widest);
-  return { src: at(Math.min(960, widest)), srcset: widths.map((width) => `${at(width)} ${width}w`).join(', '), sizes: '(max-width: 991px) 50vw, 33vw' };
-};
-// The colours the mosaic behind the list takes from each picture
-// (hero-tint.js), read here as the page is built (hero-palette.ts): from
-// the frame's own cut, small, read from its middle; from the film's still
-// as the frame shows it, at its object-position. Each travels on its list
-// item (data-tint-palette), so the mosaic is ready before the first paint.
-const pageAddress = Astro.site?.href ?? Astro.url.origin;
-const tintPalettes = await Promise.all(reel.map(({ image, film, position }) =>
-  film ? heroPalette(filmStill, position, pageAddress) : image ? heroPalette(listCut(image, position)(64), '50% 50%', pageAddress) : Promise.resolve(null)));
 ---
-<BaseLayout title="Tomrow Studios" namespace="index" pageName="Home" navPromo="contact" pinScrollbar>
+<BaseLayout title="Tomrowstudios" namespace="index" pageName="Home" navPromo="contact" pinScrollbar>
 <!-- The page itself, which shrinks into the footer as the footer arrives (footer.js) -->
 <!-- The opening, on a fresh load of this page only (loader.js, "The home
      page's opening" in style.css): on the dark, the site's square grid, a
@@ -134,16 +65,16 @@ const tintPalettes = await Promise.all(reel.map(({ image, film, position }) =>
     }, 6000);
   }
 </script>
-<div class="home-loader" data-loader data-reel-layout={reelLayout} aria-hidden="true">
+<div class="home-loader" data-loader data-reel-layout="list" aria-hidden="true">
   <div class="home-loader__bg" data-loader-bg></div>
   <div class="home-loader__layer" data-loader-layer>
-    {reel.map(({ image, position, folder, film }, i) => (
-    <div class="home-loader__square is--card" data-loader-square data-loader-card={i} style={reelLayout === 'list' ? `--drift: ${Math.max(-13, Math.min(13, -i * 10))}` : undefined}>{reelLayout === 'list' ? (film ? <img alt="" decoding="async" style={`--reel-position: ${position}`} src={filmStill}> : image && <img alt="" decoding="async" style={`--reel-position: ${position}`} {...reelImage(image, position)}>) : folder ? <ProjectsFolder projects={projectIndex} /> : film ? <img alt="" decoding="async" style={`--reel-position: ${position}`} src={filmStill}> : image && <img alt="" decoding="async" style={`--reel-position: ${position}`} {...reelImage(image)}>}</div>
+    {reel.map(({ picture, position }, i) => (
+    <div class="home-loader__square is--card" data-loader-square data-loader-card={i} style={`--drift: ${Math.max(-13, Math.min(13, -i * 10))}`}><img alt="" decoding="async" style={`--reel-position: ${position}`} {...reelImage(picture)}></div>
     ))}
     {Array.from({ length: 8 }, () => <div class="home-loader__square" data-loader-square></div>)}
   </div>
   <p class="home-loader__count" data-loader-count>0%</p>
-  <p class="home-loader__label" data-loader-label>Tomrowstudios</p>
+  <p class="home-loader__label" data-loader-label>tomrowstudios<span class="hero-nav__copy">©</span></p>
 </div>
 <!-- The row, set on the grid before the first paint, so the squares are
      there from the start: a short row in the middle of the screen, nine
@@ -152,9 +83,7 @@ const tintPalettes = await Promise.all(reel.map(({ image, film, position }) =>
      grid's cells (--grid-pitch, style.css: 7px, 5px on a phone) and on a
      cell's edge, a whole number of cells apart; the five that carry the
      hero's pictures from the middle square rightwards, so that turned into
-     a column they run from the middle downwards, as the hero's do (in the
-     row, which loops, the first in the middle and the last ones to its
-     left, where the row's own stand when it opens); the
+     a column they run from the middle downwards, as the hero's do; the
      share at the row's top right, the name under its left end. Kept on
      window for loader.js, which lays it out again on a resize. -->
 <script is:inline>
@@ -177,14 +106,11 @@ const tintPalettes = await Promise.all(reel.map(({ image, film, position }) =>
       var rowTop = snap(vh / 2 - sq / 2);
       var cards = Array.prototype.slice.call(loader.querySelectorAll('[data-loader-card]'));
       var dots = Array.prototype.slice.call(loader.querySelectorAll('[data-loader-square]:not([data-loader-card])'));
-      var row = loader.dataset.reelLayout === 'row';
       var m = cards.length;
-      var half = Math.floor(m / 2);
       var order = [];
       for (var i = 0; i < n; i++) {
         var k = i - c;
-        if (row) order.push(k >= -half && k < m - half ? cards[(k + m) % m] : dots.shift());
-        else order.push(k >= 0 && k < m ? cards[k] : dots.shift());
+        order.push(k >= 0 && k < m ? cards[k] : dots.shift());
       }
       dots.forEach(function (el) { el.style.display = 'none'; });
       order.forEach(function (el, i) {
@@ -207,188 +133,53 @@ const tintPalettes = await Promise.all(reel.map(({ image, film, position }) =>
 </script>
 
 <div class="page-surface" data-page-surface>
-<!-- Home hero, after Studio Agar's index: on the off-white, a column of
-     pictures sharing one left edge, the screen holding still while the page
-     scrolls through them. On each step its picture stands large; the others
-     wait small, faded and softly blurred above and below it, the sizes
-     passing smoothly from one to the next (home-reel.js). Beside the lit
-     picture, its name in small mono capitals, set against the picture's
-     edge. In the corners, held while the hero runs, the studio's name and
-     a Book a call button (Tom's portrait at its end, opening the contact
-     form) above, the year and the legal pages below. Behind it all, the
-     site's light square grid, held still with the pictures, which sit on
-     its cells (home-reel.js).
-     reelLayout "list" (the one in use; after GSP's list view) sets the
-     pictures one under another instead, each the same portrait size, the
-     right edge of every one exactly on the middle of the screen; the page
-     scrolls through them (or a drag does), and on the screen's middle line,
-     held while the list runs, the count and a gauge on the left, the lit
-     part's name and a line on it on the right (home-list.js); of the
-     corners, only the Book a call button.
-     The steps are what the scroll counts through; home-reel.js lights the
-     picture and its name in turn. The page's heading is for screen readers
-     only. The hero this replaced is parked on /parked. reelLayout "row"
-     (above) lays the pictures out in a loop across the screen instead
-     (after t11.com): the lit one's name under it, a ruler of numbers along
-     the foot, and the row turned by a swipe, a drag, a sideways trackpad
-     stroke or the arrow keys as well as by the scroll. No marquee over the
-     floating bar while it is on screen (held down, floatingnav.js); the page's
-     Contact Tom comes up below it. -->
-<section class="home-reel is--screen" data-home-reel data-reel-layout={reelLayout}>
-  <h1 class="visually-hidden">{hero.headline}</h1>
-  <div class="home-reel__surface" aria-hidden="true"><div class="home-reel__surface-inner"></div></div>
-  <div class="home-reel__chrome">
-    <div class="home-reel__chrome-inner">
-      <!-- The studio's name and mark, the pages and the ways to Tom: the
-           header every page has (HeroNav.astro) -->
-      <HeroNav current="/" />
-      {reelLayout === 'list' ? (
-      <>
-      <!-- The left margin, under the studio's mark: a column of the grid's
-           own squares, one cell wide, the parts' numbers beside it, lit
-           along the way the page has come, a square bright where it is
-           (drawn by home-list.js); pressed or dragged, it scrolls there -->
-      <div class="home-list__gauge" data-list-gauge aria-hidden="true">
-        <canvas class="home-list__ruler" data-list-ruler></canvas>
-        {reel.map((_, i) => <span class:list={['home-list__mark', { 'is--active': i === 0 }]} data-list-mark style={`--k: ${reel.length > 1 ? i / (reel.length - 1) : 0}`}>{pad(i + 1)}</span>)}
-      </div>
-      <!-- The right: the lit part's name, set as the closing cards' titles
-           are, and its overview beside it, on the screen's middle line;
-           the values split into place line by line as the part changes
-           (home-list.js) -->
-      <div class="home-list__meta" data-list-meta aria-hidden="true">
-        <div class="home-list__field is--title">
-          <span class="home-list__values">
-            {reel.map(({ lines }, i) => <span class:list={['home-list__value', { 'is--active': i === 0 }]} data-list-panel={i}>{lines.map((line, j) => <>{j > 0 && <br />}{line}</>)}</span>)}
-          </span>
-        </div>
-        <div class="home-list__field is--about">
-          <span class="home-list__values">
-            {reel.map(({ about }, i) => <span class:list={['home-list__value', { 'is--active': i === 0 }]} data-list-panel={i}>{about}</span>)}
-          </span>
-        </div>
-      </div>
-      </>
-      ) : (
-      <>
-      <p class="home-reel__corner is--bl">©{year} Tomrowstudios</p>
-      <p class="home-reel__corner is--br"><a href="/terms">Terms</a><a href="/privacy">Privacy</a></p>
-      </>
-      )}
-    </div>
-  </div>
-  <!-- The list (reelLayout "list"): the pictures one under another in the
-       page, each the same size, the right edge of every one on the middle
-       of the screen; the page scrolls through them as it would anything (or
-       a drag does), the lit one the one on the middle line (home-list.js).
-       Otherwise the reel's steps and stage (home-reel.js). -->
-  {reelLayout === 'list' ? (
-  <>
-  <ol class="home-list" role="list" data-list>
-    {reel.map(({ title, about, href, image, film, position, cursor }, i) => (
-    <li class="home-list__item" data-list-item data-tint-palette={tintPalettes[i] ? JSON.stringify(tintPalettes[i]) : undefined}>
-      {film ? (
-      <button type="button" class="home-list__shot home-reel__img is--film" data-list-shot data-reel-card data-cursor-label={cursor} data-reel-src={REEL_SRC} data-reel-poster={filmStill} data-reel-preview={reelPreview} aria-haspopup="dialog" aria-label={`${title}: play the film. ${about}`}>
-        <span class="home-list__visual" data-list-drift data-reel-media>
-          <img class="home-list__img" src={filmStill} alt="" decoding="async" draggable="false" style={`--reel-position: ${position}`} {...(i === 0 ? { fetchpriority: 'high', 'data-reveal-wait': '' } : {})}>
-          <!-- The film itself, muted, over its still while the pointer is
-               on the frame (reel.js, the hover preview); no source until
-               the first hover -->
-          {reelFilm && <video class="home-list__img home-list__film" data-reel-preview-video data-reel-preview-src={reelFilm} muted loop playsinline preload="none" crossorigin="anonymous" disablepictureinpicture aria-hidden="true" style={`--reel-position: ${position}`}></video>}
-        </span>
-        <span class="home-reel__play" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M8 5.5v13l10.5-6.5z" fill="currentColor"/></svg></span>
-      </button>
-      ) : (
-      <a href={href} class="home-list__shot home-reel__img" data-list-shot data-cursor-label={cursor}>
-        <span class="home-list__visual" data-list-drift>
-          {image && <img class="home-list__img" {...reelImage(image, position)} alt="" decoding="async" draggable="false" style={`--reel-position: ${position}`} {...(i === 0 ? { fetchpriority: 'high', 'data-reveal-wait': '' } : i === 1 ? {} : { loading: 'lazy' })}>}
-        </span>
-        <span class="visually-hidden">{title}: {about}</span>
-      </a>
-      )}
-    </li>
-    ))}
-  </ol>
-  <!-- A shade over the hero, deepening as the clients' band comes up
-       over it (home-list.js) -->
-  <div class="home-reel__cover" data-list-cover aria-hidden="true"></div>
-  </>
-  ) : (
-  <div class="scroll-list home-reel__grid">
-    <div class="home-reel__track">
-      <!-- The steps the scroll counts through, one a picture -->
-      <ul class="scroll-list__list home-reel__list" role="list" aria-hidden="true">
-        {reel.map(() => (
-        <li class="home-reel__step" data-reel-step></li>
-        ))}
-      </ul>
-      <!-- The pictures, on a stage that holds the middle of the screen, and
-           the lit one's texts beside it -->
-      <div class="home-reel__stage">
-        <div class="home-reel__frame">
-          {reel.map(({ title, href, image, position, folder, film, cursor }, i) => film ? (
-          <button type="button" class:list={['home-reel__shot', 'is--film', { 'is--active': i === 0 }]} data-reel-shot data-reel-card data-cursor-label={cursor} data-reel-src={REEL_SRC} data-reel-poster={filmStill} data-reel-preview={reelPreview} aria-haspopup="dialog" aria-label="About Tom: play the film" style={`--i: ${i}`}>
-            <img class="home-reel__img" data-reel-media src={filmStill} alt="" decoding="async" style={`--reel-position: ${position}`} {...(i === 0 ? { fetchpriority: 'high', 'data-reveal-wait': '' } : { loading: 'lazy' })}>
-            <span class="home-reel__play" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M8 5.5v13l10.5-6.5z" fill="currentColor"/></svg></span>
-            <span class="home-reel__caption">{title}</span>
-          </button>
-          ) : (
-          <a href={href} class:list={['home-reel__shot', { 'is--active': i === 0, 'is--folder': folder }]} data-reel-shot data-folder-link={folder ? '' : undefined} data-cursor-label={cursor} aria-label={title} style={`--i: ${i}`}>
-            {folder ? <ProjectsFolder projects={projectIndex} class="home-reel__img" /> : image && <img class="home-reel__img" {...reelImage(image)} alt="" decoding="async" style={`--reel-position: ${position}`} {...(i === 0 ? { fetchpriority: 'high', 'data-reveal-wait': '' } : { loading: 'lazy' })}>}
-            <span class="home-reel__caption">{title}</span>
-          </a>
-          ))}
-          <div class="home-reel__side is--left" aria-hidden="true">
-            {reel.map(({ title }, i) => (
-            <p class:list={['scroll-list__panel', 'home-reel__text', { 'is--active': i === 0 }]} data-reel-panel={i}>{title}</p>
-            ))}
-          </div>
-          <!-- The row's ruler: the parts' numbers along the stage's foot, the
-               lit one's under the middle, sliding with the row, looping as
-               it does; a number pressed turns the row to its part -->
-          <div class="home-reel__ruler" aria-hidden="true">
-            <div class="home-reel__ruler-track" data-reel-ruler>
-              {reel.map((_, i) => <span class="home-reel__ruler-mark" data-cursor="hover" style={`--i: ${i}`}>{pad(i + 1)}</span>)}
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-  )}
-</section>
+<!-- Home hero, after GSP's list view: the pictures one under another,
+     each the same portrait size, the right edge of every one exactly on
+     the middle of the screen; the page scrolls through them (or a drag
+     does), the lit one the one on the middle line, and on that line, held
+     while the list runs, the lit part's name and a line on it on the
+     right (home-list.js). Behind it all, the
+     site's square grid, held still with the pictures, as a mosaic in the
+     lit picture's colours (hero-tint.js). The page's heading is for screen
+     readers only. The hero this replaced is parked on /parked. No marquee
+     over the floating bar while the hero is on screen (held down,
+     floatingnav.js); the page's Contact Tom comes up below it. -->
+<HomeHero data={heroData} headline={hero.headline} />
 
 <!-- The charcoal band under the hero: the clients' logos and the practice
      statement, running straight into the closing cards. -->
 <section class="logo-wall" data-home-section="logoWall">
-  <!-- The clients: the heading, two short lines, then one row of tiles
-       running sideways on a loop across the page's full width, each the
-       Studio's white logo artwork centred on a charcoal tile, bounded on
-       both axes so a long wordmark and a tall symbol carry a similar
-       weight. The row is two identical halves (logoCells, the clients
-       repeated until a half is wider than any screen), moved by one half
-       and back to the start; only the first clients are read out, the
-       repeats hidden from screen readers. -->
+  <!-- The clients: a short heading, then one row of tiles running sideways
+       on a loop across the page's full width, each the Studio's white logo
+       artwork centred on a charcoal tile, bounded on both axes so a long
+       wordmark and a tall symbol carry a similar weight. The row is Osmo's
+       marquee with scroll direction (marquee.js): one collection of tiles
+       (logoCells, the clients repeated until it is wider than any screen),
+       cloned once by the script so the loop has no seam, run left at a
+       steady pace, turned round while the page scrolls back up and sped
+       up a little by the scroll; paused while off screen and under the
+       pointer. Only the first clients are read out, the repeats hidden
+       from screen readers. The document's label for this section is not
+       shown. -->
   <div class="logo-grid">
     <div class="logo-grid__head">
-      <p class="tagline label-pill logo-wall__eyebrow">{logoWall.label}</p>
-      <h2 class="logo-grid__lead">Worked<br>with</h2>
+      <h2 class="logo-grid__lead">Studios, brands and institutions<br>Tom has worked with</h2>
     </div>
-    <div class="logo-grid__row">
-      <ul class="logo-grid__list" role="list" style={`--logo-count: ${logoCount}`}>
-        {[0, 1].map((half) => logoCells.map(({ client, repeat }) => (
-        <li class="logo-grid__tile" aria-hidden={repeat || half ? 'true' : undefined}><img class="logo-grid__logo" src={urlFor(client.logo!).ignoreImageParams().width(600).height(240).url()} loading="lazy" decoding="async" alt={repeat || half ? '' : client.name ?? ''}></li>
-        )))}
-      </ul>
+    <div class="logo-grid__row marquee-advanced" data-marquee-scroll-direction-target data-marquee-direction="left" data-marquee-status="normal" data-marquee-speed="20" data-marquee-scroll-speed="6" data-marquee-duplicate="1" data-marquee-pause-hover>
+      <div data-marquee-scroll-target class="marquee-advanced__scroll">
+        <ul class="logo-grid__list marquee-advanced__collection" role="list" data-marquee-collection-target>
+          {logoCells.map(({ client, repeat }) => (
+          <li class="logo-grid__tile" aria-hidden={repeat ? 'true' : undefined}><img class="logo-grid__logo" src={urlFor(client.logo!).ignoreImageParams().width(600).height(240).url()} loading="lazy" decoding="async" alt={repeat ? '' : client.name ?? ''}></li>
+          ))}
+        </ul>
+      </div>
     </div>
   </div>
   <!-- Practice: the statement across the page in heavy display type, flush
        left; its words light up as it is scrolled through
        (text-highlight.js). The document's label for it is not shown. -->
-  <div class="logo-wall__statement" data-home-section="practice">
-    <div class="container">
-      <h2 class="statement-display" data-highlight-text>{practice.statement}</h2>
-    </div>
+  <div class="logo-wall__statement is--block" data-home-section="practice">
+    <StatementBlock text={practice.statement ?? ''} highlight />
   </div>
 </section>
 

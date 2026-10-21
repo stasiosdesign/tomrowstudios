@@ -170,7 +170,10 @@ function splitHoverMove(event) {
     const { clientX: x, clientY: y } = sample;
     const { x: px, y: py } = splitHoverPointer;
     if (px !== null) {
-      const steps = Math.min(60, Math.floor(Math.hypot(x - px, y - py) / SPLIT_HOVER.step));
+      // At most 24 hit tests a sample: a flick across the whole screen is
+      // walked every 6px near a link's size anyway, and each test can
+      // force a layout
+      const steps = Math.min(24, Math.floor(Math.hypot(x - px, y - py) / SPLIT_HOVER.step));
       for (let s = 1; s < steps; s++) {
         splitHoverVisit(px + ((x - px) * s) / steps, py + ((y - py) * s) / steps);
       }

@@ -8,10 +8,12 @@
 
    Laid out as the agency reference: the wordmark on the left, four columns
    on the right (contact, pages, the four parts of the practice, socials),
-   the legal line across the foot, and under it all a ticker of "Get in
-   touch" running the full width, which opens the contact panel. Pages
-   without a footer — the architecture index and the project pages — simply
-   leave it out. */
+   and across the very foot, small, the copyright and the legal links,
+   either side of the floating bar's square: at the foot of the page the
+   floating navigation opens of itself as the footer's own navigation
+   (FloatingNav.astro, floatingnav.js), over the room the footer keeps for
+   it above that line. Pages without a footer — the architecture index and
+   the project pages — simply leave it out. */
 import { pages, socials, email } from './site-links';
 type Link = { label: string; href: string; panel?: boolean; external?: boolean };
 const columns: { heading: string; links: Link[] }[] = [
@@ -31,8 +33,8 @@ const columns: { heading: string; links: Link[] }[] = [
     links: [
       { label: 'Partnerships', href: '/partner' },
       { label: 'Architectural Projects', href: '/architecture' },
-      { label: 'Courses and Resources', href: '/shop' },
-      { label: 'Architecture and Influence', href: '/influence' },
+      { label: 'Courses & Resources', href: '/shop' },
+      { label: 'Architecture & Influence', href: '/influence' },
     ],
   },
   {
@@ -54,7 +56,7 @@ const legal = [
   <div class="footer-ground" aria-hidden="true"></div>
   <footer data-footer-inner class="site-footer">
     <div class="site-footer__top">
-      <a href="/" class="site-footer__logo" aria-label="Tomrow Studios, home"><span class="footer-reveal"><span class="footer-reveal__item">tomrowstudios<sup>©</sup></span></span></a>
+      <a href="/" class="site-footer__logo" aria-label="Tomrowstudios, home"><span class="footer-reveal"><span class="footer-reveal__item">tomrowstudios<sup>©</sup></span></span></a>
       <div class="site-footer__cols">
         {columns.map(({ heading, links }) => (
         <div class="site-footer__col">
@@ -68,20 +70,15 @@ const legal = [
         ))}
       </div>
     </div>
+    <!-- The foot: the copyright on the left, the legal links on the right,
+         on the floating bar's line, either side of its square -->
     <div class="site-footer__bottom">
-      <p class="site-footer__note"><span class="footer-reveal"><span class="footer-reveal__item">© 2025 Tomrowstudios. All rights reserved.</span></span></p>
+      <p class="site-footer__note"><span class="footer-reveal"><span class="footer-reveal__item">2025 ©<br class="site-footer__br"> Tomrowstudios</span></span></p>
       <div class="site-footer__legal" data-dim-group>
         {legal.map(({ label, href }) => (
         <a data-split-hover="link" href={href} class="site-footer__note"><span class="footer-reveal"><span class="footer-reveal__item" data-split-hover="target">{label}</span></span></a>
         ))}
       </div>
     </div>
-    <a href="#contact" data-panel-open="contact" data-barba-prevent="self" class="site-footer__cta" aria-label="Get in touch">
-      <span class="footer-reveal"><span class="footer-reveal__item" aria-hidden="true">
-        <span class="site-footer__ticker">
-          <span>Get in touch</span><span>Get in touch</span><span>Get in touch</span>
-        </span>
-      </span></span>
-    </a>
   </footer>
 </div>

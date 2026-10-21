@@ -62,7 +62,7 @@ const showReel = Boolean(REEL_SRC) || __DEPLOYMENT__ !== 'production';
 <title>{title}</title>
 {noindex && <meta name="robots" content="noindex, nofollow">}
 {canonical && <link rel="canonical" href={canonical}>}
-<meta property="og:site_name" content="Tomrow Studios">
+<meta property="og:site_name" content="Tomrowstudios">
 <meta property="og:type" content="website">
 <meta property="og:title" content={title}>
 {canonical && <meta property="og:url" content={canonical}>}
@@ -150,12 +150,9 @@ const showReel = Boolean(REEL_SRC) || __DEPLOYMENT__ !== 'production';
 <script is:inline src="https://cdn.jsdelivr.net/npm/gsap@3.15/dist/SplitText.min.js"></script>
 <!-- Shared first: the page lifecycle and the on-demand loader -->
 <script is:inline src="/js/lifecycle.js"></script>
-<script is:inline src="/js/hero-nav.js"></script>
 <script is:inline src="/js/social-copy.js"></script>
 <script is:inline src="/js/floatingnav.js"></script>
 <script is:inline src="/js/enquiry.js"></script>
-<script is:inline src="/js/hero-runner.js"></script>
-<script is:inline src="/js/hero-dial.js"></script>
 <script is:inline src="/js/sidepanel.js"></script>
 <script is:inline src="/js/casepanel.js"></script>
 <script is:inline src="/js/swiper.js"></script>
@@ -177,16 +174,14 @@ const showReel = Boolean(REEL_SRC) || __DEPLOYMENT__ !== 'production';
 <script is:inline src="/js/accordion.js"></script>
 <script is:inline src="/js/image-reveal.js"></script>
 <script is:inline src="/js/text-highlight.js"></script>
-<script is:inline src="/js/sequence.js"></script>
 <script is:inline src="/js/scroll-list.js"></script>
-<script is:inline src="/js/home-reel.js"></script>
 <script is:inline src="/js/hero-tint.js"></script>
 <script is:inline src="/js/home-list.js"></script>
 <script is:inline src="/js/influence.js"></script>
 <script is:inline src="/js/logo-carousel.js"></script>
 <script is:inline src="/js/loader.js"></script>
 <script is:inline src="/js/cursor.js"></script>
-<script is:inline src="/js/bunny-lightbox.js"></script>
+<!-- The reel's player (bunny-lightbox.js) is fetched by reel.js on first need -->
 <script is:inline src="/js/reel.js"></script>
 <!-- Temporary development grid overlay (development and staging only) -->
 {showGridOverlay && <script is:inline src="/js/grid-overlay.js"></script>}

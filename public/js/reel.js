@@ -46,6 +46,11 @@
 // preview's frame of the moment if it was showing. Its corners go from the card's own
 // radius to the player's as it grows (the frame is scaled, so the radius
 // is written against the scale each frame), and back as it shrinks.
+// A card on the page that shows a picture of its own (the home hero's
+// portrait) grows as that picture: it fills the frame as the frame
+// grows, so what was clicked is what grows, and the film takes over from
+// it on the way; closing, the picture comes back over the film and lands
+// as the card ("The card's picture", below).
 //
 // The player stands over nearly the whole screen, a small even margin
 // round it (style.css), the film covering it. Its controls are Osmo's,
@@ -125,6 +130,7 @@
   function drawFrame() {
     calc.style.transform = `translate(${m.x}px, ${m.y}px) scale(${m.k})`;
     calc.style.clipPath = `inset(${m.t}px ${m.r}px ${m.b}px ${m.l}px round ${m.rad / m.k}px)`;
+    drawPicture();
   }
   // The state that puts the frame (whose resting box is `rest`) over the
   // rectangle `rect`, cropped as `el` (the card's picture) crops. The frame
@@ -180,7 +186,75 @@
     };
   }
 
-  // ---- Getting ready: hls.js and the placeholder, before they are needed
+  // ---- The card's picture
+  // A card on the page shows a picture of its own (the home hero's
+  // portrait, or its preview's frame of the moment), not the film's still,
+  // so the frame grows as that picture: laid over the player, it fills the
+  // part of the frame on show (as a cover, at the card's own
+  // object-position), so it grows with the frame from exactly where it was
+  // on the card (its own box there, taller than the card as it drifts, m.p
+  // 0) to the whole frame (m.p 1), the film coming through as it fades on
+  // the way. Closing runs it back: the picture comes over the film and
+  // lands as the card. Placed by a transform alone, nothing laid out.
+  const pic = box.querySelector('[data-reel-picture]');
+  const shot = { on: false, el: null, nw: 1, nh: 1, ax: 0.5, ay: 0.5, from: null, w: 0, h: 0 };
+  m.p = 1;
+  // What the card shows: its preview playing, else its picture; null for
+  // the menu's card, which shows the still itself
+  function pictureOf(el) {
+    if (el === navCard || !pic) return null;
+    const video = el.classList.contains('is--previewing') ? previewOf(el) : null;
+    const img = mediaOf(el).querySelector('img');
+    const shown = video && video.videoWidth ? video : img;
+    if (!shown) return null;
+    const pos = getComputedStyle(shown).objectPosition.split(' ');
+    const part = (v) => (v && v.endsWith('%') ? parseFloat(v) / 100 : 0.5);
+    return {
+      el: shown,
+      src: shown === img ? img.currentSrc || img.src : '',
+      nw: shown === img ? img.naturalWidth : video.videoWidth,
+      nh: shown === img ? img.naturalHeight : video.videoHeight,
+      ax: part(pos[0]),
+      ay: part(pos[1]),
+    };
+  }
+  // A box on the screen in the frame's own pixels, the frame in `state`
+  // over its resting box `rest`
+  const inFrame = (rect, state, rest) => ({
+    x: (rect.left - rest.left - state.x) / state.k,
+    y: (rect.top - rest.top - state.y) / state.k,
+    w: rect.width / state.k,
+    h: rect.height / state.k,
+  });
+  // Starts the picture: `from`, its box on the card in the frame's pixels
+  function showPicture(found, src, from, rest) {
+    Object.assign(shot, found, { on: true, from, w: rest.width, h: rest.height });
+    if (src && pic.getAttribute('src') !== src) pic.setAttribute('src', src);
+    pic.style.width = `${shot.nw}px`;
+    pic.style.height = `${shot.nh}px`;
+    gsap.set(pic, { autoAlpha: 1 });
+  }
+  function hidePicture() {
+    shot.on = false;
+    gsap.set(pic, { clearProps: 'transform,opacity,visibility' });
+  }
+  function drawPicture() {
+    if (!shot.on) return;
+    const { from, w, h, nw, nh, ax, ay } = shot;
+    const p = m.p;
+    // The box it covers: from its place on the card to the part on show
+    const bx = from.x + (m.l - from.x) * p;
+    const by = from.y + (m.t - from.y) * p;
+    const bw = from.w + (w - m.l - m.r - from.w) * p;
+    const bh = from.h + (h - m.t - m.b - from.h) * p;
+    const s = Math.max(bw / nw, bh / nh);
+    pic.style.transform = `translate(${bx + (bw - nw * s) * ax}px, ${by + (bh - nh * s) * ay}px) scale(${s})`;
+  }
+
+  // ---- Getting ready: the player's own script (bunny-lightbox.js, kept
+  // off every page until a card is hovered, focused or pressed), hls.js
+  // where the browser has no HLS of its own, and the placeholder, before
+  // they are needed
   let ready = null;
   function prepare() {
     if (!ready) {
@@ -188,7 +262,9 @@
       const probe = document.createElement('video');
       const nativeHls = !!probe.canPlayType('application/vnd.apple.mpegurl') && 'ManagedMediaSource' in window;
       const wantsHlsJs = src && !nativeHls && !window.Hls && ('MediaSource' in window || 'ManagedMediaSource' in window);
-      ready = wantsHlsJs ? loadScript(VENDOR.hls).catch(() => {}) : Promise.resolve();
+      const parts = [typeof initBunnyLightboxPlayer === 'function' ? Promise.resolve() : loadScript('/js/bunny-lightbox.js').catch(() => {})];
+      if (wantsHlsJs) parts.push(loadScript(VENDOR.hls).catch(() => {}));
+      ready = Promise.all(parts);
     }
     return ready;
   }
@@ -235,18 +311,28 @@
   }
   // The preview's frame of the moment, as a picture for the player to start
   // from (the video is crossorigin, and Bunny allows the read); none if it
-  // cannot be had
+  // cannot be had. The frame is drawn now, before the preview stops, and
+  // encoded off the main thread (toBlob, a promise), so opening the player
+  // never waits on a frame-sized JPEG being written in the open's own
+  // frame. One picture at a time: the last is let go as the next is made.
+  let frameUrl = '';
   function previewFrame(el) {
     const video = previewOf(el);
-    if (!video || video.readyState < 2 || !video.videoWidth) return '';
+    if (!video || video.readyState < 2 || !video.videoWidth) return Promise.resolve('');
     try {
       const canvas = document.createElement('canvas');
       canvas.width = video.videoWidth;
       canvas.height = video.videoHeight;
       canvas.getContext('2d').drawImage(video, 0, 0);
-      return canvas.toDataURL('image/jpeg', 0.92);
+      return new Promise((resolve) => {
+        canvas.toBlob((blob) => {
+          if (frameUrl) URL.revokeObjectURL(frameUrl);
+          frameUrl = blob ? URL.createObjectURL(blob) : '';
+          resolve(frameUrl);
+        }, 'image/jpeg', 0.92);
+      });
     } catch (error) {
-      return '';
+      return Promise.resolve('');
     }
   }
 
@@ -280,10 +366,19 @@
     state = 'opening';
     card = el;
     const from = rectOf(mediaOf(card));
-    const showing = (card.classList.contains('is--previewing') && previewFrame(card)) || still;
+    const found = pictureOf(card);
+    const framed = card.classList.contains('is--previewing') ? previewFrame(card) : Promise.resolve('');
     // The card is hidden under the player from the next frame: its preview stops
     stopPreview(card);
-    await prepare();
+    const [frame] = await Promise.all([framed, prepare()]);
+    const showing = frame || still;
+    // The card's picture ready to draw before the frame moves: the
+    // preview's frame if that is what it showed, else its own picture
+    const picSrc = found && (found.src || frame);
+    if (picSrc) {
+      pic.setAttribute('src', picSrc);
+      await pic.decode().catch(() => {});
+    }
     if (typeof initBunnyLightboxPlayer === 'function') initBunnyLightboxPlayer();
 
     returnFocus = card;
@@ -305,10 +400,10 @@
     if (typeof player._applyClamp === 'function') player._applyClamp();
 
     // Osmo sizes the frame on the next frame; this runs straight after it
-    requestAnimationFrame(() => grow(from));
+    requestAnimationFrame(() => grow(from, picSrc ? found : null));
   }
 
-  function grow(from) {
+  function grow(from, found) {
     const to = rectOf(calc);
     mediaOf(card).classList.add('is--lifted');
     box.classList.remove('is--pending');
@@ -318,20 +413,26 @@
 
     gsap.set(calc, { transformOrigin: '0 0', willChange: 'transform' });
     readCorners();
-    Object.assign(m, frameOver(to, from, mediaOf(card)), { rad: radiusOf(mediaOf(card)) });
+    Object.assign(m, frameOver(to, from, mediaOf(card)), { rad: radiusOf(mediaOf(card)), p: 0 });
+    const shownAt = found && rectOf(found.el);
+    if (shownAt) showPicture(found, '', inFrame(shownAt, m, to), to);
     drawFrame();
     gsap.set(dark, { opacity: 0 });
     gsap.set(closeBtn, { autoAlpha: 0 });
     tl = gsap.timeline({ onComplete: settleOpen })
-      .to(m, { ...IDLE, rad: cornerR, duration: 0.95, ease, onUpdate: drawFrame }, 0)
+      .to(m, { ...IDLE, rad: cornerR, p: 1, duration: 0.95, ease, onUpdate: drawFrame }, 0)
       .to(dark, { opacity: darkLevel(), duration: 0.75, ease: 'power2.out' }, 0)
       .to(closeBtn, { autoAlpha: 1, duration: 0.4, ease: 'power2.out' }, 0.6);
+    // The film coming through the picture as it grows, gone by the time
+    // the frame is most of the way there
+    if (shot.on) tl.to(pic, { autoAlpha: 0, duration: 0.45, ease: 'power1.inOut' }, 0.15);
   }
 
   function settleOpen() {
     state = 'open';
     tl = null;
-    Object.assign(m, IDLE);
+    hidePicture();
+    Object.assign(m, IDLE, { p: 1 });
     gsap.set(calc, { clearProps: 'transform,transformOrigin,willChange,clipPath' });
     gsap.set([dark, closeBtn], { clearProps: 'opacity,visibility' });
     box.classList.remove('is--morphing');
@@ -396,18 +497,30 @@
     // The frame's resting box, from where it is drawn now (the clip does
     // not change its box)
     const rest = { left: now.left - m.x, top: now.top - m.y, width: now.width / m.k, height: now.height / m.k };
+    const landed = frameOver(rest, target, home ? mediaOf(card) : null);
+    // Back into a card on the page, as its own picture: it comes over the
+    // film on the way, and lands where it stands on the card
+    const found = home && pictureOf(card);
+    const shownAt = found && rectOf(found.el);
+    if (shownAt) {
+      const opacity = shot.on ? gsap.getProperty(pic, 'opacity') : 0;
+      showPicture(found, found.src, inFrame(shownAt, landed, rest), rest);
+      gsap.set(pic, { opacity });
+    }
     // Landing as the menu settles round it
     const landing = 0.9;
     tl = gsap.timeline({ onComplete: settleClose })
       .to(m, {
-        ...frameOver(rest, target, home ? mediaOf(card) : null),
+        ...landed,
         rad: home ? radiusOf(mediaOf(card)) : radiusOf(document.querySelector('[data-fnav-bg]')),
+        p: 0,
         duration: landing,
         ease: 'power3.inOut',
         onUpdate: drawFrame,
       }, 0)
       .to(dark, { opacity: 0, duration: 0.6, ease: 'power2.inOut' }, 0.05)
       .to(closeBtn, { autoAlpha: 0, duration: 0.2, ease: 'power1.out' }, 0);
+    if (shot.on) tl.to(pic, { opacity: 1, duration: 0.45, ease: 'power1.inOut' }, 0.15);
     if (home) {
       // In the card's place: the card under it again, the frame away
       tl.call(() => mediaOf(card).classList.remove('is--lifted'), null, landing)
@@ -421,7 +534,8 @@
     state = 'closed';
     tl = null;
     box.classList.remove('is--closing', 'is--morphing', 'is--no-source');
-    Object.assign(m, IDLE);
+    hidePicture();
+    Object.assign(m, IDLE, { p: 1 });
     gsap.set(calc, { clearProps: 'transform,transformOrigin,willChange,opacity,clipPath' });
     gsap.set([dark, closeBtn], { clearProps: 'opacity,visibility' });
     box.setAttribute('aria-hidden', 'true');

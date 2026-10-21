@@ -16,8 +16,6 @@
 //
 // The bar's states are its own parts moved, never rebuilt:
 //   - at rest: the home link, the page's name, the menu control;
-//   - at the foot of the page (the footer coming into view): the name rolls
-//     up out of its window and the back-to-top arrow rolls up into it;
 //   - with the menu open: those parts fade, the bar's background narrows to
 //     a square, and the close control rolls up into the middle of it.
 // The menu is a set of separate modules — the four parts of the practice,
@@ -28,6 +26,19 @@
 // first, quicker. Every tween goes from wherever its target is, so a close
 // in the middle of an open (or the reverse) turns round smoothly instead
 // of jumping.
+//
+// At the foot of the page the menu opens of itself, in a second form, the
+// footer's own (setFootMode, from initFloatingNavPage's trigger on the
+// footer: on once the page is within a fifth of a screen of its end, off
+// again as it goes back up). The same modules move the same way, but only
+// the four parts of the practice rise, with no backdrop over the page and
+// the page still free to scroll, and the studio's mark comes up into the
+// bar's square in the close control's place, as the home link. Nothing on
+// the bar answers to the pointer then (the mark apart): the menu is the
+// footer's navigation until the page leaves the foot, when it drops back
+// into the bar as the menu does. Opening the contact form from the footer
+// while it is up takes the tiles away and grows the form out of the square,
+// and closing the form brings them back.
 //
 // The page under the menu holds still while it is open (Lenis stops), a
 // click on the page or Escape closes it, focus goes to the first block on
@@ -89,16 +100,18 @@ function initFloatingNav() {
   const titleInner = bar.querySelector('[data-fnav-title]');
   const burger = bar.querySelector('[data-fnav-open]');
   const closer = bar.querySelector('[data-fnav-close]');
-  const arrow = bar.querySelector('[data-fnav-top]');
   const barBg = bar.querySelector('[data-fnav-bg]');
+  const mark = bar.querySelector('[data-fnav-home]');
   const reveals = Array.from(menu.querySelectorAll('[data-fnav-reveal]'));
+  // The footer's form of the menu: the four parts of the practice alone
+  const footReveals = reveals.filter((el) => el.hasAttribute('data-fnav-foot'));
   const firstLink = menu.querySelector('a');
   const items = Array.from(menu.querySelectorAll('[data-fnav-item]'));
   const contactPanel = document.querySelector('[data-fnav-contact]');
   const contactBg = contactPanel && contactPanel.querySelector('[data-fnav-contact-bg]');
   const contactInner = contactPanel && contactPanel.querySelector('[data-fnav-contact-inner]');
   const contactReveals = contactPanel ? Array.from(contactPanel.querySelectorAll('[data-fnav-contact-reveal]')) : [];
-  const barParts = [logo, title, burger, arrow];
+  const barParts = [logo, title, burger];
   const root = document.documentElement;
   const promos = Array.from(document.querySelectorAll('[data-fnav-promo]'));
   let promoKey = '';    // the message the page asks for where it is: '' for none
@@ -107,10 +120,11 @@ function initFloatingNav() {
   // ---- The modules, row by row ----
   // A module's delay from its row: the bottom row first when opening (the
   // one nearest the bar), the top row first when closing; the modules of a
-  // row together, so the menu moves as one piece
+  // row together, so the menu moves as one piece; `list`, the modules
+  // moving (the menu's, or the footer's form's)
   const contactModule = menu.querySelector('.fnav-menu__contact');
-  function rowDelay(spread, fromBottom) {
-    const tops = reveals.map((el) => el.offsetTop);
+  function rowDelay(spread, fromBottom, list = reveals) {
+    const tops = list.map((el) => el.offsetTop);
     const lo = Math.min(...tops);
     const hi = Math.max(...tops);
     return (i) => {
@@ -118,6 +132,54 @@ function initFloatingNav() {
       return (fromBottom ? 1 - at : at) * spread;
     };
   }
+  // The footer's form's ripple: the rows as above, and within a row each
+  // tile a beat after the one to its left, so the four lift off one by one
+  // like cards picked up rather than as one sheet
+  function rippleDelay(spread, beat, fromBottom, list) {
+    const row = rowDelay(spread, fromBottom, list);
+    const lefts = list.map((el) => el.offsetLeft);
+    const lo = Math.min(...lefts);
+    const hi = Math.max(...lefts);
+    return (i) => row(i) + (hi > lo ? (lefts[i] - lo) / (hi - lo) : 0) * beat;
+  }
+
+  // ---- The bar's ground, drawn in to its square and out again ----
+  // Moved by its scale, on the compositor, never its width (a layout and a
+  // repaint of its glass every frame). Each move starts from what is seen
+  // (the ground at its full width, scaled to where it stands), and a ground
+  // drawn in becomes a true square at the end, its width the bar's height
+  // and its scale 1, so its corners are round again at rest and every
+  // later measure (barSquare, the contact form) reads the square. The
+  // scale is written to its transform here, not through GSAP's transforms,
+  // which would take over the bar's own opening-out (its CSS scale,
+  // style.css); the two multiply, each its own
+  const ground = { s: 1 };
+  const drawGround = () => { barBg.style.transform = ground.s === 1 ? '' : `scaleX(${ground.s})`; };
+  function resetGround() {
+    barBg.style.width = '';
+    ground.s = 1;
+    drawGround();
+  }
+  function fullBar() {
+    const seen = barBg.offsetWidth * ground.s;
+    barBg.style.width = '';
+    ground.s = seen / barBg.offsetWidth;
+    drawGround();
+  }
+  function narrowBar(tl, at, vars) {
+    tl.call(fullBar, null, at)
+      .to(ground, { s: () => bar.offsetHeight / bar.offsetWidth, ...vars, onUpdate: drawGround }, at)
+      .call(() => {
+        barBg.style.width = `${bar.offsetHeight}px`;
+        ground.s = 1;
+        drawGround();
+      }, null, at + vars.duration);
+  }
+  function widenBar(tl, at, vars) {
+    tl.call(fullBar, null, at)
+      .to(ground, { s: 1, ...vars, onUpdate: drawGround }, at);
+  }
+
   // Where a module stands at rest, its rise set aside for the measure
   function restRect(el) {
     const cell = el.closest('[data-fnav-reveal]') || el;
@@ -133,19 +195,29 @@ function initFloatingNav() {
   const HIDDEN = { autoAlpha: 0, y: '1rem', scale: 0.92 };
   const RISE = { y: 0, scale: 1, duration: 0.55, ease: 'back.out(1.4)' };
   const SHOW = { autoAlpha: 1, duration: 0.18, ease: 'power1.out' };
+  // The footer's form comes of itself, as the page settles on its foot, so
+  // it is softer than a menu asked for: each tile lifts from just below,
+  // a touch small, and settles with the faintest give, as a card set down
+  // on a table does; it is seen almost at once, so the motion carries it,
+  // not a fade
+  const FOOT_HIDDEN = { autoAlpha: 0, y: '1.8rem', scale: 0.94 };
+  const FOOT_RISE = { y: 0, scale: 1, duration: 0.85, ease: 'back.out(1.1)' };
+  const FOOT_SHOW = { autoAlpha: 1, duration: 0.3, ease: 'power1.out' };
 
   // ---- Rest ----
-  // The close control and the arrow wait one bar's height down, clipped;
+  // The close control and the mark wait one bar's height down, clipped;
   // the menu's blocks wait a little low and unseen; the panel is closed
   // onto its bottom edge.
   gsap.set(closer, { yPercent: 100, autoAlpha: 0 });
-  gsap.set(arrow, { yPercent: 100, autoAlpha: 1 });
+  gsap.set(mark, { yPercent: 100, autoAlpha: 0 });
   gsap.set(reveals, { ...HIDDEN, transformOrigin: '50% 100%' });
   gsap.set(backdrop, { autoAlpha: 0 });
   if (contactPanel) gsap.set(contactReveals, { autoAlpha: 0, y: '1.2rem' });
 
   let state = 'closed'; // closed | opening | open | closing
-  let atFoot = false;
+  let foot = false;     // the menu that is open (or on its way) is the footer's form
+  let footMode = false; // the page asks for the footer's form (its trigger)
+  let switching = false; // one form closing at once for the other to open
   let timeline = null;
   // The menu opened by the pointer coming onto its control ("Controls")
   let hoverOpened = false;
@@ -166,42 +238,82 @@ function initFloatingNav() {
   };
 
   const setOpenAttributes = (open) => {
-    burger.setAttribute('aria-expanded', String(open));
+    // The menu control's own state: the footer's form is not its doing
+    burger.setAttribute('aria-expanded', String(open && !foot));
     menu.setAttribute('aria-hidden', String(!open));
     menu.inert = !open;
     menu.classList.toggle('is--open', open);
     document.documentElement.classList.toggle('is--fnav-open', open);
   };
+  // The footer's form: the menu shows its four tiles alone, and the bar
+  // gives way to the mark in its square (style.css, "The footer's form")
+  const setFootForm = (on) => {
+    foot = on;
+    menu.classList.toggle('is--foot', on);
+    document.documentElement.classList.toggle('is--fnav-foot', on);
+  };
 
   // `hover`: opened by the pointer coming onto the menu control (below),
-  // which leaves focus where it is
+  // which leaves focus where it is. `foot`: the footer's form (above),
+  // opened by the page reaching its foot: the four tiles alone, no
+  // backdrop, the page free to scroll, focus left where it is
   function open(opts) {
-    if (isOpen()) return;
+    const toFoot = !!(opts && opts.foot);
+    if (isOpen()) {
+      if (foot === toFoot) return;
+      // The other form is up: down at once (its close's own follow-up held
+      // off), and the asked-for one from the bar
+      switching = true;
+      close({ instant: true });
+      switching = false;
+    }
     const byHover = !!(opts && opts.hover);
+    // From rest, or turning round a close still running (then every tween
+    // goes on from where its target is)
+    const fromRest = state === 'closed';
     if (timeline) timeline.kill();
     state = 'opening';
+    setFootForm(toFoot);
     setOpenAttributes(true);
-    holdPageScroll(true);
+    if (!toFoot) holdPageScroll(true);
+    const list = toFoot ? footReveals : reveals;
+    const middle = toFoot ? mark : closer;
     // Visible now, not on the timeline's first frame, so focus can land in
     // it: the panel, and its blocks (still transparent, about to fade in)
     gsap.set(menu, { autoAlpha: 1 });
-    gsap.set(reveals, { visibility: 'visible' });
+    gsap.set(list, { visibility: 'visible' });
 
     // Quick: the modules off the mark at once, row by row up from the bar,
     // the whole in place in about half a second
     timeline = gsap.timeline({
       defaults: { ease: 'power3.out', overwrite: 'auto' },
       onComplete: () => { state = 'open'; },
-    })
-      .to(backdrop, { autoAlpha: 1, duration: 0.35, ease: 'power2.out' }, 0)
-      .to(barBg, { width: bar.offsetHeight, duration: 0.45, ease: 'power3.inOut' }, 0)
-      .to([logo, title, burger, arrow], { autoAlpha: 0, duration: 0.18, ease: 'power2.inOut' }, 0)
-      .to(closer, { yPercent: 0, autoAlpha: 1, duration: 0.4 }, 0.12)
-      .to(reveals, { ...RISE, stagger: rowDelay(0.14, true) }, 0.02)
-      .to(reveals, { ...SHOW, stagger: rowDelay(0.14, true) }, 0.02);
+    });
+    if (toFoot) {
+      // The footer's form, in one gesture: the bar's parts go first, its
+      // ground gathers in to the square, the mark rises into it as it
+      // closes, and as the square lands the tiles lift off it one by one,
+      // the lower row first, left to right
+      if (fromRest) gsap.set(list, { y: FOOT_HIDDEN.y, scale: FOOT_HIDDEN.scale });
+      const stagger = rippleDelay(0.12, 0.05, true, list);
+      timeline.to(barParts, { autoAlpha: 0, duration: 0.2, ease: 'power2.in' }, 0);
+      narrowBar(timeline, 0.05, { duration: 0.6, ease: 'power3.inOut' });
+      timeline
+        .to(middle, { yPercent: 0, autoAlpha: 1, duration: 0.55, ease: 'power3.out' }, 0.35)
+        .to(list, { ...FOOT_RISE, stagger }, 0.4)
+        .to(list, { ...FOOT_SHOW, stagger }, 0.4);
+    } else {
+      narrowBar(timeline, 0, { duration: 0.45, ease: 'power3.inOut' });
+      timeline
+        .to(backdrop, { autoAlpha: 1, duration: 0.35, ease: 'power2.out' }, 0)
+        .to(barParts, { autoAlpha: 0, duration: 0.18, ease: 'power2.inOut' }, 0)
+        .to(middle, { yPercent: 0, autoAlpha: 1, duration: 0.4 }, 0.12)
+        .to(list, { ...RISE, stagger: rowDelay(0.14, true, list) }, 0.02)
+        .to(list, { ...SHOW, stagger: rowDelay(0.14, true, list) }, 0.02);
+    }
 
     if (reducedMotion) timeline.progress(1);
-    if (!byHover) firstLink.focus({ preventScroll: true });
+    if (!byHover && !toFoot) firstLink.focus({ preventScroll: true });
   }
 
   // Returns the closing timeline (null if the menu was already closed), so
@@ -214,53 +326,77 @@ function initFloatingNav() {
     const instant = !!(opts && opts.instant);
     const quick = !!(opts && opts.quick);
     if (state === 'closed') return null;
+    // Quick (a navigation): the menu at one and a half times its pace, the
+    // footer's unhurried form at twice, so the pages are not kept waiting
+    const pace = foot ? 2 : 1.5;
     if (state === 'closing' && !instant) {
-      if (quick && !reducedMotion) timeline.timeScale(1.5);
+      if (quick && !reducedMotion) timeline.timeScale(pace);
       return timeline;
     }
     if (timeline) timeline.kill();
     const focusWasInside = menu.contains(document.activeElement);
+    const wasFoot = foot;
+    const list = wasFoot ? footReveals : reveals;
+    const middle = wasFoot ? mark : closer;
     state = 'closing';
     setOpenAttributes(false);
 
     const done = () => {
       state = 'closed';
       gsap.set(menu, { autoAlpha: 0 });
-      gsap.set(barBg, { clearProps: 'width' });
-      holdPageScroll(false);
+      resetGround();
+      // The footer's form kept its shape through the close; gone now, and
+      // the page's scroll was never held for it
+      if (wasFoot) setFootForm(false);
+      else holdPageScroll(false);
+      // The footer's form, if the page asks for it meanwhile
+      if (!switching) syncFoot();
     };
 
-    timeline = gsap.timeline({ defaults: { ease: 'power3.in', overwrite: 'auto' }, onComplete: done })
-      .to(reveals, { autoAlpha: 0, y: '0.6rem', scale: 0.94, duration: 0.22, stagger: rowDelay(0.07, false), ease: 'power2.in' }, 0)
-      .to(backdrop, { autoAlpha: 0, duration: 0.45, ease: 'power2.inOut' }, 0.08)
-      .to(barBg, { width: bar.offsetWidth, duration: 0.55, ease: 'power3.inOut' }, 0.08)
-      .to(closer, { yPercent: 100, autoAlpha: 0, duration: 0.3 }, 0.08)
-      // All four back: of the name and the arrow, whichever is out of its
-      // window stays clipped out of sight
-      .to([logo, title, burger, arrow], { autoAlpha: 1, duration: 0.35, ease: 'power2.out' }, 0.3);
+    timeline = gsap.timeline({ defaults: { ease: 'power3.in', overwrite: 'auto' }, onComplete: done });
+    if (wasFoot) {
+      // The footer's form, the opening's gesture reversed: the tiles are
+      // set back down into the square, the upper row first, and once they
+      // are in, the mark sinks and the square opens out into the bar, its
+      // parts coming back as it reaches its width
+      timeline
+        .to(list, { autoAlpha: 0, y: '1.2rem', scale: 0.96, duration: 0.4, stagger: rippleDelay(0.08, 0.03, false, list), ease: 'power2.in' }, 0)
+        .to(middle, { yPercent: 100, autoAlpha: 0, duration: 0.35, ease: 'power2.in' }, 0.25);
+      widenBar(timeline, 0.35, { duration: 0.6, ease: 'power3.inOut' });
+      timeline.to(barParts, { autoAlpha: 1, duration: 0.35, ease: 'power2.out' }, 0.7);
+    } else {
+      widenBar(timeline, 0.08, { duration: 0.55, ease: 'power3.inOut' });
+      timeline
+        .to(list, { autoAlpha: 0, y: '0.6rem', scale: 0.94, duration: 0.22, stagger: rowDelay(0.07, false, list), ease: 'power2.in' }, 0)
+        .to(backdrop, { autoAlpha: 0, duration: 0.45, ease: 'power2.inOut' }, 0.08)
+        .to(middle, { yPercent: 100, autoAlpha: 0, duration: 0.3 }, 0.08)
+        // The bar's parts back
+        .to(barParts, { autoAlpha: 1, duration: 0.35, ease: 'power2.out' }, 0.3);
+    }
 
     if (instant || reducedMotion) timeline.progress(1);
-    else if (quick) timeline.timeScale(1.5);
-    if (focusWasInside) burger.focus({ preventScroll: true });
+    else if (quick) timeline.timeScale(pace);
+    if (focusWasInside && !wasFoot) burger.focus({ preventScroll: true });
     return timeline;
   }
 
-  // For a page transition: the menu (or the contact form) closes, quick,
-  // and the promise settles once it has, so the new page goes in only
-  // after it. It has to wait: putting the new page in holds the main thread
-  // for a moment, and GSAP, which runs without lag smoothing (transitions.js),
-  // would then jump every running tween over that moment, the closing
-  // menu's included, straight to its end. Settles at once when nothing is
-  // open; never later than the close should take, should the close be cut
-  // short by another.
+  // For a page change: the menu (or the contact form) closes, quick, and
+  // the page transition runs alongside it, not after it. It no longer has
+  // to wait: during a transition GSAP smooths over the stall of putting the
+  // new page in (transitions.js), so neither the close nor the pages jump.
+  // Usually the close has begun already, as the link was pressed (the menu's
+  // click, below); this only makes sure. The promise settles at once.
+  // The page is on its way out, so it no longer asks for the footer's
+  // form: footMode is dropped first. Left on, the close's own follow-up
+  // (syncFoot, in `done`) would open the footer's form again the moment
+  // it had closed — the page is still at its foot — only for the new page
+  // to take it down instantly on arrival: the tiles flickering back over
+  // the pages as they move. The new page sets footMode again for itself
+  // (initFloatingNavPage).
   function closeForPage() {
-    const tl = close({ quick: true });
-    if (!tl || !tl.isActive()) return Promise.resolve();
-    const left = (tl.duration() - tl.time()) / tl.timeScale();
-    return new Promise((resolve) => {
-      tl.then(() => resolve());
-      setTimeout(resolve, left * 1000 + 100);
-    });
+    footMode = false;
+    close({ quick: true });
+    return Promise.resolve();
   }
 
   // ---- The contact form: the navigation grown into a panel ----
@@ -268,7 +404,7 @@ function initFloatingNav() {
   let morphBox = null;
   let contactState = 'closed'; // closed | opening | open | closing
   let contactTimeline = null;
-  let contactSource = 'bar';   // menu | bar: where it grew from, and goes back to
+  let contactSource = 'bar';   // menu | foot | bar: where it grew from, and goes back to
   let contactReturn = null;
   const contactOpen = () => contactState === 'opening' || contactState === 'open';
 
@@ -282,9 +418,28 @@ function initFloatingNav() {
     const moved = new DOMMatrixReadOnly(getComputedStyle(bar).transform).m42;
     return new DOMRect(rect.left, rect.top - moved, rect.width, rect.height);
   }
+  // The bar's square (its background narrowed round the middle slot, as it
+  // is with the menu open), on the same line
+  function barSquare() {
+    const rest = barRest();
+    const width = barBg.getBoundingClientRect().width;
+    return new DOMRect(rest.left + (rest.width - width) / 2, rest.top, width, rest.height);
+  }
   function measureMorph(from) {
     const panel = contactPanel.getBoundingClientRect();
     morphBox = { w: panel.width, h: panel.height, x: from.left - panel.left, y: from.top - panel.top, fw: from.width, fh: from.height };
+  }
+  // The panel's own ground is white and the bar's dark: as the panel grows
+  // out of the bar (or its square) the white comes up over the dark in the
+  // first part of the growth, the bar's ground going under it; shrinking
+  // back, the reverse in the last part. `at` is where on the timeline.
+  function groundIn(tl, at) {
+    tl.fromTo(contactBg, { opacity: 0 }, { opacity: 1, duration: 0.3, ease: 'power1.out' }, at)
+      .to(barBg, { autoAlpha: 0, duration: 0.2, ease: 'power1.out' }, at + 0.15);
+  }
+  function groundOut(tl, at) {
+    tl.to(barBg, { autoAlpha: 1, duration: 0.2, ease: 'power1.in' }, at)
+      .to(contactBg, { opacity: 0, duration: 0.3, ease: 'power1.in' }, at + 0.05);
   }
   function drawContact() {
     if (!morphBox) return;
@@ -321,15 +476,18 @@ function initFloatingNav() {
 
   function openContact(trigger) {
     if (!contactPanel || contactOpen()) return;
-    const fromMenu = isOpen();
-    contactSource = fromMenu ? 'menu' : 'bar';
+    const fromFoot = isOpen() && foot;
+    const fromMenu = isOpen() && !foot;
+    contactSource = fromMenu ? 'menu' : fromFoot ? 'foot' : 'bar';
     contactReturn = trigger instanceof HTMLElement ? trigger : null;
     if (contactTimeline) contactTimeline.kill();
     contactState = 'opening';
     holdPageScroll(true);
     gsap.set(contactReveals, { autoAlpha: 0, y: '1.2rem' });
     gsap.set(contactReveals, { visibility: 'visible' });
-    measureMorph(fromMenu && contactModule ? restRect(contactModule) : barRest());
+    // Out of the bar at the foot of the screen: its square, with the menu
+    // or the footer's form open, else the bar itself
+    measureMorph(fromMenu || fromFoot ? barSquare() : barRest());
     // Held down (the home hero): up behind the form while it is open
     apply();
     morph.p = 0;
@@ -339,29 +497,48 @@ function initFloatingNav() {
       defaults: { overwrite: 'auto' },
       onComplete: () => { contactState = 'open'; },
     });
-    if (fromMenu) {
-      // The other modules drop away, and Contact Tom's grows into the form
+    if (fromFoot) {
+      // From the footer's form: the tiles drop away and the form grows out
+      // of the bar's square, the mark going with them; the page holds
+      // still from here, as it does under the form
       if (timeline) timeline.kill();
       timeline = null;
       state = 'closed';
       setOpenAttributes(false);
-      gsap.set(contactPanel, { autoAlpha: 0 });
-      tl.to([...reveals].reverse(), { autoAlpha: 0, y: '0.8rem', duration: 0.22, stagger: 0.012, ease: 'power2.in' }, 0)
-        .to([closer, barBg], { autoAlpha: 0, duration: 0.22, ease: 'power2.out' }, 0)
-        .set(contactPanel, { autoAlpha: 1 }, 0.2)
-        .set(menu, { autoAlpha: 0 }, 0.2)
-        .call(() => { gsap.set(reveals, HIDDEN); }, null, 0.2)
-        .to(morph, { p: 1, duration: 0.85, ease: 'expo.inOut', onUpdate: drawContact }, 0.2)
-        .to(contactReveals, { autoAlpha: 1, y: 0, duration: 0.7, stagger: 0.045, ease: 'expo.out' }, 0.62);
-    } else {
-      // The bar opens upward into it: the panel's background takes over from
-      // the bar's, the same surface on the same rectangle
+      holdPageScroll(true);
       gsap.set(contactPanel, { autoAlpha: 1 });
-      tl.set(barBg, { autoAlpha: 0 }, 0)
-        .to(barParts, { autoAlpha: 0, duration: 0.2, ease: 'power2.out' }, 0)
+      tl.to([...footReveals].reverse(), { autoAlpha: 0, y: '0.8rem', duration: 0.22, stagger: 0.012, ease: 'power2.in' }, 0)
+        .to(mark, { autoAlpha: 0, duration: 0.22, ease: 'power2.out' }, 0)
         .to(backdrop, { autoAlpha: 1, duration: 0.6, ease: 'power2.out' }, 0)
-        .to(morph, { p: 1, duration: 0.9, ease: 'expo.inOut', onUpdate: drawContact }, 0)
-        .to(contactReveals, { autoAlpha: 1, y: 0, duration: 0.7, stagger: 0.045, ease: 'expo.out' }, 0.42);
+        .set(menu, { autoAlpha: 0 }, 0.2)
+        .call(() => { gsap.set(footReveals, HIDDEN); setFootForm(false); }, null, 0.2)
+        .to(morph, { p: 1, duration: 0.9, ease: 'expo.inOut', onUpdate: drawContact }, 0);
+      groundIn(tl, 0);
+      tl.to(contactReveals, { autoAlpha: 1, y: 0, duration: 0.7, stagger: 0.045, ease: 'expo.out' }, 0.42);
+    } else if (fromMenu) {
+      // One movement: the menu's modules sink back towards the bar, the top
+      // row first, and at the same moment the form grows up out of the
+      // bar's square, under the modules as they go; the backdrop stays
+      if (timeline) timeline.kill();
+      timeline = null;
+      state = 'closed';
+      setOpenAttributes(false);
+      gsap.set(contactPanel, { autoAlpha: 1 });
+      tl.to(reveals, { autoAlpha: 0, y: '0.8rem', scale: 0.96, duration: 0.3, stagger: rowDelay(0.08, false), ease: 'power2.in' }, 0)
+        .to(closer, { autoAlpha: 0, duration: 0.15, ease: 'power2.out' }, 0)
+        .call(() => { gsap.set(menu, { autoAlpha: 0 }); gsap.set(reveals, HIDDEN); }, null, 0.4)
+        .to(morph, { p: 1, duration: 0.9, ease: 'expo.inOut', onUpdate: drawContact }, 0);
+      groundIn(tl, 0);
+      tl.to(contactReveals, { autoAlpha: 1, y: 0, duration: 0.7, stagger: 0.045, ease: 'expo.out' }, 0.42);
+    } else {
+      // The bar opens upward into it: the panel's ground takes over from the
+      // bar's, on the same rectangle
+      gsap.set(contactPanel, { autoAlpha: 1 });
+      tl.to(barParts, { autoAlpha: 0, duration: 0.2, ease: 'power2.out' }, 0)
+        .to(backdrop, { autoAlpha: 1, duration: 0.6, ease: 'power2.out' }, 0)
+        .to(morph, { p: 1, duration: 0.9, ease: 'expo.inOut', onUpdate: drawContact }, 0);
+      groundIn(tl, 0);
+      tl.to(contactReveals, { autoAlpha: 1, y: 0, duration: 0.7, stagger: 0.045, ease: 'expo.out' }, 0.42);
     }
     setContactAttributes(true);
     contactTimeline = tl;
@@ -370,7 +547,7 @@ function initFloatingNav() {
       tl.progress(1);
       focusContact();
     } else {
-      tl.call(focusContact, null, fromMenu ? 0.75 : 0.55);
+      tl.call(focusContact, null, 0.55);
     }
   }
 
@@ -384,16 +561,26 @@ function initFloatingNav() {
     }
     if (contactTimeline) contactTimeline.kill();
     const focusWasInside = contactPanel.contains(document.activeElement);
-    // Back where it came from; a page change or a reset takes it to the bar
+    // Back where it came from; a page change or a reset takes it to the bar,
+    // as does the page having left its foot in the meantime
     const toMenu = contactSource === 'menu' && !quick && !instant;
+    const toFoot = contactSource === 'foot' && footMode && !quick && !instant;
     contactState = 'closing';
     setContactAttributes(false);
-    measureMorph(toMenu && contactModule ? restRect(contactModule) : barRest());
+    // The bar's square is still there under the form (its ground faded, its
+    // width kept). Back into the menu or the footer's form it is that
+    // square again, so it keeps the width; back into the bar, the width goes
+    // first. (Clearing it on the way back into the menu too was what left
+    // the menu's close control stretched to the bar's full width: the menu
+    // was reopened round a square that was no longer one.)
+    if (!toFoot && !toMenu) resetGround();
+    measureMorph(toMenu || toFoot ? barSquare() : barRest());
     drawContact();
 
     const finish = () => {
       contactState = 'closed';
       gsap.set(contactPanel, { autoAlpha: 0 });
+      gsap.set(contactBg, { clearProps: 'opacity' });
       // Held down (the home hero): down again, now the form is back in it
       apply();
       document.dispatchEvent(new CustomEvent('fnav:contactclosed'));
@@ -402,33 +589,56 @@ function initFloatingNav() {
     const tl = gsap.timeline({ defaults: { overwrite: 'auto' } })
       .to([...contactReveals].reverse(), { autoAlpha: 0, y: '0.8rem', duration: 0.22, stagger: 0.015, ease: 'power2.in' }, 0)
       .to(morph, { p: 0, duration: 0.75, ease: 'expo.inOut', onUpdate: drawContact }, 0.12);
+    groundOut(tl, 0.55);
 
     if (toMenu) {
-      // In Contact Tom's place: the menu takes over, and its modules rise
-      // again round the bar's close square
+      // The opening run back, as one movement: the form sinks back into the
+      // bar's square while the menu's modules rise again round it, from the
+      // moment the form has begun to shrink (they are under it, so they show
+      // as it clears them)
       tl.call(() => {
         gsap.set(menu, { autoAlpha: 1 });
         gsap.set(reveals, { visibility: 'visible' });
         state = 'opening';
         setOpenAttributes(true);
-        finish();
-      }, null, 0.87)
-        .to([barBg, closer], { autoAlpha: 1, duration: 0.3, ease: 'power2.out' }, 0.7)
-        .to(reveals, { ...RISE, stagger: rowDelay(0.14, true) }, 0.87)
-        .to(reveals, { ...SHOW, stagger: rowDelay(0.14, true) }, 0.87)
+      }, null, 0.3)
+        .to(reveals, { ...RISE, stagger: rowDelay(0.14, true) }, 0.3)
+        .to(reveals, { ...SHOW, stagger: rowDelay(0.14, true) }, 0.3)
+        .to(closer, { yPercent: 0, autoAlpha: 1, duration: 0.3, ease: 'power2.out' }, 0.65)
+        .call(finish, null, 0.87)
         .call(() => {
           state = 'open';
           const back = contactReturn && menu.contains(contactReturn) ? contactReturn : firstLink;
           if (focusWasInside) back.focus({ preventScroll: true });
         }, null, '>');
+    } else if (toFoot) {
+      // Into the bar's square: the footer's form takes over, the mark and
+      // the square back as the panel arrives and the tiles rising again
+      // over them; the page free to scroll once more
+      tl.to(backdrop, { autoAlpha: 0, duration: 0.5, ease: 'power2.inOut' }, 0.2)
+        .call(() => {
+          gsap.set(menu, { autoAlpha: 1 });
+          gsap.set(footReveals, { visibility: 'visible' });
+          state = 'opening';
+          setFootForm(true);
+          setOpenAttributes(true);
+          finish();
+          holdPageScroll(false);
+        }, null, 0.87)
+        .to(mark, { autoAlpha: 1, duration: 0.3, ease: 'power2.out' }, 0.7)
+        .set(footReveals, { y: FOOT_HIDDEN.y, scale: FOOT_HIDDEN.scale }, 0.87)
+        .to(footReveals, { ...FOOT_RISE, stagger: rowDelay(0.18, true, footReveals) }, 0.87)
+        .to(footReveals, { ...FOOT_SHOW, stagger: rowDelay(0.18, true, footReveals) }, 0.87)
+        .call(() => {
+          state = 'open';
+          if (focusWasInside) (contactReturn && document.contains(contactReturn) ? contactReturn : mark).focus({ preventScroll: true });
+        }, null, '>');
     } else {
       // Into the bar: its background and parts back as the panel arrives
-      tl.set(closer, { yPercent: 100, autoAlpha: 0 }, 0)
-        .set(barBg, { clearProps: 'width' }, 0)
+      tl.set([closer, mark], { yPercent: 100, autoAlpha: 0 }, 0)
         .to(backdrop, { autoAlpha: 0, duration: 0.5, ease: 'power2.inOut' }, 0.2)
         .to(barParts, { autoAlpha: 1, duration: 0.35, ease: 'power2.out' }, 0.62)
         .call(() => {
-          gsap.set(barBg, { autoAlpha: 1 });
           finish();
           holdPageScroll(false);
           if (focusWasInside) (contactReturn && document.contains(contactReturn) ? contactReturn : burger).focus({ preventScroll: true });
@@ -458,22 +668,13 @@ function initFloatingNav() {
     }
   }
 
-  // ---- The foot of the page: the name gives way to the arrow ----
-  function setFoot(foot) {
-    if (foot === atFoot) return;
-    atFoot = foot;
-    const duration = reducedMotion ? 0 : 0.5;
-    gsap.to(titleInner, { yPercent: foot ? -100 : 0, duration, ease: 'power3.inOut', overwrite: 'auto' });
-    gsap.to(arrow, { yPercent: foot ? 0 : 100, duration, ease: 'power3.inOut', delay: foot && !reducedMotion ? 0.08 : 0, overwrite: 'auto' });
-  }
-
   // ---- The route: the bar's name and the menu's current page ----
   const pathName = (path) => path.replace(/[#?].*$/, '').replace(/\.html$/, '').replace(/\/index$/, '') || '/';
 
   function setTitle(text) {
     if (titleInner.textContent === text) return;
-    // Out of sight, or in the arrow's place: the name is simply set
-    if (reducedMotion || atFoot || !bar.classList.contains('is--shown')) {
+    // Out of sight: the name is simply set
+    if (reducedMotion || !bar.classList.contains('is--shown')) {
       titleInner.textContent = text;
       return;
     }
@@ -491,12 +692,15 @@ function initFloatingNav() {
   }
   // The innermost marked element under the middle of the screen; the page's
   // own mark holds wherever none of its parts is
+  // Measured as the page will stand at rest, while it is still coming in
+  // (promoPage, set by setRoute's `moving`)
+  let promoPage = null;
   function readPromo() {
     const line = window.innerHeight / 2;
     let key = '';
     promoMarks.forEach((el, i) => {
       if (i > 0) {
-        const r = el.getBoundingClientRect();
+        const r = fnavRestBox(el, promoPage);
         if (r.top > line || r.bottom <= line) return;
       }
       key = el.getAttribute('data-nav-promo') || '';
@@ -515,15 +719,20 @@ function initFloatingNav() {
   }, { passive: true });
   // Read again once a page transition has settled the new page in place
   new MutationObserver(() => {
-    if (!root.classList.contains('is--page-transition')) readPromo();
+    if (root.classList.contains('is--page-transition')) return;
+    promoPage = null;
+    readPromo();
   }).observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
 
-  function setRoute(container) {
+  // `moving`: the page is still coming in (arriveFloatingNavPage), so what
+  // is under the middle of the screen is read as it will be at rest
+  function setRoute(container, moving) {
     const page = container || document.querySelector('[data-barba="container"]');
     if (!page) return;
     setTitle(page.dataset.navTitle || page.dataset.pageName || '');
     promoMarks = [page, ...page.querySelectorAll('[data-nav-promo]')].filter((el) => el.hasAttribute('data-nav-promo'));
     if (!promoMarks.length || promoMarks[0] !== page) promoMarks.unshift(page);
+    promoPage = moving || null;
     promoKey = null;
     readPromo();
     const section = pathName(page.dataset.navSection || location.pathname);
@@ -542,10 +751,15 @@ function initFloatingNav() {
   let heldDown = false;
   function apply() {
     const shown = wanted && (!heldDown || contactState !== 'closed');
+    const was = bar.classList.contains('is--shown');
     if (!shown) close();
     bar.classList.toggle('is--shown', shown);
     bar.inert = !shown;
     syncPromo();
+    // The footer's form, if the page asks for it: once the bar has risen
+    // onto the page, when it is only now coming up (a reload at the foot)
+    if (shown && !was) setTimeout(syncFoot, reducedMotion ? 0 : 700);
+    else syncFoot();
   }
   function setShown(shown) {
     wanted = shown;
@@ -555,6 +769,22 @@ function initFloatingNav() {
     if (heldDown === down) return;
     heldDown = down;
     apply();
+  }
+
+  // ---- The footer's form, as the page asks ----
+  // Up while the page asks for it and the bar is up, unless the contact
+  // form is open (it takes the form down itself, and its close brings it
+  // back) or the menu proper is (its close does the same); down as soon
+  // as the page no longer asks
+  function syncFoot() {
+    const want = footMode && bar.classList.contains('is--shown');
+    if (want && !isOpen() && contactState === 'closed') open({ foot: true });
+    else if (!want && isOpen() && foot) close();
+  }
+  function setFootMode(on) {
+    if (footMode === on) return;
+    footMode = on;
+    syncFoot();
   }
 
   // Up once the first page has been revealed (revealPage, transitions.js,
@@ -573,17 +803,10 @@ function initFloatingNav() {
     watch.observe(root, { attributes: true, attributeFilter: ['class'] });
   }
 
-  function scrollToTop() {
-    const lenis = window.lenis;
-    if (lenis && typeof lenis.scrollTo === 'function') lenis.scrollTo(0, { duration: reducedMotion ? 0 : 1.6 });
-    else window.scrollTo({ top: 0, behavior: reducedMotion ? 'auto' : 'smooth' });
-  }
-
   // ---- Controls ----
-  // The whole bar opens the menu, save its home link and the arrow
+  // The whole bar opens the menu, save its home links
   bar.addEventListener('click', (event) => {
-    if (event.target.closest('.fnav__logo')) return;
-    if (event.target.closest('[data-fnav-top]')) return scrollToTop();
+    if (event.target.closest('.fnav__logo, [data-fnav-home]')) return;
     if (event.target.closest('[data-fnav-close]')) return close();
     if (!isOpen()) open();
   });
@@ -642,7 +865,8 @@ function initFloatingNav() {
     if (hoverOpened && event.target instanceof Element && event.target.closest('[data-fnav], [data-fnav-menu]')) endHover();
   }, true);
   document.addEventListener('keydown', (event) => {
-    if (event.key === 'Escape' && (isOpen() || contactOpen())) close();
+    // The footer's form is the page's, not something to dismiss
+    if (event.key === 'Escape' && ((isOpen() && !foot) || contactOpen())) close();
     if (event.key === 'Tab' && contactOpen()) holdFocus(event);
   });
   // Contact Tom, and every other way to contact Tom on the site: the form,
@@ -661,24 +885,33 @@ function initFloatingNav() {
   // A page in the menu: the menu goes as the page transition starts. The
   // page already showing has nowhere to go, so its link only closes the
   // menu, kept from Barba, which would reload it.
+  // Another page: the menu (either form) starts closing the moment the
+  // link is pressed, quick, alongside the page transition rather than
+  // before it (closeForPage). A press that opens a new tab or window
+  // (a modifier, another button) leaves the menu as it is.
   menu.addEventListener('click', (event) => {
     const link = event.target.closest('a');
     if (!link) return;
     const href = link.getAttribute('href') || '';
-    if (href.startsWith('/') && pathName(href) === pathName(location.pathname)) {
+    const samePage = href.startsWith('/') && pathName(href) === pathName(location.pathname);
+    if (samePage) {
       event.preventDefault();
       event.stopPropagation();
+      // The footer's form is the page's own navigation: it stays
+      if (!foot) close();
+      return;
     }
-    close();
+    if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+    closeForPage();
   });
 
   setRoute();
-  window.floatingNav = { open, close, closeForPage, isOpen, setRoute, setShown, holdDown, setFoot, openContact, closeContact };
+  window.floatingNav = { open, close, closeForPage, isOpen, setRoute, setShown, holdDown, setFootMode, openContact, closeContact };
 }
 
-// Per page: the page's name and section, the trigger that turns the bar's
-// name into the back-to-top arrow at the footer, and on the home page what
-// keeps the bar down over the hero. The hero as a list (home-list.js) has
+// Per page: the page's name and section, the trigger that opens the
+// menu in the footer's form at the foot of the page, and on the home page
+// what keeps the bar down over the hero. The hero as a list (home-list.js) has
 // the screen to itself until the clients' band below it is half way up
 // the screen: the bar (and Contact Tom's strip with it) comes up as the
 // band's top passes just above the middle of the screen going down, and goes down
@@ -688,26 +921,63 @@ function initFloatingNav() {
 // hero: a trigger until the hero's foot has come up past the foot of the
 // screen (its last picture in, and a little more), down again once the
 // page goes back up into it. A page without the hero lets it up.
+const FNAV_BAND_ENTER = 0.45; // the band's top this far down the screen: the bar comes up…
+const FNAV_BAND_LEAVE = 0.78; // …and, going back up, this far: it goes down
+
+// Where an element's box will stand on the screen once its page is at
+// rest: the page may still be on its way in, moved and drawn back in depth
+// by the transition (transitions.js), so the box is read against the
+// page's own, at the page's own size
+function fnavRestBox(el, page) {
+  const r = el.getBoundingClientRect();
+  if (!page) return { top: r.top, bottom: r.bottom };
+  const p = page.getBoundingClientRect();
+  const k = page.offsetHeight / (p.height || 1);
+  return { top: (r.top - p.top) * k, bottom: (r.bottom - p.top) * k };
+}
+
+// Whether the page's hero keeps the bar down where the page opens
+function fnavHeroHolds(scope, page) {
+  const hero = scope.querySelector('[data-home-reel]');
+  const band = hero && hero.dataset.reelLayout === 'list' ? hero.nextElementSibling : null;
+  if (band) return fnavRestBox(band, page).top > window.innerHeight * FNAV_BAND_ENTER;
+  return !!hero && fnavRestBox(hero, page).bottom > window.innerHeight * 0.97;
+}
+
+// The new page as it comes in (transitions.js, as the pages start to
+// pass): the bar goes down for it, comes up for it or takes its name now,
+// each by its own animation, so all of it has settled by the time the page
+// has landed. Nothing here outlives the old page's triggers; the page's
+// own set-up (below) runs once it has landed, and finds the bar already
+// as it should be.
+function arriveFloatingNavPage(container) {
+  const nav = window.floatingNav;
+  if (!nav || !container) return;
+  // The name is simply set while the bar is down: so going down, down
+  // first; coming up, the name first, so it rises with the new one
+  const hold = fnavHeroHolds(container, container);
+  if (hold) nav.holdDown(true);
+  nav.setRoute(container, container);
+  if (!hold) nav.holdDown(false);
+}
+
 function initFloatingNavPage(container) {
   const nav = window.floatingNav;
   if (!nav) return;
   const scope = container || document;
+  nav.setFootMode(false);
   nav.close({ instant: true });
   nav.setRoute(scope.matches && scope.matches('[data-barba="container"]') ? scope : null);
 
   const hero = scope.querySelector('[data-home-reel]');
   const HERO_END = 'bottom 97%';
-  const BAND_ENTER = 0.45; // the band's top this far down the screen: the bar comes up…
-  const BAND_LEAVE = 0.78; // …and, going back up, this far: it goes down
   const band = hero && hero.dataset.reelLayout === 'list' ? hero.nextElementSibling : null;
-  if (band) {
-    nav.holdDown(band.getBoundingClientRect().top > window.innerHeight * BAND_ENTER);
-    if (window.ScrollTrigger && !band.__fnavHold) {
-      band.__fnavHold = true;
-      ScrollTrigger.create({ trigger: band, start: `top ${BAND_ENTER * 100}%`, onEnter: () => nav.holdDown(false) });
-      ScrollTrigger.create({ trigger: band, start: `top ${BAND_LEAVE * 100}%`, onLeaveBack: () => nav.holdDown(true) });
-    }
-  } else nav.holdDown(!!hero && hero.getBoundingClientRect().bottom > window.innerHeight * 0.97);
+  nav.holdDown(fnavHeroHolds(scope, null));
+  if (band && window.ScrollTrigger && !band.__fnavHold) {
+    band.__fnavHold = true;
+    ScrollTrigger.create({ trigger: band, start: `top ${FNAV_BAND_ENTER * 100}%`, onEnter: () => nav.holdDown(false) });
+    ScrollTrigger.create({ trigger: band, start: `top ${FNAV_BAND_LEAVE * 100}%`, onLeaveBack: () => nav.holdDown(true) });
+  }
   if (hero && !band && window.ScrollTrigger && !hero.__fnavHold) {
     hero.__fnavHold = true;
     ScrollTrigger.create({
@@ -719,8 +989,13 @@ function initFloatingNavPage(container) {
   }
 
   const footer = scope.querySelector('[data-footer]');
+  // The footer's form of the menu: from the page being within a fifth of a
+  // screen of its end (the footer's foot that far below the screen's), so
+  // the tiles are up by the time the page has settled on its last pixel,
+  // over the room the footer keeps for them (style.css, .site-footer)
+  const FOOT_FORM = 0.2;
   // From where the page actually is — a reload part way down starts right
-  nav.setFoot(!!footer && footer.getBoundingClientRect().top < window.innerHeight * 0.75);
+  nav.setFootMode(!!footer && footer.getBoundingClientRect().bottom <= window.innerHeight * (1 + FOOT_FORM));
 
   // Barba runs this on the first load as well as the page's own startup:
   // one trigger per footer
@@ -728,9 +1003,9 @@ function initFloatingNavPage(container) {
     footer.__fnavFoot = true;
     ScrollTrigger.create({
       trigger: footer,
-      start: 'top 75%',
-      onEnter: () => nav.setFoot(true),
-      onLeaveBack: () => nav.setFoot(false),
+      start: `bottom bottom+=${FOOT_FORM * 100}%`,
+      onEnter: () => nav.setFootMode(true),
+      onLeaveBack: () => nav.setFootMode(false),
     });
   }
 }

@@ -151,7 +151,6 @@ html.is--loading body { opacity: 0; }
 .tagline,
 .logo-strip__note,
 .form-label,
-.case-facts dt,
 .panel-meta dt,
 .insights-row__link,
 .award-label__note,
@@ -169,7 +168,6 @@ html.is--loading body { opacity: 0; }
    the button's hover splits into words, so the face has to be named there
    rather than on the button around it. */
 .cta__label,
-.btn,
 /* The small interface type and the metadata: card tags, the role under a
    speaker's name, the word the page transition holds up while it runs. The
    drawer's close button is deliberately not here — it is a 2.8rem multiplication
@@ -287,7 +285,6 @@ textarea { font-family: inherit; }
 .section,
 .page-header,
 .footer,
-.site-nav,
 .logo-marquee,
 .map-spread,
 .testimonial-feature,
@@ -306,7 +303,6 @@ textarea { font-family: inherit; }
    footer (footer.js) the lines run on up past its corners, one set of lines
    with the footer's */
 .footer-ground,
-.project-hero,
 .project-grid,
 .project-note,
 .project-close {
@@ -498,11 +494,11 @@ textarea { font-family: inherit; }
   top: 0;
   left: 0;
   width: 100%;
-  /* Solid band, and one of the bands that carries the grid, so the column
-     lines run through the bar rather than stopping under it. No rule
-     under it: the bar runs straight into the page's first band, so the
-     header reads as part of the hero rather than a strip of its own. */
-  background-color: #000000;
+  /* No fill: the header stands straight on the page's first band, which
+     shows through under it (a map, a photograph), rather than being cut
+     off by a band of its own. It does not carry the grid's column lines,
+     and has no rule under it. */
+  background-color: transparent;
   /* The band's height is --nav-height (below), which the pages clear; the
      studio's name and the hero's navigation stand in it on the hero's own
      lines (.hero-nav__logo, .hero-nav__brand, .hero-nav__links, .hero-nav__social) */
@@ -516,7 +512,7 @@ textarea { font-family: inherit; }
    A block that wants more than bare clearance opts out here rather than
    fighting this rule — it is more specific than a single class, so it would
    otherwise win and pin the block's top padding to the height of the bar. */
-main:not(:has(.home-hero)) .site-nav + *:not(.project-hero):not(.page-header):not(.shop-hero) { padding-top: var(--nav-height); }
+main:not(:has(.home-hero)) .site-nav + *:not(.page-header):not(.shop-hero) { padding-top: var(--nav-height); }
 
 /* ---------- Typography ---------- */
 /* .tagline is the site's eyebrow, and it is set further down with the rest of
@@ -1143,54 +1139,10 @@ h3 {
 .two-col { display: grid; grid-template-columns: repeat(2, 1fr); gap: var(--grid-gap); margin-bottom: 5.6rem; }
 .two-col h2 { margin-bottom: 0; }
 
-/* ---------- Recognition cards ----------
-   One card to a column, in the last three, under the head's right half
-   and the column before it */
-.cards {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: var(--grid-gap);
-  align-items: start;
-}
-.card { min-width: 0; }
-.card:first-child { grid-column-start: 2; }
-.card__index {
-  display: block;
-  margin-bottom: 1.6rem;
-  color: rgba(255, 255, 255, 0.45);
-}
-/* The picture's frame, which carries the grain (see "Grain") */
-.card__media {
-  display: block;
-  border-radius: var(--radius);
-  margin-bottom: 2.4rem;
-}
-.card-img {
-  width: 100%;
-  height: auto;
-  aspect-ratio: 3 / 2;
-  object-fit: cover;
-  border-radius: var(--radius);
-}
-.card h3 { margin-bottom: 1.2rem; font-size: 2.4rem; line-height: var(--leading-title); letter-spacing: var(--track-title); }
-.card p { margin: 0; color: rgba(255, 255, 255, 0.6); }
-
-
 /* ---------- Alternate dark section ---------- */
 .section-alt { background-color: #0a0a0a; }
 
 
-/* ---------- Lightbox / video still ---------- */
-.lightbox { position: relative; width: 100%; aspect-ratio: 1440 / 810; overflow: hidden; }
-.lightbox-img { width: 100%; height: 100%; object-fit: cover; filter: brightness(0.6); }
-.lightbox-play {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 6.4rem;
-  height: 6.4rem;
-  margin: -3.2rem 0 0 -3.2rem;
-}
 
 /* Two column without the offset second column */
 .two-col-flat > div { padding-top: 0; }
@@ -1213,8 +1165,6 @@ h3 {
 .section-title-left { max-width: var(--grid-col-2); margin: 0 0 5.6rem; text-align: left; }
 .section-title-left h2 { margin-bottom: 2.4rem; }
 
-.strong { font-weight: var(--weight-strong); --wght: var(--weight-strong); }
-.quote { margin: 0; font-size: 1.8rem; }
 
 /* ---------- Logo strip ---------- */
 /* The strip is a titled section like any other on the page, so it takes the
@@ -1855,11 +1805,11 @@ html.is--case-open body { overflow: hidden; }
    sticky stage, a clipped hero) always wins: a band that is laid out
    statically becomes the sheet's containing block, and clips it without
    becoming a scroller, so anything sticky inside it still sticks. */
-:where(.home-hero, .home-reel, .influence-hero, .logo-wall, .seq__stage, .footer-ground, .section, .page-header, .logo-marquee, .map-spread, .testimonial-feature, .shop-hero, .arch-stage, .project-hero, .project-grid, .project-note, .project-close) {
+:where(.home-hero, .home-reel, .influence-hero, .logo-wall, .seq__stage, .footer-ground, .section, .page-header, .logo-marquee, .map-spread, .testimonial-feature, .shop-hero, .arch-stage, .project-grid, .project-note, .project-close) {
   position: relative;
   overflow: clip;
 }
-:where(.home-hero, .home-reel, .influence-hero, .logo-wall, .seq__stage, .footer-ground, .section, .page-header, .logo-marquee, .map-spread, .testimonial-feature, .shop-hero, .arch-stage, .project-hero, .project-grid, .project-note, .project-close)::before {
+:where(.home-hero, .home-reel, .influence-hero, .logo-wall, .seq__stage, .footer-ground, .section, .page-header, .logo-marquee, .map-spread, .testimonial-feature, .shop-hero, .arch-stage, .project-grid, .project-note, .project-close)::before {
   content: "";
   position: absolute;
   top: 0;
@@ -1890,10 +1840,10 @@ html.is--case-open body { overflow: hidden; }
   90%  { transform: translate3d(calc(var(--grain-tile-w) * -0.29), calc(var(--grain-tile-h) * -0.77), 0); }
 }
 @media (prefers-reduced-motion: reduce) {
-  :where(.home-hero, .home-reel, .influence-hero, .logo-wall, .seq__stage, .footer-ground, .section, .page-header, .logo-marquee, .map-spread, .testimonial-feature, .shop-hero, .arch-stage, .project-hero, .project-grid, .project-note, .project-close)::before { animation: none; }
+  :where(.home-hero, .home-reel, .influence-hero, .logo-wall, .seq__stage, .footer-ground, .section, .page-header, .logo-marquee, .map-spread, .testimonial-feature, .shop-hero, .arch-stage, .project-grid, .project-note, .project-close)::before { animation: none; }
 }
 @media print {
-  :where(.home-hero, .home-reel, .influence-hero, .logo-wall, .seq__stage, .footer-ground, .section, .page-header, .logo-marquee, .map-spread, .testimonial-feature, .shop-hero, .arch-stage, .project-hero, .project-grid, .project-note, .project-close)::before { display: none; }
+  :where(.home-hero, .home-reel, .influence-hero, .logo-wall, .seq__stage, .footer-ground, .section, .page-header, .logo-marquee, .map-spread, .testimonial-feature, .shop-hero, .arch-stage, .project-grid, .project-note, .project-close)::before { display: none; }
 }
 
 /* ---------- Home hero ---------- */
@@ -2011,31 +1961,12 @@ html.is--case-open body { overflow: hidden; }
 .home-hero-wrap__dark { will-change: opacity; }
 
 /* ---------- The home hero: the reel ----------
-   index.astro, home-reel.js. The four parts of the practice on the
-   off-white, one 4:5 photograph each. The middle of the screen holds still
-   while the page scrolls through four steps (the invisible
-   .home-reel__step entries, a screen's worth apart, which a scroll list
-   counts — see "Scroll list"); a stage sticks to the screen over them and
-   home-reel.js places the photographs on it from the scroll: the one whose
-   step is on the middle line stands large in the middle of the screen at
-   full strength, the others wait small above and below it, faded, and as
-   the scroll passes from one step to the next they trade sizes smoothly,
-   always a gap apart. Transforms and opacity only, so nothing is laid out
-   while it moves; the photographs are drawn at their large size and
-   scaled down, so the lit one is sharp. Without the script, the first
-   stands large and the others small beneath it.
-
-   After Studio Agar's index: every picture on the screen's middle line,
-   the lit one large and sharp, centred in the screen above the floating
-   bar, the waiting ones exactly the bar's width (home-reel.js), lightly
-   blurred and evenly faded, still plain to recognise, a column running
-   down behind the bar to the foot of the screen; and beside the lit
-   picture, in small mono
-   capitals, its kind and line on the left, set against the picture's edge,
-   and its number and name on the right. The studio's name, address, year
-   and legal pages sit in the screen's corners while the hero runs. Below
-   the desktop grid there is no room beside the stage: the pictures take
-   the screen alone, the lit one with its number and name beneath it. */
+   index.astro. What the hero's layouts share: the off-white, the square
+   grid and its variables, the hero's navigation's lines (below), the
+   screen that holds still while the hero runs (.home-reel__surface), the
+   pictures' frames (.home-reel__img, and the film's play mark) and the
+   layer the hero's type stands on (.home-reel__chrome). The layout itself
+   is the list ("The hero as a list", below; home-list.js). */
 :root { --hero-plain: var(--paper); }
 /* The site's square grid (after artefakt.mov): squares of six pixels and
    one-pixel lines (four and one on a phone), from the screen's top left
@@ -2064,7 +1995,7 @@ html.is--case-open body { overflow: hidden; }
   /* The studio's name: on the left edge of the home hero's pictures, the
      middle line less a picture's width (--list-axis less --list-w, "The
      hero as a list"), worked out here so every page's header has it */
-  --hero-brand-left: calc(50vw - min(35vw, 60svh));
+  --hero-brand-left: calc(50vw - min(36.75vw, 63svh) * 1.1);
   /* The studio's mark: on the margin, three cells in, just inside a line;
      below the desktop grid, where the home hero's pictures come out to the
      margin, one cell in, so the progress column under it keeps to the
@@ -2079,45 +2010,28 @@ html.is--case-open body { overflow: hidden; }
   :root {
     --hero-logo-left: calc(var(--grid-pitch) + 1px);
     --hero-col: calc(50vw + 3 * var(--grid-pitch));
-    --hero-brand-left: calc(50vw - min(50vw - 3 * var(--grid-pitch) - 1px, 46svh));
+    --hero-brand-left: calc(50vw - min(50vw - 3 * var(--grid-pitch) - 1px, 48.3svh));
   }
 }
 @supports (width: round(nearest, 1px, 1px)) {
   :root {
     --hero-col: round(nearest, 58.6vw, var(--grid-pitch));
     --hero-right: calc(100vw - round(down, 100vw - 3 * var(--grid-pitch), var(--grid-pitch)));
-    --hero-brand-left: calc(round(nearest, 50vw - 0.5px, var(--grid-pitch)) - round(down, min(35vw, 60svh), var(--grid-pitch)) + 1px);
+    --hero-brand-left: calc(round(nearest, 50vw - 0.5px, var(--grid-pitch)) - round(down, min(36.75vw, 63svh) * 1.1, var(--grid-pitch)) + 1px);
   }
   @media screen and (max-width: 991px) {
     :root {
       --hero-col: calc(round(nearest, 50vw - 0.5px, var(--grid-pitch)) + 3 * var(--grid-pitch));
-      --hero-brand-left: calc(round(nearest, 50vw - 0.5px, var(--grid-pitch)) - round(down, min(50vw - 3 * var(--grid-pitch), 46svh), var(--grid-pitch)) + 1px);
+      --hero-brand-left: calc(round(nearest, 50vw - 0.5px, var(--grid-pitch)) - round(down, min(50vw - 3 * var(--grid-pitch), 48.3svh), var(--grid-pitch)) + 1px);
     }
   }
 }
 .home-reel {
-  /* The middle two columns, line to line less a pad each side, as the grid
-     gives them: the room the photographs stand in */
-  --reel-w: calc((100vw - var(--site-inset) * 2 - var(--grid-gap) * 3) / 2 + var(--grid-gap));
-  /* The lit photograph's height (4:5), the others' share of it (the
-     waiting ones are the size they always were: 0.28 of the lit one's
-     former 68svh), the gap between neighbours, a waiting photograph's
-     strength, and the scroll from one step to the next */
-  --reel-h: min(66svh, var(--reel-w) * 1.21);
-  /* The waiting size before the script sets it to the bar's width */
-  --reel-small: 0.58;
-  --reel-gap: 2.4rem;
-  /* The stage ends this far above the floating bar (home-reel.js): the
-     menu's own gap between modules, so a waiting picture cut there sits on
-     the bar as one module on the next */
-  --reel-nav-gap: calc(0.5 * var(--fnav-u-bar));
-  --reel-dim: 0.4;
-  /* How soft a waiting picture is, as seen: a little, the same all over */
+  /* How soft a waiting picture is, as seen: a little, the same all over
+     (the opening reads it too, loader.js) */
   --reel-blur: 2px;
-  /* The small mono type of the texts beside the picture and the corners */
+  /* The small mono type of the hero's texts */
   --reel-type: var(--hero-type);
-  --reel-step: 55svh;
-  --reel-line: 2.4rem;
   position: relative;
   padding: 0 var(--site-inset);
   background-color: var(--hero-plain);
@@ -2142,64 +2056,6 @@ html.is--case-open body { overflow: hidden; }
     linear-gradient(var(--hero-plain) 1px, transparent 1px) 0 0 / var(--grid-pitch) var(--grid-pitch),
     color-mix(in srgb, var(--hero-plain), #000 3.5%);
 }
-.home-reel .scroll-list { --scroll-list-ink: #0a0a0a; }
-
-/* The steps: the first on the middle line when the page opens, the last
-   when the hero leaves */
-.home-reel__track {
-  grid-column: 2 / span 2;
-  position: relative;
-}
-.home-reel .home-reel__list {
-  margin: 0;
-  padding: calc(50svh - var(--reel-step) / 2) 0;
-  /* At the foot, only as much as lets the last picture stand a moment
-     once it is in: the stage (--reel-clear high) lets go, and the next
-     section comes up, a fiftieth of a screen past the last stop (where the
-     scroll comes to rest on it), so the last picture holds for its stop's
-     own pause and no more */
-  padding-bottom: max(0px, calc(var(--reel-clear, 100svh) - 0.5 * var(--reel-step) - 48svh));
-  list-style: none;
-}
-.home-reel__step { height: var(--reel-step); }
-
-/* The stage, over the steps, holding the middle of the screen */
-.home-reel__stage {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-}
-/* The screen's width and the screen above the bar, less a gap (--reel-clear,
-   home-reel.js), the lit picture in the middle of it; the waiting pictures
-   below it carry on down past its foot, behind the floating bar, to the
-   bottom of the screen */
-.home-reel__frame {
-  position: sticky;
-  top: 0;
-  height: var(--reel-clear, 100svh);
-  margin-inline: calc(50% - 50vw);
-}
-.home-reel__shot {
-  --reel-hs: calc(var(--reel-h) * var(--reel-small));
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  display: block;
-  width: calc(var(--reel-h) * 0.8);
-  height: var(--reel-h);
-  margin: calc(var(--reel-h) / -2) 0 0 calc(var(--reel-h) * -0.4);
-  color: inherit;
-  text-decoration: none;
-  pointer-events: auto;
-  will-change: transform;
-  /* Faded photographs wash to the off-white */
-  background-color: var(--hero-plain);
-}
-/* Before the script places them: the first large, the rest small beneath
-   it, a gap apart, all on the middle line */
-.home-reel__shot:not(:first-child) {
-  transform: translateY(calc(var(--reel-h) / 2 + var(--reel-gap) + var(--reel-hs) / 2 + (var(--i) - 1) * (var(--reel-hs) + var(--reel-gap)))) scale(var(--reel-small));
-}
 .home-reel__img {
   display: block;
   width: 100%;
@@ -2207,23 +2063,11 @@ html.is--case-open body { overflow: hidden; }
   object-fit: cover;
   object-position: var(--reel-position, 50% 50%);
 }
-.home-reel__shot:not(:first-child) .home-reel__img {
-  opacity: var(--reel-dim);
-  filter: blur(calc(var(--reel-blur) / var(--reel-small)));
-}
-/* Only below the desktop grid, where nothing stands beside the stage */
-.home-reel__caption { display: none; }
-/* About: a button (it opens the film), its still standing empty while the
-   player is out of it (reel.js); a round play button on it, for touch and
-   pointer too */
-button.home-reel__shot {
-  padding: 0;
-  border: 0;
-  font: inherit;
-  text-align: left;
-  cursor: pointer;
-}
+/* About's still, standing empty while the player is out of it (reel.js) */
 .home-reel__img.is--lifted { visibility: hidden; }
+/* The play mark on the film's frame: the triangle alone, in white with a
+   soft shadow so it reads on any still, no ring or ground round it; it
+   grows a little under the pointer (the frame is the button) */
 .home-reel__play {
   position: absolute;
   left: 50%;
@@ -2234,41 +2078,20 @@ button.home-reel__shot {
   width: 6.4rem;
   height: 6.4rem;
   margin: -3.2rem 0 0 -3.2rem;
-  padding-left: 0.2rem;
-  border: 1px solid rgba(255, 255, 255, 0.28);
-  border-radius: 50%;
-  background-color: rgba(18, 18, 18, 0.42);
-  -webkit-backdrop-filter: blur(1rem);
-  backdrop-filter: blur(1rem);
+  padding-left: 0.3rem;
   color: #ffffff;
+  filter: drop-shadow(0 1px 6px rgba(0, 0, 0, 0.45));
+  transition: transform 0.35s var(--cta-ease);
   pointer-events: none;
 }
-.home-reel__play svg { width: 2.2rem; height: 2.2rem; }
+.home-reel__play svg { width: 3.6rem; height: 3.6rem; }
+@media (hover: hover) and (pointer: fine) {
+  .home-reel__img:hover .home-reel__play { transform: scale(1.1); }
+}
+.home-reel__img:active .home-reel__play { transform: scale(0.96); }
 
-/* The name beside the lit picture: in the frame (whose left edge
-   home-reel.js gives as --reel-lit-left), a gap off the picture,
-   right-aligned against it, just above the middle. A stack of panels, the
-   lit one shown (home-reel.js). */
-.home-reel__side {
-  position: absolute;
-  top: 50%;
-  display: grid;
-  align-items: start;
-  font-size: var(--reel-type);
-  /* Up by the dimmed line (1.55em) and half the space under it (0.9em) */
-  transform: translateY(-2em);
-  pointer-events: none;
-}
-.home-reel__side.is--left {
-  --reel-room: calc(var(--reel-room-left) - var(--reel-side-gap) - var(--site-inset));
-  right: calc(100% - var(--reel-lit-left, 0px) + var(--reel-side-gap));
-  justify-items: end;
-  text-align: right;
-}
-.home-reel { --reel-side-gap: 2.8rem; }
-.home-reel__text,
-.home-reel__corner,
-.home-reel__caption,
+/* The hero's small mono type (the list's fields take it, "The hero as a
+   list") */
 .home-list__meta {
   font-family: var(--font-label);
   font-size: var(--reel-type);
@@ -2278,15 +2101,10 @@ button.home-reel__shot {
   font-weight: var(--weight-label); --wght: var(--weight-label);
   color: #0a0a0a;
 }
-.home-reel__text {
-  width: max-content;
-  max-width: min(30ch, var(--reel-room, 30ch));
-  margin: 0;
-  text-wrap: balance;
-}
 
-/* The corners: a layer the hero's height, holding a screen that sticks
-   while the hero runs, the four notes in its corners */
+/* The hero's type: a layer the hero's height, holding a screen that
+   sticks while the hero runs (the navigation and the list's fields stand
+   on it) */
 .home-reel__chrome {
   position: absolute;
   inset: 0;
@@ -2298,12 +2116,6 @@ button.home-reel__shot {
   position: sticky;
   top: 0;
   height: 100svh;
-}
-.home-reel__corner {
-  position: absolute;
-  margin: 0;
-  pointer-events: auto;
-  text-decoration: none;
 }
 /* ---------- The hero's navigation (HeroNav.astro) ----------
    The same on every page: on the home hero's sticky layer, over the
@@ -2342,7 +2154,7 @@ button.home-reel__shot {
    way: opening, the column alone grows, the square's right edge stays where
    it is, and so does the mark */
 .hero-nav__pill {
-  --hero-social-bg: #262626;
+  --hero-social-bg: #151515;
   position: relative;
   display: grid;
   grid-template-columns: 0fr;
@@ -2448,163 +2260,12 @@ button.home-reel__shot {
   .hero-nav__envelope-open,
   .hero-nav__envelope-flap { transition: none; }
 }
-.home-reel__corner.is--bl { bottom: 2.4rem; left: 2.4rem; }
-.home-reel__corner.is--br { bottom: 2.4rem; right: 2.4rem; display: flex; gap: 2em; }
-.home-reel__corner a,
-a.home-reel__corner {
-  color: inherit;
-  text-decoration: none;
-  text-underline-offset: 0.25em;
-}
-@media (hover: hover) and (pointer: fine) {
-  .home-reel__corner a:hover,
-  a.home-reel__corner:hover { text-decoration: underline; }
-}
 /* Faded in as the opening hands over */
 html.is--intro .home-reel__chrome { opacity: 0; visibility: hidden; transition: none; }
 
-/* ---------- The projects folder ----------
-   ProjectsFolder.astro: the architecture work's picture in the hero (and
-   its copy in the opening). A charcoal card against the off-white holding
-   three project covers as a stack, centred in it: the first in front, each
-   one behind it a step smaller, a step higher and a step dimmer (--dim, a
-   veil of the card's own dark over it), so only their top edges show above
-   it. Bare pictures in the cards' 3:2, corners barely broken, no frame, no
-   words. Everything in the card's own width (cqw), so it is the same at any
-   size. On a pointer, the lit stack opens a little: the sheets behind rise
-   evenly, together, a hint that it opens. The "folder" page transition
-   flies the sheets out of it (transitions.js; "The folder, opening"). */
-.folder {
-  --folder-ground: #171717;
-  container-type: inline-size;
-  position: relative;
-  display: block;
-  width: 100%;
-  height: 100%;
-  overflow: hidden;
-  background-color: var(--folder-ground);
-}
-/* Front sheet 82 wide by 54.7 tall, the two behind showing 5.5 each above
-   it: 65.7 in all, centred in the card's 125 */
-.folder__stack {
-  position: absolute;
-  left: 9cqw;
-  right: 9cqw;
-  bottom: 29.6cqw;
-  aspect-ratio: 3 / 2;
-}
-.folder__sheet {
-  position: absolute;
-  inset: 0;
-  overflow: hidden;
-  border-radius: 0.5cqw;
-  background-color: #111111;
-  box-shadow: 0 -0.3cqw 2cqw rgba(0, 0, 0, 0.28);
-  transform-origin: 50% 0;
-  transform: translateY(calc(var(--n) * -5.5cqw)) scale(calc(1 - var(--n) * 0.07));
-  transition: transform 0.8s var(--cta-ease);
-}
-.folder__sheet::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background-color: var(--folder-ground);
-  opacity: var(--dim, 0);
-  pointer-events: none;
-}
-.folder__img {
-  display: block;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  -webkit-user-drag: none;
-  user-select: none;
-}
-@media (hover: hover) and (pointer: fine) {
-  .home-reel__shot.is--active:hover .folder__sheet {
-    transform: translateY(calc(var(--n) * -8cqw)) scale(calc(1 - var(--n) * 0.07));
-  }
-}
-@media (prefers-reduced-motion: reduce) {
-  .folder__sheet { transition: none; }
-}
-
-/* ---------- The folder, opening ----------
-   The "folder" page transition (transitions.js): a layer over both pages,
-   under the floating navigation, holding the folder's card, which grows to
-   fill the screen in the Architecture page's black, and its sheets, which
-   fly out to the first three cards of the page. Laid out by the script in
-   pixels, from where each part stood. */
-.folder-flight {
-  position: fixed;
-  inset: 0;
-  z-index: 200;
-  overflow: hidden;
-  pointer-events: none;
-}
-.folder-flight__ground,
-.folder-flight__sheet {
-  position: absolute;
-  margin: 0;
-  will-change: left, top, width, height;
-}
-.folder-flight__ground { overflow: hidden; }
-.folder-flight__sheet {
-  overflow: hidden;
-  background-color: #111111;
-}
-/* A sheet's veil, lifting as it flies */
-.folder-flight__veil {
-  position: absolute;
-  inset: 0;
-  background-color: #171717;
-}
-.folder-flight__sheet img {
-  display: block;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-/* Below the desktop grid: the stage alone, the lit photograph's name under
-   it, in a gap opened wide enough to hold it clear of the next photograph */
-@media screen and (max-width: 991px) {
-  .home-reel {
-    --reel-h: min(56svh, 80vw * 1.25);
-    --reel-small: 0.6;
-    /* Room under the lit picture for its name */
-    --reel-gap: calc(4.6rem + 3.4 * var(--reel-type));
-    --reel-blur: 1.5px;
-  }
-  .home-reel .home-reel__grid { display: block; }
-  .home-reel__side { display: none; }
-  .home-reel__caption {
-    display: block;
-    position: absolute;
-    top: 100%;
-    left: 0;
-    margin-top: 2.2rem;
-    white-space: nowrap;
-    opacity: 0;
-    transition: opacity 0.4s var(--cta-ease);
-  }
-  .home-reel__shot.is--active .home-reel__caption { opacity: 1; }
-}
-
-@media screen and (max-width: 767px) {
-  /* The lit picture a little wider than the bar, where the screen's
-     height allows; the waiting ones the bar's width */
-  .home-reel { --reel-h: min(56svh, 85vw * 1.25); --reel-small: 0.87; }
-  /* The pictures are cut cleanly at the top of the screen, under the
-     corners (and nowhere else) */
-  .home-reel__frame { clip-path: inset(3.8rem 0 -100vh 0); }
-  .home-reel__corner.is--bl,
-  .home-reel__corner.is--br { display: none; }
-}
-
 /* ---------- The hero as a list (data-reel-layout="list") ----------
    After GSP's list view: the pictures one under another in the page, each
-   the same portrait (5:7), a thin gap between them, the right edge of every
+   the same portrait (3:4), a thin gap between them, the right edge of every
    one exactly on the middle of the screen (rounded down to a whole pixel),
    the first standing two cells above the middle of the screen as the
    page opens (each stands there in turn) and the
@@ -2617,8 +2278,12 @@ html.is--intro .home-reel__chrome { opacity: 0; visibility: hidden; transition: 
    length of a picture. Of the corners, only the Book a call button, at
    the top right. */
 .home-reel[data-reel-layout="list"] {
-  --list-w: min(35vw, 60svh);
-  --list-h: calc(var(--list-w) * 1.4);
+  /* The frame's measure: its height is 4:3 of it, and on the desktop grid
+     its width a tenth more, so it reaches further left (the right edge
+     stays on the middle line) */
+  --list-frame: min(36.75vw, 63svh);
+  --list-w: calc(var(--list-frame) * 1.1);
+  --list-h: calc(var(--list-frame) * 4 / 3);
   --list-gap: max(8px, 0.6vw);
   /* The lit frame's top: on the middle, but never up into the studio's
      name's row (four cells clear of it): where it would stand two cells
@@ -2689,19 +2354,24 @@ html.is--intro .home-reel__chrome { opacity: 0; visibility: hidden; transition: 
    still layer over everything in the screen: its curve, darkening to the
    edges and corners, and a faint sheen in its upper part, as the
    reference television's glass. Still: no flicker, no rolling band. */
+/* Set towards glass rather than smoke: the near-black stays near-black (a
+   faint backlight, the field barely lifted), the colour shows as clean,
+   saturated glow rather than a grey-brown haze, the scan grid and the
+   stripes are light over it, the pane's curve darkens its corners only a
+   little, and its reflection is plainer to see */
 .home-reel.is--screen {
-  --screen-backlight: 0.2;   /* the backlight's strength, behind everything */
-  --screen-bloom: 0.6;       /* the tesserae's own light, bled wide */
-  --screen-lift: 1.35;       /* the field brightened, to show through the raster… */
-  --screen-colour: 1.4;      /* …and its colour drawn out */
-  --screen-phosphor: 0.085;  /* the stripes' strength, at the most */
-  --screen-scan: 0.22;       /* the scan grid's */
-  --screen-cell: 0.16;       /* each cell's falloff towards its lines */
+  --screen-backlight: 0.04;  /* the backlight's strength, behind everything */
+  --screen-bloom: 0.9;       /* the lit tesserae's own light, bled wide */
+  --screen-lift: 1;          /* the field brightened, to show through the raster… */
+  --screen-colour: 1.8;      /* …and its colour drawn out */
+  --screen-phosphor: 0.035;  /* the stripes' strength, at the most */
+  --screen-scan: 0.12;       /* the scan grid's */
+  --screen-cell: 0.08;       /* each cell's falloff towards its lines */
   --screen-fringe: 1.2;      /* squares the bloom's red and blue part, at the sides */
-  --screen-halation: 0.45;   /* the light caught in the glass, over the lines */
-  --screen-vignette: 0.42;   /* the pane's curve, darkening the corners… */
-  --screen-edge: 0.38;       /* …and its edges */
-  --screen-sheen: 0.032;     /* the faint reflection in its upper part */
+  --screen-halation: 0.3;    /* the light caught in the glass, over the lines */
+  --screen-vignette: 0.18;   /* the pane's curve, darkening the corners… */
+  --screen-edge: 0.16;       /* …and its edges */
+  --screen-sheen: 0.06;      /* the reflection in its upper part */
 }
 .home-reel.is--screen .home-reel__tint { image-rendering: auto; }
 /* The raster (hero-tint.js draws it, once a size): the phosphor stripes,
@@ -2742,9 +2412,13 @@ html.is--intro .home-reel__chrome { opacity: 0; visibility: hidden; transition: 
   z-index: 4;
   pointer-events: none;
   background:
+    /* The pane's reflection: a broad soft light in its upper left, and a
+       long faint band across it on the diagonal, as a window's light lies
+       on glass */
     radial-gradient(ellipse 62% 42% at 34% -4%, rgba(255, 255, 255, var(--screen-sheen)), rgba(255, 255, 255, calc(0.45 * var(--screen-sheen))) 45%, transparent 100%),
+    linear-gradient(115deg, transparent 30%, rgba(255, 255, 255, calc(0.5 * var(--screen-sheen))) 44%, rgba(255, 255, 255, calc(0.7 * var(--screen-sheen))) 50%, rgba(255, 255, 255, calc(0.3 * var(--screen-sheen))) 58%, transparent 70%),
     linear-gradient(rgba(255, 255, 255, calc(0.5 * var(--screen-sheen))), transparent 38%),
-    radial-gradient(75% 70% at 50% 50%, transparent 55%, rgba(0, 0, 0, var(--screen-vignette)) 100%);
+    radial-gradient(75% 70% at 50% 50%, transparent 60%, rgba(0, 0, 0, var(--screen-vignette)) 100%);
   box-shadow: inset 0 0 clamp(60px, 10vmin, 120px) rgba(0, 0, 0, var(--screen-edge));
   transition: opacity 1.2s ease;
 }
@@ -2760,8 +2434,8 @@ html.is--intro .home-reel.is--screen .home-reel__surface-inner::before { opacity
    the grid allows */
 @supports (width: round(nearest, 1px, 1px)) {
   .home-reel[data-reel-layout="list"] {
-    --list-w: calc(round(down, min(35vw, 60svh), var(--grid-pitch)) - 1px);
-    --list-h: calc(round(nearest, (var(--list-w) + 1px) * 1.4, var(--grid-pitch)) - 1px);
+    --list-w: calc(round(down, var(--list-frame) * 1.1, var(--grid-pitch)) - 1px);
+    --list-h: calc(round(nearest, round(down, var(--list-frame), var(--grid-pitch)) * 4 / 3, var(--grid-pitch)) - 1px);
     --list-gap: calc(var(--grid-pitch) + 1px);
     --list-axis: round(nearest, 50vw - 0.5px, var(--grid-pitch));
     --list-top: calc(max(round(down, (100svh - var(--list-h)) / 2, var(--grid-pitch)) - 2 * var(--grid-pitch), min(round(down, (100svh - var(--list-h)) / 2, var(--grid-pitch)), 8 * var(--grid-pitch))) + 2 * var(--grid-pitch) + 1px);
@@ -2861,64 +2535,28 @@ html.is--intro .home-reel.is--screen .home-reel__surface-inner::before { opacity
   font-weight: var(--weight-body); --wght: var(--weight-body);
 }
 
-/* The gauge: a column of the grid's own squares down the left margin,
-   one cell wide, standing on the studio's mark's line (--hero-logo-left)
-   from two cells under the mark to three above the foot of the screen, so
-   mark and column read as one figure (home-list.js draws it on its canvas,
-   every square one of the background's, in place). The parts' squares a
-   little brighter, each with its number a cell to its right; the way the
-   page has come lit, a square bright where it is. The element is wider
-   than the column, so it is easy to press; pressed or dragged, it scrolls
-   the list there. */
-.home-list__gauge {
-  position: absolute;
-  top: 0;
-  left: var(--hero-logo-left);
-  width: 6.4rem;
-  height: 100svh;
-  pointer-events: auto;
-  cursor: ns-resize;
-  touch-action: none;
-}
-.home-list__ruler {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-}
-/* A part's number, a cell past the column, level with its square
-   (home-list.js sets it on the square's middle; this is where it stands
-   without the script) */
-.home-list__mark {
-  position: absolute;
-  left: calc(2 * var(--grid-pitch));
-  top: calc(10 * var(--grid-pitch) + var(--k) * (100% - 13 * var(--grid-pitch)));
-  font-family: var(--font-label);
-  font-size: max(1rem, 10px);
-  line-height: 1;
-  letter-spacing: var(--track-label);
-  color: var(--list-grey);
-  transform: translateY(-50%);
-  transition: color 0.4s var(--cta-ease);
-}
-.home-list__mark.is--active { color: var(--list-ink); }
-
 /* The pages, at the top of the screen on the hero's column, level with
    Book a call: the site's column of links (.site-nav__links, where its
    type, its rows and its marker are set), this page marked, a hovered one
    marked instead while the rest fall back */
+/* Their left edge: on the hero's column, and on the desktop grid three
+   cells short of it; what lines up under the pages takes it from here
+   (the project pages' awards) */
+:root { --hero-links-left: calc(var(--hero-col) + 1px); }
+@media screen and (min-width: 992px) {
+  :root { --hero-links-left: calc(var(--hero-col) - 3 * var(--grid-pitch) + 1px); }
+}
 .hero-nav__links {
   position: absolute;
   top: var(--hero-top);
-  left: calc(var(--hero-col) + 1px);
+  left: var(--hero-links-left);
   color: #f4f4f4;
   pointer-events: auto;
 }
 /* The studio's mark, in the top left corner on every page: on the margin
-   (--hero-logo-left), its top on the pages' first row, five cells tall
-   less the line (the ways to Tom's height), its width the drawing's own.
-   Its left edge is the line the home hero's progress column runs down from
-   (.home-list__gauge), so the two read as one figure. */
+   (--hero-logo-left), its top on the pages' first row, four and a half
+   cells tall less the line (a little under the ways to Tom's height, which
+   it used to match), its width the drawing's own. */
 .hero-nav__logo {
   position: absolute;
   top: var(--hero-top);
@@ -2930,13 +2568,17 @@ html.is--intro .home-reel.is--screen .home-reel__surface-inner::before { opacity
 .hero-nav__logo-mark {
   display: block;
   width: auto;
-  height: calc(5 * var(--grid-pitch) - 1px);
+  height: calc(4.5 * var(--grid-pitch) - 1px);
 }
 /* The studio's name, top left, on the pages' first row (Home's): its type
    and row the links' own, on every page (HeroNav.astro). Left on the home
    hero's pictures' left edge (--hero-brand-left); where that edge comes in
    close to the mark (below the desktop grid), five cells past the
-   mark's left edge instead, so the two never touch. A size under the links' type, on their row all the same. */
+   mark's left edge instead, so the two never touch. Set lowercase in the
+   body face, a size above the links' type (1.2 of it: the wordmark, not
+   one of the pages), a touch heavier than the interface's weight so it
+   has a little more presence at that size, still on the links' row,
+   where its line fits. */
 .hero-nav__brand {
   position: absolute;
   top: var(--hero-top);
@@ -2944,26 +2586,33 @@ html.is--intro .home-reel.is--screen .home-reel__surface-inner::before { opacity
   display: flex;
   align-items: center;
   margin: 0;
-  color: #f4f4f4;
-  font-family: var(--font-label);
-  font-size: calc(var(--hero-type) * 0.88);
   line-height: calc(3 * var(--grid-pitch));
-  letter-spacing: var(--track-label);
-  text-transform: uppercase;
   text-decoration: none;
-  font-weight: var(--weight-ui); --wght: var(--weight-ui);
   white-space: nowrap;
   pointer-events: auto;
 }
+/* The wordmark's type, one definition for the header's name and the home
+   page's opening's (.home-loader__label, the same word in the same face,
+   size, weight, tracking and colour, its © raised the same way) */
+.hero-nav__brand,
+.home-loader .home-loader__label {
+  color: #f4f4f4;
+  font-family: var(--font-body);
+  font-size: calc(var(--hero-type) * 1.2);
+  letter-spacing: var(--track-body);
+  text-transform: none;
+  font-variant-numeric: normal;
+  font-weight: calc(var(--weight-ui) + 25); --wght: calc(var(--weight-ui) + 25);
+}
 .hero-nav__brand:focus-visible { outline: 1px solid currentColor; outline-offset: 3px; }
 /* The name set as one word, a wordmark: its copyright sign a little
-   smaller than the capitals and raised to sit level with their tops,
+   smaller than the name and raised to sit level with its ascenders' tops,
    close against the name's last letter */
 .hero-nav__copy {
   margin-left: 0.12em;
   font-size: 0.8em;
   line-height: 0;
-  vertical-align: 0.18em;
+  vertical-align: 0.17em;
   letter-spacing: 0;
 }
 
@@ -2980,7 +2629,8 @@ html.is--intro .home-reel.is--screen .home-reel__surface-inner::before { opacity
   position: absolute;
   top: 0;
   bottom: 0;
-  left: calc(var(--hero-col) + 1px);
+  /* On the bar's pages' line, wherever that is (--hero-links-left) */
+  left: var(--hero-links-left);
   right: calc(var(--hero-right) + 1px);
 }
 .home-list__field {
@@ -3054,17 +2704,15 @@ html.is--intro .home-reel.is--arrived .home-reel__chrome {
    right edge still the middle), the fields stacked in the right half */
 @media screen and (max-width: 991px) {
   .home-reel[data-reel-layout="list"] {
-    --list-w: min(50vw - 3 * var(--grid-pitch) - 1px, 46svh);
+    --list-frame: min(50vw - 3 * var(--grid-pitch) - 1px, 48.3svh);
+    --list-w: var(--list-frame);
   }
   @supports (width: round(nearest, 1px, 1px)) {
     .home-reel[data-reel-layout="list"] {
-      --list-w: calc(round(down, min(50vw - 3 * var(--grid-pitch), 46svh), var(--grid-pitch)) - 1px);
+      --list-frame: min(50vw - 3 * var(--grid-pitch), 48.3svh);
+      --list-w: calc(round(down, var(--list-frame), var(--grid-pitch)) - 1px);
     }
   }
-  /* No room beside the pictures on the left: the parts' numbers go, and
-     the column keeps to the margin, the element no wider than it */
-  .home-list__mark { display: none; }
-  .home-list__gauge { width: calc(2 * var(--grid-pitch)); }
 }
 /* On a phone: the pages under the Book a call button, and the fields
    stacked from the lit frame's top, the name a size down */
@@ -3080,124 +2728,6 @@ html.is--intro .home-reel.is--arrived .home-reel__chrome {
   .home-list__field.is--title,
   .home-list__field.is--about { position: static; }
   .home-reel[data-reel-layout="list"] { --list-title-type: 2.8rem; }
-}
-
-/* ---------- The hero as a row (data-reel-layout="row") ----------
-   After t11.com: the pictures landscape (16:10), in a loop across the
-   screen a little above its middle, the lit one centred and large, the
-   others a little smaller, faded and softly blurred to its left and right
-   (home-reel.js, which keeps them on the grid). Under the lit picture, its
-   name, set to its left edge; along the stage's foot a ruler, ticks every
-   two cells, the parts' numbers sliding with the row, the lit one's under
-   the middle, each number a way to its part. The row is turned by the
-   scroll and by the hand (home-reel.js): across the hero a sideways swipe
-   or drag is the row's, while up and down (and a pinch) stay the page's;
-   nothing in it is selected or dragged out as the hand moves; and what runs
-   off either side is cut at the screen's edge, never scrolled to. */
-.home-reel[data-reel-layout="row"] {
-  --reel-row-w: min(40vw, 82svh);
-  --reel-small: 0.72;
-  --reel-gap: 2.1rem;
-  --reel-lift: 3.5rem;
-  overflow-x: clip;
-  touch-action: pan-y pinch-zoom;
-}
-.home-reel[data-reel-layout="row"] .home-reel__frame {
-  -webkit-user-select: none;
-  user-select: none;
-}
-.home-reel[data-reel-layout="row"] .home-reel__shot,
-.home-reel[data-reel-layout="row"] .home-reel__img {
-  -webkit-user-drag: none;
-}
-.home-reel[data-reel-layout="row"].is--dragging { cursor: grabbing; }
-.home-reel[data-reel-layout="row"].is--dragging .home-reel__shot { pointer-events: none; }
-.home-reel[data-reel-layout="row"] .home-reel__shot {
-  width: var(--reel-row-w);
-  height: calc(var(--reel-row-w) * 0.625);
-  margin: calc(var(--reel-row-w) * -0.3125) 0 0 calc(var(--reel-row-w) * -0.5);
-}
-/* Before the script places them: the first in the middle, the rest small
-   to its right */
-.home-reel[data-reel-layout="row"] .home-reel__shot:first-child { transform: translateY(calc(var(--reel-lift) * -1)); }
-.home-reel[data-reel-layout="row"] .home-reel__shot:not(:first-child) {
-  transform: translate(calc(var(--reel-row-w) * 0.5 + var(--reel-gap) + var(--reel-row-w) * 0.5 * var(--reel-small) + (var(--i) - 1) * (var(--reel-row-w) * var(--reel-small) + var(--reel-gap))), calc(var(--reel-lift) * -1)) scale(var(--reel-small));
-}
-/* The name under the lit picture, from its left edge, as wide as it */
-.home-reel[data-reel-layout="row"] .home-reel__side {
-  top: calc(var(--reel-lit-top, 50%) + var(--reel-lit-h, 0px) + 1.6rem);
-  left: var(--reel-lit-left, 0px);
-  right: auto;
-  width: calc(var(--reel-lit-right, 100%) - var(--reel-lit-left, 0px));
-  grid-template-columns: minmax(0, 1fr);
-  justify-items: start;
-  text-align: left;
-  transform: none;
-}
-.home-reel[data-reel-layout="row"] .home-reel__text {
-  width: auto;
-  max-width: 100%;
-}
-/* The ruler */
-.home-reel__ruler { display: none; }
-.home-reel[data-reel-layout="row"] .home-reel__ruler {
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 2.1rem;
-  display: block;
-  height: 3.5rem;
-  overflow: hidden;
-  pointer-events: none;
-  /* Ticks every two cells, counted out from the axis both ways */
-  background: linear-gradient(90deg, rgba(10, 10, 10, 0.2) 1px, transparent 1px) var(--reel-axis, 50%) 100% / calc(2 * var(--grid-pitch)) 0.7rem repeat-x;
-}
-/* The middle's own tick, taller */
-.home-reel[data-reel-layout="row"] .home-reel__ruler::after {
-  content: "";
-  position: absolute;
-  left: var(--reel-axis, 50%);
-  bottom: 0;
-  width: 1px;
-  height: 1.6rem;
-  background-color: rgba(10, 10, 10, 0.55);
-}
-.home-reel__ruler-track {
-  position: absolute;
-  inset: 0;
-}
-/* A number: centred on its place (home-reel.js moves it there, the
-   nearer way round the loop), pressed to turn the row to its part, its
-   pressable box running down over the ticks */
-.home-reel__ruler-mark {
-  position: absolute;
-  top: 0;
-  left: calc(var(--reel-axis, 50%) + 0.5px);
-  translate: -50% 0;
-  transform: translate3d(calc(var(--i) * var(--ruler-step, 36vw)), 0, 0);
-  padding: 0 1rem 1.6rem;
-  font-family: var(--font-label);
-  font-size: max(1.1rem, 10px);
-  line-height: 1;
-  letter-spacing: var(--track-label);
-  color: #0a0a0a;
-  opacity: 0.35;
-  pointer-events: auto;
-  cursor: pointer;
-  will-change: transform;
-}
-@media screen and (max-width: 991px) {
-  .home-reel[data-reel-layout="row"] {
-    --reel-row-w: min(62vw, 82svh);
-    --reel-gap: 1.6rem;
-    --reel-lift: 3.2rem;
-  }
-}
-@media screen and (max-width: 767px) {
-  .home-reel[data-reel-layout="row"] {
-    --reel-row-w: min(74vw, 82svh);
-    --reel-small: 0.68;
-  }
 }
 
 /* ---------- The home page's opening ----------
@@ -3454,14 +2984,15 @@ html.is--intro .home-loader {
 }
 
 /* ---------- The clients' logos ----------
-   index.astro. The label and the heading, two short lines set large, then
-   one row of charcoal tiles across the band's full width, each 3:2 with a
-   white logo centred on it, bounded on both axes (a long wordmark runs
-   wide, a tall mark is held down) so they carry a similar weight. The row
-   runs left on a loop, slowly and evenly (two identical halves, moved by
-   one half: --logo-count tiles each), fading in and out at the screen's
-   edges, and holds still under the pointer. Reduced motion: it holds
-   still and can be scrolled sideways instead. */
+   index.astro. A short heading on two lines, then one row of charcoal
+   tiles across the band's full width, each 3:2 with a white logo centred
+   on it, bounded on both axes (a long wordmark runs wide, a tall mark is
+   held down) so they carry a similar weight. The row is Osmo's marquee
+   with scroll direction (marquee.js, the .marquee-advanced classes under
+   "Logo marquee"): it runs left on a loop, slowly and evenly, turns round
+   while the page scrolls back up, fades in and out at the screen's edges,
+   and holds still under the pointer and off screen. Reduced motion: the
+   script leaves it still, and it can be scrolled sideways instead. */
 .logo-grid {
   padding: 12rem 0 0;
 }
@@ -3475,28 +3006,30 @@ html.is--intro .home-loader {
 }
 .logo-grid__lead {
   margin: 0;
-  font-size: 8rem;
-  line-height: 0.9;
-  letter-spacing: var(--track-display);
+  font-size: 3.2rem;
+  line-height: 1.05;
+  letter-spacing: -0.025em;
+  text-wrap: balance;
   font-weight: var(--weight-strong); --wght: var(--weight-strong);
 }
 .logo-grid__row {
   --logo-tile: 22rem;
   --logo-gap: 0.8rem;
+  width: 100%;
   overflow: hidden;
   -webkit-mask-image: linear-gradient(90deg, transparent, #000 6%, #000 94%, transparent);
   mask-image: linear-gradient(90deg, transparent, #000 6%, #000 94%, transparent);
 }
 .logo-grid__list {
   display: flex;
+  flex: none;
   width: max-content;
   margin: 0;
   padding: 0;
   list-style: none;
-  animation: logo-run calc(var(--logo-count, 10) * 3.2s) linear infinite;
 }
-/* Each tile carries its gap on its right, so a half is exactly half the
-   row and the loop closes without a seam */
+/* Each tile carries its gap on its right, so the collection and its clone
+   meet without a seam */
 .logo-grid__tile {
   flex: none;
   display: flex;
@@ -3516,26 +3049,18 @@ html.is--intro .home-loader {
   max-height: 30%;
   object-fit: contain;
 }
-@keyframes logo-run {
-  from { transform: translate3d(0, 0, 0); }
-  to { transform: translate3d(-50%, 0, 0); }
-}
-@media (hover: hover) and (pointer: fine) {
-  .logo-grid__row:hover .logo-grid__list { animation-play-state: paused; }
-}
 @media (prefers-reduced-motion: reduce) {
   .logo-grid__row { overflow-x: auto; scrollbar-width: none; }
-  .logo-grid__list { animation: none; }
 }
 @media screen and (max-width: 991px) {
   .logo-grid { padding-top: 8rem; }
-  .logo-grid__lead { font-size: 6.4rem; }
+  .logo-grid__lead { font-size: 2.8rem; }
   .logo-grid__head { margin-bottom: 3.2rem; }
   .logo-grid__row { --logo-tile: 20rem; }
 }
 @media screen and (max-width: 767px) {
   .logo-grid { padding-top: 6.4rem; }
-  .logo-grid__lead { font-size: 4.8rem; }
+  .logo-grid__lead { font-size: 2.4rem; }
   .logo-grid__head { gap: 1.6rem; margin-bottom: 2.4rem; }
   .logo-grid__row { --logo-tile: 15rem; --logo-gap: 0.6rem; }
   .logo-grid__logo { max-height: 32%; }
@@ -3927,8 +3452,12 @@ html.is--intro .home-loader {
   position: absolute;
   left: calc(-2 * var(--grid-pitch));
   top: var(--grid-pitch);
-  width: calc(var(--grid-pitch) - 1px);
-  height: calc(var(--grid-pitch) - 1px);
+  /* A pixel smaller than the cell inside its line (5px on the 7px grid,
+     4px on a phone's 5px), the same both ways, never stretched */
+  box-sizing: border-box;
+  width: max(4px, calc(var(--grid-pitch) - 2px));
+  height: max(4px, calc(var(--grid-pitch) - 2px));
+  aspect-ratio: 1;
   background-color: currentColor;
   opacity: 0;
   transition: opacity 0.25s var(--cta-ease);
@@ -4113,20 +3642,25 @@ html.is--intro .home-loader {
    its ground from a fifth of its height above into place (its parallax);
    nothing scales but the page.
 
-   Cheap to run: the page only moves (a transform, on a layer of its own
-   from a screen before the footer, is--footer-near); its corners and its
-   shadow are set once as the shrink begins (is--footer-scaling), never per
-   frame, so its paint is never redone while it shrinks. */
+   Cheap to run, and seamless: the page only moves (a transform). Its
+   layer, its black ground, its corners, its shadow and its clip are all
+   set once, a screen and a half before the footer (is--footer-near,
+   footer.js), where its foot is well below the screen and none of it can
+   be seen; so the first frame of the shrink changes nothing but the
+   transform, and nothing pops in as the footer arrives. Nothing is set per
+   frame, so its paint is never redone while it shrinks. (is--footer-scaling
+   is still marked while the shrink runs, for whatever else wants it.) */
 .page-surface {
   position: relative;
   transform-origin: 50% 100%;
 }
-/* On its own layer from a screen before the footer (footer.js) */
-:is(.is--footer-near, .is--footer-scaling) > .page-surface { will-change: transform; }
-.is--footer-scaling > .page-surface {
+/* From a screen and a half before the footer (footer.js): on its own
+   layer, and dressed for the shrink before any of it shows */
+:is(.is--footer-near, .is--footer-scaling) > .page-surface {
+  will-change: transform;
   z-index: 10;
   overflow: clip;
-  border-radius: 0 0 16px 16px;
+  border-radius: 0 0 12px 12px;
   background-color: #000000;
   /* Soft on the footer's grey, close to the page's edge and gone by the
      screen's, so the strips beside it read as the footer, not as a band of
@@ -4135,8 +3669,8 @@ html.is--intro .home-loader {
 }
 
 /* The footer: its ground, and its content over it. Clipped to itself until
-   the page shrinks; from then the ground shows a screen up beside the page
-   (the page, above, covering the rest) */
+   the page is near; from then the ground shows a screen up beside the
+   page (the page, above, covering the rest) */
 .footer-wrap {
   --footer-reach: 100vh;
   position: relative;
@@ -4144,7 +3678,7 @@ html.is--intro .home-loader {
   /* The footer's own layering stays inside it, under the lifted page */
   isolation: isolate;
 }
-.is--footer-scaling > .footer-wrap { overflow: visible; }
+:is(.is--footer-near, .is--footer-scaling) > .footer-wrap { overflow: visible; }
 .footer-ground {
   position: absolute;
   top: calc(-1 * var(--footer-reach));
@@ -4181,11 +3715,18 @@ html.is--intro .home-loader {
 /* The footer, after the agency reference (sized from it at 1920 wide, where
    the root type is 12.5px): a dark grey panel under the black page; the
    wordmark top left; four columns of links in the right 55% of the content
-   width, spread edge to edge; the legal line across the foot; and a ticker
-   of "Get in touch" at the bottom, running the full width and cut by the
-   panel's lower edge. All in the body face, white, the legal line in grey.
-   Its grey, its column lines and its grain are its ground's (.footer-ground,
-   above), which it stands on, clear itself. */
+   width, spread edge to edge; and across the very foot, small and grey,
+   the copyright and the legal links. All in the body face, white. Its
+   grey, its column lines and its grain are its ground's (.footer-ground,
+   above), which it stands on, clear itself.
+
+   At the foot of the page the floating navigation opens of itself as the
+   footer's own navigation (floatingnav.js, "The footer's form"): its square
+   on the bar's line and its four tiles above it. The footer is laid out
+   round it: the foot line stands on the bar's line, either side of the
+   square (its height the bar's, --fnav-bottom from the foot), and the
+   columns end above the tiles' reach (--fnav-foot-reach, "Floating
+   navigation") and a margin. */
 :root {
   --footer-color: #1b1b1b;
   /* The footer's grain: one sheet, on its ground */
@@ -4195,7 +3736,7 @@ html.is--intro .home-loader {
   display: flex;
   flex-direction: column;
   min-height: 90svh;
-  padding: 2.8rem var(--site-inset) 0;
+  padding: 2.8rem var(--site-inset) var(--fnav-bottom);
   overflow: hidden;
   color: #f4f4f4;
   font-size: 1.44rem;
@@ -4210,6 +3751,9 @@ html.is--intro .home-loader {
   justify-content: space-between;
   align-items: flex-start;
   gap: var(--grid-gap);
+  /* Clear of the tiles of the footer's navigation, which reach up from
+     the screen's foot past the foot line */
+  margin-bottom: calc(var(--fnav-foot-reach) - var(--fnav-bottom) - var(--fnav-bar-h) + 5.6rem);
 }
 .site-footer__logo {
   flex: none;
@@ -4250,15 +3794,21 @@ html.is--intro .home-loader {
   white-space: nowrap;
 }
 
-/* The legal line: pushed to the foot of the panel, above the ticker */
+/* The foot line: the copyright on the left and the legal links on the
+   right, small (the footer's metadata, not its navigation) and grey, on
+   the floating bar's line at the foot of the panel, a row the bar's
+   height with the bar's square in its middle */
 .site-footer__bottom {
   display: flex;
   justify-content: space-between;
-  align-items: baseline;
-  gap: var(--grid-gap);
+  align-items: center;
+  gap: calc(var(--fnav-bar-h) + 4rem);
+  height: var(--fnav-bar-h);
   margin-top: auto;
-  padding-top: 8rem;
-  color: rgba(244, 244, 244, 0.6);
+  color: rgba(244, 244, 244, 0.5);
+  font-size: 1.05rem;
+  line-height: 1.3;
+  letter-spacing: 0;
 }
 .site-footer__note {
   margin: 0;
@@ -4267,44 +3817,12 @@ html.is--intro .home-loader {
 }
 .site-footer__legal {
   display: flex;
-  gap: 4rem;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 0.6rem 2.4rem;
 }
-
-/* The ticker: three copies of the line, each running left a copy's width
-   at a time, twenty seconds a copy; the whole of it opens the contact
-   panel */
-.site-footer__cta {
-  display: block;
-  margin: 0.2rem calc(var(--site-inset) * -1) 0;
-  color: inherit;
-  text-decoration: none;
-  font-size: 18.6vw;
-  line-height: 1;
-  letter-spacing: -0.045em;
-  font-weight: var(--weight-strong); --wght: var(--weight-strong);
-  white-space: nowrap;
-}
-.site-footer__cta .footer-reveal,
-.site-footer__cta .footer-reveal__item {
-  display: block;
-  margin: 0;
-  padding: 0;
-}
-.site-footer__cta .footer-reveal__item { transition-duration: 2s; }
-.site-footer__ticker { display: flex; }
-.site-footer__ticker > span {
-  flex: none;
-  padding-right: 0.4em;
-  transform: translateX(-100%);
-  animation: footer-ticker 20s linear infinite;
-}
-@keyframes footer-ticker {
-  from { transform: translateX(-100%); }
-  to { transform: translateX(-200%); }
-}
-@media (prefers-reduced-motion: reduce) {
-  .site-footer__ticker > span { animation: none; }
-}
+/* The copyright's break, for a phone (below) */
+.site-footer__br { display: none; }
 
 @media screen and (max-width: 991px) {
   .site-footer { min-height: 0; font-size: 1.6rem; }
@@ -4316,20 +3834,20 @@ html.is--intro .home-loader {
     width: 100%;
   }
   .site-footer__a { white-space: normal; }
-  .site-footer__bottom { padding-top: 6.4rem; }
-  .site-footer__cta { font-size: 22vw; }
+  .site-footer__bottom { font-size: 1.15rem; }
 }
 
 @media screen and (max-width: 767px) {
   .site-footer { padding-top: 4rem; }
-  .site-footer__bottom {
-    flex-direction: column;
-    gap: 1.6rem;
-  }
-  .site-footer__legal { flex-wrap: wrap; gap: 1.6rem 2.4rem; }
+  /* Either side keeps to its own half, clear of the square: the
+     copyright on two lines (its break, .site-footer__br, shows here
+     alone), the links one under another against the right edge */
+  .site-footer__bottom { gap: 0; font-size: 1.05rem; line-height: 1.35; }
+  .site-footer__bottom > * { flex: 0 1 calc(50% - var(--fnav-bar-h) / 2 - 0.8rem); }
+  .site-footer__br { display: inline; }
+  .site-footer__legal { gap: 0.2rem 1.2rem; }
   /* The address will not break: the contact column takes the full width */
   .site-footer__col:first-child { grid-column: 1 / -1; }
-  .site-footer__cta { margin-top: 2.4rem; font-size: 26vw; }
 }
 
 /* ---------- Link groups ----------
@@ -4357,17 +3875,14 @@ html.is--intro .home-loader {
 
 .site-nav.is--over-hero {
   background-color: transparent;
-  /* Its stretch of the hero's lines, at the hero's finer weight */
-  --grid-line-width: 0.5px;
 }
 
 /* Over a light page — the bar followed straight by .theme-light, as on
    Partners and the archive — the bar drops its band the same way, and its
-   links and the grid lines through it turn dark to read on the white */
+   links turn dark to read on the white */
 .site-nav:has(+ .theme-light) {
   background-color: transparent;
   color: #0a0a0a;
-  --grid-line: var(--grid-line-color-dark);
 }
 /* The studio's mark, its name and the column of pages set their own
    off-white (they stand on the dark everywhere else): here they take the
@@ -5698,15 +5213,24 @@ main section + section,
    One screen at the least: under the bar, the heading and the description
    under it, centred; below them square cards in a wide, shallow
    arc (.shop-arc), filling what is left of the screen down to the
-   floating bar's room and a margin over it, so the arc never runs under
-   the bar however tall or short the screen. */
+   floating bar's foot. The cards over the bar keep its room and a margin
+   above it, so the arc never runs under the bar however tall or short the
+   screen; the outer cards, out to either side of it, come down beside it,
+   at the lowest to the hero's foot. */
 .shop-hero {
   display: flex;
   flex-direction: column;
   min-height: 100vh;
   min-height: 100svh;
-  padding: calc(var(--nav-height) + 3.2rem) var(--site-inset) calc(var(--fnav-clearance) + 2.4rem);
+  padding: var(--nav-height) var(--site-inset) var(--arc-below);
   background: #000000;
+  /* Under the arc's room, the hero's foot: as far as the outer cards may
+     come down past the room (the bar's own distance from the screen's
+     foot) */
+  --arc-below: var(--fnav-bottom);
+  /* Over the bar: its room and its strip's and a margin over them, from
+     the foot of the arc's room */
+  --arc-clear: calc(var(--fnav-clearance) + 2.4rem - var(--arc-below));
 }
 
 .shop-hero__body {
@@ -5718,16 +5242,28 @@ main section + section,
   width: 100%;
 }
 
+/* The copy takes the hero's full width, so the heading can stand on the
+   left while the description stays centred under it */
 .shop-hero__copy {
   display: flex;
   flex-direction: column;
   align-items: center;
+  align-self: stretch;
   min-width: 0;
   text-align: center;
 }
+/* The heading on two lines, balanced ("Tools for a / clearer practice"):
+   its measure is set in its own ems, so it breaks the same way at every
+   size. Flush left, on the studio's name's left edge in the bar above
+   (--hero-name-left, measured from the screen; the hero's own inset taken
+   off), less the large letters' own side bearing (0.02em), so the strokes
+   themselves line up, not just the boxes */
 .shop-hero h1 {
-  margin: 0 0 2rem;
-  font-size: 6.4rem;
+  align-self: flex-start;
+  max-width: 10em;
+  margin: 0 0 2rem calc(var(--hero-name-left) - var(--site-inset) - 0.02em);
+  text-align: left;
+  font-size: 8rem;
   line-height: 0.95;
   letter-spacing: -0.04em;
   text-wrap: balance;
@@ -5745,29 +5281,46 @@ main section + section,
 
 /* ---------- The arc of cards ----------
    After Osmo's icon fan (osmo.supply/product/icons), measured from it:
-   square cards, a seventh of the page's width (--arc-card), across its
-   full width, the middle one highest. Each card steps 0.86 of a card
-   sideways from the last (so they overlap), turns 5.2° more, and drops a
-   little further than the last did (0.117 of a card for the first step,
-   0.0376 of a card more for each step after: --n, the card's place from
-   the middle, --a, the same without its sign), the nearer the middle the
-   nearer the front (its z-index, from shop.astro). On each, the studio's
-   mark in the middle and a word under it, near the foot. The arc is the
-   container: a card is held down from a seventh of the width so the
-   whole arc, about 2.25 cards deep, fits the room the hero leaves it
-   above the floating bar, and the arc stands a little above the middle of
-   that room. Still: no script, nothing moving. */
+   square cards (--arc-card) across the screen's full width and past its
+   sides, the middle one highest. Each card steps 0.84 of a card sideways
+   from the last (so they overlap), turns 5.2° more, and drops a little
+   further than the last did (0.09 of a card for the first step, 0.04 of a
+   card more for each step after: --n, the card's place from the middle,
+   --a, the same without its sign), the nearer the middle the nearer the
+   front (its z-index, from shop.astro). On each, the studio's mark in the
+   middle and a word under it, near the foot. The arc is the container,
+   the screen's width, and clips its sides: a card is a 6.7th of the
+   width, as in the reference, so the outermost two stand with their
+   middles on the screen's sides (4 × 0.84 = 3.36 cards out of the 3.35
+   to the side) and are cut in half by them, the arc running on past the
+   screen as the reference does. Held down to the room the hero leaves it:
+   the arc stands a little above the middle of that room (its top (100cqh
+   − 2.2 cards) × 0.4 down), the whole of it about 2.15 cards deep (the
+   outer cards, turned 20.8°, reach 0.645 of a card below their middles):
+   the outer cards' corners, 0.4 × 100cqh + 1.27 cards down, stay above
+   the hero's foot (--arc-below past the room) while a card is no more
+   than (0.6 × 100cqh + --arc-below) / 1.27; the cards over the floating
+   bar, the middle three, reach about 1.17 cards below the arc's top,
+   which keeps them --arc-clear above the room's foot while a card is no
+   more than (0.6 × 100cqh − --arc-clear) / 0.3. Where the room holds the
+   cards smaller than the width asks, they step further apart (--arc-step,
+   up to 0.96 of a card, so they still overlap) to reach the sides all the
+   same. Still: no script, nothing moving. */
 .shop-arc {
   position: relative;
   flex: 1 1 0;
   align-self: stretch;
   min-height: 26rem;
   margin: 0 calc(-1 * var(--site-inset));
+  /* The outer cards run past the screen's sides: cut there, so the page
+     never scrolls sideways; free to come down past the arc's foot */
+  overflow: clip visible;
   container-type: size;
 }
 .shop-arc__card {
-  --arc-share: 14.6cqw;
-  --arc-card: min(var(--arc-share), 100cqh / 2.25);
+  --arc-share: calc(100cqw / 6.7);
+  --arc-card: min(var(--arc-share), (60cqh + var(--arc-below)) / 1.27, (60cqh - var(--arc-clear)) / 0.3);
+  --arc-step: clamp(0.84 * var(--arc-card), (50cqw - 0.645 * var(--arc-card)) / 4, 0.96 * var(--arc-card));
   position: absolute;
   top: calc((100cqh - 2.2 * var(--arc-card)) * 0.4);
   left: 50%;
@@ -5778,7 +5331,7 @@ main section + section,
   background-color: #222222;
   box-shadow: 0 0 calc(var(--arc-card) * 0.12) rgba(0, 0, 0, 0.55);
   transform:
-    translate(calc(var(--n) * 0.86 * var(--arc-card)), calc((0.117 * var(--a) + 0.0376 * var(--a) * var(--a)) * var(--arc-card)))
+    translate(calc(var(--n) * var(--arc-step)), calc((0.09 * var(--a) + 0.04 * var(--a) * var(--a)) * var(--arc-card)))
     rotate(calc(var(--n) * 5.2deg));
 }
 .shop-arc__mark {
@@ -5805,14 +5358,22 @@ main section + section,
 }
 
 @media screen and (max-width: 991px) {
-  .shop-hero { padding-top: calc(var(--nav-height) + 2.4rem); }
+  /* Here the cards run on past the screen's sides as they are and the bar
+     is wide beside them: the whole arc keeps above the bar and a margin,
+     the hero's foot */
+  .shop-hero {
+    padding-top: var(--nav-height);
+    --arc-below: calc(var(--fnav-clearance) + 2.4rem);
+    --arc-clear: 0px;
+  }
+  .shop-arc__card { --arc-card: min(var(--arc-share), 60cqh / 1.27); }
   .shop-hero__body { gap: 4.8rem; }
-  .shop-hero h1 { font-size: 5.6rem; }
+  .shop-hero h1 { font-size: 7.4rem; }
   .shop-arc__card { --arc-share: 22cqw; }
 }
 @media screen and (max-width: 767px) {
   .shop-hero__body { gap: 4rem; }
-  .shop-hero h1 { margin-bottom: 1.6rem; font-size: 4rem; }
+  .shop-hero h1 { margin-bottom: 1.6rem; font-size: 5.2rem; }
   .shop-hero .lead { font-size: 1.6rem; }
   .shop-arc { min-height: 24rem; }
   .shop-arc__card { --arc-share: 30cqw; }
@@ -6262,7 +5823,12 @@ main section + section,
 
 /* The page's column lines, not drawn on the Influence page (its own
    switch, on the page's surface, influence.astro) */
-.page-surface.is--gridless :is(.grid-lines, .section, .page-header, .site-nav, .map-spread) { background-image: none; }
+.page-surface.is--gridless :is(.grid-lines, .section, .page-header, .map-spread) { background-image: none; }
+/* A bare page: no column lines and no grain on any of its bands (the
+   project pages, on their main, and the Shop page, on its surface); the
+   footer, outside the surface, keeps its own */
+.is--bare :is(.grid-lines, .section, .page-header, .logo-marquee, .map-spread, .testimonial-feature, .shop-hero, .arch-stage, .project-grid, .project-note, .project-close) { background-image: none; }
+.is--bare :is(.home-hero, .home-reel, .influence-hero, .logo-wall, .seq__stage, .section, .page-header, .logo-marquee, .map-spread, .testimonial-feature, .shop-hero, .arch-stage, .project-grid, .project-note, .project-close)::before { display: none; }
 
 /* =============================================================
    Influence: the atlas band
@@ -6282,66 +5848,6 @@ main section + section,
 
 @media screen and (max-width: 991px) {
   .map-spread.is--influence { padding-bottom: 6.4rem; }
-}
-
-/* =============================================================
-   Case study panel — project overview with an embedded fact table
-   ============================================================= */
-
-.case-intro { max-width: 96rem; }
-.case-intro__title {
-  margin: 0 0 3.2rem;
-  font-size: 5.6rem;
-  line-height: 1.05;
-  letter-spacing: -0.03em;
-  font-weight: var(--weight-strong); --wght: var(--weight-strong);
-}
-
-.case-intro__body p { margin: 0 0 2.4rem; }
-.case-intro__body p:last-child { margin-bottom: 0; }
-
-.case-intro__standfirst {
-  margin: 0 0 4rem;
-  font-size: 2rem;
-  line-height: 1.4;
-}
-
-/* The table used to float against the right edge of a 683px drawer, which
-   squeezed the prose beside it to about forty characters a line. It now runs
-   full width as a ruled band between the standfirst and the copy. */
-.case-facts {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 0 var(--grid-gap);
-  margin: 0 0 4rem;
-  padding-top: 2rem;
-  border-top: 1px solid var(--rule);
-}
-.case-facts > div {
-  display: flex;
-  flex-direction: column;
-  gap: 0.4rem;
-  padding: 1.6rem 0;
-  border-bottom: 1px solid var(--rule);
-  min-width: 0;
-}
-/* The odd one out spans both columns so the band closes flush */
-.case-facts > div:last-child:nth-child(odd) { grid-column: 1 / -1; }
-.case-facts dt {
-  font-weight: var(--weight-label); --wght: var(--weight-label);
-  text-transform: uppercase;
-  color: var(--form-muted);
-}
-.case-facts dd {
-  margin: 0;
-  font-size: 1.6rem;
-  line-height: 1.3;
-}
-.case-facts a { text-decoration: underline; text-underline-offset: 0.3em; }
-
-@media screen and (max-width: 767px) {
-  .case-intro__title { font-size: 4rem; }
-  .case-facts { grid-template-columns: 1fr; }
 }
 
 /* =============================================================
@@ -6605,53 +6111,42 @@ strong, b, th { font-weight: var(--weight-strong); --wght: var(--weight-strong);
 }
 
 /* ---------- Hero ----------
-   The title gets the top of the page to itself. Underneath, a rule splits the
-   standfirst from the awards and the download, so those sit as a row across
-   the grid instead of stacking into a column of small blocks. */
-.project-hero {
-  /* A global rule gives every inner page one nav-height of clearance. That
-     is enough to clear the bar and nothing more, which left the eyebrow
-     sitting two pixels under it — hence the specificity here. */
-  padding: calc(var(--nav-height) + 14rem) var(--project-inset) var(--project-rhythm);
-}
+   The title as the Shop, Influence and Partner pages' name (.shop-hero),
+   the hero only as tall as it needs. Underneath, a rule splits the
+   eyebrow and standfirst from the awards and the download: the
+   standfirst on the left, the awards one above another on the line the
+   bar's pages start from (--hero-links-left; the hero's own inset taken
+   off), with the download under them. */
+.shop-hero.is--project { min-height: 0; padding-bottom: var(--project-rhythm); }
 .project-hero__eyebrow { margin: 0 0 2.4rem; }
-.project-hero__title {
-  margin: 0;
-  max-width: 18ch;
-  font-size: 8.8rem;
-  line-height: 0.98;
-  letter-spacing: -0.035em;
-  font-weight: var(--weight-strong); --wght: var(--weight-strong);
-}
 
 .project-hero__meta {
   display: grid;
-  grid-template-columns: repeat(var(--grid-columns), minmax(0, 1fr));
-  gap: var(--grid-gap);
+  grid-template-columns: minmax(0, calc(var(--hero-links-left) - var(--site-inset))) minmax(0, 1fr);
   align-items: start;
-  margin-top: 8rem;
+  align-self: stretch;
   padding-top: 3.2rem;
   border-top: 1px solid var(--rule);
+  text-align: left;
 }
+.project-hero__lead p:last-child { margin: 0; }
 .project-hero__lead {
-  grid-column: span 2;
   margin: 0;
   max-width: 44rem;
+  padding-right: var(--grid-gap);
   font-size: 2rem;
   line-height: 1.4;
   color: rgba(255, 255, 255, 0.7);
 }
-.project-hero__side {
-  grid-column: 3 / span 2;
-  min-width: 0;
-}
+.project-hero__side { min-width: 0; }
 
-/* Stacked, not wrapped across the full width — in the side column the labels
-   read as a list of credits, which is what they are */
+/* One above another, each as wide as its own words: the labels read as a
+   list of credits, which is what they are */
 .award-labels {
   list-style: none;
   display: flex;
-  flex-wrap: wrap;
+  flex-direction: column;
+  align-items: flex-start;
   gap: 0.8rem;
   margin: 0 0 3.2rem;
   padding: 0;
@@ -6774,16 +6269,6 @@ strong, b, th { font-weight: var(--weight-strong); --wght: var(--weight-strong);
 
 @media screen and (max-width: 991px) {
   :root { --project-rhythm: 8rem; }
-  .project-hero { padding-top: calc(var(--nav-height) + 9rem); }
-  .project-hero__title { font-size: 5.6rem; max-width: none; }
-  .project-hero__meta {
-    grid-template-columns: 1fr;
-    margin-top: 5.6rem;
-    gap: 3.2rem;
-  }
-  .project-hero__lead,
-  .project-hero__side { grid-column: span 1; }
-  .project-hero__lead { max-width: none; }
   .project-note__inner { grid-template-columns: 1fr; gap: 2.4rem; }
   .project-note__inner .tagline,
   .project-note__body { grid-column: span 1; }
@@ -6791,9 +6276,9 @@ strong, b, th { font-weight: var(--weight-strong); --wght: var(--weight-strong);
 
 @media screen and (max-width: 767px) {
   :root { --project-rhythm: 6rem; }
-  .project-hero { padding-top: calc(var(--nav-height) + 6rem); }
-  .project-hero__title { font-size: 4rem; }
-  .project-hero__lead { font-size: 1.8rem; }
+  /* On a phone, where the pages are not on that line: one column */
+  .project-hero__meta { grid-template-columns: 1fr; gap: 3.2rem; }
+  .project-hero__lead { max-width: none; padding-right: 0; font-size: 1.8rem; }
 }
 
 /* =============================================================
@@ -6860,15 +6345,24 @@ body:has(.arch-page) {
   height: 100vh;
   height: 100dvh;
   padding: var(--nav-height) 0 var(--fnav-clearance);
+  /* Its own black, as every band under the grain has: the grain is laid
+     in soft light over the band, and while a page transition carries the
+     page in depth (transitions.js) a band without a ground of its own gave
+     it nothing to blend with, so it showed as raw grey noise over the
+     whole page until the page landed */
+  background-color: #000000;
 }
 .arch-page :is(.site-nav, .arch-stage) { background-image: none; }
 
+/* The name and the row stand high: the name's top just under the column
+   of pages in the bar above (a little below Partner, its last link), the
+   row a gap under the name, and the room the screen has left below them */
 .arch-stage__group {
   flex: 1;
   min-height: 0;
   display: flex;
   flex-direction: column;
-  justify-content: center;
+  justify-content: flex-start;
 }
 
 /* The name over the row, its left edge under the studio's name in the bar
@@ -6880,7 +6374,7 @@ body:has(.arch-page) {
   align-items: flex-end;
   justify-content: space-between;
   gap: 2.4rem;
-  margin-bottom: 3.2rem;
+  margin-bottom: 4rem;
   padding: 0 var(--hero-right) 0 var(--hero-name-left);
 }
 .arch-stage__title {
@@ -6892,13 +6386,14 @@ body:has(.arch-page) {
 }
 .arch-stage__slider { flex: none; }
 
+/* The arrows: squares, the navigation's own corner, a hairline round each */
 .arch-arrows { display: flex; gap: 0.6rem; }
 .arch-arrow {
   width: 2.8rem;
   height: 2.8rem;
   padding: 0;
   border: 1px solid rgba(255, 255, 255, 0.24);
-  border-radius: 50%;
+  border-radius: var(--fnav-radius, 2px);
   background: transparent;
   position: relative;
   cursor: pointer;
@@ -6961,6 +6456,13 @@ html.is--page-transition .progress-bar-wrap {
   height: 100%;
   transform: scale3d(0, 1, 1);
 }
+/* The line as it was, fading off as the loop comes round (archslider.js) */
+.progress-bar.is--ghost {
+  position: absolute;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+}
 
 /* ---------- Parallax slider (Smooothy) ---------- */
 .parallax-slider__group,
@@ -6982,10 +6484,10 @@ html.is--page-transition .progress-bar-wrap {
 
 /* Small and wide, 1.6 : 1, the same height throughout, a narrow gap
    between them (--arch-gap); a short window caps the width so the row
-   always keeps its room */
+   always keeps its room under the name */
 .arch-page {
   --arch-gap: 1.8rem;
-  --arch-card: min(27vw, (100svh - var(--nav-height) - var(--fnav-clearance) - 12rem) * 1.6);
+  --arch-card: min(35vw, (100svh - var(--nav-height) - var(--fnav-clearance) - 14rem) * 1.6);
 }
 .parallax-slider__item {
   flex: none;
@@ -6994,9 +6496,10 @@ html.is--page-transition .progress-bar-wrap {
   position: relative;
 }
 
+/* Its corners only just softened, as the home hero's pictures are */
 .parallax-slider__item-inner {
   aspect-ratio: 16 / 10;
-  border-radius: var(--radius);
+  border-radius: 1px;
   width: var(--arch-card);
   position: relative;
   overflow: clip;
@@ -7104,15 +6607,15 @@ html.is--page-transition .progress-bar-wrap {
 
 @media screen and (max-width: 991px) {
   .arch-stage__title { font-size: 3.6rem; }
-  .arch-page { --arch-card: min(46vw, (100svh - var(--nav-height) - var(--fnav-clearance) - 12rem) * 1.6); }
+  .arch-page { --arch-card: min(57vw, (100svh - var(--nav-height) - var(--fnav-clearance) - 14rem) * 1.6); }
 }
 /* On a phone the name stands on the pages' column alone: the arrows go (a
-   swipe moves the row), the card a little under two thirds of the screen,
+   swipe moves the row), the card about three quarters of the screen,
    its context under its name */
 @media screen and (max-width: 767px) {
   .arch-stage__title { font-size: 2.8rem; }
   .arch-arrows { display: none; }
-  .arch-page { --arch-card: min(70vw, (100svh - var(--nav-height) - var(--fnav-clearance) - 12rem) * 1.6); }
+  .arch-page { --arch-card: min(82vw, (100svh - var(--nav-height) - var(--fnav-clearance) - 14rem) * 1.6); }
   .parallax-slider__item-label { flex-direction: column; gap: 0.4rem; }
 }
 
@@ -7675,8 +7178,11 @@ html.is--page-transition .progress-bar-wrap {
   --fnav-rise: 0.95s;
   --fnav-rise-ease: cubic-bezier(0.16, 1, 0.3, 1);
   --fnav-rise-parts: 0.42s;
-  --fnav-drop: 0.36s;
-  --fnav-drop-ease: cubic-bezier(0.45, 0, 0.75, 0.25);
+  /* Down: quick still, but on a curve that eases out at the end rather
+     than accelerating into a stop, so the strip and the bar settle out of
+     sight rather than snap */
+  --fnav-drop: 0.42s;
+  --fnav-drop-ease: cubic-bezier(0.5, 0, 0.3, 1);
   --fnav-drop-delay: 0.08s;
   --fnav-bottom: calc(4 * var(--fnav-u));
   --fnav-clearance: calc(var(--fnav-bottom) + 8 * var(--fnav-u));
@@ -7688,9 +7194,6 @@ html.is--page-transition .progress-bar-wrap {
   --fnav-module-low: #141414;
   --fnav-module-high: #1d1d1d;
   --fnav-module-hover: #252525;
-  /* A block on the menu's panel, and under the pointer */
-  --fnav-block: rgba(255, 255, 255, 0.07);
-  --fnav-block-hover: rgba(255, 255, 255, 0.13);
   /* Barely rounded, the same on every part of the navigation; and the one
      spacing of the menu, between its modules */
   --fnav-radius: max(3px, 0.3rem);
@@ -7698,6 +7201,12 @@ html.is--page-transition .progress-bar-wrap {
   /* The menu's room: from just above the bar to near the top of the screen */
   --fnav-menu-bottom: calc(10 * var(--fnav-u));
   --fnav-menu-room: calc(100svh - 12 * var(--fnav-u));
+  /* The footer's form of the menu ("The footer's form", below): its
+     tiles' height, in the menu's units, and how far up from the screen's
+     foot the menu then reaches (its two rows of tiles and the gap between
+     them over its foot), which the footer keeps clear (.site-footer) */
+  --fnav-foot-tile: 12;
+  --fnav-foot-reach: calc(var(--fnav-menu-bottom) + (2 * var(--fnav-foot-tile) + 0.5) * var(--fnav-u-bar));
 }
 @media screen and (max-width: 600px) {
   :root { --fnav-bottom: calc(3 * var(--fnav-u)); }
@@ -7805,8 +7314,9 @@ html.is--page-transition .progress-bar-wrap {
 .fnav__title { --fnav-in: calc(var(--fnav-rise-parts) + 0.12s); }
 .fnav__burger { --fnav-in: calc(var(--fnav-rise-parts) + 0.2s); }
 /* With the menu open, the square round the close control is one of the
-   menu's modules: their own solid colour, not the bar's glass */
-html.is--fnav-open .fnav__background {
+   menu's modules: their own solid colour, not the bar's glass. Not in the
+   footer's form, where the square keeps the bar's own glass */
+html.is--fnav-open:not(.is--fnav-foot) .fnav__background {
   background: var(--fnav-module);
   -webkit-backdrop-filter: none;
   backdrop-filter: none;
@@ -7815,7 +7325,7 @@ html.is--fnav-open .fnav__background {
 .fnav__logo,
 .fnav__burger,
 .fnav__close,
-.fnav__arrow {
+.fnav__home {
   position: absolute;
   top: 0;
   display: flex;
@@ -7843,16 +7353,20 @@ html.is--fnav-open .fnav__background {
 }
 .fnav__burger { right: 0; }
 .fnav__close,
-.fnav__arrow {
+.fnav__home {
   left: 50%;
   margin-left: calc(var(--fnav-bar-h) / -2);
   visibility: hidden;
+}
+/* The mark in the square (the footer's form), the bar's own mark's size */
+.fnav__home-mark {
+  width: auto;
+  height: calc(2 * var(--fnav-u));
 }
 .fnav svg { display: block; overflow: visible; }
 .fnav svg path { vector-effect: non-scaling-stroke; }
 .fnav__burger-svg { width: calc(2 * var(--fnav-u)); height: calc(1.1 * var(--fnav-u)); }
 .fnav__close-svg { width: calc(1.3 * var(--fnav-u)); height: calc(1.3 * var(--fnav-u)); }
-.fnav__arrow-svg { width: calc(1.1 * var(--fnav-u)); height: calc(1.2 * var(--fnav-u)); }
 
 /* The page's name, in the label face, rolled through this window when it
    changes; a long one is cut with an ellipsis */
@@ -7935,7 +7449,10 @@ html.is--fnav-open .fnav__background {
   opacity: 0;
   visibility: hidden;
   transform: translate(-50%, calc(100% + var(--fnav-gap)));
-  transition: transform var(--fnav-drop) var(--fnav-drop-ease), opacity calc(var(--fnav-drop) * 0.6), visibility 0s linear var(--fnav-drop), --promo-ground 0.45s var(--cta-ease);
+  /* Going (with the bar, or a message giving way to another): it slides
+     down behind the bar on the bar's own curve, fading only over the
+     last part of the way, so it is seen to go rather than to vanish */
+  transition: transform var(--fnav-drop) var(--fnav-drop-ease), opacity calc(var(--fnav-drop) * 0.6) ease-in calc(var(--fnav-drop) * 0.3), visibility 0s linear var(--fnav-drop), --promo-ground 0.45s var(--cta-ease);
 }
 .fnav-promo.is--shown {
   opacity: 1;
@@ -7943,13 +7460,15 @@ html.is--fnav-open .fnav__background {
   transform: translate(-50%, 0);
   transition: transform calc(var(--fnav-rise) - var(--fnav-rise-parts)) var(--fnav-rise-ease) var(--fnav-rise-parts), opacity 0.3s var(--fnav-rise-parts), visibility 0s var(--fnav-rise-parts), --promo-ground 0.45s var(--cta-ease);
 }
+/* Back behind the bar while the menu or the contact form is open, or a
+   page transition runs: the same movement, the bar staying where it is */
 html.is--fnav-open .fnav-promo.is--shown,
 html.is--fnav-contact .fnav-promo.is--shown,
 html.is--page-transition .fnav-promo.is--shown {
   opacity: 0;
   visibility: hidden;
   transform: translate(-50%, calc(100% + var(--fnav-gap)));
-  transition: transform 0.4s var(--cta-ease), opacity 0.25s, visibility 0s linear 0.4s, --promo-ground 0.45s var(--cta-ease);
+  transition: transform var(--fnav-drop) var(--fnav-drop-ease), opacity calc(var(--fnav-drop) * 0.6) ease-in calc(var(--fnav-drop) * 0.3), visibility 0s linear var(--fnav-drop), --promo-ground 0.45s var(--cta-ease);
 }
 /* Handed over to the band in the page: gone at once, and back at once */
 .fnav-promo.is--shown.is--docked {
@@ -7963,7 +7482,7 @@ html.is--page-transition .fnav-promo.is--shown {
   opacity: 0;
   visibility: hidden;
   transform: translate(-50%, calc(100% + var(--fnav-gap)));
-  transition: transform 0.4s var(--cta-ease), opacity 0.25s, visibility 0s linear 0.4s, --promo-ground 0.45s var(--cta-ease);
+  transition: transform var(--fnav-drop) var(--fnav-drop-ease), opacity calc(var(--fnav-drop) * 0.6) ease-in calc(var(--fnav-drop) * 0.3), visibility 0s linear var(--fnav-drop), --promo-ground 0.45s var(--cta-ease);
 }
 /* The words fade in and out at the ends rather than being cut */
 .fnav-promo::before,
@@ -7996,6 +7515,11 @@ html.is--page-transition .fnav-promo.is--shown {
   transform-origin: 0 50%;
 }
 .fnav-promo__track { animation: fnav-promo-run 24s linear infinite; }
+/* A strip down behind the bar, or handed over to the band, holds its
+   loop: nothing runs unseen (influence.js sets the band's and the strip's
+   loops level as each hands over) */
+.fnav-promo:not(.is--shown) .fnav-promo__track,
+.fnav-promo.is--docked .fnav-promo__track { animation-play-state: paused; }
 .fnav-promo__text {
   font-family: var(--font-label);
   font-size: calc(1.1 * var(--fnav-u));
@@ -8007,12 +7531,15 @@ html.is--page-transition .fnav-promo.is--shown {
   -webkit-text-stroke: var(--stroke-label) currentColor;
 }
 /* Between the words (Contact Tom's strip): a small plus, solid, its arms
-   thick, cut from a square by its outline so the colour rules below carry
-   on as they were. Where the browser can round, both its size and its
-   arms are an odd number of whole pixels, so it centres sharp */
+   fine (a tenth of its width: one pixel at the site's sizes, two on a very
+   large screen), cut from a square by its outline so the colour rules
+   below carry on as they were. Where the browser can round, the arm is a
+   whole number of pixels and the plus the same parity as the arm (an odd
+   square round a one-pixel arm, an even one round two), so the arm stands
+   on whole pixels either way and it draws sharp */
 .fnav-promo__mark {
   --plus: calc(0.9 * var(--fnav-u));
-  --plus-arm: calc(0.3 * var(--fnav-u));
+  --plus-arm: calc(0.12 * var(--fnav-u));
   --plus-a: calc(50% - var(--plus-arm) / 2);
   --plus-b: calc(50% + var(--plus-arm) / 2);
   flex: none;
@@ -8025,8 +7552,8 @@ html.is--page-transition .fnav-promo.is--shown {
 }
 @supports (width: round(nearest, 1px, 1px)) {
   .fnav-promo__mark {
-    --plus: calc(2 * round(down, 0.45 * var(--fnav-u), 1px) + 1px);
-    --plus-arm: calc(2 * round(nearest, 0.15 * var(--fnav-u) - 0.5px, 1px) + 1px);
+    --plus-arm: max(1px, round(nearest, 0.1 * var(--fnav-u), 1px));
+    --plus: calc(2 * round(nearest, 0.45 * var(--fnav-u) - var(--plus-arm) / 2, 1px) + var(--plus-arm));
   }
 }
 /* The words' box trimmed to their capitals, so the plus centres on them
@@ -8110,7 +7637,7 @@ html.is--page-transition .fnav-promo.is--shown {
 .fnav-promo.is--contact {
   --promo-ground: var(--paper);
   color: #0a0a0a;
-  transition: transform var(--fnav-drop) var(--fnav-drop-ease), opacity calc(var(--fnav-drop) * 0.6), visibility 0s linear var(--fnav-drop), --promo-ground 0.45s var(--cta-ease), color 0.45s var(--cta-ease);
+  transition: transform var(--fnav-drop) var(--fnav-drop-ease), opacity calc(var(--fnav-drop) * 0.6) ease-in calc(var(--fnav-drop) * 0.3), visibility 0s linear var(--fnav-drop), --promo-ground 0.45s var(--cta-ease), color 0.45s var(--cta-ease);
 }
 .fnav-promo.is--contact.is--shown {
   transition: transform calc(var(--fnav-rise) - var(--fnav-rise-parts)) var(--fnav-rise-ease) var(--fnav-rise-parts), opacity 0.3s var(--fnav-rise-parts), visibility 0s var(--fnav-rise-parts), --promo-ground 0.45s var(--cta-ease), color 0.45s var(--cta-ease);
@@ -8126,30 +7653,41 @@ html.is--page-transition .fnav-promo.is--shown {
 
 /* ---------- The menu ----------
    Separate modules, close together, with no panel round them: the four
-   parts of the practice two by two; Home as a single row; and at the
-   foot the reel and Contact Tom side by side, two thirds and a third.
-   Each module a plain block of colour, a shade apart from its neighbours,
-   no edge line, corners barely rounded; small type, one inset for every
-   label (--fnav-inset). The script raises them into place row by row, and
-   a module gives a little under a press.
+   parts of the practice two by two, as off-white cards; under them the
+   reel and Contact Tom side by side, two thirds and a third; and Home as
+   a single row at the foot. Each module a plain block of colour, no edge
+   line, corners slightly rounded (--fnav-radius, the menu's own); one
+   inset for every label (--fnav-inset). The script raises them into place
+   row by row, and a module gives a little under a press.
 
    Always whole on the screen, however short: nothing in it is squeezed
-   (each part keeps its own height), and it is the four tiles that give
+   (each part keeps its own height), and it is the four cards that give
    way. --fnav-menu-fixed is everything but them, in the menu's units —
-   three gaps (1.5), Home (--fnav-menu-home, 7.2) and the foot's row of the
-   reel and Contact Tom (14.5: the reel, two thirds of the width, at a
-   little under 2:1) — so the tiles
-   take what the room leaves, at most
-   13 units each, at least 8 (on a phone 9, where a tile's note runs to
-   two lines). Only if the panel would not fit even then does its unit come
+   three gaps (1.5), Home (--fnav-menu-home, 7.2) and the row of the reel
+   and Contact Tom (14.5: the reel, two thirds of the width, at 2:1) — so
+   the cards take what the room leaves, at most 14 units each, at least 9
+   (on a phone 11.5 and 9.5).
+
+   One type for every module: each name at --fnav-title-size, each line
+   under or beside it at --fnav-note-size, both near-black on the
+   off-white (the reel's label white on its picture). Only if the panel would not fit even then does its unit come
    down from the bar's, just far enough (never under 7px). As a last
    resort on a tiny screen, the panel scrolls. */
 .fnav-menu {
   --fnav-menu-fixed: 23.2;
   --fnav-menu-home: 7.2;
   --fnav-menu-row: 14.5;
-  --fnav-menu-tile: 13;
-  --fnav-menu-tile-min: 8;
+  --fnav-menu-tile: 14;
+  --fnav-menu-tile-min: 9;
+  /* The one type of the menu: every module's name, and every note */
+  --fnav-title-size: calc(2 * var(--fnav-u));
+  --fnav-note-size: calc(1.05 * var(--fnav-u));
+  /* The cards' off-white, a soft grey rather than white, and its ink */
+  --fnav-light: #e8e8e5;
+  --fnav-light-hover: #dcdcd8;
+  --fnav-ink: #161616;
+  /* Only just rounded, every module alike (the bar keeps its own corners) */
+  --fnav-radius: max(3px, 0.35 * var(--fnav-u));
   --fnav-u: max(7px, min(var(--fnav-u-bar), var(--fnav-menu-room) / (var(--fnav-menu-fixed) + 2 * var(--fnav-menu-tile-min))));
   --fnav-gap: calc(0.5 * var(--fnav-u));
   /* The one inset of every label in a module (their colours: --fnav-module
@@ -8160,7 +7698,7 @@ html.is--page-transition .fnav-promo.is--shown {
   bottom: var(--fnav-menu-bottom);
   z-index: 260;
   display: flex;
-  width: calc(42 * var(--fnav-u));
+  width: calc(44 * var(--fnav-u));
   max-height: var(--fnav-menu-room);
   color: #f4f4f4;
   transform: translateX(-50%);
@@ -8230,55 +7768,59 @@ html.is--page-transition .fnav-promo.is--shown {
   align-items: center;
   height: calc(var(--fnav-menu-home) * var(--fnav-u));
   padding-block: 0;
-  background-color: var(--fnav-module-low);
+  background-color: var(--fnav-light);
+  color: var(--fnav-ink);
 }
 .fnav-tile__title {
-  font-size: calc(1.9 * var(--fnav-u));
-  line-height: 1.1;
-  letter-spacing: var(--track-title);
+  font-size: var(--fnav-title-size);
+  line-height: 1;
+  letter-spacing: -0.03em;
   font-weight: var(--weight-strong); --wght: var(--weight-strong);
 }
 .fnav-tile__note {
-  font-size: calc(1.15 * var(--fnav-u));
-  line-height: 1.3;
-  color: rgba(244, 244, 244, 0.5);
+  font-size: var(--fnav-note-size);
+  line-height: 1.25;
+  color: rgba(22, 22, 22, 0.62);
 }
-/* The page you are on, among the four parts of the practice: the small
-   square the bar at the top marks it with, in the tile's top right corner,
-   a beat after the tile has risen. Home has none. */
-.fnav-tile:not(.is--wide)::before {
-  content: "";
+/* The four parts of the practice, as cards (after the references'
+   dashboard cards): the soft off-white, near-black type; at the top left,
+   small, what the part stands for, and directly under it, larger, its
+   name; at the top right a small diagonal arrow, an open head whose two
+   arms almost close a square, and a short shaft from its point. Under the pointer the card darkens a shade and the
+   arrow steps out towards its corner. */
+.fnav-tile.is--card {
+  justify-content: flex-start;
+  gap: calc(0.9 * var(--fnav-u));
+  padding: calc(2 * var(--fnav-u));
+  background-color: var(--fnav-light);
+  color: var(--fnav-ink);
+}
+.fnav-tile.is--card .fnav-tile__note { padding-right: calc(2.4 * var(--fnav-u)); }
+.fnav-tile__arrow {
   position: absolute;
-  top: var(--fnav-inset);
-  right: var(--fnav-inset);
-  width: calc(0.6 * var(--fnav-u));
-  height: calc(0.6 * var(--fnav-u));
-  background-color: currentColor;
-  opacity: 0;
-  transition: opacity 0.25s;
+  top: calc(2 * var(--fnav-u));
+  right: calc(2 * var(--fnav-u));
+  width: calc(1 * var(--fnav-u));
+  height: calc(1 * var(--fnav-u));
+  overflow: visible;
+  transition: transform 0.3s var(--cta-ease);
 }
-.fnav-menu.is--open .fnav-menu__cell.is--current .fnav-tile:not(.is--wide)::before {
-  opacity: 0.8;
-  transition-duration: 0.5s;
-  transition-delay: 0.5s;
-}
-
-/* Contact Tom: beside the reel, the one module in the off-white, its name
-   set as the pages' names are, at its foot and inset as theirs are, the
-   arrow at its top right. Opens the contact form in the navigation. */
+/* Contact: beside the reel, in the cards' off-white, its name set as
+   theirs are, at its foot, the cards' own arrow at its top right on their
+   inset. Opens the contact form in the navigation. */
 .fnav-menu__contact {
   position: relative;
   display: flex;
   align-items: flex-end;
   gap: calc(1.2 * var(--fnav-u));
-  padding: var(--fnav-inset);
+  padding: calc(2 * var(--fnav-u));
   border-radius: var(--fnav-radius);
-  background-color: #f4f4f4;
-  color: #0a0a0a;
+  background-color: var(--fnav-light);
+  color: var(--fnav-ink);
   text-decoration: none;
-  font-size: calc(1.9 * var(--fnav-u));
-  line-height: 1.1;
-  letter-spacing: var(--track-title);
+  font-size: var(--fnav-title-size);
+  line-height: 1;
+  letter-spacing: -0.03em;
   font-weight: var(--weight-strong); --wght: var(--weight-strong);
   transition: background-color 0.25s var(--cta-ease), scale 0.25s var(--cta-ease);
 }
@@ -8291,31 +7833,39 @@ html.is--page-transition .fnav-promo.is--shown {
   transition-duration: 0.12s;
 }
 .fnav-menu__contact-label { flex: 1; }
-.fnav-menu__contact-arrow {
-  position: absolute;
-  top: var(--fnav-inset);
-  right: var(--fnav-inset);
-  width: calc(1.2 * var(--fnav-u));
-  height: calc(1.2 * var(--fnav-u));
-  transition: transform 0.3s var(--cta-ease);
-}
 /* Alone in its row (no reel): its name on the middle line, the arrow at
-   the right */
+   the top right still */
 .fnav-menu:not(.has-reel) .fnav-menu__contact {
   align-items: center;
   padding-block: 0;
 }
-.fnav-menu:not(.has-reel) .fnav-menu__contact-arrow {
-  position: static;
-  flex: none;
-}
 
 @media (hover: hover) and (pointer: fine) {
   .fnav-tile:hover { background-color: var(--fnav-module-hover); }
-  .fnav-menu__contact:hover { background-color: #dedede; }
-  .fnav-menu__contact:hover .fnav-menu__contact-arrow { transform: translateX(0.4rem); }
+  .fnav-tile:is(.is--card, .is--wide):hover { background-color: var(--fnav-light-hover); }
+  :is(.fnav-tile.is--card, .fnav-menu__contact):hover .fnav-tile__arrow { transform: translate(0.2rem, -0.2rem); }
+  .fnav-menu__contact:hover { background-color: var(--fnav-light-hover); }
 }
 .fnav-menu :is(a, button):focus-visible { outline: 1px solid #ffffff; outline-offset: 0.2rem; }
+/* Home's own list, after the reel's row: one column */
+.fnav-menu__tiles.is--home { grid-template-columns: minmax(0, 1fr); }
+
+/* ---------- The footer's form ----------
+   The menu opened of itself at the foot of the page (floatingnav.js), as
+   the footer's own navigation. The bar gives way to its square, with the
+   studio's mark in it as the home link, and nothing else on it answers to
+   the pointer; the menu shows the four parts of the practice alone, at
+   one height (--fnav-foot-tile), the same off-white cards as the menu's.
+   No backdrop (the script never raises it); the square keeps the
+   bar's own glass, as it looks everywhere else. The footer keeps the room
+   (.site-footer). */
+html.is--fnav-foot .fnav {
+  pointer-events: none;
+  cursor: default;
+}
+html.is--fnav-foot .fnav__home { pointer-events: auto; }
+.fnav-menu.is--foot :is(.fnav-menu__cell.is--wide, .fnav-menu__row) { display: none; }
+.fnav-menu.is--foot .fnav-tile { height: calc(var(--fnav-foot-tile) * var(--fnav-u)); }
 
 /* ---------- The contact form ----------
    The navigation grown into a panel (floatingnav.js): standing on the
@@ -8333,31 +7883,33 @@ html.is--page-transition .fnav-promo.is--shown {
   bottom: var(--fnav-bottom);
   z-index: 260;
   display: flex;
-  width: min(calc(48 * var(--fnav-u)), calc(100vw - 3.2rem));
+  width: min(calc(50 * var(--fnav-u)), calc(100vw - 3.2rem));
   max-height: calc(100svh - var(--fnav-bottom) - 2 * var(--fnav-u));
-  color: #f4f4f4;
+  color: #161616;
   transform: translateX(-50%);
   visibility: hidden;
   pointer-events: none;
 }
 .fnav-contact.is--open { pointer-events: auto; }
+/* White, solid: it grows out of the bar's dark ground and comes up over
+   it as it does (floatingnav.js, groundIn), so nothing behind needs
+   blurring */
 .fnav-contact__background {
   position: absolute;
   inset: 0;
   z-index: -1;
-  background: var(--fnav-surface);
-  -webkit-backdrop-filter: blur(calc(2 * var(--fnav-u)));
-  backdrop-filter: blur(calc(2 * var(--fnav-u)));
+  background: #ffffff;
+  border-radius: max(3px, 0.35 * var(--fnav-u));
   transform-origin: 0 0;
   pointer-events: none;
 }
 .fnav-contact__inner {
   display: flex;
   flex-direction: column;
-  gap: calc(1.6 * var(--fnav-u));
+  gap: calc(2.4 * var(--fnav-u));
   width: 100%;
   min-height: 0;
-  padding: calc(2.4 * var(--fnav-u));
+  padding: calc(3.2 * var(--fnav-u));
   overflow-y: auto;
   overscroll-behavior: contain;
   scrollbar-width: none;
@@ -8391,7 +7943,7 @@ html.is--page-transition .fnav-promo.is--shown {
   padding: 0;
   border: 0;
   border-radius: var(--fnav-radius);
-  background-color: var(--fnav-block);
+  background-color: rgba(22, 22, 22, 0.06);
   color: inherit;
   cursor: pointer;
   transition: background-color 0.25s var(--cta-ease);
@@ -8403,10 +7955,10 @@ html.is--page-transition .fnav-promo.is--shown {
 }
 .fnav-contact__close svg path { vector-effect: non-scaling-stroke; }
 .fnav-contact__lead {
-  margin: calc(-0.8 * var(--fnav-u)) 0 0;
-  font-size: calc(1.4 * var(--fnav-u));
+  margin: calc(-1.2 * var(--fnav-u)) 0 calc(0.4 * var(--fnav-u));
+  font-size: calc(1.5 * var(--fnav-u));
   line-height: 1.4;
-  color: rgba(244, 244, 244, 0.6);
+  color: rgba(22, 22, 22, 0.62);
 }
 
 .fnav-contact__form { display: contents; }
@@ -8414,66 +7966,66 @@ html.is--page-transition .fnav-promo.is--shown {
 .fnav-contact__fields {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: calc(1.6 * var(--fnav-u)) calc(1.2 * var(--fnav-u));
+  gap: calc(2.2 * var(--fnav-u)) calc(1.4 * var(--fnav-u));
 }
 .fnav-field { grid-column: 1 / -1; }
 .fnav-field.is--half { grid-column: auto; }
 .fnav-field__label {
   display: block;
-  margin-bottom: calc(0.6 * var(--fnav-u));
-  font-family: var(--font-label);
-  font-size: calc(1.1 * var(--fnav-u));
+  margin-bottom: calc(0.8 * var(--fnav-u));
+  font-family: var(--font-body);
+  font-size: calc(1.3 * var(--fnav-u));
   line-height: 1.3;
-  letter-spacing: var(--track-label);
-  text-transform: uppercase;
-  font-weight: var(--weight-label); --wght: var(--weight-label);
-  color: rgba(244, 244, 244, 0.65);
+  letter-spacing: var(--track-body);
+  font-weight: var(--weight-ui); --wght: var(--weight-ui);
+  color: #161616;
 }
-.fnav-field__mark { color: var(--cta-accent-color); }
-.fnav-field__optional { color: rgba(244, 244, 244, 0.38); }
+.fnav-field__mark { color: rgba(22, 22, 22, 0.45); }
+.fnav-field__optional { color: rgba(22, 22, 22, 0.45); }
 /* At least 16px, so a phone does not zoom in on the field */
 .fnav-field__input {
   display: block;
   width: 100%;
-  height: calc(4.6 * var(--fnav-u));
+  height: calc(5 * var(--fnav-u));
   margin: 0;
-  padding: 0 calc(1.2 * var(--fnav-u));
-  border: 1px solid rgba(255, 255, 255, 0.14);
+  padding: 0 calc(1.4 * var(--fnav-u));
+  border: 1px solid rgba(22, 22, 22, 0.14);
   border-radius: var(--fnav-radius);
-  background-color: rgba(255, 255, 255, 0.05);
-  color: #f4f4f4;
+  background-color: #f5f5f3;
+  color: #161616;
   font: inherit;
   font-size: max(16px, calc(1.5 * var(--fnav-u)));
   line-height: 1.3;
   transition: border-color 0.2s var(--cta-ease), background-color 0.2s var(--cta-ease);
 }
 .fnav-field__input.is--area {
-  height: calc(11 * var(--fnav-u));
-  padding-top: calc(1.1 * var(--fnav-u));
-  padding-bottom: calc(1.1 * var(--fnav-u));
+  height: calc(12 * var(--fnav-u));
+  padding-top: calc(1.3 * var(--fnav-u));
+  padding-bottom: calc(1.3 * var(--fnav-u));
   line-height: 1.45;
   resize: vertical;
 }
-.fnav-field__input::placeholder { color: rgba(244, 244, 244, 0.32); }
+.fnav-field__input::placeholder { color: rgba(22, 22, 22, 0.38); }
 .fnav-field__input:focus {
   outline: none;
-  border-color: rgba(255, 255, 255, 0.6);
-  background-color: rgba(255, 255, 255, 0.08);
+  border-color: rgba(22, 22, 22, 0.55);
+  background-color: #ffffff;
 }
-.fnav-field.is--invalid .fnav-field__input { border-color: #ff6a55; }
+.fnav-field.is--invalid .fnav-field__input { border-color: #c42c17; }
 .fnav-field__error {
-  margin: calc(0.5 * var(--fnav-u)) 0 0;
+  margin: calc(0.6 * var(--fnav-u)) 0 0;
   font-size: calc(1.2 * var(--fnav-u));
   line-height: 1.35;
-  color: #ff8a78;
+  color: #c42c17;
 }
 .fnav-field__error:empty { display: none; }
 
-/* Submit Enquiry: Contact Tom's block, in the accent, across the panel */
+/* Submit Enquiry: black, across the panel, in the site's own type */
 .fnav-contact__actions {
   display: flex;
   flex-direction: column;
-  gap: calc(1 * var(--fnav-u));
+  gap: calc(1.2 * var(--fnav-u));
+  margin-top: calc(0.4 * var(--fnav-u));
 }
 .fnav-contact__submit {
   position: relative;
@@ -8485,13 +8037,12 @@ html.is--page-transition .fnav-promo.is--shown {
   padding: 0 calc(1.6 * var(--fnav-u));
   border: 0;
   border-radius: var(--fnav-radius);
-  background-color: var(--cta-accent-color);
+  background-color: #111111;
   color: #ffffff;
-  font-family: var(--font-label);
-  font-size: calc(1.3 * var(--fnav-u));
-  letter-spacing: var(--track-label);
-  text-transform: uppercase;
-  font-weight: var(--weight-label); --wght: var(--weight-label);
+  font-family: var(--font-body);
+  font-size: calc(1.5 * var(--fnav-u));
+  letter-spacing: var(--track-body);
+  font-weight: var(--weight-strong); --wght: var(--weight-strong);
   cursor: pointer;
   transition: background-color 0.25s var(--cta-ease), opacity 0.25s;
 }
@@ -8502,19 +8053,19 @@ html.is--page-transition .fnav-promo.is--shown {
 }
 .fnav-contact__submit:disabled { opacity: 0.7; cursor: progress; }
 @media (hover: hover) and (pointer: fine) {
-  .fnav-contact__submit:not(:disabled):hover { background-color: #c42c17; }
+  .fnav-contact__submit:not(:disabled):hover { background-color: #2a2a2a; }
   .fnav-contact__submit:not(:disabled):hover .fnav-contact__submit-arrow { transform: translateX(0.4rem); }
-  .fnav-contact__close:hover { background-color: var(--fnav-block-hover); }
+  .fnav-contact__close:hover { background-color: rgba(22, 22, 22, 0.1); }
 }
 .fnav-contact__status {
   font-size: calc(1.3 * var(--fnav-u));
   line-height: 1.45;
-  color: rgba(244, 244, 244, 0.75);
+  color: rgba(22, 22, 22, 0.75);
 }
 .fnav-contact__status:empty { display: none; }
-.fnav-contact__status.is--error { color: #ff8a78; }
-.fnav-contact__status a { color: #ffffff; text-decoration: underline; text-underline-offset: 0.2em; }
-.fnav-contact :is(button, a):focus-visible { outline: 1px solid #ffffff; outline-offset: 0.2rem; }
+.fnav-contact__status.is--error { color: #c42c17; }
+.fnav-contact__status a { color: #111111; text-decoration: underline; text-underline-offset: 0.2em; }
+.fnav-contact :is(button, a):focus-visible { outline: 1px solid #111111; outline-offset: 0.2rem; }
 
 .fnav-contact__done { outline: none; }
 .fnav-contact__done-title {
@@ -8526,25 +8077,32 @@ html.is--page-transition .fnav-promo.is--shown {
 }
 .fnav-contact__done-text {
   margin: 0;
-  font-size: calc(1.4 * var(--fnav-u));
+  font-size: calc(1.5 * var(--fnav-u));
   line-height: 1.45;
-  color: rgba(244, 244, 244, 0.7);
+  color: rgba(22, 22, 22, 0.62);
 }
 
 @media screen and (max-width: 600px) {
-  .fnav-contact__inner { padding: calc(1.8 * var(--fnav-u)); }
+  .fnav-contact__inner { gap: calc(2 * var(--fnav-u)); padding: calc(2.4 * var(--fnav-u)); }
   .fnav-field.is--half { grid-column: 1 / -1; }
 }
 
 @media screen and (max-width: 600px) {
-  /* Narrower: the foot's row 12.5 units */
+  /* Narrower: the reel's row 12.5 units, the cards' names a size down so
+     the longest (Architecture) keeps to its card */
   .fnav-menu {
     --fnav-menu-fixed: 21.2;
     --fnav-menu-row: 12.5;
-    --fnav-menu-tile: 11;
-    --fnav-menu-tile-min: 9;
-    width: calc(33 * var(--fnav-u));
+    --fnav-menu-tile: 11.5;
+    --fnav-menu-tile-min: 9.5;
+    --fnav-title-size: calc(1.7 * var(--fnav-u));
+    width: calc(34 * var(--fnav-u));
   }
+  .fnav-tile.is--card { padding: calc(1.6 * var(--fnav-u)); }
+  /* A label may run to two lines here: each keeps two lines' room, so the
+     names stand level across the cards */
+  .fnav-tile.is--card .fnav-tile__note { min-height: 2.5em; }
+  .fnav-tile__arrow { top: calc(1.6 * var(--fnav-u)); right: calc(1.6 * var(--fnav-u)); }
   .fnav-menu:not(.has-reel) { --fnav-menu-fixed: 15.9; }
 }
 
@@ -9162,6 +8720,20 @@ html.is--page-transition .fnav-promo.is--shown {
 .bunny-lightbox[data-reel-lightbox] .bunny-lightbox__calc,
 .bunny-lightbox[data-reel-lightbox] .bunny-lightbox__dark,
 .bunny-lightbox[data-reel-lightbox] .bunny-lightbox__close { transition: none; }
+/* The card's picture over the player as it grows from a card on the page
+   (reel.js): at its own proportions, placed and sized by a transform from
+   its top left corner, under the close control */
+.bunny-lightbox__picture {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 2;
+  max-width: none;
+  transform-origin: 0 0;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
 .bunny-lightbox[data-reel-lightbox] .bunny-lightbox__dark { background-color: #0a0a0a; }
 .bunny-lightbox[data-reel-lightbox][data-bunny-lightbox-status="active"] .bunny-lightbox__dark { opacity: var(--reel-dark); }
 .bunny-lightbox[data-reel-lightbox] .bunny-lightbox-player {
@@ -9278,15 +8850,47 @@ html.is--page-transition .fnav-promo.is--shown {
   .bunny-lightbox[data-reel-lightbox] [data-timeline-drag="true"] .bunny-lightbox-player__timeline-handle { transform: translate(-50%, -50%) scale(1.2); }
 }
 
-/* The middle button and the spinner, the hero's own glass button's size */
+/* The middle button: the mark alone, as on the hero's frame, no ring or
+   ground round it, a little larger under the pointer */
 .bunny-lightbox[data-reel-lightbox] .bunny-lightbox-player__big-btn {
   width: max(56px, 6.4rem);
   height: max(56px, 6.4rem);
-  padding: max(18px, 2.1rem);
-  border-color: rgba(255, 255, 255, 0.28);
-  background-color: rgba(18, 18, 18, 0.42);
+  padding: max(16px, 1.8rem);
+  border: 0;
+  border-radius: 0;
+  background-color: transparent;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  filter: drop-shadow(0 1px 6px rgba(0, 0, 0, 0.45));
+  transition: transform 0.35s var(--cta-ease);
 }
-.bunny-lightbox[data-reel-lightbox] .bunny-lightbox-player__loading-svg { width: max(40px, 4.4rem); }
+@media (hover: hover) and (pointer: fine) {
+  .bunny-lightbox[data-reel-lightbox] .bunny-lightbox-player__playpause:hover .bunny-lightbox-player__big-btn { transform: scale(1.1); }
+}
+/* The loading bar: a hairline across the foot of the frame, filled by how
+   much of the film is in (bunny-lightbox.js, from the video's own
+   buffered range); its track faint, the fill white, nothing drawn until
+   the film's length is known */
+.bunny-lightbox[data-reel-lightbox] .bunny-lightbox-player__loading {
+  justify-content: flex-start;
+  align-items: flex-end;
+  background-color: transparent;
+}
+.bunny-lightbox[data-reel-lightbox] .bunny-lightbox-player__loading-track {
+  position: relative;
+  width: 100%;
+  height: 2px;
+  background-color: rgba(255, 255, 255, 0.18);
+  overflow: hidden;
+}
+.bunny-lightbox[data-reel-lightbox] .bunny-lightbox-player__loading-fill {
+  position: absolute;
+  inset: 0;
+  background-color: #f4f4f4;
+  transform-origin: 0 50%;
+  transform: scaleX(0);
+  transition: transform 0.25s linear;
+}
 
 /* A phone: the time keeps to the position alone, the bar a little closer */
 @media screen and (max-width: 479px) {
@@ -9374,9 +8978,9 @@ html.is--page-transition .fnav-promo.is--shown {
   position: absolute;
   left: var(--fnav-inset);
   bottom: calc(1.2 * var(--fnav-u));
-  font-size: calc(1.9 * var(--fnav-u));
-  line-height: 1.1;
-  letter-spacing: var(--track-title);
+  font-size: var(--fnav-title-size, calc(1.9 * var(--fnav-u)));
+  line-height: 1;
+  letter-spacing: -0.03em;
   font-weight: var(--weight-strong); --wght: var(--weight-strong);
 }
 /* The mark, no box round it: its triangle's point on the label's inset
@@ -9492,8 +9096,8 @@ html:has(.site-nav + .theme-light) .cursor-label__box {
 }
 .cursor-label__window {
   display: block;
-  -webkit-mask-image: linear-gradient(90deg, transparent, #000 6px, #000 calc(100% - 6px), transparent);
-  mask-image: linear-gradient(90deg, transparent, #000 6px, #000 calc(100% - 6px), transparent);
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 5px, #000 calc(100% - 5px), transparent);
+  mask-image: linear-gradient(90deg, transparent, #000 5px, #000 calc(100% - 5px), transparent);
 }
 .cursor-label__track {
   display: flex;
@@ -9506,9 +9110,9 @@ html:has(.site-nav + .theme-light) .cursor-label__box {
 .cursor-label.is--swap .cursor-label__track { opacity: 0; }
 .cursor-label__text {
   flex: none;
-  padding: 5px 9px 5px 9px;
+  padding: 4px 7px 4px 7px;
   font-family: var(--font-label);
-  font-size: 11px;
+  font-size: 9.5px;
   line-height: 1.2;
   letter-spacing: var(--track-label);
   text-transform: uppercase;
@@ -9585,7 +9189,6 @@ html:has(.site-nav + .theme-light) .cursor-label__box {
 .map-spread__footer,
 .book-feature,
 .testimonial-slide__who,
-.project-hero,
 .project-note,
 .project-close {
   position: relative;
@@ -9709,48 +9312,6 @@ html:has(.site-nav + .theme-light) .cursor-label__box {
   align-items: flex-start;
 }
 
-/* At the full twelve columns, the bars read as four clusters of three —
-   1–3, 4–6, 7–9, 10–12 — with a tighter gap inside a cluster and the full
-   `--grid-gap` between clusters.
-
-   Every division is its own fixed track, and every bar is a `1fr` track, so
-   the twelve bars are exactly the same width whatever the viewport and the
-   two kinds of gap are simply two sizes of spacer: the tight one inside a
-   cluster, and `--grid-gap` between clusters — the same wide division as
-   before, still centred on the site's own column lines. No column gap at
-   all, so nothing is added to a spacer on the quiet.
-
-   The columns are placed onto their bar tracks by hand: bars sit on the
-   odd tracks, spacers on the even ones. Scoped to the twelve-column layout
-   only — the six- and four-column breakpoints below keep the even spacing,
-   since a cluster of three doesn't map onto either of those. */
-@media screen and (min-width: 992px) {
-  .grid-overlay__row {
-    --grid-gap-tight: calc(var(--grid-gap) * 0.55);
-    --bar: minmax(0, 1fr);
-    --tight: var(--grid-gap-tight);
-    --wide: var(--grid-gap);
-    grid-template-columns:
-      var(--bar) var(--tight) var(--bar) var(--tight) var(--bar) var(--wide)
-      var(--bar) var(--tight) var(--bar) var(--tight) var(--bar) var(--wide)
-      var(--bar) var(--tight) var(--bar) var(--tight) var(--bar) var(--wide)
-      var(--bar) var(--tight) var(--bar) var(--tight) var(--bar);
-    column-gap: 0;
-  }
-  .grid-overlay__col:nth-child(1) { grid-column: 1; }
-  .grid-overlay__col:nth-child(2) { grid-column: 3; }
-  .grid-overlay__col:nth-child(3) { grid-column: 5; }
-  .grid-overlay__col:nth-child(4) { grid-column: 7; }
-  .grid-overlay__col:nth-child(5) { grid-column: 9; }
-  .grid-overlay__col:nth-child(6) { grid-column: 11; }
-  .grid-overlay__col:nth-child(7) { grid-column: 13; }
-  .grid-overlay__col:nth-child(8) { grid-column: 15; }
-  .grid-overlay__col:nth-child(9) { grid-column: 17; }
-  .grid-overlay__col:nth-child(10) { grid-column: 19; }
-  .grid-overlay__col:nth-child(11) { grid-column: 21; }
-  .grid-overlay__col:nth-child(12) { grid-column: 23; }
-}
-
 /* The column numbers. Counters rather than markup, so the supplied HTML keeps
    its twelve empty columns — and because a counter skips a column that is not
    rendered, the two rules below that drop columns at the narrower breakpoints
@@ -9785,3 +9346,135 @@ html:has(.site-nav + .theme-light) .cursor-label__box {
   }
   .grid-overlay__col:nth-child(n + 5) { display: none; }
 }
+
+/* For now: the arc of cards pushed below the Shop hero's first screen,
+   out of sight on arrival (temporary, to be reworked) */
+.shop-hero .shop-arc { margin-top: 100svh; }
+
+
+/* The Influence hero: the name on two lines (Architectural / Influence),
+   and the atlas behind it, centred across the first screen, its hotspots
+   still live (the name's layer lets the pointer through to them) */
+.shop-hero.is--influence { position: relative; overflow: clip; min-height: 260svh; }
+.shop-hero.is--influence h1 { max-width: 7.4em; }
+.shop-hero.is--influence .shop-hero__body { position: relative; z-index: 1; pointer-events: none; }
+.influence-map {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+/* Covering the whole hero, edge to edge and top to bottom, a little
+   larger than the screen so its far edges (Alaska, the east of Russia, New
+   Zealand) may run off; its lines lighter than in the atlas section, so it
+   sits back behind the name */
+/* The frame is held on screen (sticky) for the hero's length; the whole map
+   fits it, and influence.js starts it zoomed far in, drawing back as the
+   page scrolls */
+.influence-map { display: block; }
+.influence-map__frame { position: sticky; top: 0; height: 100svh; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+.influence-map .world-map-stage { flex: none; width: min(94vw, 100svh * 1.9); }
+.influence-map .world-map { opacity: 0.62; }
+/* The Partner page's hero on the paper, as the rest of that page */
+.shop-hero.is--partner { background: var(--paper); color: #0a0a0a; min-height: 0; padding-bottom: 0; }
+/* The hero's map: finer lines than the atlas section's, a hair */
+.influence-map .world-map__field { stroke-width: 0.25px; vector-effect: non-scaling-stroke; }
+
+/* ---------- Partner page only ---------- */
+/* The mono (one static 300 cut) given a little body with a hairline stroke */
+main[data-barba-namespace="partner"] :is(.site-nav__link, .cta__label, .slide-card__index, .tagline, .logo-strip__note, .testimonial-chip__role, .results-card__index, .results-card__tag, .results-card__foot, .form-label, .case-panel__tag, .case-panel__label, .step-number) {
+  -webkit-text-stroke: 0.4px currentColor;
+}
+/* No column lines on this page */
+main[data-barba-namespace="partner"],
+main[data-barba-namespace="partner"] :is(.theme-light, .section, [class]) { --grid-line: transparent; }
+/* The ways to Tom in their light form: black marks on squares a shade under the paper */
+main[data-barba-namespace="partner"] .hero-nav__pill { --hero-social-bg: #e4e2de; color: #0a0a0a; }
+
+
+/* The Architecture page's name set as the Shop, Influence and Partner heroes':
+   the same size, flush left on the studio's name, its arrows kept beside it */
+.arch-stage__title { margin-left: -0.02em; font-size: 8rem; line-height: 0.95; letter-spacing: -0.04em; }
+@media screen and (max-width: 991px) { .arch-stage__title { font-size: 7.4rem; } }
+@media screen and (max-width: 767px) { .arch-stage__title { font-size: 5.2rem; } }
+/* How many projects: small and raised at the name's top right, in the
+   name's own ems so it keeps its place at every size, a hair clear of the
+   last letter */
+.arch-stage__count {
+  margin-left: 0.12em;
+  font-size: 0.24em;
+  line-height: 1;
+  letter-spacing: 0;
+  /* Its figures' tops level with the name's capitals */
+  vertical-align: 2.28em;
+}
+.arch-stage__head { margin-bottom: 0; }
+/* The name's box ends on its letters' foot (the baseline), so the room
+   under it, and the row centred in it, start where the eye sees the name
+   end */
+.arch-stage__title { text-box: trim-end cap alphabetic; }
+/* The arrows start under the YouTube square: the ways to Tom's row of four squares, measured from the same right edge */
+.arch-arrows { width: calc(4 * (5 * var(--grid-pitch) - 1px) + 9px); justify-content: flex-start; }
+/* The row in the middle of the room between the name's foot and the top of
+   the floating bar (the stage's foot, --arch-foot), its pictures centred
+   there: the names under them hang below the middle, their height
+   (--arch-label-h) left out of the centring */
+.arch-stage { --arch-foot: calc(var(--fnav-bottom) + var(--fnav-bar-h)); padding-bottom: var(--arch-foot); }
+.arch-page { --arch-label-h: calc(1.2rem + 1.4rem * 1.2); }
+.arch-stage__slider { flex: 1; min-height: 0; display: flex; align-items: center; }
+.arch-stage__slider .parallax-slider__collection { margin-bottom: calc(-1 * var(--arch-label-h)); }
+/* The row unseen until the slider has set itself (archslider.js), then faded in */
+.arch-stage__slider { transition: opacity 0.5s ease; }
+.is--pending .arch-stage__slider { opacity: 0; transition: none; }
+/* The project's name and context under its picture, not over it */
+.parallax-slider__item-link { display: block; }
+.parallax-slider__item-label { position: static; padding: 1.2rem 0 0; background: none; }
+.parallax-slider__item-label .parallax-slider__item-meta { font-size: 0.9rem; }
+@media screen and (max-width: 767px) {
+  /* The context under the name: two lines */
+  .arch-page { --arch-label-h: calc(1.2rem + 1.4rem * 1.2 + 0.4rem + 0.9rem * 1.5); }
+}
+/* The Influence map painted in its opening, zoomed-in state from the first
+   frame (the same values influence.js starts its zoom from), so it never
+   shows the whole map before the script takes over */
+.influence-map .world-map-stage { transform: translate(-1%, -26%) scale(1.5); }
+@media (prefers-reduced-motion: reduce) {
+  .influence-map .world-map-stage { transform: none; }
+}
+/* The Partner page on a cool, paper off-white */
+main[data-barba-namespace="partner"] { --paper: #dcdee1; }
+main[data-barba-namespace="partner"] .hero-nav__pill { --hero-social-bg: #cbced2; }
+/* The Influence map without the scroll zoom: held at its zoomed-in framing,
+   running on past the first screen and scrolling away with the page; the
+   cities lit throughout */
+.shop-hero.is--influence { min-height: 150svh; }
+.influence-map__frame { position: absolute; inset: 0; height: auto; }
+
+/* ---------- Statement block (StatementBlock.astro) ---------- */
+/* One rectangular block across the page between the side insets, the
+   first line opening after an indent */
+.statement-block { padding: 12rem var(--site-inset); }
+.statement-block__text {
+  margin: 0;
+  font-size: 5.6rem;
+  line-height: 1.02;
+  letter-spacing: -0.045em;
+  text-indent: 24%;
+  text-wrap: pretty;
+  font-weight: 520; --wght: 520;
+}
+@media screen and (max-width: 991px) {
+  .statement-block { padding: 8rem var(--site-inset); }
+  .statement-block__text { font-size: 4.4rem; }
+}
+@media screen and (max-width: 767px) {
+  .statement-block { padding: 6.4rem var(--site-inset); }
+  .statement-block__text { font-size: 3.2rem; text-indent: 16%; }
+}
+.logo-wall__statement.is--block { padding: 0; }
+.influence-statement { position: relative; z-index: 1; background: #000000; color: #f4f4f4; }
+/* The indent is the block's first line only: the scroll highlight wraps each
+   word in a box of its own (text-highlight.js), which would inherit it */
+.statement-block__text * { text-indent: 0; }

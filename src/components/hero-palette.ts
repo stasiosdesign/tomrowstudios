@@ -33,8 +33,8 @@ export interface HeroPalette {
   cast: [number, number, number];
 }
 
-const FRAME_SHAPE = 1.4;         // the frame, height to width (5:7)
-const IMAGE_SHAPE = 1.4 * 1.3;   // the picture in it, 130% of the frame's height (the drift)
+const FRAME_SHAPE = 4 / 3;       // the frame, height to width (3:4)
+const IMAGE_SHAPE = (4 / 3) * 1.3; // the picture in it, 130% of the frame's height (the drift)
 const SAMPLE_W = 48;             // the copy read, in pixels across
 const SAMPLE_H = Math.round(SAMPLE_W * FRAME_SHAPE);
 const COLOURS = 7;               // the colours sought in each picture
@@ -46,7 +46,9 @@ const TIMEOUT = 8000;            // ms, the most a picture is waited for
 const cache = new Map<string, Promise<HeroPalette | null>>();
 
 /** The palette of the picture at `src` as the hero's frame shows it
-    (object-fit: cover at `position`, the frame's middle). `referer` is the
+    (object-fit: cover at `position`, the frame's middle). `src` is an
+    address, or a path in the site's library (/assets/…, read from
+    public/). `referer` is the
     page's own address: Bunny's CDN, which serves the film's still, refuses
     a request that names no page. */
 export function heroPalette(src: string, position = '50% 50%', referer?: string): Promise<HeroPalette | null> {
@@ -66,9 +68,18 @@ export function heroPalette(src: string, position = '50% 50%', referer?: string)
 
 async function readPalette(src: string, position: string, referer?: string): Promise<HeroPalette | null> {
   const { default: sharp } = await import('sharp');
-  const response = await fetch(src, { signal: AbortSignal.timeout(TIMEOUT), headers: referer ? { Referer: referer } : {} });
-  if (!response.ok) throw new Error(`HTTP ${response.status}`);
-  const file = Buffer.from(await response.arrayBuffer());
+  let file: Buffer;
+  if (src.startsWith('/')) {
+    // A picture in the site's own library (public/, served at /assets/…):
+    // read from the disk, so a build never waits on the site it is building
+    const { readFile } = await import('node:fs/promises');
+    const { join } = await import('node:path');
+    file = await readFile(join(process.cwd(), 'public', src));
+  } else {
+    const response = await fetch(src, { signal: AbortSignal.timeout(TIMEOUT), headers: referer ? { Referer: referer } : {} });
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    file = Buffer.from(await response.arrayBuffer());
+  }
   const picture = sharp(file);
   const { width: nw, height: nh } = await picture.metadata();
   if (!nw || !nh) throw new Error('no size');

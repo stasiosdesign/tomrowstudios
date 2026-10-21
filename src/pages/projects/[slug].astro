@@ -43,29 +43,36 @@ const creditClass = { won: 'is--won', award: undefined, detail: 'is--meta' };
 // The gallery tiles' aspect ratio; "natural" leaves every picture uncropped
 const framingClass = { wide: 'is--wide', square: 'is--square', tall: 'is--tall', natural: undefined };
 ---
-<BaseLayout title={`${project.title} — Tomrow Studios`} namespace={`project-${project.slug}`} pageName={project.name ?? ''} navTitle="Architecture" navSection="/architecture">
+<BaseLayout title={`${project.title} — Tomrowstudios`} namespace={`project-${project.slug}`} pageName={project.name ?? ''} navTitle="Architecture" navSection="/architecture" mainClass="is--bare">
 <SiteNav />
 
 
-<!-- Project header. The title takes the top of the page on its own; the rule
-     under it separates the standfirst from the awards, so the two read as a
-     row rather than one long pile of stacked blocks. -->
-<header class="project-hero">
-  <p class="tagline project-hero__eyebrow">{eyebrow}</p>
-  <h1 class="project-hero__title">{project.title}</h1>
-  <div class="project-hero__meta">
-    <p class="project-hero__lead">{project.lead}</p>
-    <div class="project-hero__side">
-    {project.credits?.length ? (
-    <ul class="award-labels">
-      {project.credits.map((credit) => (
-      <li class:list={['award-label', creditClass[credit.kind ?? 'detail']]}><span class="award-label__name">{credit.name}</span>{credit.note && <span class="award-label__note">{credit.note}</span>}</li>
-      ))}
-    </ul>
-    ) : null}
-      <div class="actions project-hero__actions">
-        {project.portfolioUrl && <Button href={project.portfolioUrl} target="_blank" rel="noopener" label="Download Portfolio" />}
-        <Button href="/architecture" label="All projects" secondary />
+<!-- Project header, laid out as the Shop, Influence and Partner pages'
+     (.shop-hero): the title large on the black, flush left on the studio's
+     name in the bar above; under it, past a rule, the standfirst beside the
+     awards. No column lines and no grain on these pages (is--bare). -->
+<header class="shop-hero is--project">
+  <div class="shop-hero__body">
+    <div class="shop-hero__copy">
+      <h1>{project.title}</h1>
+    </div>
+    <div class="project-hero__meta">
+      <div class="project-hero__lead">
+        <p class="tagline project-hero__eyebrow">{eyebrow}</p>
+        <p>{project.lead}</p>
+      </div>
+      <div class="project-hero__side">
+      {project.credits?.length ? (
+      <ul class="award-labels">
+        {project.credits.map((credit) => (
+        <li class:list={['award-label', creditClass[credit.kind ?? 'detail']]}><span class="award-label__name">{credit.name}</span>{credit.note && <span class="award-label__note">{credit.note}</span>}</li>
+        ))}
+      </ul>
+      ) : null}
+        <div class="actions project-hero__actions">
+          {project.portfolioUrl && <Button href={project.portfolioUrl} target="_blank" rel="noopener" label="Download Portfolio" />}
+          <Button href="/architecture" label="All projects" secondary />
+        </div>
       </div>
     </div>
   </div>

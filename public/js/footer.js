@@ -143,17 +143,20 @@ function initFooterReveal(container){
       render(self.progress * 100);
     },
   });
-  // A screen before the footer arrives, the page goes onto a layer of its
-  // own (`is--footer-near`), so the first frame of the shrink is not also
-  // the frame that has to paint the whole page into one. It holds to the
-  // very foot of the page: the trigger ends past the last scroll (the
-  // footer's foot at the top of the screen, which the page never reaches),
-  // because a trigger counts its own end as left, and with an end exactly
-  // at the last scroll the flag (and the page's layer with it) dropped
-  // whenever a scroll came to rest on the last pixel.
+  // A screen and a half before the footer arrives, the page goes onto a
+  // layer of its own and is dressed for the shrink (`is--footer-near`: its
+  // black ground, its corners, its shadow and its clip, style.css), so the
+  // first frame of the shrink is not also the frame that has to paint the
+  // whole page into one, and nothing changes but the transform once the
+  // footer is in sight. It holds to the very foot of the page: the trigger
+  // ends past the last scroll (the footer's foot at the top of the screen,
+  // which the page never reaches), because a trigger counts its own end as
+  // left, and with an end exactly at the last scroll the flag (and the
+  // page's layer with it) dropped whenever a scroll came to rest on the
+  // last pixel.
   const near = ScrollTrigger.create({
     trigger: footer,
-    start: 'top bottom+=100%',
+    start: 'top bottom+=150%',
     end: 'bottom top',
     toggleClass: { targets: main, className: 'is--footer-near' },
   });

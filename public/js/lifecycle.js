@@ -11,16 +11,27 @@
 // registers how to stop it here, as it starts it; transitions.js runs the
 // list in its afterLeave hook, once the old page has gone and before the
 // new one's scripts run. Listeners on the page's own elements need no
-// entry: they go with the elements.
+// entry: they go with the elements. A page set up early, while it is still
+// coming in (transitions.js, beforeEnter: pageArriving), keeps its entries
+// apart until the old page's have run, so they are not taken for the old
+// page's and run the moment the new page is in.
 //
 // loadScript(src) / loadStyle(href) — a library only one page uses is
 // fetched the first time that page needs it, not on every page. Each
 // returns a promise, cached per URL, so asking twice loads once.
 
 const pageCleanups = [];
+// The incoming page's, from the moment it starts coming in until the old
+// page's have run (later ones, from its scripts finishing late, included)
+const arrivingCleanups = [];
+let pageArriving = false;
 
 function onPageLeave(fn) {
-  if (typeof fn === "function") pageCleanups.push(fn);
+  if (typeof fn === "function") (pageArriving ? arrivingCleanups : pageCleanups).push(fn);
+}
+
+function pageStartsArriving() {
+  pageArriving = true;
 }
 
 function runPageCleanups() {
@@ -32,6 +43,9 @@ function runPageCleanups() {
       console.error(error);
     }
   }
+  // The new page's own, from here on the ones to run when it goes
+  pageArriving = false;
+  pageCleanups.push(...arrivingCleanups.splice(0));
 }
 
 const loadedAssets = new Map();

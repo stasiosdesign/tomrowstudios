@@ -1,0 +1,14 @@
+---
+/* A statement set as one rectangular block of text across the page, its
+   first line opening after an indent. Used on the home page (the practice
+   statement) and on Influence (the approach, just after the map). */
+interface Props {
+  text: string;
+  field?: string;
+  highlight?: boolean;
+}
+const { text, field, highlight } = Astro.props;
+---
+<div class="statement-block">
+  <h2 class="statement-block__text" data-page-field={field} data-highlight-text={highlight ? '' : undefined}>{text}</h2>
+</div>

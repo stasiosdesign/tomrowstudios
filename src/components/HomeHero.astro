@@ -1,0 +1,84 @@
+---
+/* The home hero, after GSP's list view: the pictures one under another,
+   each the same portrait size, the right edge of every one exactly on the
+   middle of the screen; the page scrolls through them (or a drag does),
+   the lit one the one on the middle line, and on that line, held while the
+   list runs, the lit part's name and a line on it on the right
+   (home-list.js). Behind it all, the site's square
+   grid, held still with the pictures, as a mosaic in the lit picture's
+   colours (hero-tint.js; its screen treatment, "The home hero: the reel"
+   in style.css). The page's heading is for screen readers only. No marquee
+   over the floating bar while the hero is on screen (held down,
+   floatingnav.js); the page's Contact Tom comes up below it.
+
+   Its parts and pictures come from home-hero.ts (index.astro). */
+import HeroNav from './HeroNav.astro';
+import { reelImage, type HomeHeroData } from './home-hero';
+
+interface Props {
+  data: HomeHeroData;
+  /** The page's heading, for screen readers */
+  headline: string;
+}
+const { data, headline } = Astro.props;
+const { reel, filmStill, tintPalettes, reelSrc, reelPreview, reelFilm } = data;
+---
+<section class="home-reel is--screen" data-home-reel data-reel-layout="list">
+  <h1 class="visually-hidden">{headline}</h1>
+  <div class="home-reel__surface" aria-hidden="true"><div class="home-reel__surface-inner"></div></div>
+  <div class="home-reel__chrome">
+    <div class="home-reel__chrome-inner">
+      <!-- The studio's name and mark, the pages and the ways to Tom: the
+           header every page has (HeroNav.astro) -->
+      <HeroNav current="/" />
+      <!-- The right: the lit part's name, set as the closing cards' titles
+           are, and its overview beside it, on the screen's middle line;
+           the values split into place line by line as the part changes
+           (home-list.js) -->
+      <div class="home-list__meta" data-list-meta aria-hidden="true">
+        <div class="home-list__field is--title">
+          <span class="home-list__values">
+            {reel.map(({ lines }, i) => <span class:list={['home-list__value', { 'is--active': i === 0 }]} data-list-panel={i}>{lines.map((line, j) => <>{j > 0 && <br />}{line}</>)}</span>)}
+          </span>
+        </div>
+        <div class="home-list__field is--about">
+          <span class="home-list__values">
+            {reel.map(({ about }, i) => <span class:list={['home-list__value', { 'is--active': i === 0 }]} data-list-panel={i}>{about}</span>)}
+          </span>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- The list: the pictures one under another in the page, each the same
+       size, the right edge of every one on the middle of the screen; the
+       page scrolls through them as it would anything (or a drag does), the
+       lit one the one on the middle line (home-list.js). -->
+  <ol class="home-list" role="list" data-list>
+    {reel.map(({ title, about, href, picture, film, position, cursor }, i) => (
+    <li class="home-list__item" data-list-item data-tint-palette={tintPalettes[i] ? JSON.stringify(tintPalettes[i]) : undefined}>
+      {film ? (
+      <button type="button" class="home-list__shot home-reel__img is--film" data-list-shot data-reel-card data-cursor-label={cursor} data-reel-src={reelSrc} data-reel-poster={filmStill} data-reel-preview={reelPreview} aria-haspopup="dialog" aria-label={`${title}: play the film. ${about}`}>
+        <span class="home-list__visual" data-list-drift data-reel-media>
+          <img class="home-list__img" {...reelImage(picture)} alt="" decoding="async" draggable="false" style={`--reel-position: ${position}`} {...(i === 0 ? { fetchpriority: 'high', 'data-reveal-wait': '' } : {})}>
+          <!-- The film itself, muted, over its still while the pointer is
+               on the frame (reel.js, the hover preview); no source until
+               the first hover -->
+          {reelFilm && <video class="home-list__img home-list__film" data-reel-preview-video data-reel-preview-src={reelFilm} muted loop playsinline preload="none" crossorigin="anonymous" disablepictureinpicture aria-hidden="true" style={`--reel-position: ${position}`}></video>}
+        </span>
+        <span class="home-reel__play" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M8 5.5v13l10.5-6.5z" fill="currentColor"/></svg></span>
+      </button>
+      ) : (
+      <a href={href} class="home-list__shot home-reel__img" data-list-shot data-cursor-label={cursor}>
+        <span class="home-list__visual" data-list-drift>
+          <img class="home-list__img" {...reelImage(picture)} alt="" decoding="async" draggable="false" style={`--reel-position: ${position}`} {...(i === 0 ? { fetchpriority: 'high', 'data-reveal-wait': '' } : i === 1 ? {} : { loading: 'lazy' })}>
+        </span>
+        <span class="visually-hidden">{title}: {about}</span>
+      </a>
+      )}
+    </li>
+    ))}
+  </ol>
+  <!-- A shade over the hero, deepening as the clients' band comes up
+       over it (home-list.js) -->
+  <div class="home-reel__cover" data-list-cover aria-hidden="true"></div>
+</section>

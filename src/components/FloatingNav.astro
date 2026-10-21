@@ -3,25 +3,35 @@
    screen, centred, there on every page from the moment it has loaded.
 
    The bar: a dark, translucent rectangle holding the home link, the page's
-   name and the menu control, with the close control and a back-to-top arrow
-   waiting below its edge, clipped. Its background is its own element, so it
+   name and the menu control, with the close control and the footer's
+   form's home mark waiting below its edge, clipped. Its background is its own element, so it
    can narrow to a square around the close control without moving anything
    on it.
 
    The menu: a set of separate modules standing just above the bar, close
    together, with no panel round them: the four parts of the practice as
-   tiles, two by two, each with the part it stands for under its name;
-   Home across the full width under them; and at the foot one row of two:
-   the Play Reel card, two thirds of the width, which grows into the
-   reel's player when pressed (reel.js), and Contact Tom, the last third,
-   in the off-white. Each module is its own surface, the dark ones a shade
-   apart from their neighbours; they rise into place from the bar, row by
-   row, as the menu opens.
+   off-white cards, two by two, what each stands for small at the top
+   left, its name under it, a small diagonal arrow at the top right;
+   under them one row of two: the Play Reel card, two thirds of the width, which grows into the
+   reel's player when pressed (reel.js), and Contact, the last third, in
+   the same off-white with the same arrow; and Home across the full
+   width at the foot. Each module is its own surface; they rise into place
+   from the bar, row by row, as the menu opens.
 
-   The contact form: Contact Tom turns the menu itself into a panel holding
-   a short enquiry form (name, company, email, the project): the menu's
-   blocks give way, its panel reshapes into the form's, and the form's
-   fields rise in; closing runs it back into the menu. Every other way to
+   The footer's form: at the foot of the page the menu opens of itself
+   (floatingnav.js, from the footer's position), as the footer's own
+   navigation: the four parts of the practice alone (data-fnav-foot), the
+   rest of the modules left out, no backdrop over the page, and in the
+   bar's square the studio's mark as the home link (data-fnav-home) where
+   the close control would be. It drops back into the bar as the page
+   leaves the foot.
+
+   The contact form: a white panel holding a short enquiry form (name,
+   company, email, the project) that grows up out of the bar at the foot
+   of the screen. Opened from Contact, in one movement: the menu's modules
+   sink back towards the bar while the form grows out of the bar's square
+   under them, and its fields rise in; closing runs it back into the square
+   while the modules rise again round it. Every other way to
    contact Tom on the site (the bar at the top's Let's talk, the footer's
    Start a project and Get in touch) opens the same form, grown out of the
    bar, and closing takes it back into the bar. floatingnav.js moves it,
@@ -46,7 +56,7 @@
    navigation" in style.css. */
 import { pages, email } from './site-links';
 import { CONTACT_ENDPOINT } from './contact';
-import { REEL_SRC, REEL_FALLBACK_POSTER, reelPoster, reelPreview, reelPreviewSmall } from './reel';
+import { REEL_SRC, REEL_FALLBACK_POSTER, REEL_POSTER_SRCSET, reelPoster, reelPreview, reelPreviewSmall } from './reel';
 import { urlFor } from '../sanity/image';
 import BookIcon from './BookIcon.astro';
 import BrandMark from './BrandMark.astro';
@@ -61,6 +71,10 @@ const reelStill = reelPoster || urlFor({ asset: { _id: REEL_FALLBACK_POSTER } })
 // The marquees' words, one strip each. Two identical halves of four, each
 // wider than the strip, so moving the pair by one half brings it back to
 // where it started.
+// The cards' arrow (the four parts of the practice, and Contact): an open
+// head whose arms run along the top and the right of a square, and a shaft
+// from its point most of the way to the opposite corner
+const ARROW = '<path d="M2.5 1.5H10.5V9.5" stroke="currentColor" stroke-width="1.25"/><path d="M10.5 1.5 2 10" stroke="currentColor" stroke-width="1.25"/>';
 const promos = [
   { key: 'book', label: 'Architectural Influence Book', href: '/book', contact: false },
   { key: 'contact', label: 'Contact Tom', href: '#contact', contact: true },
@@ -76,28 +90,26 @@ const fields: { name: string; label: string; type: 'text' | 'email'; autocomplet
 
 <div class:list={['fnav-menu', { 'has-reel': showReel }]} id="fnav-menu" data-fnav-menu aria-hidden="true" inert>
   <nav class="fnav-menu__nav" aria-label="Site menu">
+    <!-- The four parts of the practice: off-white cards, what each stands
+         for small at the top left, its name large under it, a small
+         diagonal arrow at the top right -->
     <ul class="fnav-menu__tiles" role="list">
       {tiles.map(({ href, label, note }) => (
-        <li class="fnav-menu__cell" data-fnav-reveal data-fnav-item={href}>
-          <a href={href} class="fnav-tile" data-fnav-link data-split-hover="link">
-            <span class="fnav-tile__title" data-split-hover="target">{label}</span>
+        <li class="fnav-menu__cell" data-fnav-reveal data-fnav-foot data-fnav-item={href}>
+          <a href={href} class="fnav-tile is--card" data-fnav-link data-split-hover="link">
             <span class="fnav-tile__note">{note}</span>
+            <span class="fnav-tile__title" data-split-hover="target">{label}</span>
+            <svg class="fnav-tile__arrow" viewBox="0 0 12 12" fill="none" aria-hidden="true" set:html={ARROW} />
           </a>
         </li>
       ))}
-      <li class="fnav-menu__cell is--wide" data-fnav-reveal data-fnav-item={home.href}>
-        <a href={home.href} class="fnav-tile is--wide" data-fnav-link data-split-hover="link">
-          <span class="fnav-tile__title" data-split-hover="target">{home.label}</span>
-          <span class="fnav-tile__note">{home.note}</span>
-        </a>
-      </li>
     </ul>
     <div class="fnav-menu__row">
     {showReel && (
     <div class="fnav-menu__reel" data-fnav-reveal>
       <button type="button" class="fnav-reel" data-cursor="play" data-reel-card data-reel-src={REEL_SRC} data-reel-poster={reelStill} data-reel-preview={reelPreview} data-reel-preview-small={reelPreviewSmall || undefined} aria-haspopup="dialog" aria-label="Play the reel">
         <span class="fnav-reel__media">
-          <img class="fnav-reel__still" src={reelStill} alt="" decoding="async">
+          <img class="fnav-reel__still" src={reelStill} srcset={REEL_POSTER_SRCSET || undefined} sizes={REEL_POSTER_SRCSET ? '(max-width: 600px) 60vw, 320px' : undefined} alt="" decoding="async">
           <!-- The moving preview: no source until the first hover (reel.js);
                crossorigin so the player can start from the frame it shows -->
           <video class="fnav-reel__preview" data-reel-preview-video muted loop playsinline preload="none" crossorigin="anonymous" disablepictureinpicture aria-hidden="true"></video>
@@ -108,10 +120,19 @@ const fields: { name: string; label: string; type: 'text' | 'email'; autocomplet
     </div>
     )}
     <a href="#contact" class="fnav-menu__contact" data-fnav-reveal data-fnav-button data-fnav-contact-open data-barba-prevent="self" aria-haspopup="dialog" aria-controls="fnav-contact" data-split-hover="link">
-      <span class="fnav-menu__contact-label" data-split-hover="target">Contact Tom</span>
-      <svg class="fnav-menu__contact-arrow" viewBox="0 0 12 12" fill="none" aria-hidden="true"><path d="M4 1.5 8.5 6 4 10.5" stroke="currentColor" stroke-width="1.25" stroke-linecap="square"/></svg>
+      <span class="fnav-menu__contact-label" data-split-hover="target">Contact</span>
+      <svg class="fnav-tile__arrow" viewBox="0 0 12 12" fill="none" aria-hidden="true" set:html={ARROW} />
     </a>
     </div>
+    <!-- Home, across the full width, under the reel and Contact Tom -->
+    <ul class="fnav-menu__tiles is--home" role="list">
+      <li class="fnav-menu__cell is--wide" data-fnav-reveal data-fnav-item={home.href}>
+        <a href={home.href} class="fnav-tile is--wide" data-fnav-link data-split-hover="link">
+          <span class="fnav-tile__title" data-split-hover="target">{home.label}</span>
+          <span class="fnav-tile__note">{home.note}</span>
+        </a>
+      </li>
+    </ul>
   </nav>
 </div>
 
@@ -175,7 +196,7 @@ const fields: { name: string; label: string; type: 'text' | 'email'; autocomplet
 
 <div class="fnav" data-fnav data-cursor="hover">
   <!-- The home link: the studio's mark (BrandMark.astro) -->
-  <a href="/" class="fnav__logo" aria-label="Tomrow Studios, home"><BrandMark class="fnav__logo-mark" /></a>
+  <a href="/" class="fnav__logo" aria-label="Tomrowstudios, home"><BrandMark class="fnav__logo-mark" /></a>
   <div class="fnav__title" aria-hidden="true"><div class="fnav__title-inner" data-fnav-title></div></div>
   <button type="button" class="fnav__burger" data-fnav-open aria-label="Open menu" aria-expanded="false" aria-controls="fnav-menu">
     <svg class="fnav__burger-svg" viewBox="0 0 20 11" fill="none" aria-hidden="true"><path d="M0 0.5H20" stroke="currentColor"/><path d="M0 5.5H20" stroke="currentColor"/><path d="M0 10.5H20" stroke="currentColor"/></svg>
@@ -183,8 +204,8 @@ const fields: { name: string; label: string; type: 'text' | 'email'; autocomplet
   <button type="button" class="fnav__close" data-fnav-close aria-label="Close menu">
     <svg class="fnav__close-svg" viewBox="0 0 13 13" fill="none" aria-hidden="true"><path d="M0.354 11.667 11.667 0.354" stroke="currentColor"/><path d="M0.354 0.354 11.667 11.667" stroke="currentColor"/></svg>
   </button>
-  <button type="button" class="fnav__arrow" data-fnav-top aria-label="Back to top">
-    <svg class="fnav__arrow-svg" viewBox="0 0 11 12" fill="none" aria-hidden="true"><path d="M5.375 11.711V1.2M0.35 5.65 5.375 0.6l5.025 5.05" stroke="currentColor"/></svg>
-  </button>
+  <!-- The footer's form: the studio's mark in the square, the home link
+       (the same mark as the bar's own home link, BrandMark.astro) -->
+  <a href="/" class="fnav__home" data-fnav-home aria-label="Tomrowstudios, home"><BrandMark class="fnav__home-mark" /></a>
   <span class="fnav__background" data-fnav-bg></span>
 </div>

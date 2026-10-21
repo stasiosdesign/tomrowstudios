@@ -17,7 +17,7 @@ type Section = Record<string, string | ImageDefault>;
 
 export const PAGE_DEFAULTS = {
   architecturePage: {
-    header: { label: 'Architecture', heading: 'Architecture' },
+    header: { label: 'Architecture', heading: 'Architectural Projects' },
   },
 
   influencePage: {

@@ -1,11 +1,11 @@
 ---
+import StatementBlock from '../components/StatementBlock.astro';
 import BaseLayout from '../layouts/BaseLayout.astro';
 import SiteNav from '../components/SiteNav.astro';
 import SiteFooter from '../components/SiteFooter.astro';
 import ContactPanel from '../components/ContactPanel.astro';
 import Button from '../components/Button.astro';
 import WorldMapLines from '../components/WorldMapLines.astro';
-import AtlasHotspots from '../components/AtlasHotspots.astro';
 import ServiceCards from '../components/ServiceCards.astro';
 import BookIcon from '../components/BookIcon.astro';
 import { srcSet, urlFor } from '../sanity/image';
@@ -85,18 +85,47 @@ const shotImage = (id: string) => ({ asset: { _id: `image-${id}` } });
 // The book band's words, twice four, as the strip over the bar has them
 const bookLabel = 'Architectural Influence Book';
 ---
-<BaseLayout title="Influence — Tomrow Studios" namespace="influence" pageName="Influence" pageDoc="influencePage" navPromo="book">
+<BaseLayout title="Influence — Tomrowstudios" namespace="influence" pageName="Influence" pageDoc="influencePage" navPromo="book">
 <!-- The page itself, which shrinks into the footer as the footer arrives
      (footer.js); no column lines on this page (is--gridless) -->
 <div class="page-surface is--gridless" data-page-surface>
 <SiteNav />
 
-<!-- The hero: the page's name in the middle of the first screen, the
-     collage round it in parallax (influence.js) -->
-<section class="influence-hero" data-influence-hero style={`--tail: ${layouts.desktop.tail}; --ttail: ${layouts.tablet.tail}; --mtail: ${layouts.phone.tail};`}>
-  <div class="influence-hero__head">
-    <h1 class="influence-hero__title" data-page-field="hero.heading">{page?.hero?.heading ?? D.hero.heading}</h1>
+<!-- No book strip over the bar over the hero and the collage (data-nav-promo
+     empty): it comes up from the followers section on (the page asks for it,
+     navPromo). The hero, laid out as the Shop page's (its styles, .shop-hero): the
+     page's name large on the black, flush left on the studio's name in
+     the bar above -->
+<header class="shop-hero is--influence" data-nav-promo="">
+  <!-- Behind the name: the atlas, the creators' map,
+       across the hero (moved up from the atlas section). The stage is
+       exactly the plate's box, so the hotspot layer inside it shares the
+       map's coordinates at any width -->
+  <div class="influence-map" data-influence-map>
+    <!-- Held on screen while the hero scrolls by, zooming out to the whole
+         map (influence.js, initInfluenceMap) -->
+    <div class="influence-map__frame">
+      <div class="world-map-stage" data-influence-map-stage>
+        <WorldMapLines />
+      </div>
+    </div>
   </div>
+  <div class="shop-hero__body">
+    <div class="shop-hero__copy">
+      <h1 data-page-field="hero.heading">{page?.hero?.heading ?? D.hero.heading}</h1>
+    </div>
+  </div>
+</header>
+
+<!-- Approach, just after the map: the statement set large (StatementBlock.astro) -->
+<section class="influence-statement" data-nav-promo="">
+  <StatementBlock text={page?.approach?.statement ?? D.approach.statement} field="approach.statement" />
+</section>
+
+<!-- The collage, the section under the hero: the photographs in
+     parallax (influence.js), laid out round the middle of its first
+     screen as they were round the name -->
+<section class="influence-hero" data-influence-hero data-nav-promo="" style={`--tail: ${layouts.desktop.tail}; --ttail: ${layouts.tablet.tail}; --mtail: ${layouts.phone.tail};`}>
   {shots.map(({ id, speed, style, sizes, eager }) => (
   <div class="influence-hero__shot" data-speed={speed} style={style}>
     <img class="influence-hero__img" src={urlFor(shotImage(id)).width(800).url()} srcset={srcSet(shotImage(id), [400, 800, 1200, 1600])} sizes={sizes} alt="" decoding="async" loading={eager ? 'eager' : 'lazy'}>
@@ -115,13 +144,6 @@ const bookLabel = 'Architectural Influence Book';
   </div>
 </section>
 
-<!-- Approach: the label in the first column, the statement across the rest -->
-<section class="section">
-  <div class="container lede-row">
-    <p class="tagline" data-page-field="approach.label">{page?.approach?.label ?? D.approach.label}</p>
-    <h2 data-page-field="approach.statement">{page?.approach?.statement ?? D.approach.statement}</h2>
-  </div>
-</section>
 
 <!-- Origins / timeline -->
 <section class="section section-alt">
@@ -248,14 +270,6 @@ const bookLabel = 'Architectural Influence Book';
   <div class="map-spread__head">
     <p class="tagline" data-page-field="atlas.label">{page?.atlas?.label ?? D.atlas.label}</p>
     <h2 data-page-field="atlas.heading">{page?.atlas?.heading ?? D.atlas.heading}</h2>
-  </div>
-  <div class="map-spread__media">
-    <!-- The stage is exactly the plate's box, so the hotspot layer inside it
-         shares the map's coordinates at any width -->
-    <div class="world-map-stage" data-hotspot-area>
-      <WorldMapLines />
-      <AtlasHotspots />
-    </div>
   </div>
   <!-- The book band: the strip over the floating bar, grown to the page's
        width as the section comes up (influence.js), its head -->

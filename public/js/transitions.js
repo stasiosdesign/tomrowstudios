@@ -47,6 +47,12 @@ function initBeforeEnterFunctions(next) {
   // The home hero's coloured mosaic, made and painted now, before the page
   // comes in, so it arrives with the page rather than seconds after it
   if (typeof prepareHeroTint === "function") prepareHeroTint(nextPage);
+  // The Architecture row, built and measured now, so it comes in already
+  // as it will stay (its pictures drifted, its loop round, the row never
+  // hidden and shown again under the eye); what it sets up is taken down
+  // when that page goes, not with the page going now (pageStartsArriving,
+  // the beforeEnter hook)
+  if (typeof initParallaxImageSlider === "function") initParallaxImageSlider();
 }
 
 function initAfterEnterFunctions(next) {
@@ -71,9 +77,9 @@ function initAfterEnterFunctions(next) {
   if (typeof initScrollToNextPage === "function") initScrollToNextPage();
   if (typeof initImageReveal === "function") initImageReveal(nextPage);
   if (typeof initTextHighlight === "function") initTextHighlight(nextPage);
+  // The parked home page's scroll panels (/parked, which loads sequence.js itself)
   if (typeof initSequence === "function") initSequence(nextPage);
   if (typeof initScrollLists === "function") initScrollLists(nextPage);
-  if (typeof initHomeReel === "function") initHomeReel(nextPage);
   if (typeof initHomeList === "function") initHomeList(nextPage);
   // The Influence page's hero collage, and its book band (influence.js)
   if (typeof initInfluenceHero === "function") initInfluenceHero(nextPage);
@@ -88,11 +94,12 @@ function initAfterEnterFunctions(next) {
   /* The pointer has not moved, but what is under it has: the cursor takes
      its state from the new page */
   if (typeof refreshCursor === "function") refreshCursor();
-  /* The nav is outside the container and survives the navigation, but the
-     trigger tying it to the home hero does not — `afterLeave` kills the
-     page's triggers. Rebinding here restores it when we arrive on home, and
-     clears the state when we arrive anywhere else. */
+  /* The parked home hero's bar, runner and dial (/parked, which loads
+     their scripts itself: hero-nav.js, hero-runner.js, hero-dial.js). On
+     every other page these are not defined. */
   if (typeof initHeroNav === "function") initHeroNav();
+  if (typeof initHeroRunner === "function") initHeroRunner();
+  if (typeof initHeroDial === "function") initHeroDial();
   /* The hero's email square, which copies the address: in the container too */
   if (typeof initSocialCopy === "function") initSocialCopy(nextPage);
   /* The floating navigation lives in the layout and is bound once; only its
@@ -100,11 +107,6 @@ function initAfterEnterFunctions(next) {
      the page's triggers, and it takes the page's name and section. */
   if (typeof initFloatingNav === "function") initFloatingNav();
   if (typeof initFloatingNavPage === "function") initFloatingNavPage(nextPage);
-  /* Same story for the hero runner: its canvas and pointer listeners go with
-     the outgoing container, so it is rebuilt when we land on home and torn
-     down when we land anywhere else. */
-  if (typeof initHeroRunner === "function") initHeroRunner();
-  if (typeof initHeroDial === "function") initHeroDial();
   // Click-to-zoom binds one delegated listener on the document, so images
   // arriving with a new container are already covered — nothing to rebind.
 
@@ -188,9 +190,12 @@ function revealPage(container) {
 //   - the pages' corners round only a little as they move (PAGE_RADIUS),
 //     the same on both, and square again at rest;
 //   - the floating navigation is outside the container and stays as it is:
-//     an open menu has closed, its own closing played through, before the
-//     pages start to move (the `before` hook, below); the bar takes the new
-//     page's name once the page has arrived (initFloatingNavPage);
+//     an open menu closes as the pages start to move, the two together
+//     (the `before` hook, below); the bar goes down, comes up or takes the
+//     new page's name as the pages start to pass (NAV_ARRIVES,
+//     arriveFloatingNavPage), so it has settled by the time the page has;
+//     the page's own ties to it are made once it has arrived
+//     (initFloatingNavPage);
 //   - the outgoing page is held exactly as it was seen (freezeCurrentPage);
 //   - the body keeps a full screen's height while it carries the
 //     perspective, which makes it the frame the fixed bar is placed in, and
@@ -198,11 +203,13 @@ function revealPage(container) {
 const PAGE_DEPTH = "-25vw";
 const PAGE_SHIFT = 125;
 const PAGE_RADIUS = "0.6rem";
+// When the floating bar takes the new page, into the transition (seconds)
+const NAV_ARRIVES = 0.35;
 
 function runPageLeaveAnimation(current, next) {
   const parent = current.parentElement || document.body;
 
-  // An open menu has closed already (the `before` hook); this only makes
+  // An open menu is closing already (the `before` hook); this only makes
   // sure of it
   if (window.floatingNav) window.floatingNav.close({ quick: true });
 
@@ -250,6 +257,15 @@ function runPageLeaveAnimation(current, next) {
     clipPath: "rect(0% 100% 100% 0% round 0rem)"
   }, ">-=0.4");
 
+  // The floating bar takes the new page as the pages start to pass, not
+  // once it has landed: going down for the home hero, coming up off it, or
+  // changing its name, each by its own animation, and each settled before
+  // the page is (the bar's rise, the longest, with its parts in about 1.3
+  // seconds, of the transition's 1.75)
+  tl.call(() => {
+    if (typeof arriveFloatingNavPage === "function") arriveFloatingNavPage(next);
+  }, null, "start+=" + NAV_ARRIVES);
+
   return tl;
 }
 
@@ -282,9 +298,9 @@ function runPageEnterAnimation(next){
 // container is added: a page arriving can change the document under the
 // one leaving — the architecture index stops the whole document scrolling
 // (`html:has(.arch-page)`), which unsticks everything on the outgoing page
-// the moment it is added.
+// the moment it is added. (.seq__stage is the parked home page's, /parked.)
 let heldPage = null;
-const STICKY = ".seq__stage, .home-reel__surface-inner, .home-reel__frame, .home-reel__chrome-inner, .scroll-list__stick, .scroll-list__aside, .scroll-next__inner, .atlas-modal__top";
+const STICKY = ".seq__stage, .home-reel__surface-inner, .home-reel__chrome-inner, .scroll-list__stick, .scroll-list__aside, .scroll-next__inner, .atlas-modal__top";
 
 function freezeCurrentPage(current) {
   // Marked as leaving, for whatever watches the scroll in its own way (the
@@ -379,199 +395,28 @@ function prepareForTransition(parent, current, next){
 
 
 // -----------------------------------------
-// THE PROJECTS FOLDER, OPENING INTO ARCHITECTURE
-// -----------------------------------------
-//
-// The home hero's folder (ProjectsFolder.astro) pressed: instead of the
-// pages passing each other, the folder itself opens into the Architecture
-// page.
-//   1. The folder is copied onto layers over both pages, exactly where it
-//      stands: its card on one, under the new page, and each of its sheets
-//      on another, over it.
-//   2. The card grows to fill the screen, turning to the page's black; the
-//      home page behind it sinks back a little.
-//   3. The sheets fly, one after another, their dimming lifting, to
-//      the first cards of the Architecture page — measured on the new page
-//      itself, which waits unseen in place — the third on past the
-//      right-hand edge with the rest of the run.
-//   4. Once those cards' own photographs are in (a second and a half at
-//      most), the page fades up over the card, under the sheets, which lie
-//      exactly over its cards; then both layers go.
-// Only from the folder (the transition's `custom` rule, below): back and
-// forward, the menu and every other link keep the pages passing. With
-// reduced motion the pages simply change, as everywhere.
-// 1. Where everything stands, before anything moves: measured in Barba's
-// first hook (`before`, below), as the outgoing page's sticky parts are,
-// since the Architecture page stops the whole document scrolling the moment
-// it is added and the hero's stage, which holds the folder, comes unstuck.
-// The folder may be drawn smaller than its size (a waiting one in the
-// reel): each sheet's border and corners are taken at the scale it is
-// shown at.
-let heldFolder = null;
-
-function measureFolder(trigger) {
-  const folder = trigger.querySelector("[data-folder]");
-  if (!folder) return null;
-  const sheets = Array.from(folder.querySelectorAll("[data-folder-sheet]"))
-    .sort((a, b) => Number(a.dataset.folderSheet) - Number(b.dataset.folderSheet));
-  return {
-    folder,
-    box: folder.getBoundingClientRect(),
-    strength: parseFloat(getComputedStyle(folder).opacity) || 1,
-    from: sheets.map(sheet => {
-      const rect = sheet.getBoundingClientRect();
-      const styles = getComputedStyle(sheet);
-      const k = rect.width / (sheet.offsetWidth || rect.width);
-      const img = sheet.querySelector("img");
-      return {
-        rect,
-        padding: parseFloat(styles.paddingTop) * k,
-        radius: parseFloat(styles.borderTopLeftRadius) * k,
-        shadow: styles.boxShadow,
-        dim: parseFloat(sheet.style.getPropertyValue("--dim")) || 0,
-        src: img ? img.currentSrc || img.src : "",
-      };
-    }),
-  };
-}
-
-function runFolderLeaveAnimation(current, next) {
-  const held = heldFolder;
-  heldFolder = null;
-  const cardsAhead = Array.from(next.querySelectorAll(".parallax-slider__item-inner"));
-  if (reducedMotion || !held || !held.from.length || !cardsAhead.length) return runPageLeaveAnimation(current, next);
-  const parent = current.parentElement || document.body;
-  if (window.floatingNav) window.floatingNav.close({ quick: true });
-
-  const { folder, box, strength } = held;
-  const from = held.from.slice(0, cardsAhead.length);
-
-  const { wrapper } = prepareForTransition(parent, current, next);
-  // The new page, unseen, where it will stand, over the growing card
-  gsap.set(next, { yPercent: 0, z: 0, autoAlpha: 0, clipPath: "none", zIndex: 4 });
-  gsap.set(wrapper, { clipPath: "none" });
-  const cards = cardsAhead.slice(0, from.length);
-  const to = cards.map(card => card.getBoundingClientRect());
-  const cardRadius = getComputedStyle(cards[0]).borderTopLeftRadius;
-
-  const layer = (z) => {
-    const el = document.createElement("div");
-    el.className = "folder-flight";
-    el.style.zIndex = z;
-    document.body.appendChild(el);
-    return el;
-  };
-  const under = layer(3);
-  const over = layer(200);
-  folder.style.visibility = "hidden";
-
-  const ground = folder.cloneNode(true);
-  ground.querySelector(".folder__stack")?.remove();
-  ground.removeAttribute("data-folder");
-  ground.classList.remove("home-reel__img");
-  ground.classList.add("folder-flight__ground");
-  ground.style.cssText = `left:${box.left}px;top:${box.top}px;width:${box.width}px;height:${box.height}px;opacity:${strength};visibility:visible`;
-  under.appendChild(ground);
-
-  const veils = [];
-  const flying = from.map(({ rect, padding, radius, shadow, dim, src }) => {
-    const sheet = document.createElement("div");
-    sheet.className = "folder-flight__sheet";
-    sheet.style.cssText = `left:${rect.left}px;top:${rect.top}px;width:${rect.width}px;height:${rect.height}px;padding:${padding}px;border-radius:${radius}px;box-shadow:${shadow};opacity:${strength}`;
-    const img = document.createElement("img");
-    img.alt = "";
-    img.src = src;
-    sheet.appendChild(img);
-    // The dimming the sheets behind carry, lifted on the way
-    const veil = document.createElement("div");
-    veil.className = "folder-flight__veil";
-    veil.style.opacity = dim;
-    sheet.appendChild(veil);
-    veils.push(veil);
-    return sheet;
-  });
-  // The first project in front
-  flying.slice().reverse().forEach(sheet => over.appendChild(sheet));
-
-  // The cards' own photographs, before the page is shown over the sheets
-  const photos = cards.map(card => card.querySelector("img")).filter(Boolean);
-  const landed = Promise.race([
-    Promise.all(photos.map(img => (img.complete && img.naturalWidth)
-      ? (img.decode ? img.decode().catch(() => {}) : null)
-      : new Promise(resolve => {
-          img.addEventListener("load", resolve, { once: true });
-          img.addEventListener("error", resolve, { once: true });
-        }))),
-    new Promise(resolve => setTimeout(resolve, 1500)),
-  ]);
-
-  const tl = gsap.timeline({
-    onComplete: () => {
-      under.remove();
-      over.remove();
-      wrapper.remove();
-      document.documentElement.classList.remove("is--page-transition");
-      gsap.set(parent, { clearProps: "perspective,transformStyle,overflow,minHeight" });
-      gsap.set(next, { clearProps: "position,inset,width,height,zIndex,transformStyle,willChange,backfaceVisibility,transform,clipPath,overflow,opacity,visibility" });
-      resetPage(next);
-    },
-  });
-
-  // 2
-  tl.to(ground, {
-    left: 0,
-    top: 0,
-    width: window.innerWidth,
-    height: window.innerHeight,
-    opacity: 1,
-    backgroundColor: "#000000",
-    duration: 1.05,
-    ease: "expo.inOut",
-  }, 0);
-  tl.to(wrapper, { scale: 0.94, duration: 1.05, ease: "expo.inOut" }, 0);
-
-  // 3
-  tl.to(flying, {
-    left: i => to[i].left,
-    top: i => to[i].top,
-    width: i => to[i].width,
-    height: i => to[i].height,
-    padding: 0,
-    borderRadius: cardRadius,
-    boxShadow: "0px 0px 0px 0px rgba(0, 0, 0, 0)",
-    opacity: 1,
-    duration: 1.15,
-    ease: "expo.inOut",
-    stagger: 0.07,
-  }, 0.08);
-  tl.to(veils, { opacity: 0, duration: 0.8, ease: "power2.inOut", stagger: 0.07 }, 0.2);
-
-  // 4
-  tl.addPause(">", () => landed.then(() => tl.resume()));
-  tl.to(next, { autoAlpha: 1, duration: 0.45, ease: "power2.out" });
-
-  return tl;
-}
-
-
-// -----------------------------------------
 // BARBA HOOKS + INIT
 // -----------------------------------------
 
 // The outgoing page is measured before anything of the incoming one is in
 // the document (freezeCurrentPage). Barba runs this hook once the new page
-// has been fetched, and waits on it: an open floating menu (or its contact
-// form) first finishes closing (floatingNav.closeForPage), since putting the
-// new page in holds the main thread long enough for GSAP, without lag
-// smoothing (initLenis), to skip a running close to its end. With nothing
-// open, nothing waits.
+// has been fetched. An open floating menu (or its contact form) closes
+// alongside the transition, not before it (floatingNav.closeForPage; it
+// usually began as the link was pressed). Putting the new page in holds the
+// main thread for a moment, and GSAP runs without lag smoothing (initLenis,
+// for Lenis and ScrollTrigger's sake), so it would jump every running tween
+// over that moment, the closing menu's and the pages' own included. So for
+// the length of a transition the stall is smoothed instead (a frame longer
+// than TRANSITION_LAG counts as one ordinary frame), and once the new page
+// has settled (the `after` hook) lag smoothing is off again.
+const TRANSITION_LAG = 120;
 barba.hooks.before(data => {
-  const navClosed = window.floatingNav ? window.floatingNav.closeForPage() : Promise.resolve();
-  return navClosed.then(() => {
-    // The projects folder first, before the freeze changes anything
-    heldFolder = data.trigger instanceof Element && data.trigger.hasAttribute("data-folder-link") ? measureFolder(data.trigger) : null;
-    heldPage = data.current && data.current.container ? freezeCurrentPage(data.current.container) : null;
-  });
+  gsap.ticker.lagSmoothing(TRANSITION_LAG, 16);
+  if (window.floatingNav) window.floatingNav.closeForPage();
+  heldPage = data.current && data.current.container ? freezeCurrentPage(data.current.container) : null;
+});
+barba.hooks.after(() => {
+  gsap.ticker.lagSmoothing(0);
 });
 
 barba.hooks.beforeEnter(data => {
@@ -587,6 +432,9 @@ barba.hooks.beforeEnter(data => {
     lenis.stop();
   }
 
+  // A page going as this one comes: what this one sets up from here is
+  // kept apart from its cleanups (lifecycle.js)
+  if (data.current && data.current.container && typeof pageStartsArriving === "function") pageStartsArriving();
   initBeforeEnterFunctions(data.next.container);
 });
 
@@ -621,19 +469,6 @@ barba.init({
   timeout: 7000,
   preventRunning: true,
   transitions: [
-    // The home hero's projects folder, opening into the Architecture page
-    // (runFolderLeaveAnimation): only when the folder itself was pressed
-    {
-      name: "folder",
-      sync: true,
-      from: { namespace: ["index"] },
-      to: { namespace: ["architecture"] },
-      custom: ({ trigger }) => trigger instanceof Element && trigger.hasAttribute("data-folder-link"),
-      async leave(data) {
-        return runFolderLeaveAnimation(data.current.container, data.next.container);
-      },
-      async enter() {},
-    },
     {
       name: "default",
       sync: true,

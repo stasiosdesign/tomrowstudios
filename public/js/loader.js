@@ -20,7 +20,7 @@
 //   4. the five squares carrying the hero's pictures (the middle one and
 //      the four below it; for the list, the column's right edges on the
 //      middle of the screen, where the pictures' stand, each growing out of
-//      its own edge in turn, the hero's gauge and type coming in as they
+//      its own edge in turn, the hero's type coming in as they
 //      finish) grow into those pictures: each to the very place,
 //      size, strength and softness of its counterpart in the hero, its
 //      photograph coming up inside it, while the dark gives way to the
@@ -151,7 +151,7 @@ function runHomeLoader(loader) {
     clearTimeout(cap);
     try { sessionStorage.setItem('tomrow:opening', '1'); } catch (_) {}
     grid = layout() || grid;
-    const { P, sq, c, middle, rowTop, order, cards } = grid;
+    const { P, sq, c, rowTop, order, cards } = grid;
     const targets = Array.from(document.querySelectorAll('.home-reel__img'));
     if (!targets.length) return finish();
     const target = (k) => targets[Math.min(k, targets.length - 1)].getBoundingClientRect();
@@ -165,32 +165,24 @@ function runHomeLoader(loader) {
     const columnTop = (i) => rowTop + (i - c) * pitch;
     const isCard = (el) => el.hasAttribute('data-loader-card');
 
-    // A hero in a row (data-reel-layout="row") is met by the row as it is:
-    // no turn into a column, the squares grow where they stand
-    const rowHero = !!(reel && reel.dataset.reelLayout === 'row');
-    // A hero in a list (data-reel-layout="list") is met by a column whose
-    // right edges stand on the middle of the screen, where the pictures'
-    // do: each square grows out of its own edge into its picture, one after
-    // another down the column, and as they finish the hero's own gauge and
-    // type come in with them (home:arrive, home-list.js)
-    const listHero = !!(reel && reel.dataset.reelLayout === 'list');
-    const columnLeft = listHero ? Math.floor(window.innerWidth / 2) - sq : middle;
+    // The hero's list is met by a column whose right edges stand on the
+    // middle of the screen, where the pictures' do: each square grows out
+    // of its own edge into its picture, one after another down the column,
+    // and as they finish the hero's own type comes in with them
+    // (home:arrive, home-list.js)
+    const columnLeft = Math.floor(window.innerWidth / 2) - sq;
     const tl = gsap.timeline({ onComplete: finish });
     tl.to([count, label], { autoAlpha: 0, duration: 0.35, ease: 'power2.out' }, 0);
-    if (rowHero) {
-      tl.addLabel('grow', 0.2);
-    } else {
-      // 3. The row turns into a column round its middle square
-      order.forEach((el, i) => {
-        tl.to(el, { left: columnLeft, top: columnTop(i), duration: 1, ease: 'power3.inOut' }, 0.05 + Math.abs(i - c) * 0.022);
-      });
-      // Once every square has arrived in the column
-      tl.addLabel('grow', 0.05 + (c + 1) * 0.022 + 1);
-    }
+    // 3. The row turns into a column round its middle square
+    order.forEach((el, i) => {
+      tl.to(el, { left: columnLeft, top: columnTop(i), duration: 1, ease: 'power3.inOut' }, 0.05 + Math.abs(i - c) * 0.022);
+    });
+    // Once every square has arrived in the column
+    tl.addLabel('grow', 0.05 + (c + 1) * 0.022 + 1);
     // 4. The picture squares grow into the hero's pictures, their
     // photographs coming up in them
     cards.forEach((el, k) => {
-      const at = listHero ? k * 0.07 : 0;
+      const at = k * 0.07;
       tl.to(el, {
         left: () => target(k).left,
         top: () => target(k).top,
@@ -201,7 +193,7 @@ function runHomeLoader(loader) {
       }, `grow+=${at}`);
       if (el.firstElementChild) tl.to(el.firstElementChild, { opacity: 1, duration: 0.8, ease: 'power2.out' }, `grow+=${at + 0.45}`);
     });
-    if (listHero) tl.call(() => document.dispatchEvent(new CustomEvent('home:arrive')), null, 'grow+=1.05');
+    tl.call(() => document.dispatchEvent(new CustomEvent('home:arrive')), null, 'grow+=1.05');
     tl.to(cards.slice(1), { opacity: resting, duration: 0.9, ease: 'power2.inOut' }, 'grow+=0.65');
     if (soft) tl.fromTo(cards.slice(1), { filter: 'blur(0px)' }, { filter: `blur(${soft}px)`, duration: 0.9, ease: 'power2.inOut' }, 'grow+=0.65');
     // The others sink back into the grid: each down to one cell, at its
@@ -210,8 +202,8 @@ function runHomeLoader(loader) {
     order.forEach((el, i) => {
       if (isCard(el)) return;
       tl.to(el, {
-        left: (rowHero ? (parseFloat(el.style.left) || middle) : columnLeft) + shrink,
-        top: (rowHero ? rowTop : columnTop(i)) + shrink,
+        left: columnLeft + shrink,
+        top: columnTop(i) + shrink,
         width: P - 1,
         height: P - 1,
         opacity: 0,
@@ -219,16 +211,6 @@ function runHomeLoader(loader) {
         ease: 'power2.inOut',
       }, 'grow');
     });
-    // Cut where the hero's stage cuts its pictures (at the top of a phone's
-    // screen, nowhere else), so the hand-over is exact
-    const stage = document.querySelector('.home-reel__frame');
-    if (stage) {
-      const edges = () => {
-        const top = /inset\(([\d.]+)px/.exec(getComputedStyle(stage).clipPath);
-        return `inset(${top ? top[1] : 0}px 0px 0px 0px)`;
-      };
-      tl.fromTo(layer, { clipPath: 'inset(0px 0px 0px 0px)' }, { clipPath: edges, duration: 1.55, ease: 'expo.inOut' }, 'grow');
-    }
     // 5. The dark gives way to the light grid behind, as the squares grow
     tl.to(bg, { opacity: 0, duration: 1.2, ease: 'power2.inOut' }, 'grow+=0.25');
   }

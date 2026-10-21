@@ -106,14 +106,27 @@ function createHeroTint(root, options) {
     haloPen = halo.getContext('2d');
   }
 
-  const BASE = 14;            // the grid's own near-black (#0e0e0e), each channel
-  const BODY = 0.1;           // a tessera's strength, at its full...
+  // The screen's strengths (style.css, .home-reel.is--screen), read once;
+  // each has its own fallback, the value the home page uses
+  const styles = getComputedStyle(root);
+  const setting = (name, fallback) => {
+    const v = parseFloat(styles.getPropertyValue(name));
+    return Number.isFinite(v) ? v : fallback;
+  };
+  const BASE = setting('--screen-base', 14); // the grid's own near-black (#0e0e0e), each channel
+  const BODY = setting('--screen-body', 0.1);         // a tessera's strength, at its full...
   const SWELL = 0.4;          // ...rising and sinking by this share over the field...
   const SWELL_SPAN = 24;      // ...over about this many squares
-  const KEEP = 0.26;          // the share of tesserae at their strength, in the open...
-  const KEEP_SWELL = 0.14;    // ...more or fewer by this over the field...
+  const KEEP = setting('--screen-keep', 0.22);        // the share of tesserae at their strength, in the open...
+  const KEEP_SWELL = setting('--screen-keep-swell', 0.12); // ...more or fewer by this over the field...
   const DENSE_SPAN = 15;      // ...over about this many squares
-  const HELD = 0.25;          // a held-back tessera's share of its strength
+  const HELD = setting('--screen-held', 0.07);        // a held-back tessera's share of its strength: the barest
+                              // trace, so the field reads as clear glass with lit points,
+                              // not a speckle between them
+  const BLOOM_FLOOR = setting('--screen-bloom-floor', 0.045); // a tessera glows (bleeds wide) only from this
+                              // strength: the lit ones, well above the trace the held-back ones keep
+  const SOFTEN = setting('--screen-soften', 0.14);    // how much each square's colour bleeds into its neighbours'
+  const BLOOM_PASSES = Math.round(setting('--screen-bloom-passes', 2)); // how wide the glow is bled (0: none)
   const DRIFT_SPAN = 14;      // squares a drift of one colour spans, about...
   const GRAIN_SPAN = 3;       // ...and the finer scatter through it...
   const GRAIN = 0.45;         // ...which has this much of the say
@@ -140,12 +153,6 @@ function createHeroTint(root, options) {
   const LIFT_RISE = 260;      // ...coming up over about this long (ms)...
   const LIFT_FALL = 900;      // ...and easing back over this
   const BAYER = [0, 8, 2, 10, 12, 4, 14, 6, 3, 11, 1, 9, 15, 7, 13, 5];
-  // The screen (style.css, .home-reel.is--screen), read once
-  const styles = getComputedStyle(root);
-  const setting = (name, fallback) => {
-    const v = parseFloat(styles.getPropertyValue(name));
-    return Number.isFinite(v) ? v : fallback;
-  };
   const SCREEN = screen ? {
     backlight: setting('--screen-backlight', 0.2),
     bloom: setting('--screen-bloom', 0.6),
@@ -513,7 +520,10 @@ function createHeroTint(root, options) {
       return;
     }
     // The tesserae's light at their strength, and the bloom's gathered at
-    // a quarter of the squares
+    // a quarter of the squares: from the lit tesserae alone (those above
+    // BLOOM_FLOOR), not the held-back ones, so the glow is a scatter of
+    // clear points of light and never a dull cloud summed up out of the
+    // trace that fills the field between them
     bloomBuf.fill(0);
     for (let y = 0, i = 0; y < rows; y++) {
       const qy = y >> 2;
@@ -523,21 +533,22 @@ function createHeroTint(root, options) {
         tintBuf[i * 3] = cur[o] * a;
         tintBuf[i * 3 + 1] = cur[o + 1] * a;
         tintBuf[i * 3 + 2] = cur[o + 2] * a;
+        if (a < BLOOM_FLOOR) continue;
         const q = (qy * qCols + (x >> 2)) * 3;
         bloomBuf[q] += cur[o + 3] * a;
         bloomBuf[q + 1] += cur[o + 4] * a;
         bloomBuf[q + 2] += cur[o + 5] * a;
       }
     }
-    // The tesserae softened: each square's colour bleeding into its
-    // neighbours' a little, across then down
-    blur3(tintBuf, tintTmp, cols, rows, 0.27);
+    // The tesserae softened only a little: each square's colour bleeding
+    // into its neighbours' at the edge, across then down, so the squares
+    // stay crisp behind the glass rather than running together
+    if (SOFTEN > 0) blur3(tintBuf, tintTmp, cols, rows, SOFTEN);
     // The bloom bled wide: the quarter squares smoothed twice, each a
     // sixteenth of its squares' light (the sum over a quarter square
     // over 16, the mean), then read back up between them
     for (let q = 0; q < bloomBuf.length; q++) bloomBuf[q] /= 16;
-    blur3(bloomBuf, bloomTmp, qCols, qRows, 0.25);
-    blur3(bloomBuf, bloomTmp, qCols, qRows, 0.25);
+    for (let pass = 0; pass < BLOOM_PASSES; pass++) blur3(bloomBuf, bloomTmp, qCols, qRows, 0.25);
     const cast = [0, 1, 2].map((ch) => castFrom[ch] + (castTo[ch] - castFrom[ch]) * castMix);
     const bloom = SCREEN.bloom;
     const halation = SCREEN.halation;

@@ -21,8 +21,8 @@ import { createQueryStore } from '@sanity/core-loader';
 import { createDataAttribute, enableVisualEditing } from '@sanity/visual-editing-standalone';
 import { sanityClient } from './client';
 import { urlFor, type SanityImage } from './image';
-import { CLIENT_LOGOS_QUERY, HOME_PAGE_QUERY, PAGE_LIVE_QUERY } from './queries';
-import type { CLIENT_LOGOS_QUERY_RESULT, HOME_PAGE_QUERY_RESULT, PAGE_LIVE_QUERY_RESULT } from './sanity.types';
+import { HOME_PAGE_QUERY, PAGE_LIVE_QUERY } from './queries';
+import type { HOME_PAGE_QUERY_RESULT, PAGE_LIVE_QUERY_RESULT } from './sanity.types';
 
 type Home = NonNullable<HOME_PAGE_QUERY_RESULT>;
 type Path = Parameters<typeof createDataAttribute>[0]['path'];
@@ -79,7 +79,8 @@ const button = (cta: Element | null | undefined, path: Path, label: Value, doc =
 const section = (name: string) => document.querySelector(`[data-home-section="${name}"]`);
 
 function renderHero(hero: Home['hero']) {
-  // The home page's reel (its headline a hidden heading), or the parked hero
+  // The home page's reel (its headline a hidden heading), or the parked
+  // hero (/parked: its slides' captions, photographs and buttons too)
   const root = document.querySelector('.home-reel, .home-hero');
   if (!root || !hero) return;
 
@@ -101,60 +102,17 @@ function renderHero(hero: Home['hero']) {
   button(secondary, ['hero', 'secondaryButton'], hero.secondaryButton);
 }
 
-function renderLogoWall(logoWall: Home['logoWall']) {
-  const eyebrow = section('logoWall')?.querySelector('.logo-wall__eyebrow');
-  text(eyebrow, ['logoWall', 'label'], logoWall?.label ?? null);
-}
-
 function renderPractice(practice: Home['practice']) {
   const root = section('practice');
   if (!root || !practice) return;
   text(root.querySelector('h2'), ['practice', 'statement'], practice.statement);
 }
 
-function renderRecognition(recognition: Home['recognition']) {
-  const root = section('recognition');
-  if (!root || !recognition) return;
-  text(root.querySelector('.tagline'), ['recognition', 'label'], recognition.label);
-  text(root.querySelector('h2'), ['recognition', 'heading'], recognition.heading);
-  text(root.querySelector('.lead'), ['recognition', 'lead'], recognition.lead);
-  button(root.querySelector('a.cta'), ['recognition', 'button'], recognition.button);
-
-  const cards = root.querySelectorAll('.card');
-  recognition.cards?.forEach((card, i) => {
-    const path: Path = ['recognition', 'cards', { _key: card._key }];
-    const image = cards[i]?.querySelector('.card-img');
-    mark(image, [...path, 'image']);
-    setImage(image, card.image, 1200);
-    text(cards[i]?.querySelector('h3'), [...path, 'title'], card.title);
-    text(cards[i]?.querySelector('p'), [...path, 'text'], card.text);
-  });
-}
-
+// The logo wall's label is not shown on the page, and the clients' tiles
+// are built once (a logo changed shows on the next build)
 function renderHome(home: Home) {
   renderHero(home.hero);
-  renderLogoWall(home.logoWall);
   renderPractice(home.practice);
-  renderRecognition(home.recognition);
-}
-
-// Each logo tile opens its client, while the grid still matches the clients
-// one for one
-// The clients: each name opens its client in the Studio and takes the
-// draft's name; its logo, in the frame beside the list, takes the draft's
-// logo. A client added or removed shows on the next build.
-function renderLogos(clients: CLIENT_LOGOS_QUERY_RESULT) {
-  const root = section('logoWall');
-  const items = root?.querySelectorAll('[data-scroll-list-item]');
-  if (!root || !items || items.length !== clients.length) return;
-  clients.forEach((client, i) => {
-    mark(items[i], ['name'], { id: client._id, type: 'client' });
-    setText(items[i], client.name ?? null);
-    const img = root.querySelector(`[data-scroll-list-panel="${i}"]`);
-    if (!(img instanceof HTMLImageElement) || !client.logo?.asset) return;
-    const src = urlFor(client.logo).ignoreImageParams().width(600).height(240).url();
-    if (img.getAttribute('src') !== src) img.src = src;
-  });
 }
 
 // Every other page: its <main> names its document (data-page-doc, the type,
@@ -275,7 +233,6 @@ function live<T>(query: string, render: (data: NonNullable<T>) => void, params: 
 }
 
 const home = live<HOME_PAGE_QUERY_RESULT>(HOME_PAGE_QUERY, renderHome);
-const logos = live<CLIENT_LOGOS_QUERY_RESULT>(CLIENT_LOGOS_QUERY, renderLogos);
 
 // One live query per page document, made the first time its page is shown
 // (keyed by the document's ID; the type is the ID unless <main> says otherwise)
@@ -291,10 +248,8 @@ function page(id: string, type = id) {
 }
 
 function update() {
-  if (document.querySelector('.home-hero')) {
-    home();
-    logos();
-  }
+  // The home page (its hero as the list, or the parked one)
+  if (document.querySelector('.home-reel, .home-hero')) home();
   const main = document.querySelector('main[data-page-doc]');
   if (main instanceof HTMLElement && main.dataset.pageDoc) page(main.dataset.pageDoc, main.dataset.pageType || undefined);
 }

@@ -15,7 +15,7 @@ export const GET: APIRoute = ({ site }) => {
     __DEPLOYMENT__ === 'production'
       ? ['User-agent: *', 'Allow: /', ...(site ? ['', `Sitemap: ${new URL('/sitemap-index.xml', site)}`] : [])]
       : [
-          `# Tomrow Studios: this is not the public site${site ? `, which is ${site.origin}` : ''}.`,
+          `# Tomrowstudios: this is not the public site${site ? `, which is ${site.origin}` : ''}.`,
           '# Every page and file here is sent with "X-Robots-Tag: noindex, nofollow".',
           'User-agent: *',
           'Allow: /',

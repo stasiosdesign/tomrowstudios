@@ -30,9 +30,10 @@ const questions = page?.faq?.questions?.length ? page.faq.questions : FAQ_DEFAUL
 const arcWords = ['Sketching', 'Drawing', 'Modelling', 'Rendering', 'Designing', 'Visualising', 'Presenting', 'Learning', 'Detailing'];
 const arcCards = arcWords.map((word, i) => ({ word, n: i - (arcWords.length - 1) / 2 }));
 ---
-<BaseLayout title="Shop — Tomrow Studios" namespace="shop" pageName="Shop" pageDoc="shopPage">
-<!-- The page itself, which shrinks into the footer as the footer arrives (footer.js) -->
-<div class="page-surface" data-page-surface>
+<BaseLayout title="Shop — Tomrowstudios" namespace="shop" pageName="Shop" pageDoc="shopPage">
+<!-- The page itself, which shrinks into the footer as the footer arrives
+     (footer.js); no column lines and no grain on this page (is--bare) -->
+<div class="page-surface is--bare" data-page-surface>
 <SiteNav />
 
 <!-- Hero: the heading and the description under it, centred; below them
@@ -44,7 +45,6 @@ const arcCards = arcWords.map((word, i) => ({ word, n: i - (arcWords.length - 1)
   <div class="shop-hero__body">
     <div class="shop-hero__copy">
       <h1 data-page-field="hero.heading">{page?.hero?.heading ?? D.hero.heading}</h1>
-      <p class="lead" data-page-field="hero.lead">{page?.hero?.lead ?? D.hero.lead}</p>
     </div>
     <div class="shop-arc" aria-hidden="true">
       {arcCards.map(({ word, n }) => (
@@ -64,6 +64,10 @@ const arcCards = arcWords.map((word, i) => ({ word, n: i - (arcWords.length - 1)
       <div class="section-head__main">
         <p class="tagline label-pill" data-page-field="catalogue.label">{page?.catalogue?.label ?? D.catalogue.label}</p>
         <h2 data-page-field="catalogue.heading">{page?.catalogue?.heading ?? D.catalogue.heading}</h2>
+      </div>
+      <!-- The shop's description, moved here from the hero -->
+      <div class="section-head__side">
+        <p class="lead" data-page-field="hero.lead">{page?.hero?.lead ?? D.hero.lead}</p>
       </div>
     </div>
 

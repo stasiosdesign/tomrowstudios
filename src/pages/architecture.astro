@@ -12,7 +12,7 @@ const { sanity } = Astro.locals;
 const [projects, page] = await Promise.all([sanity.fetch(PROJECT_INDEX_QUERY), sanity.fetch(ARCHITECTURE_PAGE_QUERY)]);
 const D = PAGE_DEFAULTS.architecturePage;
 ---
-<BaseLayout title="Architecture — Tomrow Studios" namespace="architecture" pageName="Architecture" mainClass="arch-page" pageDoc="architecturePage">
+<BaseLayout title="Architecture — Tomrowstudios" namespace="architecture" pageName="Architecture" mainClass="arch-page" pageDoc="architecturePage">
 <SiteNav />
 
 <!-- One screen, moving sideways, after an editorial index: a single row of
@@ -29,16 +29,18 @@ const D = PAGE_DEFAULTS.architecturePage;
   <div data-parallax-init class="parallax-slider__group arch-stage__group">
 
     <div class="arch-stage__head">
-      <h1 class="arch-stage__title" data-page-field="header.heading">{page?.header?.heading ?? D.header.heading}</h1>
+      <!-- The name, and beside it, small and raised, how many projects the
+           row shows (the projects from Sanity, counted) -->
+      <h1 class="arch-stage__title"><span data-page-field="header.heading">{page?.header?.heading ?? D.header.heading}</span><sup class="arch-stage__count">({projects.length})</sup></h1>
       <div class="arch-arrows">
-        <button type="button" data-parallax-prev class="arch-arrow is--prev is--disabled" aria-label="Previous project"></button>
+        <button type="button" data-parallax-prev class="arch-arrow is--prev" aria-label="Previous project"></button>
         <button type="button" data-parallax-next class="arch-arrow is--next" aria-label="Next project"></button>
       </div>
     </div>
 
     <div class="arch-stage__slider">
       <div class="parallax-slider__collection">
-        <div data-parallax-slider data-parallax-infinite="false" data-parallax-snap="false" data-parallax-amount="10" data-parallax-lerp="0.2" class="parallax-slider__list">
+        <div data-parallax-slider data-parallax-infinite="true" data-parallax-snap="false" data-parallax-amount="10" data-parallax-lerp="0.2" class="parallax-slider__list">
 
           {projects.map((project) => (
           <div class="parallax-slider__item">
@@ -47,10 +49,10 @@ const D = PAGE_DEFAULTS.architecturePage;
                 <div data-parallax-inner class="parallax-slider__item-visual">
                   {project.coverImage && <img {...imageAttrs(project.coverImage, 1600)} draggable="false" alt={project.coverImage.alt || project.name || ''} class="parallax-slider__item-img">}
                 </div>
-                <div class="parallax-slider__item-label">
-                  <p class="parallax-slider__item-name">{project.name}</p>
-                  <span class="parallax-slider__item-meta">{[project.year, project.context].filter(Boolean).join(' / ')}</span>
-                </div>
+              </div>
+              <div class="parallax-slider__item-label">
+                <p class="parallax-slider__item-name">{project.name}</p>
+                <span class="parallax-slider__item-meta">{[project.year, project.context].filter(Boolean).join(' / ')}</span>
               </div>
             </a>
           </div>
