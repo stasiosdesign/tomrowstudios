@@ -212,6 +212,8 @@ function runPageLeaveAnimation(current, next) {
   // An open menu is closing already (the `before` hook); this only makes
   // sure of it
   if (window.floatingNav) window.floatingNav.close({ quick: true });
+  // A card's picture that began to grow and was not taken up (project-expand.js)
+  if (typeof dropProjectExpand === "function") dropProjectExpand();
 
   // Helper function to prepare transition structure
   const { wrapper } = prepareForTransition(parent, current, next);
@@ -267,6 +269,22 @@ function runPageLeaveAnimation(current, next) {
   }, null, "start+=" + NAV_ARRIVES);
 
   return tl;
+}
+
+// From the Architecture row to a project: the card's picture grows into the
+// project page's background (project-expand.js) in place of the pages
+// passing. The row's page is one screen at the top, so it is simply fixed
+// where it stands, over the new page, which waits unseen in the flow under
+// it until the picture has filled the screen; then the two change places
+// under the picture, and the picture's copy goes.
+async function runProjectExpandLeave(current, next) {
+  // The outgoing page was held in the `before` hook; nothing here moves it
+  heldPage = null;
+  document.documentElement.classList.add("is--page-transition");
+  gsap.set(current, { position: "fixed", top: 0, left: 0, width: "100%", height: "100vh", zIndex: 1 });
+  if (typeof arriveFloatingNavPage === "function") arriveFloatingNavPage(next);
+  await finishProjectExpand(current, next);
+  document.documentElement.classList.remove("is--page-transition");
 }
 
 function runPageEnterAnimation(next){
@@ -469,6 +487,25 @@ barba.init({
   timeout: 7000,
   preventRunning: true,
   transitions: [
+    {
+      // A card pressed in the Architecture row, its picture already
+      // growing (project-expand.js); never the browser's back or forward
+      name: "project-expand",
+      sync: true,
+      custom: ({ trigger }) => Boolean(typeof projectExpand !== "undefined" && projectExpand && trigger && trigger === projectExpand.link),
+
+      beforeEnter(data) {
+        hideForProjectExpand(data.next.container);
+      },
+
+      async leave(data) {
+        return runProjectExpandLeave(data.current.container, data.next.container);
+      },
+
+      async enter(data) {
+        return runPageEnterAnimation(data.next.container);
+      }
+    },
     {
       name: "default",
       sync: true,

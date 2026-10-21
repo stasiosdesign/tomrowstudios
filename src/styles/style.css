@@ -6118,6 +6118,57 @@ strong, b, th { font-weight: var(--weight-strong); --wght: var(--weight-strong);
    bar's pages start from (--hero-links-left; the hero's own inset taken
    off), with the download under them. */
 .shop-hero.is--project { min-height: 0; padding-bottom: var(--project-rhythm); }
+
+/* The project's cover behind the header: a screen tall from the very top
+   (under the bar), edge to edge, cut to fill as the Architecture card's
+   picture is, in colour and darkened under the words, falling off to the
+   page's black at its foot so the header runs on into the page without an
+   edge. The header is at least that screen tall. The card grows into
+   exactly this box (project-expand.js), the shade included. */
+.shop-hero.is--project:has(.project-hero__bg) {
+  position: relative;
+  isolation: isolate;
+  min-height: 100vh;
+}
+.project-hero__bg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: -1;
+  width: 100%;
+  height: 100vh;
+  overflow: hidden;
+  pointer-events: none;
+}
+.project-hero__bg-img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  object-fit: cover;
+}
+.project-hero__shade {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to bottom, rgba(0, 0, 0, 0.66), rgba(0, 0, 0, 0.6) 45%, rgba(0, 0, 0, 0.74) 75%, #000000);
+}
+/* The card's picture growing into that background (project-expand.js): a
+   frame over the page and the row's progress line (240), under the
+   floating bar (250), clipping a copy of the picture; the script moves
+   both */
+.project-expand {
+  position: fixed;
+  z-index: 245;
+  overflow: hidden;
+  pointer-events: none;
+  background: #111111;
+}
+.project-expand__img {
+  position: absolute;
+  max-width: none;
+  object-fit: cover;
+}
 .project-hero__eyebrow { margin: 0 0 2.4rem; }
 
 .project-hero__meta {
@@ -6178,7 +6229,8 @@ strong, b, th { font-weight: var(--weight-strong); --wght: var(--weight-strong);
   border-style: dashed;
   border-color: rgba(255, 255, 255, 0.14);
 }
-.project-hero__actions { margin: 0; }
+/* The credits close the column: nothing under them */
+.project-hero__side .award-labels { margin-bottom: 0; }
 
 /* ---------- Full-bleed plate ----------
    Edge to edge, no gutter and no corner. The plate keeps its own proportions:
@@ -6260,12 +6312,6 @@ strong, b, th { font-weight: var(--weight-strong); --wght: var(--weight-strong);
   line-height: 1.55;
 }
 .project-note__body p:last-child { margin-bottom: 0; }
-
-/* ---------- Closing download ---------- */
-.project-close {
-  padding: 0 var(--project-inset) var(--project-rhythm);
-}
-.project-close .actions { justify-content: flex-start; }
 
 @media screen and (max-width: 991px) {
   :root { --project-rhythm: 8rem; }
@@ -6482,12 +6528,12 @@ html.is--page-transition .progress-bar-wrap {
 }
 .parallax-slider__list:active { cursor: grabbing; }
 
-/* Small and wide, 1.6 : 1, the same height throughout, a narrow gap
+/* Small and cinematic, 16 : 9, the same size throughout, a narrow gap
    between them (--arch-gap); a short window caps the width so the row
    always keeps its room under the name */
 .arch-page {
-  --arch-gap: 1.8rem;
-  --arch-card: min(35vw, (100svh - var(--nav-height) - var(--fnav-clearance) - 14rem) * 1.6);
+  --arch-gap: 1.4rem;
+  --arch-card: min(29vw, (100svh - var(--nav-height) - var(--fnav-clearance) - 14rem) * 16 / 9);
 }
 .parallax-slider__item {
   flex: none;
@@ -6496,10 +6542,10 @@ html.is--page-transition .progress-bar-wrap {
   position: relative;
 }
 
-/* Its corners only just softened, as the home hero's pictures are */
+/* Square-cornered, a clean cut rectangle */
 .parallax-slider__item-inner {
-  aspect-ratio: 16 / 10;
-  border-radius: 1px;
+  aspect-ratio: 16 / 9;
+  border-radius: 0;
   width: var(--arch-card);
   position: relative;
   overflow: clip;
@@ -6597,6 +6643,28 @@ html.is--page-transition .progress-bar-wrap {
   .parallax-slider__item-link:hover .parallax-slider__item-img { transform: scale(1.03); }
 }
 
+/* One picture in colour at a time: the card nearest the row's middle
+   (is--active, archslider.js), or the one under the pointer, which takes
+   it from the middle one while it is there. The rest stand back, in black
+   and white and a shade darker, still legible as pictures. */
+.parallax-slider__item-img {
+  filter: grayscale(1) brightness(0.62);
+  transition: transform 0.9s var(--cta-ease), opacity 0.7s ease, filter 0.45s ease;
+}
+.parallax-slider__item.is--active .parallax-slider__item-img { filter: none; }
+@media (hover: hover) and (pointer: fine) {
+  .parallax-slider__list:has(.parallax-slider__item-link:hover) .parallax-slider__item-img { filter: grayscale(1) brightness(0.62); }
+  .parallax-slider__list .parallax-slider__item-link:hover .parallax-slider__item-img { filter: none; }
+  /* The coloured card's name and context under it, as the hovered card's are */
+  .parallax-slider__list:not(:has(.parallax-slider__item-link:hover)) .parallax-slider__item.is--active .parallax-slider__item-label {
+    opacity: 1;
+    translate: 0 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .parallax-slider__item-img { transition: opacity 0.7s ease, filter 0.2s ease; }
+}
+
 /* Smooothy never loaded — the track scrolls natively instead */
 .parallax-slider__list.is--fallback {
   overflow-x: auto;
@@ -6607,7 +6675,7 @@ html.is--page-transition .progress-bar-wrap {
 
 @media screen and (max-width: 991px) {
   .arch-stage__title { font-size: 3.6rem; }
-  .arch-page { --arch-card: min(57vw, (100svh - var(--nav-height) - var(--fnav-clearance) - 14rem) * 1.6); }
+  .arch-page { --arch-card: min(50vw, (100svh - var(--nav-height) - var(--fnav-clearance) - 14rem) * 16 / 9); }
 }
 /* On a phone the name stands on the pages' column alone: the arrows go (a
    swipe moves the row), the card about three quarters of the screen,
@@ -6615,7 +6683,7 @@ html.is--page-transition .progress-bar-wrap {
 @media screen and (max-width: 767px) {
   .arch-stage__title { font-size: 2.8rem; }
   .arch-arrows { display: none; }
-  .arch-page { --arch-card: min(82vw, (100svh - var(--nav-height) - var(--fnav-clearance) - 14rem) * 1.6); }
+  .arch-page { --arch-card: min(76vw, (100svh - var(--nav-height) - var(--fnav-clearance) - 14rem) * 16 / 9); }
   .parallax-slider__item-label { flex-direction: column; gap: 0.4rem; }
 }
 
@@ -7388,6 +7456,30 @@ html.is--fnav-open:not(.is--fnav-foot) .fnav__background {
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
+}
+/* A name wider than the window (a project's full title) runs round as a
+   marquee (floatingnav.js): two copies end to end, each with half the gap
+   either side, so moving the pair by half its width brings it back exactly
+   where it began; it fades out into the bar's glass at both edges rather
+   than being cut. Within the window between the home link and the menu
+   control, so it never runs under either. */
+.fnav__title-inner.is--running {
+  padding: 0;
+  text-align: left;
+  text-overflow: clip;
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000000 2.6em, #000000 calc(100% - 2.6em), transparent);
+  mask-image: linear-gradient(90deg, transparent, #000000 2.6em, #000000 calc(100% - 2.6em), transparent);
+}
+.fnav__title-track {
+  display: inline-flex;
+  animation: fnav-title-run var(--fnav-title-run, 12s) linear infinite;
+}
+.is--running .fnav__title-word {
+  flex: none;
+  padding: 0 1.6em;
+}
+@keyframes fnav-title-run {
+  to { transform: translateX(-50%); }
 }
 
 .fnav :is(a, button):focus-visible {
@@ -9397,24 +9489,36 @@ main[data-barba-namespace="partner"] .hero-nav__pill { --hero-social-bg: #e4e2de
 /* The Architecture page's name set as the Shop, Influence and Partner heroes':
    the same size, flush left on the studio's name, its arrows kept beside it */
 .arch-stage__title { margin-left: -0.02em; font-size: 8rem; line-height: 0.95; letter-spacing: -0.04em; }
-@media screen and (max-width: 991px) { .arch-stage__title { font-size: 7.4rem; } }
-@media screen and (max-width: 767px) { .arch-stage__title { font-size: 5.2rem; } }
-/* How many projects: small and raised at the name's top right, in the
-   name's own ems so it keeps its place at every size, a hair clear of the
-   last letter */
+/* On a wide screen the name stands up beside the column of pages, a size
+   larger, its foot on Partner's (the last link's baseline, 12.13rem down
+   the bar): its box is trimmed to its capitals (0.728em of the face), so
+   the stage's top padding is that baseline less their height (set as the
+   rule that clears the bar on every inner page is, to outrank it) */
+@media screen and (min-width: 992px) {
+  .arch-page { --arch-title-size: 8.8rem; }
+  main.arch-page:not(:has(.home-hero)) .site-nav + .arch-stage { padding-top: calc(12.13rem - 0.728 * var(--arch-title-size)); }
+  .arch-stage__title { font-size: var(--arch-title-size); }
+}
+@media screen and (max-width: 991px) { .arch-stage__title { font-size: 6.8rem; } }
+@media screen and (max-width: 767px) { .arch-stage__title { font-size: 4.8rem; } }
+/* How many projects, in square brackets: small and raised at the name's
+   top right, in the name's own ems so it keeps its place at every size, a
+   hair clear of the last letter */
 .arch-stage__count {
-  margin-left: 0.12em;
-  font-size: 0.24em;
+  margin-left: 0.55em;
+  font-size: 0.16em;
   line-height: 1;
-  letter-spacing: 0;
-  /* Its figures' tops level with the name's capitals */
-  vertical-align: 2.28em;
+  letter-spacing: 0.02em;
+  /* Its figures' tops level with the name's capitals: raised by the
+     name's cap height (0.728 of its em) less its own, in its own ems */
+  vertical-align: 3.82em;
 }
 .arch-stage__head { margin-bottom: 0; }
 /* The name's box ends on its letters' foot (the baseline), so the room
    under it, and the row centred in it, start where the eye sees the name
    end */
 .arch-stage__title { text-box: trim-end cap alphabetic; }
+@media screen and (min-width: 992px) { .arch-stage__title { text-box: trim-both cap alphabetic; } }
 /* The arrows start under the YouTube square: the ways to Tom's row of four squares, measured from the same right edge */
 .arch-arrows { width: calc(4 * (5 * var(--grid-pitch) - 1px) + 9px); justify-content: flex-start; }
 /* The row in the middle of the room between the name's foot and the top of

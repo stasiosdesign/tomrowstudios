@@ -877,7 +877,7 @@ export type PROJECT_INDEX_QUERY_RESULT = Array<{
 
 // Source: ../src/sanity/queries.ts
 // Variable: PROJECT_PAGE_QUERY
-// Query: *[_type == "project" && slug.current == $slug && count(*[_id == "publish-log." + ^._id && state == "unpublished" && draftRev == ^._rev]) == 0][0] {  _id,  title,  "name": coalesce(shortTitle, title),  "slug": slug.current,  context,  year,  lead,  credits[]{ _key, name, note, kind },  "portfolioUrl": coalesce(portfolio.asset->url, portfolioUrl),  content[]{    _key,    _type,    _type == "featureImage" => { asset->{ _id, metadata { dimensions { width, height } } }, crop, hotspot, alt },    _type == "imageGallery" => { layout, framing, images[]{ _key, asset->{ _id, metadata { dimensions { width, height } } }, crop, hotspot, alt } },    _type == "textSection" => { label, body }  }}
+// Query: *[_type == "project" && slug.current == $slug && count(*[_id == "publish-log." + ^._id && state == "unpublished" && draftRev == ^._rev]) == 0][0] {  _id,  title,  "name": coalesce(shortTitle, title),  "slug": slug.current,  context,  year,  lead,  coverImage { asset->{ _id, metadata { dimensions { width, height } } }, crop, hotspot, alt },  credits[]{ _key, name, note, kind },  content[]{    _key,    _type,    _type == "featureImage" => { asset->{ _id, metadata { dimensions { width, height } } }, crop, hotspot, alt },    _type == "imageGallery" => { layout, framing, images[]{ _key, asset->{ _id, metadata { dimensions { width, height } } }, crop, hotspot, alt } },    _type == "textSection" => { label, body }  }}
 export type PROJECT_PAGE_QUERY_RESULT = {
   _id: string;
   title: string | null;
@@ -886,13 +886,26 @@ export type PROJECT_PAGE_QUERY_RESULT = {
   context: string | null;
   year: number | null;
   lead: string | null;
+  coverImage: {
+    asset: {
+      _id: string;
+      metadata: {
+        dimensions: {
+          width: number | null;
+          height: number | null;
+        } | null;
+      } | null;
+    } | null;
+    crop: SanityImageCrop | null;
+    hotspot: SanityImageHotspot | null;
+    alt: string | null;
+  } | null;
   credits: Array<{
     _key: string;
     name: string | null;
     note: string | null;
     kind: "award" | "detail" | "won" | null;
   }> | null;
-  portfolioUrl: string | null;
   content: Array<
     | {
         _key: string;
@@ -2400,7 +2413,7 @@ export type PARTNERS_QUERY_RESULT = Array<{
 declare global {
   interface SanityQueries {
     '*[_type == "project" && defined(slug.current) && count(*[_id == "publish-log." + ^._id && state == "unpublished" && draftRev == ^._rev]) == 0] | order(sortOrder asc, _createdAt asc) {\n  _id,\n  "name": coalesce(shortTitle, title),\n  "slug": slug.current,\n  context,\n  year,\n  coverImage { asset->{ _id, metadata { dimensions { width, height } } }, crop, hotspot, alt }\n}': PROJECT_INDEX_QUERY_RESULT;
-    '*[_type == "project" && slug.current == $slug && count(*[_id == "publish-log." + ^._id && state == "unpublished" && draftRev == ^._rev]) == 0][0] {\n  _id,\n  title,\n  "name": coalesce(shortTitle, title),\n  "slug": slug.current,\n  context,\n  year,\n  lead,\n  credits[]{ _key, name, note, kind },\n  "portfolioUrl": coalesce(portfolio.asset->url, portfolioUrl),\n  content[]{\n    _key,\n    _type,\n    _type == "featureImage" => { asset->{ _id, metadata { dimensions { width, height } } }, crop, hotspot, alt },\n    _type == "imageGallery" => { layout, framing, images[]{ _key, asset->{ _id, metadata { dimensions { width, height } } }, crop, hotspot, alt } },\n    _type == "textSection" => { label, body }\n  }\n}': PROJECT_PAGE_QUERY_RESULT;
+    '*[_type == "project" && slug.current == $slug && count(*[_id == "publish-log." + ^._id && state == "unpublished" && draftRev == ^._rev]) == 0][0] {\n  _id,\n  title,\n  "name": coalesce(shortTitle, title),\n  "slug": slug.current,\n  context,\n  year,\n  lead,\n  coverImage { asset->{ _id, metadata { dimensions { width, height } } }, crop, hotspot, alt },\n  credits[]{ _key, name, note, kind },\n  content[]{\n    _key,\n    _type,\n    _type == "featureImage" => { asset->{ _id, metadata { dimensions { width, height } } }, crop, hotspot, alt },\n    _type == "imageGallery" => { layout, framing, images[]{ _key, asset->{ _id, metadata { dimensions { width, height } } }, crop, hotspot, alt } },\n    _type == "textSection" => { label, body }\n  }\n}': PROJECT_PAGE_QUERY_RESULT;
     '*[_type == "shopItem" && defined(slug.current) && count(*[_id == "publish-log." + ^._id && state == "unpublished" && draftRev == ^._rev]) == 0] | order(sortOrder asc, title asc) {\n  _id,\n  title,\n  "slug": slug.current,\n  sortOrder,\n  card { image { asset->{ _id, metadata { dimensions { width, height } } }, crop, hotspot, alt }, kind, meta, text, button }\n}': SHOP_ITEMS_QUERY_RESULT;
     '*[_type == "shopItem" && slug.current == $slug && count(*[_id == "publish-log." + ^._id && state == "unpublished" && draftRev == ^._rev]) == 0][0] {\n  _id,\n  title,\n  "slug": slug.current,\n  header { image { asset->{ _id, metadata { dimensions { width, height } } }, crop, hotspot, alt }, lead, tags },\n  details {\n    metaRows[]{ _key, label, value },\n    cta { rowLabel, label, href, opensContact }\n  },\n  overview { heading, body, image { asset->{ _id, metadata { dimensions { width, height } } }, crop, hotspot, alt } },\n  whatYouGet { heading, body, modules[]{ _key, name, text }, image { asset->{ _id, metadata { dimensions { width, height } } }, crop, hotspot, alt } },\n  atlas {\n    image { asset->{ _id, metadata { dimensions { width, height } } }, crop, hotspot, alt },\n    caption,\n    primaryButton { label, href },\n    secondaryButton { label, href }\n  }\n}': SHOP_ITEM_QUERY_RESULT;
     'select(\n  count(*[_id == "homePage"][0].logoWall.clients) > 0 =>\n    (*[_id == "homePage"][0].logoWall.clients[]-> { _id, name, logo { asset->{ _id, metadata { dimensions { width, height } } }, crop, hotspot } })[defined(logo.asset)],\n  *[_type == "client" && defined(logo.asset)] | order(sortOrder asc, name asc) { _id, name, logo { asset->{ _id, metadata { dimensions { width, height } } }, crop, hotspot } }\n)': CLIENT_LOGOS_QUERY_RESULT;

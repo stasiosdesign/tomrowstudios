@@ -16,10 +16,12 @@ const D = PAGE_DEFAULTS.architecturePage;
 <SiteNav />
 
 <!-- One screen, moving sideways, after an editorial index: a single row of
-     small landscape pictures across the middle of the screen, a great deal
+     small 16:9 pictures across the middle of the screen, a great deal
      of room above and below, the page's name over the row under the
-     studio's name, and each project's name and context on its picture,
-     shown under the pointer or with the card focused. The pictures drift a
+     studio's name, and each project's name and context under its picture.
+     One picture is in colour at a time, the one nearest the middle or the
+     one under the pointer, with its name shown; the rest stand back in
+     black and white. The pictures drift a
      little in their frames as the row moves (Osmo's parallax slider,
      archslider.js). The row is reached by dragging, by the arrows, or by
      scrolling up and down, which the slider reads as left and right; a fine
@@ -31,7 +33,7 @@ const D = PAGE_DEFAULTS.architecturePage;
     <div class="arch-stage__head">
       <!-- The name, and beside it, small and raised, how many projects the
            row shows (the projects from Sanity, counted) -->
-      <h1 class="arch-stage__title"><span data-page-field="header.heading">{page?.header?.heading ?? D.header.heading}</span><sup class="arch-stage__count">({projects.length})</sup></h1>
+      <h1 class="arch-stage__title"><span data-page-field="header.heading">{page?.header?.heading ?? D.header.heading}</span><sup class="arch-stage__count">[{projects.length}]</sup></h1>
       <div class="arch-arrows">
         <button type="button" data-parallax-prev class="arch-arrow is--prev" aria-label="Previous project"></button>
         <button type="button" data-parallax-next class="arch-arrow is--next" aria-label="Next project"></button>
@@ -40,7 +42,7 @@ const D = PAGE_DEFAULTS.architecturePage;
 
     <div class="arch-stage__slider">
       <div class="parallax-slider__collection">
-        <div data-parallax-slider data-parallax-infinite="true" data-parallax-snap="false" data-parallax-amount="10" data-parallax-lerp="0.2" class="parallax-slider__list">
+        <div data-parallax-slider data-parallax-infinite="true" data-parallax-snap="false" data-parallax-amount="10" data-parallax-lerp="0.08" class="parallax-slider__list">
 
           {projects.map((project) => (
           <div class="parallax-slider__item">

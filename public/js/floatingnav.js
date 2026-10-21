@@ -671,16 +671,54 @@ function initFloatingNav() {
   // ---- The route: the bar's name and the menu's current page ----
   const pathName = (path) => path.replace(/[#?].*$/, '').replace(/\.html$/, '').replace(/\/index$/, '') || '/';
 
+  // The name written into its window: as it is, centred, when it fits;
+  // wider than the window (a project's full title), running round as a
+  // marquee, two copies end to end moved by one copy's width on a loop, at
+  // an even reading pace, faded out at both edges (style.css). Measured
+  // again when the window or the fonts change.
+  const TITLE_PACE = 32; // pixels a second
+  let titleText = titleInner.textContent;
+  function writeTitle(text) {
+    titleText = text;
+    titleInner.classList.remove('is--running');
+    titleInner.textContent = text;
+    if (!text || reducedMotion) return;
+    const style = getComputedStyle(titleInner);
+    const room = titleInner.clientWidth - parseFloat(style.paddingLeft) - parseFloat(style.paddingRight);
+    const word = document.createElement('span');
+    word.className = 'fnav__title-word';
+    word.textContent = text;
+    titleInner.replaceChildren(word);
+    if (word.offsetWidth <= room + 0.5) {
+      titleInner.textContent = text;
+      return;
+    }
+    titleInner.classList.add('is--running');
+    const track = document.createElement('span');
+    track.className = 'fnav__title-track';
+    const twin = word.cloneNode(true);
+    track.append(word, twin);
+    titleInner.replaceChildren(track);
+    track.style.setProperty('--fnav-title-run', `${(word.offsetWidth / TITLE_PACE).toFixed(2)}s`);
+  }
+  let titleFrame = 0;
+  const refitTitle = () => {
+    cancelAnimationFrame(titleFrame);
+    titleFrame = requestAnimationFrame(() => writeTitle(titleText));
+  };
+  window.addEventListener('resize', refitTitle);
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(refitTitle);
+
   function setTitle(text) {
-    if (titleInner.textContent === text) return;
+    if (titleText === text) return;
     // Out of sight: the name is simply set
     if (reducedMotion || !bar.classList.contains('is--shown')) {
-      titleInner.textContent = text;
+      writeTitle(text);
       return;
     }
     gsap.timeline({ defaults: { overwrite: 'auto' } })
       .to(titleInner, { yPercent: -100, duration: 0.3, ease: 'power3.in' })
-      .call(() => { titleInner.textContent = text; })
+      .call(() => writeTitle(text))
       .set(titleInner, { yPercent: 100 })
       .to(titleInner, { yPercent: 0, duration: 0.45, ease: 'power3.out' });
   }

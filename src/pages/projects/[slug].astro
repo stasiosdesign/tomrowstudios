@@ -13,7 +13,6 @@ import { PortableText } from 'astro-portabletext';
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import SiteNav from '../../components/SiteNav.astro';
 import ContactPanel from '../../components/ContactPanel.astro';
-import Button from '../../components/Button.astro';
 import { sanityClient } from '../../sanity/client';
 import { imageAttrs } from '../../sanity/image';
 import { PROJECT_INDEX_QUERY, PROJECT_PAGE_QUERY } from '../../sanity/queries';
@@ -43,15 +42,24 @@ const creditClass = { won: 'is--won', award: undefined, detail: 'is--meta' };
 // The gallery tiles' aspect ratio; "natural" leaves every picture uncropped
 const framingClass = { wide: 'is--wide', square: 'is--square', tall: 'is--tall', natural: undefined };
 ---
-<BaseLayout title={`${project.title} — Tomrowstudios`} namespace={`project-${project.slug}`} pageName={project.name ?? ''} navTitle="Architecture" navSection="/architecture" mainClass="is--bare">
+<BaseLayout title={`${project.title} — Tomrowstudios`} namespace={`project-${project.slug}`} pageName={project.name ?? ''} navTitle={project.title ?? project.name ?? 'Architecture'} navSection="/architecture" mainClass="is--bare">
 <SiteNav />
 
 
 <!-- Project header, laid out as the Shop, Influence and Partner pages'
-     (.shop-hero): the title large on the black, flush left on the studio's
-     name in the bar above; under it, past a rule, the standfirst beside the
-     awards. No column lines and no grain on these pages (is--bare). -->
+     (.shop-hero): the title large, flush left on the studio's name in the
+     bar above; under it, past a rule, the standfirst beside the awards. All
+     of it over the project's cover, a screen tall, edge to edge and
+     darkened: the picture the Architecture row's card grows into when it is
+     opened (project-expand.js), the same file, so it is already there. No
+     column lines and no grain on these pages (is--bare). -->
 <header class="shop-hero is--project">
+  {project.coverImage && (
+  <div class="project-hero__bg" data-project-bg aria-hidden="true">
+    <img {...imageAttrs(project.coverImage, 1600)} alt="" decoding="async" data-reveal-wait class="project-hero__bg-img">
+    <span class="project-hero__shade"></span>
+  </div>
+  )}
   <div class="shop-hero__body">
     <div class="shop-hero__copy">
       <h1>{project.title}</h1>
@@ -69,10 +77,6 @@ const framingClass = { wide: 'is--wide', square: 'is--square', tall: 'is--tall',
         ))}
       </ul>
       ) : null}
-        <div class="actions project-hero__actions">
-          {project.portfolioUrl && <Button href={project.portfolioUrl} target="_blank" rel="noopener" label="Download Portfolio" />}
-          <Button href="/architecture" label="All projects" secondary />
-        </div>
       </div>
     </div>
   </div>
@@ -113,15 +117,6 @@ const framingClass = { wide: 'is--wide', square: 'is--square', tall: 'is--tall',
 )}
 </>
 ))}
-
-{/* Portfolio download */}
-{project.portfolioUrl && (
-<section class="project-close">
-  <div class="actions">
-    <Button href={project.portfolioUrl} target="_blank" rel="noopener" label="Download Portfolio" />
-  </div>
-</section>
-)}
 
 <!-- Keep scrolling past the end of the project and the ring fills; when it
      closes, the link is taken and the next project loads. -->

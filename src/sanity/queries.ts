@@ -42,8 +42,8 @@ export const PROJECT_PAGE_QUERY = defineQuery(`*[_type == "project" && slug.curr
   context,
   year,
   lead,
+  coverImage { ${IMAGE} },
   credits[]{ _key, name, note, kind },
-  "portfolioUrl": coalesce(portfolio.asset->url, portfolioUrl),
   content[]{
     _key,
     _type,
