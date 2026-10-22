@@ -133,7 +133,7 @@ const fields: { name: string; label: string; placeholder: string; type: 'text' |
       </button>
     </div>
     )}
-    <!-- Beside the reel, the four ways to Tom (site-links.ts), each a circle
+    <!-- Beside the reel, the four ways to Tom (site-links.ts), each a square
          in the cards' colour holding its mark, two by two; the email one
          copies the address, as it does in the footer (social-copy.js), its
          envelope opening -->
@@ -153,18 +153,16 @@ const fields: { name: string; label: string; placeholder: string; type: 'text' |
       </div>
     </div>
     </div>
-    <!-- The foot: Home and Contact side by side, half and half, each a
-         single row on the middle line -->
+    <!-- The foot: Home and Contact side by side, half and half, each its
+         name alone on the middle line -->
     <div class="fnav-menu__foot">
       <div class="fnav-menu__cell is--wide" data-fnav-reveal data-fnav-item={home.href}>
         <a href={home.href} class="fnav-tile is--wide" data-fnav-link data-split-hover="link">
           <span class="fnav-tile__title" data-split-hover="target">{home.label}</span>
-          <span class="fnav-tile__note">{home.note}</span>
         </a>
       </div>
       <a href="#contact" class="fnav-menu__contact" data-fnav-reveal data-fnav-button data-fnav-contact-open data-barba-prevent="self" aria-haspopup="dialog" aria-controls="fnav-contact" data-split-hover="link">
         <span class="fnav-menu__contact-label" data-split-hover="target">Contact</span>
-        <Arrow class="fnav-tile__arrow" shape="corner" />
       </a>
     </div>
   </nav>

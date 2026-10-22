@@ -79,9 +79,11 @@ const stage = panels.map((panel) => ({ ...panel, xf: order.indexOf(panel.x) * EV
   </div>
 </section>
 
-<!-- The approach, set large (StatementBlock.astro) -->
+<!-- The approach, set large (StatementBlock.astro); its words light up as
+     it is scrolled through, as the home page's statement's do
+     (text-highlight.js) -->
 <section class="section">
-  <StatementBlock text={page?.approach?.statement ?? D.approach.statement} field="approach.statement" centred />
+  <StatementBlock text={page?.approach?.statement ?? D.approach.statement} field="approach.statement" centred highlight />
 </section>
 
 <!-- The line map, the creators' atlas, held in a section of its own for

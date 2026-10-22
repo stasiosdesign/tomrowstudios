@@ -1,0 +1,18 @@
+---
+/* Contact: two boxes side by side, one link — its word, in the links'
+   own face and with their roll on hover (split-hover.js, as the column of
+   pages has it), and the arrow in a square of the same height. Pressed, it
+   opens the contact form out of the floating bar (floatingnav.js). At the
+   top right of every page's header (HeroNav.astro) and in the footer's
+   Contact column (SiteFooter.astro); style.css, .hero-nav__contact. */
+import Arrow from './Arrow.astro';
+
+interface Props {
+  class?: string;
+}
+const { class: className } = Astro.props;
+---
+<a href="#contact" class:list={['hero-nav__contact', className]} data-fnav-contact-open data-barba-prevent="self" aria-haspopup="dialog" aria-controls="fnav-contact" data-split-hover="link">
+  <span class="hero-nav__contact-label"><span data-split-hover="target">Contact</span></span>
+  <span class="hero-nav__contact-square"><Arrow class="hero-nav__contact-arrow" shape="straight" /></span>
+</a>

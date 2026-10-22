@@ -41,6 +41,13 @@ const { reel, filmStill, tintPalettes, reelSrc, reelPreview, reelFilm } = data;
            the overview are for the eye (each picture names its part to a
            screen reader); the link is for everyone. -->
       <div class="home-list__meta" data-list-meta>
+        <!-- The parts' numbers, 01 to 05, on the left margin under the
+             studio's mark: a wheel turned by the scroll, the lit part's
+             facing out level with its name, the ones either side turning
+             away above and below it (home-list.js, turnDial) -->
+        <div class="home-list__dial" aria-hidden="true">
+          {reel.map((_, i) => <span class="home-list__dial-num" data-list-dial>{String(i + 1).padStart(2, '0')}</span>)}
+        </div>
         <div class="home-list__field is--title" aria-hidden="true">
           <span class="home-list__values">
             {reel.map(({ lines }, i) => <span class:list={['home-list__value', { 'is--active': i === 0 }]} data-list-panel={i}>{lines.map((line, j) => <>{j > 0 && <br />}{line}</>)}</span>)}
@@ -65,10 +72,10 @@ const { reel, filmStill, tintPalettes, reelSrc, reelPreview, reelFilm } = data;
        page scrolls through them as it would anything (or a drag does), the
        lit one the one on the middle line (home-list.js). -->
   <ol class="home-list" role="list" data-list>
-    {reel.map(({ title, about, href, picture, film, position, cursor }, i) => (
+    {reel.map(({ title, about, href, picture, film, position, cursor, colour }, i) => (
     <li class="home-list__item" data-list-item data-list-title={title} data-tint-palette={tintPalettes[i] ? JSON.stringify(tintPalettes[i]) : undefined}>
       {film ? (
-      <button type="button" class="home-list__shot home-reel__img is--film" data-list-shot data-reel-card data-cursor-label={cursor} data-reel-src={reelSrc} data-reel-poster={filmStill} data-reel-preview={reelPreview} aria-haspopup="dialog" aria-label={`${title}: play the film. ${about}`}>
+      <button type="button" class:list={['home-list__shot home-reel__img is--film', { 'is--mono': !colour }]} data-list-shot data-reel-card data-cursor-label={cursor} data-reel-src={reelSrc} data-reel-poster={filmStill} data-reel-preview={reelPreview} aria-haspopup="dialog" aria-label={`${title}: play the film. ${about}`}>
         <span class="home-list__visual" data-list-drift data-reel-media>
           <img class="home-list__img" {...reelImage(picture)} alt="" decoding="async" draggable="false" style={`--reel-position: ${position}`} {...(i === 0 ? { fetchpriority: 'high', 'data-reveal-wait': '' } : {})}>
           <!-- The film itself, muted, over its still while the pointer is
@@ -79,7 +86,7 @@ const { reel, filmStill, tintPalettes, reelSrc, reelPreview, reelFilm } = data;
         <span class="home-reel__play" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M8 5.5v13l10.5-6.5z" fill="currentColor"/></svg></span>
       </button>
       ) : (
-      <a href={href} class="home-list__shot home-reel__img" data-list-shot data-cursor-label={cursor}>
+      <a href={href} class:list={['home-list__shot home-reel__img', { 'is--mono': !colour }]} data-list-shot data-cursor-label={cursor}>
         <span class="home-list__visual" data-list-drift>
           <img class="home-list__img" {...reelImage(picture)} alt="" decoding="async" draggable="false" style={`--reel-position: ${position}`} {...(i === 0 ? { fetchpriority: 'high', 'data-reveal-wait': '' } : i === 1 ? {} : { loading: 'lazy' })}>
         </span>

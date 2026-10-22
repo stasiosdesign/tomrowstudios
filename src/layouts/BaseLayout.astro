@@ -16,6 +16,7 @@ import ScrollBar from '../components/ScrollBar.astro';
 import ReelLightbox from '../components/ReelLightbox.astro';
 import { REEL_SRC } from '../components/reel';
 import DraftModeLabel from '../components/DraftModeLabel.astro';
+import { DESIGN_NOTES } from '../components/design-notes';
 
 interface Props {
   title: string;
@@ -49,8 +50,12 @@ const canonical = Astro.site && new URL(path, Astro.site).href;
 // Anything but production asks search engines to stay away (so does every
 // response header there: src/middleware.ts, vercel.ts)
 const noindex = __DEPLOYMENT__ !== 'production';
-// The design grid overlay is a development aid: never on production
-const showGridOverlay = __DEPLOYMENT__ !== 'production';
+// The design review mode (Shift + G) is a development aid:
+// never on production
+const showDesignReview = __DEPLOYMENT__ !== 'production';
+// The notes travel in the page as JSON, every page's at once (a Barba
+// navigation keeps this layer), "<" escaped so none can close the script
+const designNotes = showDesignReview ? JSON.stringify(DESIGN_NOTES).replace(/</g, '\\u003c') : '';
 // The reel's player goes where its card does: on production, once there is a reel (reel.ts)
 const showReel = Boolean(REEL_SRC) || __DEPLOYMENT__ !== 'production';
 ---
@@ -94,27 +99,14 @@ const showReel = Boolean(REEL_SRC) || __DEPLOYMENT__ !== 'production';
 </head>
 <body data-barba="wrapper">
 
-<!-- Temporary 12-column design grid overlay (Shift + G), a design aid for
-     development and staging only: a production build leaves it out. Outside
-     the Barba container so it survives a navigation. -->
-{showGridOverlay && <div data-animated-grid class="grid-overlay">
-  <div class="container is--full-height">
-    <div class="grid-overlay__row">
-      <div data-animated-grid-col class="grid-overlay__col"></div>
-      <div data-animated-grid-col class="grid-overlay__col"></div>
-      <div data-animated-grid-col class="grid-overlay__col"></div>
-      <div data-animated-grid-col class="grid-overlay__col"></div>
-      <div data-animated-grid-col class="grid-overlay__col"></div>
-      <div data-animated-grid-col class="grid-overlay__col"></div>
-      <div data-animated-grid-col class="grid-overlay__col"></div>
-      <div data-animated-grid-col class="grid-overlay__col"></div>
-      <div data-animated-grid-col class="grid-overlay__col"></div>
-      <div data-animated-grid-col class="grid-overlay__col"></div>
-      <div data-animated-grid-col class="grid-overlay__col"></div>
-      <div data-animated-grid-col class="grid-overlay__col"></div>
-    </div>
-  </div>
-</div>}
+<!-- Design review mode (Shift + G), a review aid for development and
+     staging only (a production build leaves it out): the site faded behind
+     a translucent white and the design notes over it, each beside the part
+     of the page it is about (design-notes.ts, grid-overlay.js, "Design
+     notes" in style.css). Desktop only. Outside the Barba container so it
+     survives a navigation. -->
+{showDesignReview && <div class="design-notes" data-design-notes aria-hidden="true"></div>}
+{showDesignReview && <script type="application/json" id="design-notes-data" set:html={designNotes}></script>}
 
 <!-- The cursor's label: what a click does, beside the arrow, over an
      element marked data-cursor-label (cursor.js, "Cursor label" in
@@ -184,7 +176,7 @@ const showReel = Boolean(REEL_SRC) || __DEPLOYMENT__ !== 'production';
 <!-- The reel's player (bunny-lightbox.js) is fetched by reel.js on first need -->
 <script is:inline src="/js/reel.js"></script>
 <!-- Temporary development grid overlay (development and staging only) -->
-{showGridOverlay && <script is:inline src="/js/grid-overlay.js"></script>}
+{showDesignReview && <script is:inline src="/js/grid-overlay.js"></script>}
 <!-- Staging and development only: inside the Studio's Visual editor (the page
      in a frame), load the click-to-edit layer and live drafts. The deployment
      is fixed at build time, so a production build leaves all of it out. -->

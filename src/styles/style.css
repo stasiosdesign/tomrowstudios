@@ -2500,6 +2500,10 @@ html.is--intro .home-reel__chrome { opacity: 0; visibility: hidden; transition: 
   user-select: none;
   -webkit-user-drag: none;
 }
+/* Black and white, every part's but Architectural Influence's
+   (home-hero.ts, `colour`), the film over About's still the same; the
+   opening's squares draw them alike (.home-loader__square.is--mono) */
+.home-list__shot.is--mono .home-list__img { filter: grayscale(1); }
 /* The film over its still while hovered, faded in once it is running and
    out again on leaving (reel.js) */
 .home-list__film {
@@ -2640,11 +2644,54 @@ html.is--intro .home-reel__chrome { opacity: 0; visibility: hidden; transition: 
   min-width: 0;
 }
 .home-list__field.is--title { top: var(--list-title-top); }
+/* The parts' numbers (01 to 05) as a wheel: on the left margin, under the
+   studio's mark (--hero-logo-left), left of the pictures, in the name's
+   own face, its middle on the middle of the name's first line. Each number
+   stands on the wheel's rim (its turning point --dial-r behind it), a
+   --dial-step of a turn from the next; home-list.js turns the wheel with
+   the scroll (--d, how many parts a number is from the one in the middle,
+   and --o, how far it has faded), so the lit part's faces out and the
+   others roll away above and below it, fading, as the list goes by. Only
+   where the margin has room for it */
+.home-list__dial {
+  --dial-step: 30deg;
+  --dial-r: 2.3em;
+  position: absolute;
+  top: var(--list-title-top);
+  left: calc(var(--hero-logo-left) - var(--hero-links-left));
+  width: 2.4em;
+  height: calc(var(--list-title-type) * var(--leading-heading));
+  perspective: 12em;
+  pointer-events: none;
+  font-family: var(--font-body);
+  font-size: clamp(1.3rem, 1vw, 1.8rem);
+  line-height: 1;
+  letter-spacing: var(--track-display);
+  font-weight: var(--weight-strong); --wght: var(--weight-strong);
+  font-variant-numeric: tabular-nums;
+  color: var(--list-ink);
+}
+.home-list__dial-num {
+  --d: 0;
+  --o: 1;
+  position: absolute;
+  left: 0;
+  top: calc(50% - 0.5em);
+  white-space: nowrap;
+  transform-origin: 50% 50% calc(-1 * var(--dial-r));
+  transform: rotateX(calc(var(--d) * -1 * var(--dial-step)));
+  backface-visibility: hidden;
+  opacity: var(--o);
+}
+@media screen and (max-width: 991px) {
+  .home-list__dial { display: none; }
+}
 .home-list__field.is--about { bottom: calc(100% - var(--list-top) - var(--list-h)); }
-/* Learn more: on the background's second line down, the bottom of its
-   underline on the foot of the name's last line as the eye reads it
-   (--cta-x, --cta-y, from the fields' top left, home-list.js); faded out
-   where the part has none (About) */
+/* Learn more: beside the name's first line, set by eye, the top of its
+   capital on the top of the name's lowercase, a little more than the
+   name's size clear of its widest first line (--cta-x, --cta-y, from the
+   fields' top left, home-list.js); faded out where the part has none
+   (About) */
 .home-list__field.is--cta {
   top: var(--cta-y, var(--list-title-top));
   left: var(--cta-x, 0px);
@@ -2677,15 +2724,15 @@ html.is--intro .home-reel__chrome { opacity: 0; visibility: hidden; transition: 
 }
 .home-list__cta-label { position: relative; }
 /* The line close under the words (about a quarter of their size below
-   their baseline), so it hangs no lower than the name's round letters dip
-   below theirs and the link reads as standing on the name's line */
+   their baseline), a half-pixel hairline as the hero's grid is (a true one
+   on a dense screen, a fainter single pixel on a standard one) */
 .home-list__cta-label::after {
   content: "";
   position: absolute;
   left: 0;
   right: 0;
   bottom: 0.05em;
-  height: 1px;
+  height: 0.5px;
   background-color: currentColor;
   transform-origin: right center;
 }
@@ -2873,6 +2920,7 @@ html.is--intro .home-loader {
   object-position: var(--reel-position, 50% 50%);
   opacity: 0;
 }
+.home-loader__square.is--mono > img { filter: grayscale(1); }
 /* Into the list: each photograph as the list draws it, running 15% past
    its frame top and bottom and drifted as its picture will be when the
    page opens (--drift, % of the frame; home-list.js), so the hand-over is
@@ -2901,12 +2949,13 @@ html.is--intro .home-loader {
    One charcoal band from the hero to the closing cards, in the site's usual
    white type: the clients' logos, then the practice statement. It comes up
    over the hero, so without the rule between sections (no line along its
-   top edge). */
+   top edge), and the closing cards follow the statement with none either. */
 .logo-wall {
-  background-color: #121212;
+  background-color: #0d0d0d;
   color: #ffffff;
   border-top: 0;
 }
+.logo-wall + .explore { border-top: 0; }
 
 /* ---------- Scroll list ----------
    The home page's clients (logos) and the Partner page's services
@@ -3873,7 +3922,9 @@ html.is--intro .home-loader {
   display: flex;
   flex-direction: column;
   min-height: var(--footer-room);
-  padding: var(--footer-pad-top) var(--site-inset) var(--fnav-bottom);
+  /* The foot line a little under the bar's (.site-footer__bottom) */
+  --footer-pad-bottom: calc(0.55 * var(--fnav-bottom));
+  padding: var(--footer-pad-top) var(--site-inset) var(--footer-pad-bottom);
   overflow: hidden;
   color: #f4f4f4;
   font-size: 1.44rem;
@@ -3890,7 +3941,19 @@ html.is--intro .home-loader {
   gap: var(--grid-gap);
   /* Clear of the tiles of the footer's navigation, which reach up from
      the screen's foot past the foot line */
-  margin-bottom: calc(var(--fnav-foot-reach) - var(--fnav-bottom) - var(--fnav-bar-h) + var(--footer-clear));
+  margin-bottom: calc(var(--fnav-foot-reach) - var(--footer-pad-bottom) - var(--fnav-bar-h) + var(--footer-clear));
+}
+/* On the desktop grid the tiles stand clear of the first column, so the
+   wordmark comes down among them: its foot level with the foot of the
+   lower cards' names (--fnav-foot-name, floatingnav.js; until measured,
+   the cards' padding over their foot), the room above it taking what the
+   screen leaves */
+@media screen and (min-width: 992px) {
+  .site-footer__top {
+    margin-top: auto;
+    margin-bottom: calc(var(--fnav-foot-name, var(--fnav-menu-bottom) + 2 * var(--fnav-u)) - var(--footer-pad-bottom) - var(--fnav-bar-h));
+  }
+  .site-footer__top + .site-footer__bottom { margin-top: 0; }
 }
 .site-footer__logo {
   flex: none;
@@ -3915,13 +3978,14 @@ html.is--intro .home-loader {
 }
 
 /* The foot line: the copyright on the left and the legal links on the
-   right, small (the footer's metadata, not its navigation) and grey, on
-   the floating bar's line at the foot of the panel, a row the bar's
-   height with the bar's square in its middle */
+   right, small (the footer's metadata, not its navigation) and grey, low
+   at the foot of the panel: a row the bar's height with the bar's square
+   in its middle, the words at its foot, the row itself a little under the
+   bar's line (--footer-pad-bottom) */
 .site-footer__bottom {
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-end;
   gap: calc(var(--fnav-bar-h) + 4rem);
   height: var(--fnav-bar-h);
   margin-top: auto;
@@ -3962,16 +4026,17 @@ html.is--intro .home-loader {
 
 /* ---------- The footer's first row ----------
    SiteFooter.astro, after a studio reference (measured at 1900 wide, the
-   footer's sizes in its own terms at 1920): Menu in the page's first
-   column, Socials in the second, Newsletter across the right half; each a
-   small grey heading over its links, the links at the footer's size, one
-   under another on an open leading. The Newsletter: its line at the
-   links' size, then the sign-up, one low field the width of the half, a
-   shade lighter than the footer's grey, the address on its left and
-   Subscribe with its arrow at its right end, both small. It rises with
-   the footer's lines (the field fades up with them). Then a wide gap down
-   to the footer as it was. Below the desktop grid, Menu and Socials side
-   by side and the Newsletter under them across the width. */
+   footer's sizes in its own terms at 1920): Menu, Socials, Contact and
+   Newsletter, one to each of the page's four columns; each a small grey
+   heading over its links, the links at the footer's size, one under
+   another on an open leading. The Newsletter: its line at the links'
+   size, then the sign-up, one low field the width of its column, a shade
+   lighter than the footer's grey, the address on its left and Subscribe
+   with its arrow at its right end, both small. It rises with the footer's
+   lines (the field fades up with them). Then a wide gap down to the
+   footer as it was. Below the desktop grid, two columns (Menu and
+   Socials, then Contact and Newsletter); on a phone the Newsletter under
+   Contact across the width. */
 .site-footer__intro {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -3981,7 +4046,18 @@ html.is--intro .home-loader {
   margin-bottom: clamp(var(--footer-gap-min), var(--footer-room) - var(--footer-above) - var(--fnav-foot-reach), var(--footer-gap-max));
 }
 .site-footer__group { min-width: 0; }
-.site-footer__group.is--newsletter { grid-column: 3 / -1; }
+/* Contact: the header's button (ContactButton.astro) in the flow, as tall
+   as the squares and the field beside it, in its paper on every page */
+.site-footer__contact { max-width: none; }
+.site-footer .site-footer__contact-button.hero-nav__contact {
+  --pill: var(--footer-field-h);
+  --contact-bg: var(--partner-paper);
+  --contact-bg-hover: var(--partner-social);
+  --contact-ink: #0a0a0a;
+  --hero-social-ring: #f4f4f4;
+  position: static;
+  width: max-content;
+}
 .site-footer__label {
   margin: 0 0 1.4rem;
   color: rgba(244, 244, 244, 0.5);
@@ -4015,13 +4091,15 @@ html.is--intro .home-loader {
     align-content: start;
   }
   .site-footer__group > .site-footer__links { grid-row: 2 / -1; }
+  /* Contact has no line: its button on the squares' and the field's row */
+  .site-footer__group > .site-footer__contact { grid-row: 3; }
 }
 .site-footer__pitch { margin: 0 0 1.4rem; line-height: 1.5; }
 .site-footer__signup {
   display: flex;
   align-items: center;
   height: var(--footer-field-h);
-  background-color: rgba(244, 244, 244, 0.07);
+  background-color: rgba(244, 244, 244, 0.09);
   opacity: 0;
   transform: translateY(0.8rem);
   transition: opacity 0.8s ease, transform 1s cubic-bezier(0.165, 0.84, 0.44, 1);
@@ -4047,7 +4125,7 @@ html.is--intro .home-loader {
   outline: none;
 }
 .site-footer__email::placeholder { color: rgba(244, 244, 244, 0.72); opacity: 1; }
-.site-footer__signup:focus-within { background-color: rgba(244, 244, 244, 0.1); }
+.site-footer__signup:focus-within { background-color: rgba(244, 244, 244, 0.12); }
 .site-footer__subscribe {
   display: flex;
   flex: none;
@@ -4078,7 +4156,6 @@ html.is--intro .home-loader {
 }
 @media screen and (max-width: 991px) {
   .site-footer__intro { grid-template-columns: repeat(2, minmax(0, 1fr)); row-gap: 4rem; }
-  .site-footer__group.is--newsletter { grid-column: 1 / -1; }
   .site-footer__label,
   .site-footer__email,
   .site-footer__subscribe { font-size: 1.15rem; }
@@ -4093,6 +4170,8 @@ html.is--intro .home-loader {
   .site-footer__email,
   .site-footer__subscribe { font-size: max(1.3rem, 16px); }
   .site-footer { --footer-field-h: 4.8rem; }
+  /* The sign-up across the width, under Contact */
+  .site-footer__group.is--newsletter { grid-column: 1 / -1; }
 }
 
 /* ---------- Link groups ----------
@@ -6641,26 +6720,46 @@ body:has(.arch-page) {
 }
 .arch-stage__slider { flex: none; }
 
-/* The arrows: squares, the navigation's own corner, a hairline round each */
-.arch-arrows { display: flex; gap: 0.6rem; }
+/* The arrows: either side of the floating bar, as though the bar ran on
+   into them: each a square the bar's height on the bar's own glass and
+   corners, a hair from its ends (--arch-arrow-gap), on its line at the
+   foot of the screen. They come and go with the bar, and step aside, as
+   the row's line does, while the menu or the contact form is open or a
+   page transition runs. */
+.arch-arrows { display: contents; }
 .arch-arrow {
+  --arch-arrow-gap: 3px;
+  position: fixed;
+  bottom: var(--fnav-bottom);
+  z-index: 250;
   display: grid;
   place-items: center;
-  width: 2.8rem;
-  height: 2.8rem;
+  width: var(--fnav-bar-h);
+  height: var(--fnav-bar-h);
   padding: 0;
-  border: 1px solid rgba(255, 255, 255, 0.24);
+  border: 0;
   border-radius: var(--fnav-radius, 2px);
-  background: transparent;
-  color: #ffffff;
-  position: relative;
+  background: var(--fnav-surface);
+  -webkit-backdrop-filter: blur(calc(2 * var(--fnav-u)));
+  backdrop-filter: blur(calc(2 * var(--fnav-u)));
+  color: #f4f4f4;
   cursor: pointer;
-  transition: background-color 0.25s, border-color 0.25s, color 0.25s, opacity 0.25s;
+  transition: background-color 0.25s, color 0.25s, opacity 0.25s;
+}
+.arch-arrow.is--prev { left: calc(50% + var(--fnav-nudge) - var(--fnav-bar-w) / 2 - var(--arch-arrow-gap) - var(--fnav-bar-h)); }
+.arch-arrow.is--next { left: calc(50% + var(--fnav-nudge) + var(--fnav-bar-w) / 2 + var(--arch-arrow-gap)); }
+html:has(.fnav:not(.is--shown)) .arch-arrow,
+html.is--fnav-open .arch-arrow,
+html.is--fnav-contact .arch-arrow,
+html.is--page-transition .arch-arrow {
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.2s, visibility 0s linear 0.2s;
 }
 /* The floating menu's arrow (Arrow.astro, its corner shape), turned to
    point right, and left for the previous one */
 .arch-arrow .arrow { width: 0.95rem; height: 0.95rem; }
-.arch-arrow:hover { background: #ffffff; border-color: #ffffff; color: #0a0a0a; }
+.arch-arrow:hover { background: #ffffff; color: #0a0a0a; }
 /* The run has two ends; a dead arrow says so rather than pretending */
 .arch-arrow.is--disabled { opacity: 0.25; pointer-events: none; }
 
@@ -6735,7 +6834,8 @@ html.is--page-transition .progress-bar-wrap {
    always keeps its room under the name */
 .arch-page {
   --arch-gap: 1.4rem;
-  --arch-card: min(29vw, (100svh - var(--nav-height) - var(--fnav-clearance) - 14rem) * 16 / 9);
+  /* A card a touch (5%) over its first measure, 16:9 as ever */
+  --arch-card: calc(1.05 * min(29vw, (100svh - var(--nav-height) - var(--fnav-clearance) - 14rem) * 16 / 9));
 }
 .parallax-slider__item {
   flex: none;
@@ -6884,7 +6984,7 @@ html.is--page-transition .progress-bar-wrap {
 
 @media screen and (max-width: 991px) {
   .arch-stage__title { font-size: 3.6rem; }
-  .arch-page { --arch-card: min(50vw, (100svh - var(--nav-height) - var(--fnav-clearance) - 14rem) * 16 / 9); }
+  .arch-page { --arch-card: calc(1.05 * min(50vw, (100svh - var(--nav-height) - var(--fnav-clearance) - 14rem) * 16 / 9)); }
 }
 /* On a phone the name stands on the pages' column alone: the arrows go (a
    swipe moves the row), the card about three quarters of the screen,
@@ -8086,9 +8186,9 @@ html.is--page-transition .fnav-promo.is--shown {
   height: calc(var(--fnav-menu-home) * var(--fnav-u));
 }
 /* Beside the reel, in the third Contact had: the four ways to Tom, each a
-   circle in the cards' colour holding its mark in their ink, two by two,
-   the circles as large as the third's width or height allows (a gap
-   between them), centred in it. Under the pointer a circle takes the
+   square in the cards' colour and corners holding its mark in their ink,
+   two by two, the squares as large as the third's width or height allows
+   (a gap between them), centred in it. Under the pointer a square takes the
    cards' darker shade; the email one, pressed, copies the address and its
    envelope opens (social-copy.js) */
 .fnav-menu__socials { container-type: size; }
@@ -8109,14 +8209,14 @@ html.is--page-transition .fnav-promo.is--shown {
   margin: 0;
   padding: 0;
   border: 0;
-  border-radius: 50%;
+  border-radius: var(--fnav-radius);
   background-color: var(--fnav-light);
   color: var(--fnav-ink);
   cursor: pointer;
   transition: background-color 0.25s var(--cta-ease), scale 0.25s var(--cta-ease);
 }
 .fnav-social:active { scale: 0.96; transition-duration: 0.12s; }
-.fnav-social__icon { display: block; width: 32%; height: 32%; }
+.fnav-social__icon { display: block; width: 25%; height: 25%; }
 .fnav-social .hero-nav__envelope-flap { stroke: var(--fnav-light); transition: stroke 0.25s var(--cta-ease); }
 .fnav-social.is--copied .hero-nav__envelope-closed { opacity: 0; }
 .fnav-social.is--copied .hero-nav__envelope-open { opacity: 1; }
@@ -8135,8 +8235,7 @@ html.is--page-transition .fnav-promo.is--shown {
   grid-template-rows: var(--social-d);
 }
 /* The foot: Home and Contact side by side, half and half, Home's height,
-   each a single row with its name on the middle line (Contact's arrow
-   at its top right still) */
+   each its name alone on the middle line */
 .fnav-menu__foot {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -9727,133 +9826,78 @@ html:has(.site-nav + .theme-light) .cursor-label__box {
 
 /* The fixed bar, above all of that. It shared 91 with the wrappers above,
    and a wrapper later in the document painted over it as the page scrolled
-   under the bar. Well clear of the grain (90), the lifted type (91) and the
-   development grid (140); still under the drawers and the lightbox (300),
-   which are meant to cover it. */
+   under the bar. Well clear of the grain (90) and the lifted type (91);
+   still under the drawers and the lightbox (300), which are meant to
+   cover it. */
 .site-nav { z-index: 150; }
 
-/* =============================================================
-   Animated grid overlay — temporary, development only
-   =============================================================
-
-   A twelve-column reference laid over the viewport, toggled with Shift + G.
-   It is a measuring aid and nothing else: it is not the site's layout, no
-   element is positioned from it, and removing the block of markup, this
-   block of CSS and grid-overlay.js takes it off the site completely.
-
-   The site's own grid — the permanent lines drawn as a background further up
-   this file — is a separate system and is untouched by any of this.
-
-   Two things make the overlay usable as a reference rather than decorative:
-
-   1. Its columns divide exactly the span the site's own columns divide. The
-      row sits between the two gutters, so the overlay's outer edges land on
-      the site's outer grid lines, and twelve columns across four site columns
-      means every third overlay boundary falls on a site line. At the tablet
-      breakpoint the site drops to two columns and the overlay to six, and at
-      mobile to one and four — the ratio holds at every width, so the thirds
-      keep landing on the lines.
-
-   2. It carries the same padding the site's content carries. Each column is
-      inset by `--grid-pad` and paints only inside that inset, so the visible
-      bar is exactly the width of a piece of content sitting in that column —
-      which is what you are actually aligning to. The gap you see between two
-      bars is `--grid-gap`, because it is two pads, from the same token.
-
-   The supplied component asked for a `.container` with its own max-width and
-   padding. This site already has a `.container`, doing a different job, so
-   the overlay's copy is scoped to the overlay rather than redefining it. */
-.grid-overlay {
+/* ---------- Design notes: temporary, development only ----------
+   Design review mode (Shift + G, grid-overlay.js), on desktop; the notes'
+   words in design-notes.ts. One fixed layer over everything on the page
+   (above the bars, the drawers, the lightbox and the loader, the highest
+   at 600): its own ground a strong translucent white, which fades the
+   whole site well back behind it, hero, sections and footer alike, the
+   site itself untouched; and in it, the notes, each beside the element it
+   is about, solid and unfaded. Cards after the review's own reference, a
+   look no part of the site uses: bright cyan, well rounded, an "i" in a
+   ring on a black square at the head, then the note in black, large and
+   strong. Nothing in the layer takes a click, so the page under it works
+   as ever. Hidden, it is gone. */
+.design-notes {
   position: fixed;
   inset: 0;
-  /* Above the grain (90) and the lifted type (91), under the fixed nav
-     (150) so it can never sit over the bar. It never takes a click. */
-  z-index: 140;
+  z-index: 1000;
+  overflow: hidden;
   pointer-events: none;
-  display: block;
+  background-color: rgba(255, 255, 255, 0.7);
+  visibility: hidden;
+  opacity: 0;
+  transition: opacity 0.35s ease, visibility 0s linear 0.35s;
 }
-
-.grid-overlay .container {
-  width: 100%;
-  max-width: var(--size-container);
-  margin-inline: auto;
-  /* The site's gutter, not the component's 1.5em, so the row starts and ends
-     on the outermost of the site's own grid lines. */
-  padding-inline: var(--site-gutter);
+.design-notes.is--shown {
+  visibility: visible;
+  opacity: 1;
+  transition: opacity 0.35s ease, visibility 0s linear 0s;
 }
-
-.grid-overlay .container.is--full-height {
-  height: 100%;
-}
-
-/* The spacing is on the row, not the columns. The row is inset by one pad
-   at each end, so the outer bars sit a pad in from the outermost site lines
-   — exactly where content sits in the first and last column — and the space
-   between bars is the row's own column gap. Every bar is then a plain
-   equal-width track: no per-column padding, so nothing can make one bar
-   wider than its neighbour.
-
-   `--grid-gap` between bars is two pads, the same gap the site's own columns
-   keep, so the bars' boundaries stay centred on the site's lines. */
-.grid-overlay__row {
-  display: grid;
-  grid-template-columns: repeat(12, minmax(0, 1fr));
-  column-gap: var(--grid-gap);
-  padding-inline: var(--grid-pad);
-  width: 100%;
-  height: 100%;
-  overflow: clip;
-  counter-reset: grid-overlay-col;
-}
-
-.grid-overlay__col {
-  width: 100%;
-  height: 100%;
-  min-height: 100%;
-  /* A mid grey rather than the component's near-white. The overlay is fixed
-     to the viewport and the page scrolls under it, so the same bar crosses
-     the site's black bands and its light ones — the footer is white on every
-     page. A light bar disappears against that; a mid grey lightens the black
-     and darkens the white, and stays readable across both. */
-  background-color: rgba(128, 128, 128, 0.22);
-  display: flex;
-  justify-content: center;
-  align-items: flex-start;
-}
-
-/* The column numbers. Counters rather than markup, so the supplied HTML keeps
-   its twelve empty columns — and because a counter skips a column that is not
-   rendered, the two rules below that drop columns at the narrower breakpoints
-   also renumber what is left, with no second list to keep in step.
-
-   Cleared below the fixed bar so a number never sits on a nav link, and set in
-   the label face at the size of the site's other small figures. */
-.grid-overlay__col::before {
-  counter-increment: grid-overlay-col;
-  content: counter(grid-overlay-col);
-  margin-top: calc(var(--nav-height) + 1.6rem);
-  font-family: var(--font-label);
-  font-size: 1.1rem;
-  line-height: 1;
-  letter-spacing: 0.08em;
-  /* Mid grey for the same reason as the bar it labels. */
-  color: rgba(150, 150, 150, 0.95);
-}
-
-/* Tablet: the site is on two columns, the overlay on six. */
 @media screen and (max-width: 991px) {
-  .grid-overlay__row {
-    grid-template-columns: repeat(6, minmax(0, 1fr));
-  }
-  .grid-overlay__col:nth-child(n + 7) { display: none; }
+  .design-notes { display: none; }
 }
-
-/* Mobile: the site is on one column, the overlay on four. */
-@media screen and (max-width: 767px) {
-  .grid-overlay__row {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-  }
-  .grid-overlay__col:nth-child(n + 5) { display: none; }
+.design-note {
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2rem;
+  width: 28rem;
+  padding: 1.6rem 2rem 2rem;
+  border-radius: 1.5rem;
+  background-color: #00ffff;
+  color: #000000;
+  font-family: var(--font-body);
+  letter-spacing: 0;
+  text-transform: none;
+  will-change: transform;
+}
+.design-note.is--off { display: none; }
+.design-note__icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 3.6rem;
+  height: 3.6rem;
+  border-radius: 0.8rem;
+  background-color: #000000;
+  color: #00ffff;
+}
+.design-note__icon svg { width: 52%; height: 52%; }
+.design-note__text {
+  margin: 0;
+  font-size: 1.6rem;
+  line-height: 1.25;
+  letter-spacing: -0.01em;
+  font-weight: var(--weight-strong); --wght: var(--weight-strong);
 }
 
 /* For now: the arc of cards pushed below the Shop hero's first screen,
@@ -10208,8 +10252,6 @@ main.arch-page:not(:has(.home-hero)) .site-nav + .arch-stage { padding-top: calc
   font-weight: var(--weight-body); --wght: var(--weight-body);
   color: #f4f4f4;
 }
-/* The arrows start under the YouTube square: the ways to Tom's row of four squares, measured from the same right edge */
-.arch-arrows { width: calc(4 * (5 * var(--grid-pitch) - 1px) + 9px); justify-content: flex-start; }
 /* The row in the middle of the room between the name's foot and the top of
    the floating bar (the stage's foot, --arch-foot), its pictures centred
    there: the names under them hang below the middle, their height
@@ -10475,6 +10517,15 @@ main:not(:has(.home-hero)) .site-nav + .influence-stage:not(.page-header) { padd
   .statement-block__text { font-size: 3.2rem; text-indent: 16%; }
 }
 .logo-wall__statement.is--block { padding: 0; }
+/* Under the clients' logos, the statement a little further off than a
+   band's usual space, so the two read as separate parts of the band */
+.logo-wall__statement .statement-block { padding-top: 16rem; }
+@media screen and (max-width: 991px) {
+  .logo-wall__statement .statement-block { padding-top: 10.4rem; }
+}
+@media screen and (max-width: 767px) {
+  .logo-wall__statement .statement-block { padding-top: 8.4rem; }
+}
 /* Centred by its lines (StatementBlock.astro, `centred`): the block moved
    over as a whole, by what the script measures; the text inside it set as
    ever */

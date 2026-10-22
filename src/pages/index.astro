@@ -68,8 +68,8 @@ const logoCells = Array.from({ length: logoCount }, (_, i) => ({ client: logoCli
 <div class="home-loader" data-loader data-reel-layout="list" aria-hidden="true">
   <div class="home-loader__bg" data-loader-bg></div>
   <div class="home-loader__layer" data-loader-layer>
-    {reel.map(({ picture, position }, i) => (
-    <div class="home-loader__square is--card" data-loader-square data-loader-card={i} style={`--drift: ${Math.max(-13, Math.min(13, -i * 10))}`}><img alt="" decoding="async" style={`--reel-position: ${position}`} {...reelImage(picture)}></div>
+    {reel.map(({ picture, position, colour }, i) => (
+    <div class:list={['home-loader__square is--card', { 'is--mono': !colour }]} data-loader-square data-loader-card={i} style={`--drift: ${Math.max(-13, Math.min(13, -i * 10))}`}><img alt="" decoding="async" style={`--reel-position: ${position}`} {...reelImage(picture)}></div>
     ))}
     {Array.from({ length: 8 }, () => <div class="home-loader__square" data-loader-square></div>)}
   </div>

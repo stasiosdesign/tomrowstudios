@@ -50,12 +50,14 @@ const cache = new Map<string, Promise<HeroPalette | null>>();
     address, or a path in the site's library (/assets/…, read from
     public/). `referer` is the
     page's own address: Bunny's CDN, which serves the film's still, refuses
-    a request that names no page. */
-export function heroPalette(src: string, position = '50% 50%', referer?: string): Promise<HeroPalette | null> {
-  const key = `${src}|${position}`;
+    a request that names no page. `mono`: the picture is shown in black and
+    white (grayscale(1), style.css), so it is read as shown, each pixel its
+    luminance by the same weights. */
+export function heroPalette(src: string, position = '50% 50%', referer?: string, mono = false): Promise<HeroPalette | null> {
+  const key = `${src}|${position}|${mono}`;
   let job = cache.get(key);
   if (!job) {
-    job = readPalette(src, position, referer).catch((error) => {
+    job = readPalette(src, position, referer, mono).catch((error) => {
       console.warn(`The hero's mosaic has no colours for ${src}: ${error instanceof Error ? error.message : error}`);
       return null;
     });
@@ -66,7 +68,7 @@ export function heroPalette(src: string, position = '50% 50%', referer?: string)
   return job;
 }
 
-async function readPalette(src: string, position: string, referer?: string): Promise<HeroPalette | null> {
+async function readPalette(src: string, position: string, referer: string | undefined, mono: boolean): Promise<HeroPalette | null> {
   const { default: sharp } = await import('sharp');
   let file: Buffer;
   if (src.startsWith('/')) {
@@ -111,6 +113,13 @@ async function readPalette(src: string, position: string, referer?: string): Pro
   const n = SAMPLE_W * SAMPLE_H;
   const px3 = new Float32Array(n * 3);
   for (let i = 0; i < n * 3; i++) px3[i] = data[i];
+  if (mono) {
+    // CSS grayscale(1)'s weights (the luminance of sRGB)
+    for (let i = 0; i < n; i++) {
+      const y = 0.2126 * px3[i * 3] + 0.7152 * px3[i * 3 + 1] + 0.0722 * px3[i * 3 + 2];
+      px3[i * 3] = px3[i * 3 + 1] = px3[i * 3 + 2] = y;
+    }
+  }
   return paletteOf(px3, n);
 }
 
@@ -198,45 +207,6 @@ function paletteOf(px3: Float32Array, n: number): HeroPalette {
     palette: palette.map(({ rgb, share, accent }) => ({ rgb: whole(rgb), share: Math.round(share * 1000) / 1000, accent })),
     cast: whole(cast),
   };
-}
-
-/** The site's signal red (#f20607), the one red the home hero's red tone
-    is made from */
-const SIGNAL_RED = [242, 6, 7];
-/** How far the red is laid over each grey: from the darkest to the
-    lightest, the accent's strength and share, and the cast's */
-const RED_OVER = { dark: 0.18, light: 0.34, accent: 0.5, accentShare: 0.03, cast: 0.22 };
-
-/** A palette in the signal red, for a black and white picture (the About
-    part's, home-hero.ts), which would otherwise give the mosaic greys
-    alone. Each grey takes the red itself, dimmed to the grey's own depth
-    (so its green and blue stay level and it reads as red, not as the rose
-    a red greyed to the same lightness would), and is laid lightly over
-    the grey (RED_OVER): a touch in the dark ones, a little more in the
-    lighter, so the red is an air in the field rather than its colour. One
-    rarer accent, the red itself dimmed, joins them in its place by
-    lightness, and the cast takes a hint of the red as well. Still dark,
-    still the picture's own values, its shares as they were. */
-export function redTone(palette: HeroPalette | null): HeroPalette | null {
-  if (!palette) return palette;
-  const n = palette.palette.length;
-  const value = ([r, g, b]: number[]) => (r + g + b) / 3;
-  const whole = (c: number[]) => c.map(Math.round) as [number, number, number];
-  // The red at a grey's depth, laid over the grey by `k`
-  const redden = (rgb: number[], k: number) => {
-    const v = value(rgb);
-    const red = SIGNAL_RED.map((c) => Math.min(255, c * (v / 128)));
-    return whole(rgb.map((c, ch) => c + (red[ch] - c) * k));
-  };
-  const colours: HeroColour[] = palette.palette.map(({ rgb, share, accent }, i) => ({
-    rgb: redden(rgb, RED_OVER.dark + (n > 1 ? i / (n - 1) : 0) * (RED_OVER.light - RED_OVER.dark)),
-    share,
-    accent,
-  }));
-  const red: HeroColour = { rgb: whole(SIGNAL_RED.map((c) => c * RED_OVER.accent)), share: RED_OVER.accentShare, accent: true };
-  const at = colours.findIndex((c) => value(c.rgb) > value(red.rgb));
-  colours.splice(at < 0 ? colours.length : at, 0, red);
-  return { palette: colours, cast: redden(palette.cast, RED_OVER.cast) };
 }
 
 // A colour as the tesserae take it: its own hue, its saturation drawn out,

@@ -6,11 +6,13 @@
    footer-reveal (its mask) holding a footer-reveal__item (the part that
    rises); in a link the item is also what the hover roll splits.
 
-   Laid out after a studio reference: a first row of Menu (the five
-   pages), Socials (Tom's channels, as the four squares that stood at the
-   top right of the pages) and Newsletter (a line and the sign-up
-   field across the right half), small grey headings over the links; then
-   the wordmark; and across the very foot, small, the copyright and the
+   Laid out after a studio reference: a first row of four columns, Menu
+   (the five pages), Socials (Tom's channels, as the four squares that
+   stood at the top right of the pages), Contact (the header's own Contact
+   button, ContactButton.astro) and Newsletter (a line and the sign-up
+   field), small grey headings over them; then the wordmark, low on the
+   left, level with the name on the lower of the footer navigation's
+   cards; and across the very foot, small, the copyright and the
    legal links, either side of the floating bar's square: at the foot of
    the page the floating navigation opens of itself as the footer's own
    navigation (FloatingNav.astro, floatingnav.js), over the room the footer
@@ -23,6 +25,7 @@
 import { pages } from './site-links';
 import Arrow from './Arrow.astro';
 import SocialSquares from './SocialSquares.astro';
+import ContactButton from './ContactButton.astro';
 const legal = [
   { label: 'Privacy', href: '/privacy' },
   { label: 'Terms of use', href: '/terms' },
@@ -36,8 +39,8 @@ const legal = [
 <div data-footer class="footer-wrap">
   <div class="footer-ground" aria-hidden="true"></div>
   <footer data-footer-inner class="site-footer">
-    <!-- The first row: Menu, Socials and Newsletter, on the page's columns
-         (the first, the second, the right half) -->
+    <!-- The first row: Menu, Socials, Contact and Newsletter, one on each
+         of the page's four columns -->
     <div class="site-footer__intro">
       <nav class="site-footer__group" aria-label="Menu">
         <p class="site-footer__label"><span class="footer-reveal"><span class="footer-reveal__item">Menu</span></span></p>
@@ -56,9 +59,16 @@ const legal = [
         <p class="site-footer__pitch"><span class="footer-reveal"><span class="footer-reveal__item">Follow Tom’s work online</span></span></p>
         <div class="site-footer__socials footer-reveal"><div class="footer-reveal__item"><SocialSquares /></div></div>
       </div>
+      <!-- Contact: the header's Contact button (ContactButton.astro), which
+           opens the contact form out of the floating bar, rising in as one
+           line of the footer, level with the squares and the field -->
+      <div class="site-footer__group is--contact">
+        <p class="site-footer__label"><span class="footer-reveal"><span class="footer-reveal__item">Contact</span></span></p>
+        <div class="site-footer__contact footer-reveal"><div class="footer-reveal__item"><ContactButton class="site-footer__contact-button" /></div></div>
+      </div>
       <div class="site-footer__group is--newsletter">
         <p class="site-footer__label"><span class="footer-reveal"><span class="footer-reveal__item">Newsletter</span></span></p>
-        <p class="site-footer__pitch" id="footer-newsletter-pitch"><span class="footer-reveal"><span class="footer-reveal__item">Subscribe to get updates on new projects and insights</span></span></p>
+        <p class="site-footer__pitch" id="footer-newsletter-pitch"><span class="footer-reveal"><span class="footer-reveal__item">Subscribe to the newsletter</span></span></p>
         <form class="site-footer__signup" data-newsletter novalidate>
           <label class="visually-hidden" for="footer-newsletter-email">Email address</label>
           <input class="site-footer__email" id="footer-newsletter-email" type="email" name="email" placeholder="Email address" autocomplete="email" required aria-describedby="footer-newsletter-pitch">
@@ -72,7 +82,7 @@ const legal = [
     <!-- The foot: the copyright on the left, the legal links on the right,
          on the floating bar's line, either side of its square -->
     <div class="site-footer__bottom">
-      <p class="site-footer__note"><span class="footer-reveal"><span class="footer-reveal__item">2025 ©<br class="site-footer__br"> Tomrowstudios</span></span></p>
+      <p class="site-footer__note"><span class="footer-reveal"><span class="footer-reveal__item">2026 ©<br class="site-footer__br"> tomrowstudios</span></span></p>
       <div class="site-footer__legal" data-dim-group>
         {legal.map(({ label, href }) => (
         <a data-split-hover="link" href={href} class="site-footer__note"><span class="footer-reveal"><span class="footer-reveal__item" data-split-hover="target">{label}</span></span></a>

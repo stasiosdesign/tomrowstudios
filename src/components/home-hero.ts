@@ -12,22 +12,24 @@
    name in the list (all five 135 to 150 characters, so they set alike).
    `lines` is the part's name as the hero sets it beside its picture, one
    entry a line (About's says what Tom does), every line flush left.
-   `tone: 'red'`: the picture is black and white, so the mosaic behind it
-   takes its values in restrained reds (redTone, hero-palette.ts) rather
-   than greys alone; every other part's colours are its picture's own.
+   Every picture is shown in black and white (.is--mono, style.css) but
+   those marked `colour` (Architectural Influence alone), and the mosaic
+   behind each reads its colours from the picture as it is shown, the same
+   way for all (heroPalette, hero-palette.ts, `mono`): greys behind a
+   black and white one, its own colours behind the other.
 
    The home page's (index.astro, through HomeHero.astro), and its opening's
    squares, which grow into the same pictures. */
 import { REEL_SRC, REEL_FALLBACK_POSTER, reelPoster, reelPreview, reelFilm } from './reel';
 import { urlFor } from '../sanity/image';
-import { heroPalette, redTone } from './hero-palette';
+import { heroPalette } from './hero-palette';
 
-export type ReelEntry = { title: string; lines: string[]; href: string; about: string; picture: string; position?: string; film?: boolean; cursor: string; tone?: 'red' };
+export type ReelEntry = { title: string; lines: string[]; href: string; about: string; picture: string; position?: string; film?: boolean; cursor: string; colour?: boolean };
 
 const ENTRIES: ReelEntry[] = [
-  { title: 'About', lines: ['Architecture, content', '& education for a global', 'audience'], href: '#about', cursor: 'Play Video', about: 'Architectural designer, author and content strategist Tom Rowntree. Press play for the short film on his work and the way he approaches it.', picture: 'about', position: '50% 30%', film: true, tone: 'red' },
+  { title: 'About', lines: ['Architecture, content', '& education for a global', 'audience'], href: '#about', cursor: 'Play Video', about: 'Architectural designer, author and content strategist Tom Rowntree. Press play for the short film on his work and the way he approaches it.', picture: 'about', position: '50% 30%', film: true },
   { title: 'Partners & Collabs', lines: ['Partners', '& Collabs'], href: '/partner', cursor: 'View Partners', about: 'Content and strategy for architecture, design and technology brands, made with Tom for an audience that cares about how buildings are made.', picture: 'partners', position: '50% 40%' },
-  { title: 'Architectural Influence', lines: ['Architectural', 'Influence'], href: '/influence', cursor: 'View Influence', about: 'Content and a personal brand that build authority in architecture, through long-form explainers, walkthroughs and interviews shared online.', picture: 'influence', position: '50% 50%' },
+  { title: 'Architectural Influence', lines: ['Architectural', 'Influence'], href: '/influence', cursor: 'View Influence', about: 'Content and a personal brand that build authority in architecture, through long-form explainers, walkthroughs and interviews shared online.', picture: 'influence', position: '50% 50%', colour: true },
   { title: 'Shop & Courses', lines: ['Shop', '& Courses'], href: '/shop', cursor: 'View Shop', about: 'Courses, a book and practical resources for working architects, drawn from Tom’s own experience of studying, practising and teaching architecture.', picture: 'shop', position: '50% 50%' },
   { title: 'Architectural Projects', lines: ['Architectural', 'Projects'], href: '/architecture', cursor: 'View Projects', about: 'Tom’s own design work, from early studies to his dissertation, with the drawings and the thinking behind each project gathered in one place.', picture: 'projects', position: '50% 50%' },
 ];
@@ -63,7 +65,7 @@ export async function homeHero(pageAddress: string) {
   // (hero-tint.js), read here as the page is built (hero-palette.ts, from
   // the library on the disk). Each travels on its list item
   // (data-tint-palette), so the mosaic is ready before the first paint.
-  const tintPalettes = await Promise.all(reel.map(({ picture, position, tone }) => heroPalette(file(picture, 480), position, pageAddress).then((palette) => (tone === 'red' ? redTone(palette) : palette))));
+  const tintPalettes = await Promise.all(reel.map(({ picture, position, colour }) => heroPalette(file(picture, 480), position, pageAddress, !colour)));
   return { reel, filmStill, tintPalettes, reelSrc: REEL_SRC, reelPreview, reelFilm };
 }
 

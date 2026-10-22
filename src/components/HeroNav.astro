@@ -19,7 +19,7 @@
    (SiteNav.astro, where it is on the bar's band, its type dark over a
    light page). */
 import BrandMark from './BrandMark.astro';
-import Arrow from './Arrow.astro';
+import ContactButton from './ContactButton.astro';
 import { pages } from './site-links';
 
 interface Props {
@@ -35,10 +35,5 @@ const { current } = Astro.props;
 <nav class="hero-nav__links site-nav__links" aria-label="Pages" data-dim-group>
   {pages.map(({ href, label }) => <a href={href} data-split-hover="link" class="site-nav__link" aria-current={href === current ? 'page' : undefined}>{label}</a>)}
 </nav>
-<!-- Contact: two boxes side by side, one link — its word, in the links'
-     own face and with their roll on hover (split-hover.js, as the column of
-     pages has it), and the arrow in a square of the same height -->
-<a href="#contact" class="hero-nav__contact" data-fnav-contact-open data-barba-prevent="self" aria-haspopup="dialog" aria-controls="fnav-contact" data-split-hover="link">
-  <span class="hero-nav__contact-label"><span data-split-hover="target">Contact</span></span>
-  <span class="hero-nav__contact-square"><Arrow class="hero-nav__contact-arrow" shape="straight" /></span>
-</a>
+<!-- Contact (ContactButton.astro) -->
+<ContactButton />

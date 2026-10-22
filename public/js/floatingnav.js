@@ -125,6 +125,12 @@ function initFloatingNav() {
     const gap = parseFloat(getComputedStyle(cardGrid).rowGap) || 0;
     const bottom = parseFloat(getComputedStyle(menu).bottom) || 0;
     document.documentElement.style.setProperty('--fnav-foot-reach', `${bottom + 2 * firstCard.offsetHeight + gap}px`);
+    // And how far up from the foot the lower cards' names stand (the foot
+    // of a name's line), which the footer's wordmark stands level with
+    const name = firstCard.querySelector('.fnav-tile__title');
+    if (name && name.offsetParent === firstCard) {
+      document.documentElement.style.setProperty('--fnav-foot-name', `${bottom + firstCard.offsetHeight - name.offsetTop - name.offsetHeight}px`);
+    }
   };
   measureFootReach();
   if (firstCard && typeof ResizeObserver !== 'undefined') new ResizeObserver(measureFootReach).observe(firstCard);
