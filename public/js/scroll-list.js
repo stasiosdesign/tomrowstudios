@@ -20,7 +20,8 @@
 //
 // On a fine pointer, the entry under the pointer is lit while it is there,
 // and leaving it hands the light back to the scroll — unless the root says
-// data-scroll-list-hover="off" (the hero's photographs).
+// data-scroll-list-hover="off" (the hero's photographs, and the Partners
+// page's services, whose names take the accent from the scroll alone).
 //
 // Barba runs this on the first load as well as the page's own startup:
 // built once per list, and taken down when the page is left (lifecycle.js).

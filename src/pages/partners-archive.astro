@@ -4,7 +4,7 @@ import SiteNav from '../components/SiteNav.astro';
 import SiteFooter from '../components/SiteFooter.astro';
 import ContactPanel from '../components/ContactPanel.astro';
 import ServiceCards from '../components/ServiceCards.astro';
-import CaseStudyPanel from '../components/CaseStudyPanel.astro';
+import CaseStudyViewer from '../components/CaseStudyViewer.astro';
 import { imageAttrs } from '../sanity/image';
 import { PARTNERS_PAGE_QUERY, PARTNERS_QUERY } from '../sanity/queries';
 import { PAGE_DEFAULTS } from '../sanity/page-defaults';
@@ -69,8 +69,8 @@ const hasCaseStudy = (partner: Partner) => Boolean(partner.caseStudy?.title);
 
 <SiteFooter />
 
-<!-- Case study side panels (slide-out drawers), one per partner with a case study -->
-{partners.filter(hasCaseStudy).map((partner) => <CaseStudyPanel partner={partner} />)}
+<!-- The case studies, a panel the floating bar grows into when a card is pressed (CaseStudyViewer.astro, casepanel.js) -->
+<CaseStudyViewer partners={partners.filter(hasCaseStudy)} />
 
 <ContactPanel />
 </BaseLayout>

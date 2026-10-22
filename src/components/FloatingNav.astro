@@ -48,7 +48,8 @@
    leading to the book (the Influence page, where it grows into the band at
    the head of the book section as that comes up, influence.js); and Contact
    Tom's, on the off-white, opening the contact form (the home page, below
-   its hero). Changing message, one strip goes back behind the bar as the
+   its hero); and Start Your Project, drawn as Contact Tom's and
+   opening the same form (the Partners page, past its first screen). Changing message, one strip goes back behind the bar as the
    other comes up, each still running; they go back while the menu is open
    or a page transition runs.
 
@@ -86,10 +87,12 @@ const showReel = Boolean(REEL_SRC) || __DEPLOYMENT__ !== 'production';
 const reelStill = reelPoster || urlFor({ asset: { _id: REEL_FALLBACK_POSTER } }).width(1280).height(720).fit('crop').url();
 // The marquees' words, one strip each. Two identical halves of four, each
 // wider than the strip, so moving the pair by one half brings it back to
-// where it started.
+// where it started. `look`: a strip drawn as another's (the Partners page's
+// Start Your Project as Contact Tom's, opening the same form).
 const promos = [
   { key: 'book', label: 'Architectural Influence Book', href: '/book', contact: false },
   { key: 'contact', label: 'Contact Tom', href: '#contact', contact: true },
+  { key: 'project', label: 'Start Your Project', href: '#contact', contact: true, look: 'contact' },
 ];
 // The contact form's single-line fields; the project's text follows them
 const fields: { name: string; label: string; placeholder: string; type: 'text' | 'email'; autocomplete: 'name' | 'organization' | 'email'; required: boolean; half?: boolean }[] = [
@@ -171,13 +174,11 @@ const fields: { name: string; label: string; placeholder: string; type: 'text' |
 <div class="fnav-contact" id="fnav-contact" data-fnav-contact role="dialog" aria-modal="true" aria-labelledby="fnav-contact-title" aria-hidden="true" inert>
   <div class="fnav-contact__inner" data-fnav-contact-inner data-lenis-prevent tabindex="-1">
     <!-- Two blocks, one over the other: Contact (the address and Tom's
-         channels) and Form, each with its heading on top -->
+         channels) and Form, each with its heading on top. Its close is the
+         bar's square under it (floatingnav.js, "The panels") -->
     <section class="fnav-contact__block">
       <div class="fnav-contact__head" data-fnav-contact-reveal>
         <h2 class="fnav-contact__title" id="fnav-contact-title">Contact</h2>
-        <button type="button" class="fnav-contact__close" data-fnav-contact-close aria-label="Close the contact form">
-          <svg viewBox="0 0 13 13" fill="none" aria-hidden="true"><path d="M0.354 11.667 11.667 0.354" stroke="currentColor"/><path d="M0.354 0.354 11.667 11.667" stroke="currentColor"/></svg>
-        </button>
       </div>
       <dl class="fnav-contact__details" data-fnav-contact-reveal>
         <div class="fnav-contact__detail">
@@ -231,8 +232,8 @@ const fields: { name: string; label: string; placeholder: string; type: 'text' |
   <div class="fnav-contact__background" data-fnav-contact-bg></div>
 </div>
 
-{promos.map(({ key, label, href, contact }) => (
-<a href={href} class={`fnav-promo is--${key}`} data-fnav-promo={key} aria-label={label} {...(contact ? { 'data-panel-open': 'contact', 'data-barba-prevent': 'self', 'aria-haspopup': 'dialog', 'aria-controls': 'fnav-contact' } : {})}>
+{promos.map(({ key, label, href, contact, look }) => (
+<a href={href} class:list={['fnav-promo', `is--${look ?? key}`, look && `is--${key}`]} data-fnav-promo={key} aria-label={label} {...(contact ? { 'data-panel-open': 'contact', 'data-barba-prevent': 'self', 'aria-haspopup': 'dialog', 'aria-controls': 'fnav-contact' } : {})}>
   <!-- The words' layer, which the book's strip scales as it grows into the
        Influence page's book band (influence.js) -->
   <span class="fnav-promo__scale">
@@ -248,6 +249,13 @@ const fields: { name: string; label: string; placeholder: string; type: 'text' |
   </span>
 </a>
 ))}
+
+<!-- Either side of the bar's square while a panel of several things is
+     open over it (the Partners page's case studies): the steps to the one
+     before and the one after, squares on the bar's own glass, as the
+     Architecture page's arrows stand beside the bar (floatingnav.js) -->
+<button type="button" class="fnav-step is--prev" data-fnav-step="prev" aria-label="Previous"><Arrow shape="corner" rotate={225} /></button>
+<button type="button" class="fnav-step is--next" data-fnav-step="next" aria-label="Next"><Arrow shape="corner" rotate={45} /></button>
 
 <div class="fnav" data-fnav data-cursor="hover">
   <!-- The home link: the studio's mark (BrandMark.astro) -->

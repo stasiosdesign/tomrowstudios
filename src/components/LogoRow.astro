@@ -12,11 +12,16 @@
    wider than any screen and the loop never shows its end; only the first
    are read out, the repeats hidden from screen readers.
 
-   The home page's (index.astro, under its hero) and the Partners page's
-   (partner.astro), each on the dark band (.logo-wall). Its heading comes
-   from the page (the slot). */
+   The home page's (index.astro, under its hero), on the dark band
+   (.logo-wall), and the Partners page's (partner.astro), on the white
+   (.logo-wall.is--light). Its heading comes from the page (the slot). A
+   logo with no artwork for its band (no `src`) stands as the studio's
+   placeholder mark (BrandMark.astro), in the band's ink, named for the
+   logo it stands for. */
+import BrandMark from './BrandMark.astro';
+
 interface Props {
-  logos: { src: string; alt: string }[];
+  logos: { src?: string; alt: string }[];
 }
 const { logos } = Astro.props;
 const count = logos.length ? Math.max(10, logos.length) : 0;
@@ -30,7 +35,11 @@ const cells = Array.from({ length: count }, (_, i) => ({ ...logos[i % logos.leng
     <div data-marquee-scroll-target class="marquee-advanced__scroll">
       <ul class="logo-grid__list marquee-advanced__collection" role="list" data-marquee-collection-target>
         {cells.map(({ src, alt, repeat }) => (
-        <li class="logo-grid__tile" aria-hidden={repeat ? 'true' : undefined}><img class="logo-grid__logo" src={src} loading="lazy" decoding="async" alt={repeat ? '' : alt}></li>
+        <li class="logo-grid__tile" aria-hidden={repeat ? 'true' : undefined}>{src ? (
+          <img class="logo-grid__logo" src={src} loading="lazy" decoding="async" alt={repeat ? '' : alt}>
+        ) : (
+          <span class="logo-grid__logo is--mark" role="img" aria-label={repeat ? undefined : alt}><BrandMark class="logo-grid__mark" /></span>
+        )}</li>
         ))}
       </ul>
     </div>

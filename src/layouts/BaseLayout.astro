@@ -35,8 +35,8 @@ interface Props {
   navTitle?: string;
   /** The page the floating menu marks as current, when not this one: a shop item belongs to /shop (data-nav-section). */
   navSection?: string;
-  /** The marquee over the floating navigation's bar on this page (data-nav-promo, FloatingNav.astro): the book's, or Contact Tom's. A part of the page can ask for another, or none, with its own data-nav-promo. */
-  navPromo?: 'book' | 'contact';
+  /** The marquee over the floating navigation's bar on this page (data-nav-promo, FloatingNav.astro): the book's, Contact Tom's, or Start Your Project. A part of the page can ask for another, or none, with its own data-nav-promo. */
+  navPromo?: 'book' | 'contact' | 'project';
   /** The page's scrollbar in sight from the start and throughout, rather than only while it scrolls (scrollbar.js). */
   pinScrollbar?: boolean;
 }

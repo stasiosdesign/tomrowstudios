@@ -57,21 +57,29 @@
 // initFloatingNavPage() re-ties the bar to the new page's footer (afterLeave
 // kills the old page's triggers).
 //
-// The contact form (data-fnav-contact) is the navigation grown into a
-// panel, never a drawer of its own. Its background starts as exactly the
-// rectangle it grows from and opens to the panel's (one number, morph.p,
-// drives it: the background moved and scaled, the contents clipped to it):
+// The panels are the navigation grown into a panel, never a drawer of
+// their own: the contact form (data-fnav-contact, the layout's), and a
+// page's own handed over with openPanel (the Partners page's case studies,
+// casepanel.js). A panel stands over the bar where the menu's modules
+// stand; its background starts as exactly the rectangle it grows from and
+// opens to the panel's (one number, morph.p, drives it: the background
+// moved and scaled, the contents clipped to it), and under it the bar keeps
+// its square, the close control in it: the panel's close, at its foot,
+// with the steps to the one before and after either side of it for a
+// panel of several things:
 //   - from Contact Tom in the open menu: the other modules drop away and
-//     Contact Tom's own module grows into the form, the bar's close square
-//     going with the modules; closing runs it back into that module, and
-//     the others rise again round it;
+//     the form grows out of the bar's square, the close control staying in
+//     it; closing runs it back into the square, and the modules rise again
+//     round it;
 //   - from anywhere else (every [data-panel-open="contact"] on the page,
-//     which no longer opens a side panel): the bar opens upward into it,
-//     its parts fading as it goes; closing runs it back into the bar.
+//     which no longer opens a side panel, or a page's own trigger): the
+//     bar lifts into the panel, gathering in to its square under it as it
+//     goes; closing runs it back onto the bar, which opens out again.
 // A page change (quick) or a reset (instant) always closes it to the bar.
-// The page holds still while it is open; Escape, the backdrop and the close
-// control close it, focus stays inside it and goes back to what opened it.
-// The form itself is enquiry.js's.
+// The page holds still while it is open; Escape, the close, a press on the
+// page around it (the backdrop) or in its own gaps close it; focus stays
+// inside it and its controls, and goes back to what opened it. The form
+// itself is enquiry.js's.
 //
 // The marquees over the bar (data-fnav-promo="book", "contact": one strip
 // per message) answer to the page, and to the part of it on screen: the
@@ -108,10 +116,40 @@ function initFloatingNav() {
   const footReveals = reveals.filter((el) => el.hasAttribute('data-fnav-foot'));
   const firstLink = menu.querySelector('a');
   const items = Array.from(menu.querySelectorAll('[data-fnav-item]'));
-  const contactPanel = document.querySelector('[data-fnav-contact]');
-  const contactBg = contactPanel && contactPanel.querySelector('[data-fnav-contact-bg]');
-  const contactInner = contactPanel && contactPanel.querySelector('[data-fnav-contact-inner]');
-  const contactReveals = contactPanel ? Array.from(contactPanel.querySelectorAll('[data-fnav-contact-reveal]')) : [];
+  // The panels the bar grows into ("The panels", below): the contact form,
+  // the layout's own, and whichever a page hands over (openPanel). Each is
+  // its parts: the panel, its ground, its contents, what rises in once it
+  // has grown (`reveals`, asked for at each opening, as a page's panel may
+  // show different contents each time), whether its ground splits into
+  // separate blocks once open (`split`), the close control's name while it
+  // is open, and, for a panel of several things, the steps between them
+  // (`steps`: prev and next, the arrows beside the bar's square)
+  const contactEl = document.querySelector('[data-fnav-contact]');
+  const contactParts = contactEl && {
+    el: contactEl,
+    bg: contactEl.querySelector('[data-fnav-contact-bg]'),
+    inner: contactEl.querySelector('[data-fnav-contact-inner]'),
+    reveals: () => Array.from(contactEl.querySelectorAll('[data-fnav-contact-reveal]')),
+    split: true,
+    closeLabel: 'Close the contact form',
+  };
+  // The panel open, or the last one to have been
+  let parts = contactParts;
+  let panelEl = contactParts ? contactParts.el : null;
+  let panelBg = contactParts ? contactParts.bg : null;
+  let panelInner = contactParts ? contactParts.inner : null;
+  let panelReveals = contactParts ? contactParts.reveals() : [];
+  function usePanel(next) {
+    parts = next;
+    panelEl = next.el;
+    panelBg = next.bg;
+    panelInner = next.inner;
+    panelReveals = next.reveals();
+  }
+  // Beside the bar's square while a panel of several things is open: the
+  // steps to the one before and the one after (FloatingNav.astro)
+  const stepButtons = Array.from(document.querySelectorAll('[data-fnav-step]'));
+  const closerLabel = closer.getAttribute('aria-label');
 
   // How far up from the screen's foot the footer's form reaches: its two
   // rows of cards, at the menu's own size, the gap between them and the
@@ -238,7 +276,9 @@ function initFloatingNav() {
   gsap.set(mark, { yPercent: 100, autoAlpha: 0 });
   gsap.set(reveals, { ...HIDDEN, transformOrigin: '50% 100%' });
   gsap.set(backdrop, { autoAlpha: 0 });
-  if (contactPanel) gsap.set(contactReveals, { autoAlpha: 0, y: '1.2rem' });
+  if (panelEl) gsap.set(panelReveals, { autoAlpha: 0, y: '1.2rem' });
+  gsap.set(stepButtons, { autoAlpha: 0 });
+  stepButtons.forEach((button) => { button.inert = true; });
 
   let state = 'closed'; // closed | opening | open | closing
   let foot = false;     // the menu that is open (or on its way) is the footer's form
@@ -348,7 +388,7 @@ function initFloatingNav() {
   function close(opts) {
     endHover();
     // The contact form, if that is what is open
-    if (contactState !== 'closed') return closeContact(opts);
+    if (panelState !== 'closed') return closePanel(opts);
     const instant = !!(opts && opts.instant);
     const quick = !!(opts && opts.quick);
     if (state === 'closed') return null;
@@ -425,14 +465,21 @@ function initFloatingNav() {
     return Promise.resolve();
   }
 
-  // ---- The contact form: the navigation grown into a panel ----
+  // ---- The panels: the navigation grown into a panel ----
+  // The contact form, or a page's own (the Partners page's case studies,
+  // casepanel.js), grown out of the bar to stand over it where the menu's
+  // modules stand. As it grows, the bar gathers in to its square, as it
+  // does for the menu, and the close control rolls up into the square: the
+  // panel's close, at its foot; for a panel of several things, the steps
+  // to the one before and the one after come up either side of it. One
+  // panel at a time; closing runs it all back into the bar.
   const morph = { p: 0 };
   let morphBox = null;
-  let contactState = 'closed'; // closed | opening | open | closing
-  let contactTimeline = null;
-  let contactSource = 'bar';   // menu | foot | bar: where it grew from, and goes back to
-  let contactReturn = null;
-  const contactOpen = () => contactState === 'opening' || contactState === 'open';
+  let panelState = 'closed'; // closed | opening | open | closing
+  let panelTimeline = null;
+  let panelSource = 'bar';   // menu | foot | bar: where it grew from, and goes back to
+  let panelReturn = null;
+  const panelOpen = () => panelState === 'opening' || panelState === 'open';
 
   // From a rectangle (p 0) to the panel's (p 1): the background moved and
   // scaled from the panel's top left corner, the contents clipped to exactly
@@ -452,185 +499,221 @@ function initFloatingNav() {
     return new DOMRect(rest.left + (rest.width - width) / 2, rest.top, width, rest.height);
   }
   function measureMorph(from) {
-    const panel = contactPanel.getBoundingClientRect();
+    const panel = panelEl.getBoundingClientRect();
     morphBox = { w: panel.width, h: panel.height, x: from.left - panel.left, y: from.top - panel.top, fw: from.width, fh: from.height };
   }
-  // The panel's own ground is white and the bar's dark: as the panel grows
-  // out of the bar (or its square) the white comes up over the dark in the
-  // first part of the growth, the bar's ground going under it; shrinking
-  // back, the reverse in the last part. `at` is where on the timeline.
+  // The panel's own ground (the contact form's white, a case study's
+  // paper) comes up over the bar's dark in the first part of the growth,
+  // the bar's square left standing under it as it rises off the bar's
+  // line; shrinking back, it goes in the last part, as it lands on the bar
+  // again. `at` is where on the timeline.
   function groundIn(tl, at) {
-    tl.fromTo(contactBg, { opacity: 0 }, { opacity: 1, duration: 0.3, ease: 'power1.out' }, at)
-      .to(barBg, { autoAlpha: 0, duration: 0.2, ease: 'power1.out' }, at + 0.15);
+    tl.fromTo(panelBg, { opacity: 0 }, { opacity: 1, duration: 0.3, ease: 'power1.out' }, at);
   }
   function groundOut(tl, at) {
-    tl.to(barBg, { autoAlpha: 1, duration: 0.2, ease: 'power1.in' }, at)
-      .to(contactBg, { opacity: 0, duration: 0.3, ease: 'power1.in' }, at + 0.05);
+    tl.to(panelBg, { opacity: 0, duration: 0.3, ease: 'power1.in' }, at);
   }
-  function drawContact() {
+  function drawPanel() {
     if (!morphBox) return;
     const { w, h, x, y, fw, fh } = morphBox;
     const p = morph.p;
     if (p >= 1) {
-      contactBg.style.transform = '';
-      contactInner.style.clipPath = '';
+      panelBg.style.transform = '';
+      panelInner.style.clipPath = '';
       return;
     }
     const left = x * (1 - p);
     const top = y * (1 - p);
     const width = fw + (w - fw) * p;
     const height = fh + (h - fh) * p;
-    contactBg.style.transform = `translate(${left}px, ${top}px) scale(${width / w}, ${height / h})`;
-    contactInner.style.clipPath = `inset(${top}px ${w - left - width}px ${h - top - height}px ${left}px)`;
+    panelBg.style.transform = `translate(${left}px, ${top}px) scale(${width / w}, ${height / h})`;
+    panelInner.style.clipPath = `inset(${top}px ${w - left - width}px ${h - top - height}px ${left}px)`;
   }
 
-  const setContactAttributes = (open) => {
-    contactPanel.setAttribute('aria-hidden', String(!open));
-    contactPanel.inert = !open;
-    contactPanel.classList.toggle('is--open', open);
-    document.documentElement.classList.toggle('is--fnav-contact', open);
-    bar.inert = open || !bar.classList.contains('is--shown');
+  // The bar stays live under a panel: its square is the panel's close, and
+  // carries the panel's name for it while it is open
+  const setPanelAttributes = (open) => {
+    panelEl.setAttribute('aria-hidden', String(!open));
+    panelEl.inert = !open;
+    panelEl.classList.toggle('is--open', open);
+    // Any panel: whatever the page keeps by the bar steps aside (style.css)
+    root.classList.toggle('is--fnav-contact', open);
+    bar.inert = !bar.classList.contains('is--shown');
+    closer.setAttribute('aria-label', open ? parts.closeLabel || closerLabel : closerLabel);
+    const steps = open && !!parts.steps;
+    stepButtons.forEach((button) => { button.inert = !steps; });
   };
 
-  // Where focus lands: the first field with a pointer and keys; on a touch
-  // screen the panel itself, so the keyboard does not cover it at once
-  const focusContact = () => {
-    const first = contactPanel.querySelector('input, textarea');
+  // The steps either side of the square, up with a panel of several
+  // things: from the bar's line, as the close control rolls up into the
+  // square; down again first as it closes
+  function stepsIn(tl, at) {
+    if (!parts.steps || !stepButtons.length) return;
+    tl.fromTo(stepButtons, { autoAlpha: 0, yPercent: 60 }, { autoAlpha: 1, yPercent: 0, duration: 0.45, ease: 'power3.out', stagger: 0.06 }, at);
+  }
+  function stepsOut(tl, at) {
+    if (!stepButtons.length) return;
+    tl.to(stepButtons, { autoAlpha: 0, yPercent: 60, duration: 0.22, ease: 'power2.in' }, at);
+  }
+
+  // Where focus lands: in the contact form, the first field with a pointer
+  // and keys; on a touch screen, and in any other panel, the panel itself,
+  // so a keyboard does not cover it at once and its reading starts at the top
+  const focusPanel = () => {
+    const first = parts === contactParts && panelEl.querySelector('input, textarea');
     if (first && window.matchMedia('(pointer: fine)').matches) first.focus({ preventScroll: true });
-    else contactInner.focus({ preventScroll: true });
+    else panelInner.focus({ preventScroll: true });
   };
 
-  function openContact(trigger) {
-    if (!contactPanel || contactOpen()) return;
+  // `next`: the panel's parts (above); `trigger`: what opened it, where
+  // focus goes back to once it has closed
+  function openPanel(next, trigger) {
+    if (!next || panelOpen()) return;
+    usePanel(next);
+    // A press in the panel off its contents (the gaps between its blocks):
+    // outside it, as a press on the darkened page is
+    if (!panelEl.__fnavPanel) {
+      panelEl.__fnavPanel = true;
+      const own = parts;
+      panelEl.addEventListener('click', (event) => {
+        if (parts === own && (event.target === own.el || event.target === own.inner)) close();
+      });
+    }
     const fromFoot = isOpen() && foot;
     const fromMenu = isOpen() && !foot;
-    contactSource = fromMenu ? 'menu' : fromFoot ? 'foot' : 'bar';
-    contactReturn = trigger instanceof HTMLElement ? trigger : null;
-    if (contactTimeline) contactTimeline.kill();
-    contactState = 'opening';
+    panelSource = fromMenu ? 'menu' : fromFoot ? 'foot' : 'bar';
+    panelReturn = trigger instanceof HTMLElement ? trigger : null;
+    if (panelTimeline) panelTimeline.kill();
+    panelState = 'opening';
     holdPageScroll(true);
-    gsap.set(contactReveals, { autoAlpha: 0, y: '1.2rem' });
-    gsap.set(contactReveals, { visibility: 'visible' });
+    gsap.set(panelReveals, { autoAlpha: 0, y: '1.2rem' });
+    gsap.set(panelReveals, { visibility: 'visible' });
     // Out of the bar at the foot of the screen: its square, with the menu
     // or the footer's form open, else the bar itself
     measureMorph(fromMenu || fromFoot ? barSquare() : barRest());
-    // Held down (the home hero): up behind the form while it is open
+    // Held down (the home hero): up behind the panel while it is open
     apply();
     morph.p = 0;
-    drawContact();
+    drawPanel();
 
     const tl = gsap.timeline({
       defaults: { overwrite: 'auto' },
-      onComplete: () => { contactState = 'open'; },
+      onComplete: () => { panelState = 'open'; },
     });
     if (fromFoot) {
-      // From the footer's form: the tiles drop away and the form grows out
-      // of the bar's square, the mark going with them; the page holds
-      // still from here, as it does under the form
+      // From the footer's form: the tiles drop away and the panel grows out
+      // of the bar's square, the mark sinking out of the square as the
+      // close control rises into it; the page holds still from here, as it
+      // does under the panel
       if (timeline) timeline.kill();
       timeline = null;
       state = 'closed';
       setOpenAttributes(false);
       holdPageScroll(true);
-      gsap.set(contactPanel, { autoAlpha: 1 });
+      gsap.set(panelEl, { autoAlpha: 1 });
       tl.to([...footReveals].reverse(), { autoAlpha: 0, y: '0.8rem', duration: 0.22, stagger: 0.012, ease: 'power2.in' }, 0)
-        .to(mark, { autoAlpha: 0, duration: 0.22, ease: 'power2.out' }, 0)
+        .to(mark, { yPercent: 100, autoAlpha: 0, duration: 0.25, ease: 'power2.in' }, 0)
+        .to(closer, { yPercent: 0, autoAlpha: 1, duration: 0.4, ease: 'power3.out' }, 0.2)
         .to(backdrop, { autoAlpha: 1, duration: 0.6, ease: 'power2.out' }, 0)
         .set(menu, { autoAlpha: 0 }, 0.2)
         .call(() => { gsap.set(footReveals, HIDDEN); setFootForm(false); }, null, 0.2)
-        .to(morph, { p: 1, duration: 0.9, ease: 'expo.inOut', onUpdate: drawContact }, 0);
-      groundIn(tl, 0);
-      tl.to(contactReveals, { autoAlpha: 1, y: 0, duration: 0.7, stagger: 0.045, ease: 'expo.out' }, 0.42);
+        .to(morph, { p: 1, duration: 0.9, ease: 'expo.inOut', onUpdate: drawPanel }, 0);
     } else if (fromMenu) {
       // One movement: the menu's modules sink back towards the bar, the top
-      // row first, and at the same moment the form grows up out of the
-      // bar's square, under the modules as they go; the backdrop stays
+      // row first, and at the same moment the panel grows up out of the
+      // bar's square, under the modules as they go; the backdrop stays, and
+      // so does the close control in the square, the panel's close now
       if (timeline) timeline.kill();
       timeline = null;
       state = 'closed';
       setOpenAttributes(false);
-      gsap.set(contactPanel, { autoAlpha: 1 });
+      gsap.set(panelEl, { autoAlpha: 1 });
       tl.to(reveals, { autoAlpha: 0, y: '0.8rem', scale: 0.96, duration: 0.3, stagger: rowDelay(0.08, false), ease: 'power2.in' }, 0)
-        .to(closer, { autoAlpha: 0, duration: 0.15, ease: 'power2.out' }, 0)
         .call(() => { gsap.set(menu, { autoAlpha: 0 }); gsap.set(reveals, HIDDEN); }, null, 0.4)
-        .to(morph, { p: 1, duration: 0.9, ease: 'expo.inOut', onUpdate: drawContact }, 0);
-      groundIn(tl, 0);
-      tl.to(contactReveals, { autoAlpha: 1, y: 0, duration: 0.7, stagger: 0.045, ease: 'expo.out' }, 0.42);
+        .to(morph, { p: 1, duration: 0.9, ease: 'expo.inOut', onUpdate: drawPanel }, 0);
     } else {
-      // The bar opens upward into it: the panel's ground takes over from the
-      // bar's, on the same rectangle
-      gsap.set(contactPanel, { autoAlpha: 1 });
+      // The bar lifts into the panel: the panel's ground takes over from
+      // the bar's on the same rectangle and grows up off the bar's line,
+      // while under it the bar gathers in to its square, as it does for
+      // the menu, and the close control rolls up into the square
+      gsap.set(panelEl, { autoAlpha: 1 });
       tl.to(barParts, { autoAlpha: 0, duration: 0.2, ease: 'power2.out' }, 0)
         .to(backdrop, { autoAlpha: 1, duration: 0.6, ease: 'power2.out' }, 0)
-        .to(morph, { p: 1, duration: 0.9, ease: 'expo.inOut', onUpdate: drawContact }, 0);
-      groundIn(tl, 0);
-      tl.to(contactReveals, { autoAlpha: 1, y: 0, duration: 0.7, stagger: 0.045, ease: 'expo.out' }, 0.42);
+        .to(morph, { p: 1, duration: 0.9, ease: 'expo.inOut', onUpdate: drawPanel }, 0)
+        .to(closer, { yPercent: 0, autoAlpha: 1, duration: 0.45, ease: 'power3.out' }, 0.3);
+      narrowBar(tl, 0.05, { duration: 0.55, ease: 'power3.inOut' });
     }
-    // Grown: Contact and Form take their own white and the one ground
-    // fades from under them, opening the gap between the two panels
-    contactPanel.classList.remove('is--split');
-    tl.call(() => contactPanel.classList.add('is--split'), null, 0.9)
-      .to(contactBg, { opacity: 0, duration: 0.3, ease: 'power1.out' }, 0.9);
-    setContactAttributes(true);
-    contactTimeline = tl;
+    groundIn(tl, 0);
+    tl.to(panelReveals, { autoAlpha: 1, y: 0, duration: 0.7, stagger: 0.045, ease: 'expo.out' }, 0.42);
+    stepsIn(tl, 0.45);
+    // Grown, a panel of separate blocks (the contact form's Contact and
+    // Form) gives each its own ground, and the one ground fades from under
+    // them, opening the gaps between them
+    panelEl.classList.remove('is--split');
+    if (parts.split) {
+      tl.call(() => panelEl.classList.add('is--split'), null, 0.9)
+        .to(panelBg, { opacity: 0, duration: 0.3, ease: 'power1.out' }, 0.9);
+    }
+    setPanelAttributes(true);
+    panelTimeline = tl;
 
     if (reducedMotion) {
       tl.progress(1);
-      focusContact();
+      focusPanel();
     } else {
-      tl.call(focusContact, null, 0.55);
+      tl.call(focusPanel, null, 0.55);
     }
   }
 
-  function closeContact(opts) {
+  function closePanel(opts) {
     const instant = !!(opts && opts.instant);
     const quick = !!(opts && opts.quick);
-    if (contactState === 'closed') return null;
-    if (contactState === 'closing' && !instant) {
-      if (quick && !reducedMotion) contactTimeline.timeScale(1.5);
-      return contactTimeline;
+    if (panelState === 'closed') return null;
+    if (panelState === 'closing' && !instant) {
+      if (quick && !reducedMotion) panelTimeline.timeScale(1.5);
+      return panelTimeline;
     }
-    if (contactTimeline) contactTimeline.kill();
-    const focusWasInside = contactPanel.contains(document.activeElement);
+    if (panelTimeline) panelTimeline.kill();
+    const focusWasInside = panelEl.contains(document.activeElement) || bar.contains(document.activeElement) || stepButtons.includes(document.activeElement);
+    const closing = parts;
     // Back where it came from; a page change or a reset takes it to the bar,
     // as does the page having left its foot in the meantime
-    const toMenu = contactSource === 'menu' && !quick && !instant;
-    const toFoot = contactSource === 'foot' && footMode && !quick && !instant;
-    contactState = 'closing';
-    setContactAttributes(false);
-    // The bar's square is still there under the form (its ground faded, its
-    // width kept). Back into the menu or the footer's form it is that
-    // square again, so it keeps the width; back into the bar, the width goes
-    // first. (Clearing it on the way back into the menu too was what left
-    // the menu's close control stretched to the bar's full width: the menu
-    // was reopened round a square that was no longer one.)
-    if (!toFoot && !toMenu) resetGround();
+    const toMenu = panelSource === 'menu' && !quick && !instant;
+    const toFoot = panelSource === 'foot' && footMode && !quick && !instant;
+    panelState = 'closing';
+    setPanelAttributes(false);
+    // Into the bar's square (the menu, the footer's form), or onto the bar
+    // itself, the square opening out into the bar under it as it lands
     measureMorph(toMenu || toFoot ? barSquare() : barRest());
-    drawContact();
+    drawPanel();
 
     const finish = () => {
-      contactState = 'closed';
-      gsap.set(contactPanel, { autoAlpha: 0 });
-      gsap.set(contactBg, { clearProps: 'opacity' });
-      // Held down (the home hero): down again, now the form is back in it
+      panelState = 'closed';
+      gsap.set(panelEl, { autoAlpha: 0 });
+      gsap.set(panelBg, { clearProps: 'opacity' });
+      // Held down (the home hero): down again, now the panel is back in it
       apply();
-      document.dispatchEvent(new CustomEvent('fnav:contactclosed'));
+      if (closing === contactParts) document.dispatchEvent(new CustomEvent('fnav:contactclosed'));
+      if (closing.onClosed) closing.onClosed();
     };
 
-    // The one ground back under the two panels, closing the gap, before
-    // the whole shrinks as one
-    const tl = gsap.timeline({ defaults: { overwrite: 'auto' } })
-      .to(contactBg, { opacity: 1, duration: 0.12, ease: 'power1.in' }, 0)
-      .call(() => contactPanel.classList.remove('is--split'), null, 0.12)
-      .to([...contactReveals].reverse(), { autoAlpha: 0, y: '0.8rem', duration: 0.22, stagger: 0.015, ease: 'power2.in' }, 0)
-      .to(morph, { p: 0, duration: 0.75, ease: 'expo.inOut', onUpdate: drawContact }, 0.12);
-    groundOut(tl, 0.55);
+    const tl = gsap.timeline({ defaults: { overwrite: 'auto' } });
+    // A split panel's one ground back under its blocks, closing the gaps,
+    // before the whole shrinks as one
+    if (closing.split) {
+      tl.to(panelBg, { opacity: 1, duration: 0.12, ease: 'power1.in' }, 0)
+        .call(() => panelEl.classList.remove('is--split'), null, 0.12);
+    }
+    tl.to([...panelReveals].reverse(), { autoAlpha: 0, y: '0.8rem', duration: 0.22, stagger: 0.015, ease: 'power2.in' }, 0)
+      .to(morph, { p: 0, duration: 0.75, ease: 'expo.inOut', onUpdate: drawPanel }, 0.12);
+    stepsOut(tl, 0);
+    groundOut(tl, 0.6);
 
     if (toMenu) {
-      // The opening run back, as one movement: the form sinks back into the
-      // bar's square while the menu's modules rise again round it, from the
-      // moment the form has begun to shrink (they are under it, so they show
-      // as it clears them)
+      // The opening run back, as one movement: the panel sinks back into
+      // the bar's square while the menu's modules rise again round it, from
+      // the moment the panel has begun to shrink (they are under it, so
+      // they show as it clears them); the close control stays, the menu's
       tl.call(() => {
         gsap.set(menu, { autoAlpha: 1 });
         gsap.set(reveals, { visibility: 'visible' });
@@ -639,18 +722,19 @@ function initFloatingNav() {
       }, null, 0.3)
         .to(reveals, { ...RISE, stagger: rowDelay(0.14, true) }, 0.3)
         .to(reveals, { ...SHOW, stagger: rowDelay(0.14, true) }, 0.3)
-        .to(closer, { yPercent: 0, autoAlpha: 1, duration: 0.3, ease: 'power2.out' }, 0.65)
         .call(finish, null, 0.87)
         .call(() => {
           state = 'open';
-          const back = contactReturn && menu.contains(contactReturn) ? contactReturn : firstLink;
+          const back = panelReturn && menu.contains(panelReturn) ? panelReturn : firstLink;
           if (focusWasInside) back.focus({ preventScroll: true });
         }, null, '>');
     } else if (toFoot) {
-      // Into the bar's square: the footer's form takes over, the mark and
-      // the square back as the panel arrives and the tiles rising again
-      // over them; the page free to scroll once more
+      // Into the bar's square: the footer's form takes over, the close
+      // control sinking out of the square and the mark rising back into it
+      // as the panel arrives, the tiles rising again over them; the page
+      // free to scroll once more
       tl.to(backdrop, { autoAlpha: 0, duration: 0.5, ease: 'power2.inOut' }, 0.2)
+        .to(closer, { yPercent: 100, autoAlpha: 0, duration: 0.3, ease: 'power2.in' }, 0.4)
         .call(() => {
           gsap.set(menu, { autoAlpha: 1 });
           gsap.set(footReveals, { visibility: 'visible' });
@@ -660,44 +744,51 @@ function initFloatingNav() {
           finish();
           holdPageScroll(false);
         }, null, 0.87)
-        .to(mark, { autoAlpha: 1, duration: 0.3, ease: 'power2.out' }, 0.7)
+        .to(mark, { yPercent: 0, autoAlpha: 1, duration: 0.35, ease: 'power3.out' }, 0.7)
         .set(footReveals, { y: FOOT_HIDDEN.y, scale: FOOT_HIDDEN.scale }, 0.87)
         .to(footReveals, { ...FOOT_RISE, stagger: rowDelay(0.18, true, footReveals) }, 0.87)
         .to(footReveals, { ...FOOT_SHOW, stagger: rowDelay(0.18, true, footReveals) }, 0.87)
         .call(() => {
           state = 'open';
-          if (focusWasInside) (contactReturn && document.contains(contactReturn) ? contactReturn : mark).focus({ preventScroll: true });
+          if (focusWasInside) (panelReturn && document.contains(panelReturn) ? panelReturn : mark).focus({ preventScroll: true });
         }, null, '>');
     } else {
-      // Into the bar: its background and parts back as the panel arrives
-      tl.set([closer, mark], { yPercent: 100, autoAlpha: 0 }, 0)
+      // Onto the bar: the close control sinks out of the square, the
+      // square opens out into the bar under the panel as it lands, and the
+      // bar's parts come back as the panel's ground goes
+      tl.set(mark, { yPercent: 100, autoAlpha: 0 }, 0)
+        .to(closer, { yPercent: 100, autoAlpha: 0, duration: 0.3, ease: 'power2.in' }, 0.1)
         .to(backdrop, { autoAlpha: 0, duration: 0.5, ease: 'power2.inOut' }, 0.2)
         .to(barParts, { autoAlpha: 1, duration: 0.35, ease: 'power2.out' }, 0.62)
         .call(() => {
           finish();
           holdPageScroll(false);
-          if (focusWasInside) (contactReturn && document.contains(contactReturn) ? contactReturn : burger).focus({ preventScroll: true });
+          if (focusWasInside) (panelReturn && document.contains(panelReturn) ? panelReturn : burger).focus({ preventScroll: true });
         }, null, 0.87);
+      widenBar(tl, 0.3, { duration: 0.55, ease: 'power3.inOut' });
     }
-    contactTimeline = tl;
+    panelTimeline = tl;
 
     if (instant || reducedMotion) tl.progress(1);
     else if (quick) tl.timeScale(1.5);
     return tl;
   }
 
-  // Tab and Shift + Tab go round the form while it is open
+  // Tab and Shift + Tab go round the panel and its controls at its foot
+  // (the steps and the close in the bar's square) while it is open
   function holdFocus(event) {
-    const focusable = Array.from(contactPanel.querySelectorAll('button, input, textarea, a[href]'))
-      .filter((el) => !el.disabled && el.getClientRects().length);
+    const controls = parts.steps ? [stepButtons[0], closer, ...stepButtons.slice(1)] : [closer];
+    const focusable = [...panelEl.querySelectorAll('button, input, textarea, a[href]'), ...controls]
+      .filter((el) => el && !el.disabled && el.getClientRects().length);
     if (!focusable.length) return;
     const first = focusable[0];
     const last = focusable[focusable.length - 1];
     const at = document.activeElement;
-    if (event.shiftKey && (at === first || !contactPanel.contains(at))) {
+    const inside = focusable.includes(at) || panelEl.contains(at);
+    if (event.shiftKey && (at === first || !inside)) {
       event.preventDefault();
       last.focus();
-    } else if (!event.shiftKey && (at === last || !contactPanel.contains(at))) {
+    } else if (!event.shiftKey && (at === last || !inside)) {
       event.preventDefault();
       first.focus();
     }
@@ -823,7 +914,7 @@ function initFloatingNav() {
   let wanted = false;
   let heldDown = false;
   function apply() {
-    const shown = wanted && (!heldDown || contactState !== 'closed');
+    const shown = wanted && (!heldDown || panelState !== 'closed');
     const was = bar.classList.contains('is--shown');
     if (!shown) close();
     bar.classList.toggle('is--shown', shown);
@@ -851,7 +942,7 @@ function initFloatingNav() {
   // as the page no longer asks
   function syncFoot() {
     const want = footMode && bar.classList.contains('is--shown');
-    if (want && !isOpen() && contactState === 'closed') open({ foot: true });
+    if (want && !isOpen() && panelState === 'closed') open({ foot: true });
     else if (!want && isOpen() && foot) close();
   }
   function setFootMode(on) {
@@ -880,8 +971,17 @@ function initFloatingNav() {
   // The whole bar opens the menu, save its home links
   bar.addEventListener('click', (event) => {
     if (event.target.closest('.fnav__logo, [data-fnav-home]')) return;
-    if (event.target.closest('[data-fnav-close]')) return close();
+    // Under a panel only the square is seen: its close; a press beside it
+    // is a press outside the panel
+    if (event.target.closest('[data-fnav-close]') || panelOpen()) return close();
     if (!isOpen()) open();
+  });
+  // The steps beside the square: the panel's own (its parts' `steps`)
+  stepButtons.forEach((button) => {
+    button.addEventListener('click', () => {
+      const step = panelOpen() && parts.steps && parts.steps[button.dataset.fnavStep];
+      if (step) step();
+    });
   });
   backdrop.addEventListener('click', () => close());
 
@@ -911,11 +1011,11 @@ function initFloatingNav() {
     }, HOVER_CLOSE);
   }
   burger.addEventListener('pointerenter', (event) => {
-    if (event.pointerType !== 'mouse' || !hoverable.matches || isOpen() || contactOpen()) return;
+    if (event.pointerType !== 'mouse' || !hoverable.matches || isOpen() || panelOpen()) return;
     clearTimeout(openTimer);
     openTimer = setTimeout(() => {
       openTimer = 0;
-      if (isOpen() || contactOpen() || bar.inert) return;
+      if (isOpen() || panelOpen() || bar.inert) return;
       open({ hover: true });
       hoverOpened = true;
     }, HOVER_OPEN);
@@ -939,21 +1039,27 @@ function initFloatingNav() {
   }, true);
   document.addEventListener('keydown', (event) => {
     // The footer's form is the page's, not something to dismiss
-    if (event.key === 'Escape' && ((isOpen() && !foot) || contactOpen())) close();
-    if (event.key === 'Tab' && contactOpen()) holdFocus(event);
+    if (event.key === 'Escape' && ((isOpen() && !foot) || panelOpen())) close();
+    if (event.key === 'Tab' && panelOpen()) holdFocus(event);
+    // The arrow keys step, as the arrows beside the square do, unless
+    // they are moving a caret
+    const typing = event.target instanceof Element && event.target.closest('input, textarea, select, [contenteditable]');
+    if ((event.key === 'ArrowLeft' || event.key === 'ArrowRight') && panelOpen() && parts.steps && !typing) {
+      event.preventDefault();
+      parts.steps[event.key === 'ArrowLeft' ? 'prev' : 'next']();
+    }
   });
   // Contact Tom, and every other way to contact Tom on the site: the form,
   // in the navigation. Caught before anything else hears the click, so the
   // side panel those links used to open (sidepanel.js) never does.
-  if (contactPanel) {
+  if (contactParts) {
     document.addEventListener('click', (event) => {
       const trigger = event.target instanceof Element && event.target.closest('[data-fnav-contact-open], [data-panel-open="contact"]');
       if (!trigger) return;
       event.preventDefault();
       event.stopPropagation();
-      openContact(trigger);
+      openPanel(contactParts, trigger);
     }, true);
-    contactPanel.querySelector('[data-fnav-contact-close]').addEventListener('click', () => closeContact());
   }
   // A page in the menu: the menu goes as the page transition starts. The
   // page already showing has nowhere to go, so its link only closes the
@@ -979,7 +1085,12 @@ function initFloatingNav() {
   });
 
   setRoute();
-  window.floatingNav = { open, close, closeForPage, isOpen, setRoute, setShown, holdDown, setFootMode, openContact, closeContact };
+  window.floatingNav = {
+    open, close, closeForPage, isOpen, setRoute, setShown, holdDown, setFootMode,
+    openPanel, closePanel, panelIsOpen: panelOpen,
+    openContact: (trigger) => openPanel(contactParts, trigger),
+    closeContact: closePanel,
+  };
 }
 
 // Per page: the page's name and section, the trigger that opens the

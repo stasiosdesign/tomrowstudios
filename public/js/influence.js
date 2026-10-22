@@ -1,10 +1,10 @@
 // -----------------------------------------
-// THE INFLUENCE PAGE: its stepped hero; and its former layout's collage
-// in parallax, column of panels and book strip growing into the book band
-// (InfluenceStory.astro, now on the Shop page)
+// THE INFLUENCE PAGE: its stepped hero; and from its former layout, the
+// collage in parallax, the column of panels (now the Partners page's
+// outcomes) and the book strip growing into the book band
 // -----------------------------------------
 //
-// influence.astro and InfluenceStory.astro; "Influence: the stepped hero",
+// influence.astro and partner.astro; "Influence: the stepped hero",
 // "Influence: the hero" and "The book band" in style.css.
 //
 // The stepped hero (initInfluenceStage): nothing holds the page. The stage
@@ -353,12 +353,9 @@ function initBookBand(scope) {
   }
 }
 
-// The hero's column of panels (initInfluenceStrip): the panel whose
-// place is on the focus line is the large one. The line is where the
-// second panel's middle stands on arrival (style.css sets the column's top
-// for that, a little under the screen's middle), so that one is the large
-// one at first; on a phone, where the column follows the words, the
-// screen's middle. Each panel's middle is measured once with all of them
+// The column of panels (initInfluenceStrip): the panel whose place is on
+// the focus line, the screen's middle, is the large one. Each panel's
+// middle is measured once with all of them
 // small (and again on a resize); on scroll, each takes its share of the
 // large size by how near that middle is to the line, falling to nothing a
 // panel's pitch away, so the one coming in grows as the one going out
@@ -371,15 +368,24 @@ function initBookBand(scope) {
 // growth as they go. Placed at once on arrival and on a resize; with
 // reduced motion, no glide.
 //
+// A panel whose figure counts (data-odometer-manual, odometer.js) counts
+// up as it becomes the large one: once its size passes COUNT_ON on its way
+// up. It is set back to its start once it has shrunk to COUNT_OFF, well
+// away again, ready to count the next time; between the two it is left as
+// it is, so a large panel never restarts with the scroll, and one at the
+// edge does not flicker. Either way down the page, and as often as it
+// comes round. Read from the sizes the column draws already, nothing more.
+//
 // `arriving`: the page is still coming in (transitions.js, beforeEnter), so
 // the panels are measured against the page's own box, as they will stand
 // once it has landed at its top, and sized now, while it is unseen; once
 // it has landed (the call without it) they are measured again where they
 // are, which changes nothing, and from then on follow the scroll.
 //
-// Every such column on the page (data-influence-strip): the Shop hero's,
-// and the Partners page's results (partner.astro), which stand in the
-// page's flow, their focus line the screen's middle.
+// Every such column on the page (data-influence-strip): the Partners
+// page's outcomes (partner.astro).
+const COUNT_ON = 0.6;
+const COUNT_OFF = 0.25;
 function initInfluenceStrip(scope, options) {
   (scope || document).querySelectorAll('[data-influence-strip]').forEach((strip) => initStripColumn(strip, options));
 }
@@ -394,7 +400,9 @@ function initStripColumn(strip, { arriving = false } = {}) {
   const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   const EASE_RATE = 7; // the share of the way left closed each second, as a rate (about 0.11 a frame at 60fps)
   const page = strip.closest('[data-barba="container"]') || document.body;
-  const hero = strip.offsetParent || page;
+  // The panels that count, and whether each is counting
+  const counters = items.map((item) => (item.hasAttribute('data-odometer-manual') ? item : null));
+  const counting = items.map(() => false);
   let landed = !arriving;
   let middles = [];
   let pitch = 1;
@@ -419,8 +427,7 @@ function initStripColumn(strip, { arriving = false } = {}) {
       return down(r) + (r.height * k) / 2;
     });
     pitch = middles.length > 1 ? middles[1] - middles[0] : items[0].offsetHeight || 1;
-    const placed = getComputedStyle(strip).position === 'absolute' && middles.length > 1;
-    focus = placed ? middles[1] - down(hero.getBoundingClientRect()) : window.innerHeight / 2;
+    focus = window.innerHeight / 2;
     aim();
     shown = targets.slice();
     draw();
@@ -440,6 +447,26 @@ function initStripColumn(strip, { arriving = false } = {}) {
   }
   function draw() {
     items.forEach((item, i) => item.style.setProperty('--t', shown[i].toFixed(4)));
+    count();
+  }
+  // A counting panel's figure: up as the panel becomes the large one, back
+  // to its start once it is well away again (COUNT_ON, COUNT_OFF). The
+  // panel carries is--counting meanwhile, so a figure built after the panel
+  // came up still counts (odometer.js)
+  function count() {
+    counters.forEach((item, i) => {
+      if (!item) return;
+      const odometer = item.__odometer;
+      if (!counting[i] && shown[i] >= COUNT_ON) {
+        counting[i] = true;
+        item.classList.add('is--counting');
+        if (odometer && odometer.play) odometer.play();
+      } else if (counting[i] && shown[i] <= COUNT_OFF) {
+        counting[i] = false;
+        item.classList.remove('is--counting');
+        if (odometer && odometer.reset) odometer.reset();
+      }
+    });
   }
   // One moment of the glide; on until every panel has arrived
   function step(now) {

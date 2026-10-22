@@ -41,7 +41,19 @@ function initNumberOdometer(scope, { prepare = false } = {}) {
     if (!group.__odometer) group.__odometer = buildGroup(group, elements)
     if (prepare) return
     group.setAttribute(initFlag, '')
-    playGroup(group, group.__odometer)
+    // A group another script sets going (data-odometer-manual: the Partners
+    // page's outcomes, each as its panel becomes the large one,
+    // influence.js), as often as it asks, rather than once on coming into
+    // view; already asked for (is--counting) while it was being built, it
+    // goes now
+    if (group.hasAttribute('data-odometer-manual')) {
+      const data = group.__odometer
+      data.play = () => playManual(data)
+      data.reset = () => resetManual(data)
+      if (group.classList.contains('is--counting')) data.play()
+    } else {
+      playGroup(group, group.__odometer)
+    }
   })
 
   // The group's rollers, built at their start
@@ -101,7 +113,33 @@ function initNumberOdometer(scope, { prepare = false } = {}) {
         })
       }
     })
+    addRolls(tl, ordered, elementStagger)
+  }
 
+  // A manual group rolled to its figures from its start, now; its rollers
+  // kept afterwards (no cleanup), so it can be set back and rolled again
+  function playManual(data) {
+    resetManual(data)
+    data.tl = gsap.timeline()
+    addRolls(data.tl, data.ordered, data.elementStagger)
+  }
+
+  // A manual group back at its start, at once, whatever it was doing
+  function resetManual(data) {
+    if (data.tl) {
+      data.tl.kill()
+      data.tl = null
+    }
+    data.elementData.forEach(({ rollers, step, revealData }) => {
+      rollers.forEach(({ roller, startY }) => gsap.set(roller, { y: startY * step + 'em' }))
+      revealData.forEach(({ el }) => gsap.set(el, { width: 0, opacity: 0 }))
+    })
+  }
+
+  // Each element's digits rolled to their figures on the timeline, one
+  // element a beat after another, each digit a beat after the one to its
+  // right, any hidden part opening out as it goes
+  function addRolls(tl, ordered, elementStagger) {
     ordered.forEach((data, orderIdx) => {
       const { rollers, duration, step, revealData } = data
       const offset = orderIdx * elementStagger
@@ -306,7 +344,9 @@ function initNumberOdometer(scope, { prepare = false } = {}) {
       gsap.set(roller, { y: isReveal ? step + 'em' : -startDigit * step + 'em' })
       const endDigit = parseInt(seg.char, 10)
       const targetPos = endDigit > startDigit ? endDigit : 10 + endDigit
-      rollers.push({ roller, targetPos })
+      // Where it starts, in rows: the start digit, or a row under for one
+      // that opens out
+      rollers.push({ roller, targetPos, startY: isReveal ? 1 : -startDigit })
       if (isReveal) revealEls.push(mask)
     })
     return { rollers, revealEls }

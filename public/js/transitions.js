@@ -79,6 +79,8 @@ function initAfterEnterFunctions(next) {
   if (typeof initProductHotspotModal === "function") initProductHotspotModal();
   if (typeof initCenteredSliders === "function") initCenteredSliders();
   if (typeof initTestimonialSwitcher === "function") initTestimonialSwitcher();
+  // The Partners page's stagger, each column drifting at its own pace (partners.js)
+  if (typeof initPartnerStagger === "function") initPartnerStagger(nextPage);
   if (typeof initBasicFormValidation === "function") initBasicFormValidation();
   if (typeof initParallaxImageSlider === "function") initParallaxImageSlider();
   if (typeof initScrollToNextPage === "function") initScrollToNextPage();

@@ -86,12 +86,27 @@ function buildCenteredSlider(sliderWrapper) {
   // On initialization, center the slider
   loop.toIndex(2, { duration: 0.01 });
 
-  function startAutoplay() {
+  // How long until the next: a line along the foot of the slide that is
+  // showing (data-centered-slider="progress"), filling over the autoplay's
+  // wait, started with each wait and put back to empty when it stops
+  const bars = slides.map((slide) => slide.querySelector('[data-centered-slider="progress"]'));
+  let barTween;
+  function runBar(index) {
+    if (barTween) barTween.kill();
+    bars.forEach((bar) => bar && gsap.set(bar, { scaleX: 0 }));
+    const bar = bars[index];
+    if (bar) barTween = gsap.fromTo(bar, { scaleX: 0 }, { scaleX: 1, duration: autoplayDuration, ease: "none" });
+  }
+
+  function startAutoplay(index = currentIndex) {
     if (autoplayDuration > 0 && !autoplay) {
       const repeat = () => {
+        const next = (currentIndex + 1) % slides.length;
         loop.next({ ease: "osmo-ease", duration: 0.725 });
+        runBar(next);
         autoplay = gsap.delayedCall(autoplayDuration, repeat);
       };
+      runBar(index);
       autoplay = gsap.delayedCall(autoplayDuration, repeat);
     }
   }
@@ -101,6 +116,18 @@ function buildCenteredSlider(sliderWrapper) {
       autoplay.kill();
       autoplay = null;
     }
+    if (barTween) barTween.kill();
+    bars.forEach((bar) => bar && gsap.set(bar, { scaleX: 0 }));
+  }
+
+  // A move by hand while it plays (a tap, with no pointer over the slider to
+  // hold it): the wait, and its line, start again on the slide moved to
+  function goTo(index) {
+    loop.toIndex(index, { ease: "osmo-ease", duration: 0.725 });
+    if (autoplay) {
+      stopAutoplay();
+      startAutoplay(index);
+    }
   }
 
   // Start/stop autoplay based on viewport visibility via ScrollTrigger
@@ -108,9 +135,9 @@ function buildCenteredSlider(sliderWrapper) {
     trigger: sliderWrapper,
     start: "top bottom",
     end: "bottom top",
-    onEnter: startAutoplay,
+    onEnter: () => startAutoplay(),
     onLeave: stopAutoplay,
-    onEnterBack: startAutoplay,
+    onEnterBack: () => startAutoplay(),
     onLeaveBack: stopAutoplay
   });
 
@@ -123,7 +150,7 @@ function buildCenteredSlider(sliderWrapper) {
   // Slide click event for direct navigation
   slides.forEach((slide, i) => {
     slide.addEventListener("click", () => {
-      loop.toIndex(i, { ease: "osmo-ease", duration: 0.725 });
+      goTo(i);
     });
   });
 
@@ -131,7 +158,7 @@ function buildCenteredSlider(sliderWrapper) {
   if (bullets && bullets.length > 0) {
     bullets.forEach((bullet, i) => {
       bullet.addEventListener("click", () => {
-        loop.toIndex(i, { ease: "osmo-ease", duration: 0.725 });
+        goTo(i);
         if (activeBullet) activeBullet.classList.remove("active");
         bullet.classList.add("active");
         activeBullet = bullet;
@@ -147,7 +174,7 @@ function buildCenteredSlider(sliderWrapper) {
     prevButton.addEventListener("click", () => {
       let newIndex = currentIndex - 1;
       if (newIndex < 0) newIndex = slides.length - 1;
-      loop.toIndex(newIndex, { ease: "osmo-ease", duration: 0.725 });
+      goTo(newIndex);
     });
   }
 
@@ -155,7 +182,7 @@ function buildCenteredSlider(sliderWrapper) {
     nextButton.addEventListener("click", () => {
       let newIndex = currentIndex + 1;
       if (newIndex >= slides.length) newIndex = 0;
-      loop.toIndex(newIndex, { ease: "osmo-ease", duration: 0.725 });
+      goTo(newIndex);
     });
   }
 

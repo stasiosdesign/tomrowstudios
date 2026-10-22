@@ -1,0 +1,57 @@
+---
+/* The testimonials as one full-screen stage (the Partners page's): the
+   active one's photograph filling the band in black and white, its quote
+   large over the left of it and the person under that, and along the foot
+   the row of everyone, each a small cut of their own photograph round the
+   face, their name and role; the active one on a frosted ground, with a
+   line along its foot filling as its time runs out. The stage moves on by
+   itself (partners.js, initTestimonialSwitcher): the next photograph fades
+   up and settles, its words rise in. Pressing a person shows theirs. The
+   site's grain lies over the band as over every band (style.css, "Grain").
+
+   Photographs only for now: each backdrop is the one element a film would
+   take the place of, should a testimonial come with one.
+
+   `image`: the photograph, both the backdrop and the cut in the row;
+   `position`: its anchor as the backdrop; `face`: where the face is in it
+   (the backdrop's anchor on a phone, where the screen's narrow crop would
+   otherwise miss it) and `zoom`, how far the row's cut closes in on it. `interval`: seconds
+   on each. Styles: "Testimonial stage" in style.css. */
+export interface Testimonial {
+  quote: string;
+  name: string;
+  role: string;
+  image: string;
+  position?: string;
+  face?: string;
+  zoom?: number;
+}
+interface Props {
+  testimonials: Testimonial[];
+  interval?: number;
+}
+const { testimonials, interval = 7 } = Astro.props;
+---
+<section class="testimonial-feature" aria-label="Testimonials">
+  <div data-testimonial class="testimonial-stage" style={`--testimonial-interval: ${interval}s;`}>
+    {testimonials.map(({ quote, name, role, image, position, face }, i) => (
+    <div data-testimonial-slide class:list={['testimonial-slide', { 'is--active': i === 0 }]} aria-hidden={i === 0 ? 'false' : 'true'}>
+      <img class="testimonial-slide__bg" src={image} alt="" loading="lazy" decoding="async" style={`--position: ${position ?? '50% 50%'}; --face: ${face ?? position ?? '50% 50%'};`}>
+      <div class="testimonial-slide__body">
+        <blockquote>“{quote}”</blockquote>
+        <p class="testimonial-slide__who"><span>{name}</span> {role}</p>
+      </div>
+    </div>
+    ))}
+
+    <div role="tablist" aria-label="Choose a testimonial" class="testimonial-chips">
+      {testimonials.map(({ name, role, image, face, zoom }, i) => (
+      <button type="button" data-testimonial-chip role="tab" aria-selected={i === 0 ? 'true' : 'false'} class:list={['testimonial-chip', { 'is--active': i === 0 }]}>
+        <span class="testimonial-chip__face"><img src={image} alt="" loading="lazy" decoding="async" style={`--face: ${face ?? '50% 50%'}; --zoom: ${zoom ?? 1};`}></span>
+        <span class="testimonial-chip__text"><span class="testimonial-chip__name">{name}</span><span class="testimonial-chip__role">{role}</span></span>
+        <span class="testimonial-chip__progress" aria-hidden="true"><span class="testimonial-chip__bar" data-testimonial-bar></span></span>
+      </button>
+      ))}
+    </div>
+  </div>
+</section>

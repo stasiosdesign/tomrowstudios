@@ -1,15 +1,14 @@
 ---
-/* A partner's case study, as a panel over the page, after Jesper Landberg's
-   project panels (public/js/casepanel.js, "Case study panel" in style.css):
-   a large off-white sheet inset from the screen's edges over the darkened
-   page, grown out of the card that was pressed. On its left, standing still,
-   the case study's title, its standfirst, its tags (a round button to the
-   partner's website, then the client, the date and the output), the body
-   text and the services; on its right, scrolling on its own, the case
-   study's pictures one under another — the wide picture, then the gallery.
-   A round black close button at its top right. Rendered once per partner
-   with a case study, as #case-<slug>, the id the Partners page's slider and
-   the Partners archive grid name in data-case-open. */
+/* A partner's case study, one of those the case-study viewer holds
+   (CaseStudyViewer.astro: the floating bar grown into a wide panel,
+   casepanel.js). On its left the case study's title, its standfirst, its
+   tags (a round button to the partner's website, then the client, the date
+   and the output), the body text and the services; on its right the case
+   study's pictures one under another — the wide picture, then the gallery;
+   each side scrolling on its own. Rendered once per partner with a case
+   study, as #case-<slug>, the id the Partners page's stagger and the
+   Partners archive grid name in data-case-open; hidden but for the one the
+   viewer shows. What rises in as it shows is marked data-case-reveal. */
 import Arrow from './Arrow.astro';
 import { PortableText } from 'astro-portabletext';
 import { imageAttrs } from '../sanity/image';
@@ -17,52 +16,48 @@ import type { PARTNERS_QUERY_RESULT } from '../sanity/sanity.types';
 
 interface Props {
   partner: PARTNERS_QUERY_RESULT[number];
+  /** A mockup for testing the viewer (case-study-mockups.ts): marked as one, first among its tags */
+  mockup?: boolean;
 }
 
-const { partner } = Astro.props;
+const { partner, mockup = false } = Astro.props;
 const study = partner.caseStudy;
 const facts = study?.facts;
 const id = `case-${partner.slug}`;
 // The tags: the short facts, as the reference's
-const tags = [facts?.client, facts?.date, facts?.output].filter((tag): tag is string => Boolean(tag));
+const tags = [mockup && 'Mockup', facts?.client, facts?.date, facts?.output].filter((tag): tag is string => Boolean(tag));
 // The website, shown without its scheme and "www." as the pages always did
 const website = facts?.website;
 const websiteLabel = website?.replace(/^https?:\/\/(www\.)?/, '').replace(/\/$/, '');
 // The pictures, the wide one first
 const pictures = [study?.image, ...(study?.gallery ?? [])].filter((image) => image?.asset);
 ---
-<div class="case-panel" id={id} data-case-panel role="dialog" aria-modal="true" aria-labelledby={`${id}-title`} aria-hidden="true" inert>
-  <div class="case-panel__backdrop" data-case-backdrop data-case-close data-cursor="hover"></div>
-  <div class="case-panel__sheet" data-case-sheet data-lenis-prevent>
-    <div class="case-panel__aside">
-      <h2 class="case-panel__title" id={`${id}-title`} data-case-reveal>{study?.title}</h2>
-      {study?.standfirst && <p class="case-panel__lead" data-case-reveal>{study.standfirst}</p>}
-      {(website || tags.length > 0) && (
-        <div class="case-panel__tags" data-case-reveal>
-          {website && (
-            <a class="case-panel__visit" href={website} target="_blank" rel="noopener" aria-label={`Visit ${websiteLabel}`}>
-              <Arrow />
-            </a>
-          )}
-          {tags.map((tag) => <span class="case-panel__tag">{tag}</span>)}
-        </div>
-      )}
-      {study?.body && study.body.length > 0 && (
-        <div class="case-panel__body" data-case-reveal><PortableText value={study.body} /></div>
-      )}
-      {facts?.services && (
-        <p class="case-panel__services" data-case-reveal><span class="case-panel__label">Services</span>{facts.services}</p>
-      )}
-    </div>
-    <div class="case-panel__media" data-case-scroll data-lenis-prevent>
-      {pictures.map((picture, i) => (
-        <figure class="case-panel__shot" data-case-reveal={i < 2 ? '' : undefined}>
-          <img {...imageAttrs(picture!, 1600)} alt={picture!.alt ?? ''} loading={i < 2 ? 'eager' : 'lazy'} decoding="async" draggable="false">
-        </figure>
-      ))}
-    </div>
-    <button type="button" class="case-panel__close" data-case-close aria-label="Close case study">
-      <svg viewBox="0 0 13 13" fill="none" aria-hidden="true"><path d="M0.354 11.667 11.667 0.354" stroke="currentColor" stroke-width="1.4"/><path d="M0.354 0.354 11.667 11.667" stroke="currentColor" stroke-width="1.4"/></svg>
-    </button>
+<article class="fnav-case__study" id={id} data-case-study data-case-mockup={mockup ? '' : undefined} aria-labelledby={`${id}-title`} hidden>
+  <div class="case-panel__aside">
+    <h2 class="case-panel__title" id={`${id}-title`} data-case-reveal>{study?.title}</h2>
+    {study?.standfirst && <p class="case-panel__lead" data-case-reveal>{study.standfirst}</p>}
+    {(website || tags.length > 0) && (
+      <div class="case-panel__tags" data-case-reveal>
+        {website && (
+          <a class="case-panel__visit" href={website} target="_blank" rel="noopener" aria-label={`Visit ${websiteLabel}`}>
+            <Arrow />
+          </a>
+        )}
+        {tags.map((tag) => <span class="case-panel__tag">{tag}</span>)}
+      </div>
+    )}
+    {study?.body && study.body.length > 0 && (
+      <div class="case-panel__body" data-case-reveal><PortableText value={study.body} /></div>
+    )}
+    {facts?.services && (
+      <p class="case-panel__services" data-case-reveal><span class="case-panel__label">Services</span>{facts.services}</p>
+    )}
   </div>
-</div>
+  <div class="case-panel__media">
+    {pictures.map((picture, i) => (
+      <figure class="case-panel__shot" data-case-reveal={i < 2 ? '' : undefined}>
+        <img {...imageAttrs(picture!, 1600)} alt={picture!.alt ?? ''} loading="lazy" decoding="async" draggable="false">
+      </figure>
+    ))}
+  </div>
+</article>

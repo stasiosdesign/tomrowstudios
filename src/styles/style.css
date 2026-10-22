@@ -149,7 +149,6 @@ html.is--loading body { opacity: 0; }
    noted at the call site, so this rule can sit here with the rest of the
    typography rather than having to come last to win. */
 .tagline,
-.influence-hero__cue,
 .logo-strip__note,
 .form-label,
 .panel-meta dt,
@@ -1357,42 +1356,15 @@ html.is--page-transition [data-barba="container"] { background-color: #000000; }
 .panel .rich-split { flex-direction: column; gap: 2.4rem; margin-bottom: 3.2rem; }
 .panel .rich-split h3 { flex: none; width: 100%; font-size: 3.2rem; letter-spacing: var(--track-display); }
 
-/* ---------- Case study panel ----------
-   CaseStudyPanel.astro, casepanel.js; after Jesper Landberg's project
-   panels. Over everything but the cursor: the page darkened behind, and a
-   large off-white sheet inset from the screen's edges, its corners barely
-   broken as the site's are. Two columns: on the left (about two fifths),
-   standing still, the title in the heading face, the standfirst, the tags —
-   a round black button to the partner's website and pills of the short
-   facts in the label face — the body text and the services; on the right,
-   scrolling on its own with no bar to see, the pictures one under another,
-   full width, a gap apart, clear of the round black close button at the
-   top right. The script grows the sheet out of the pressed card (its clip,
-   with the card's picture, .case-panel__ghost, laid over it as it opens).
-   On a phone the two stack and the whole sheet scrolls. */
-.case-panel {
-  position: fixed;
-  inset: 0;
-  z-index: 300;
-  display: none;
-}
-.case-panel.is--open { display: block; }
-.case-panel__backdrop {
-  position: absolute;
-  inset: 0;
-  background-color: rgba(0, 0, 0, 0.62);
-  cursor: pointer;
-}
-.case-panel__sheet {
-  position: absolute;
-  inset: 2.6vh 3.5vw;
-  display: grid;
-  grid-template-columns: minmax(0, 0.42fr) minmax(0, 0.58fr);
-  overflow: hidden;
-  border-radius: 2px;
-  background-color: var(--paper);
-  color: #0a0a0a;
-}
+/* ---------- A case study's words and pictures ----------
+   CaseStudyPanel.astro, in the case-study viewer the floating bar grows
+   into (CaseStudyViewer.astro; its panel: "The case studies, grown out of
+   the bar", with the floating navigation). Two columns: on the left
+   (about two fifths), the title in the heading face, the standfirst, the
+   tags — a round black button to the partner's website and pills of the
+   short facts in the label face — the body text and the services; on the
+   right the pictures one under another, full width, a gap apart; each
+   scrolling on its own with no bar to see. */
 .case-panel__aside {
   display: flex;
   flex-direction: column;
@@ -1503,70 +1475,6 @@ html.is--page-transition [data-barba="container"] { background-color: #000000; }
   width: 100%;
   height: auto;
   -webkit-user-drag: none;
-}
-.case-panel__close {
-  position: absolute;
-  top: 2.8rem;
-  right: 2.8rem;
-  z-index: 2;
-  display: grid;
-  place-items: center;
-  width: 5.6rem;
-  height: 5.6rem;
-  padding: 0;
-  border: 0;
-  border-radius: 50%;
-  background-color: #0a0a0a;
-  color: #ffffff;
-  cursor: pointer;
-  transition: transform 0.3s var(--cta-ease);
-}
-.case-panel__close svg { width: 1.4rem; height: 1.4rem; }
-@media (hover: hover) and (pointer: fine) {
-  .case-panel__close:hover { transform: rotate(90deg); }
-}
-.case-panel :is(a, button):focus-visible { outline: 1px solid #0a0a0a; outline-offset: 0.3rem; }
-/* The pressed card's picture, over the sheet while it grows out of it */
-.case-panel__ghost {
-  position: absolute;
-  inset: 0;
-  z-index: 3;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  pointer-events: none;
-}
-/* The page under it holds still */
-html.is--case-open,
-html.is--case-open body { overflow: hidden; }
-
-@media screen and (max-width: 991px) {
-  /* Stacked: the text over the pictures, the whole sheet scrolling */
-  .case-panel__sheet {
-    inset: 1.2rem;
-    display: block;
-    overflow-y: auto;
-    overscroll-behavior: contain;
-    scrollbar-width: none;
-  }
-  .case-panel__aside {
-    padding: 4rem 2.4rem 3.2rem;
-    overflow: visible;
-  }
-  .case-panel__media {
-    gap: 1.6rem;
-    padding: 0 2.4rem 2.4rem;
-    overflow: visible;
-  }
-  /* Held at the sheet's top right as it scrolls */
-  .case-panel__close {
-    position: fixed;
-    top: calc(1.2rem + 1.6rem);
-    right: calc(1.2rem + 1.6rem);
-    width: 4.8rem;
-    height: 4.8rem;
-  }
-  .case-panel__title { padding-right: 5.6rem; }
 }
 
 /* ---------- Contact / start a project panel ---------- */
@@ -3081,6 +2989,9 @@ html.is--intro .home-loader {
   transition: color 0.25s var(--cta-ease);
 }
 .scroll-list__item.is--active { color: var(--cta-accent-color); }
+/* The Partners page's services: no red, under the pointer or on the
+   middle line; the line beside them still changes with the scroll */
+.services .scroll-list__item.is--active { color: var(--scroll-list-ink); }
 
 /* The panels, stacked in one cell of the frame: the lit one shown, the
    rest waiting, below it or above it on the side the list will bring them
@@ -3187,15 +3098,27 @@ html.is--intro .home-loader {
   text-wrap: balance;
   font-weight: var(--weight-strong); --wght: var(--weight-strong);
 }
-/* Where the heading has a note (the Partners page's), under it, small and
-   grey */
-.logo-grid__note {
-  max-width: 40rem;
-  margin: 0;
-  font-size: 1.4rem;
-  line-height: 1.4;
-  color: rgba(244, 244, 244, 0.56);
+/* The band on the paper (the Partners page's, its --paper the page's own,
+   so the band runs on from the sections round it): its type, its ruler and
+   its marks in the site's near-black */
+.logo-wall.is--light {
+  background-color: var(--paper);
+  color: #0a0a0a;
 }
+.logo-wall.is--light .logo-grid__row {
+  --tick-fine: rgba(10, 10, 10, 0.2);
+  --tick-strong: rgba(10, 10, 10, 0.5);
+}
+/* A logo without its artwork: the studio's placeholder mark, the logos'
+   own height at most, in the band's ink */
+.logo-grid__logo.is--mark {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: var(--logo-mark-h);
+  color: currentColor;
+}
+.logo-grid__mark { display: block; height: 100%; width: auto; }
 /* On the Partners page the band stands alone: as much room under the row
    as over it */
 .logo-wall.is--partner .logo-grid { padding-bottom: 12rem; }
@@ -5321,12 +5244,38 @@ body{
   opacity: 1;
 }
 
+/* The quote set as the Partners page's testimonials (.testimonial-slide
+   blockquote), a size down for the card: the strong weight, tightly set */
 .slide-demo__description {
   margin: 0;
   max-width: 52rem;
-  font-size: 2.4rem;
-  line-height: 1.3;
-  letter-spacing: var(--track-title);
+  font-size: 2.6rem;
+  line-height: 1.1;
+  letter-spacing: -0.035em;
+  text-wrap: pretty;
+  font-weight: var(--weight-strong); --wght: var(--weight-strong);
+}
+/* How long until the next, as on the Partners page's testimonials: a fine
+   line along the foot of the card showing, between its corner brackets,
+   filling over the autoplay's wait (centeredslider.js) */
+.centered-slider-progress {
+  position: absolute;
+  left: 1.6rem;
+  right: 1.6rem;
+  bottom: -1px;
+  height: 2px;
+  background-color: rgba(255, 255, 255, 0.12);
+  opacity: 0;
+  transition: opacity 0.4s ease;
+  pointer-events: none;
+}
+.centered-slider-slide.active .centered-slider-progress { opacity: 1; }
+.centered-slider-progress__bar {
+  display: block;
+  height: 100%;
+  background-color: #ffffff;
+  transform: scaleX(0);
+  transform-origin: left center;
 }
 
 .slide-demo__details {
@@ -5382,6 +5331,35 @@ body{
   width: 100%;
   height: 100%;
   border-radius: 100em;
+}
+/* A review's stars over its words, and a reviewer by their initials in
+   the avatar's circle (the slide's and the row's), not a picture */
+.slide-demo__quote {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2rem;
+}
+.slide-demo__stars { display: block; width: 9.6rem; height: auto; }
+.slide-demo__initials {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 100%;
+  border-radius: 100em;
+  background-color: rgba(255, 255, 255, 0.12);
+  color: #ffffff;
+  font-family: var(--font-label);
+  font-size: var(--size-label);
+  letter-spacing: var(--track-label);
+  line-height: 1;
+}
+.slide-demo__avatar.slide-demo__initials { flex: none; width: 4rem; height: 4rem; }
+/* A review of a few words, left whole, set a size larger so its card
+   carries it as the longer ones' carry theirs */
+.slide-demo__description.is--short { font-size: 3.4rem; line-height: 1.05; }
+@media screen and (max-width: 767px) {
+  .slide-demo__description.is--short { font-size: 2.6rem; }
 }
 
 .centered-slider-bullet:focus {
@@ -5453,7 +5431,7 @@ body{
     min-height: 0;
     padding: 2.4rem;
   }
-  .slide-demo__description { font-size: 1.8rem; }
+  .slide-demo__description { font-size: 2rem; }
 }
 
 /* =============================================================
@@ -6305,46 +6283,79 @@ strong, b, th { font-weight: var(--weight-strong); --wght: var(--weight-strong);
    Testimonial feature, map head, prefooter
    ============================================================= */
 
-/* ---------- Testimonial feature ---------- */
-/* The Partners page is wrapped in .theme-light, and this band is a dark
-   full-bleed frame sitting inside it — reset the colour and the tokens, or
-   the quote renders near-black over the photograph */
+/* ---------- Testimonial stage (TestimonialStage.astro) ----------
+   Most of a screen tall: the active testimonial's photograph filling it in black
+   and white, a shade darker, its quote large over the left and the person
+   under it, and the row of everyone at the foot. Changing testimonial, the
+   next photograph fades up over a second and a bit and settles from a
+   touch larger, its words rise in after it, and the last one's go quickly;
+   the active person's line in the row fills over the interval
+   (--testimonial-interval) and, filled, moves the stage on (partners.js).
+   The Partners page is wrapped in .theme-light, and the stage is a dark
+   frame inside it: the band's colour and tokens reset, or the quote would
+   set near-black over the photograph. */
+/* The band on the page's paper, the stage inside it held to the page's
+   gutters (--site-inset), as a picture on the page rather than the page
+   itself, its corners the site's; its words and row set in from its edges
+   (--testimonial-pad) */
 .testimonial-feature {
-  background-color: #0a0a0a;
+  padding: 0 var(--site-inset);
+  background-color: var(--paper);
   color: #ffffff;
   --rule: rgba(255, 255, 255, 0.1);
   --form-muted: rgba(255, 255, 255, 0.5);
 }
 .testimonial-stage {
+  --testimonial-ease: cubic-bezier(0.16, 1, 0.3, 1);
+  --testimonial-pad: clamp(2.4rem, 4vw, 5.6rem);
   position: relative;
-  width: 100%;
-  min-height: 82rem;
   display: grid;
+  width: 100%;
+  min-height: max(56rem, 84vh);
+  min-height: max(56rem, 84svh);
   overflow: hidden;
+  border-radius: var(--radius);
+  background-color: #0a0a0a;
 }
+/* Each slide a layer of its own (its lifted words kept inside it), the
+   active one over the one fading out */
 .testimonial-slide {
   grid-area: 1 / 1;
   position: relative;
+  z-index: 0;
   opacity: 0;
   visibility: hidden;
-  transition: opacity 0.5s cubic-bezier(0.65, 0.05, 0, 1);
+  transition: opacity 1.2s ease, visibility 0s linear 1.2s;
 }
-.testimonial-slide.is--active { opacity: 1; visibility: visible; }
-
+.testimonial-slide.is--active {
+  z-index: 1;
+  opacity: 1;
+  visibility: visible;
+  transition: opacity 1.2s ease, visibility 0s;
+}
 .testimonial-slide__bg {
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
   object-fit: cover;
+  object-position: var(--position);
+  filter: grayscale(1) brightness(0.78) contrast(1.05);
+  transform: scale(1.06);
+  transition: transform 2.4s var(--testimonial-ease);
 }
-/* The quote sits over the darker half of the frame, so weight the wash to
-   the side it reads on */
+.testimonial-slide.is--active .testimonial-slide__bg { transform: none; }
+/* The quote reads over the left of the photograph: a light, even shade
+   over the whole picture, and on it the wash weighted to that side, and
+   to the foot, where the row is */
 .testimonial-slide::after {
   content: '';
   position: absolute;
   inset: 0;
-  background: linear-gradient(90deg, rgba(10, 10, 10, 0.88) 0%, rgba(10, 10, 10, 0.6) 45%, rgba(10, 10, 10, 0.25) 100%);
+  background:
+    linear-gradient(90deg, rgba(10, 10, 10, 0.72) 0%, rgba(10, 10, 10, 0.38) 42%, rgba(10, 10, 10, 0) 72%),
+    linear-gradient(0deg, rgba(10, 10, 10, 0.5) 0%, rgba(10, 10, 10, 0) 30%),
+    rgba(10, 10, 10, 0.2);
 }
 .testimonial-slide__body {
   position: relative;
@@ -6353,62 +6364,155 @@ strong, b, th { font-weight: var(--weight-strong); --wght: var(--weight-strong);
   flex-direction: column;
   justify-content: center;
   height: 100%;
-  max-width: var(--grid-col-2);
-  padding: 12rem var(--site-inset) 20rem;
+  padding: 9.6rem var(--testimonial-pad) calc(var(--fnav-clearance) + 13rem);
 }
 .testimonial-slide blockquote {
+  max-width: min(20em, 100%);
   margin: 0 0 3.2rem;
-  font-size: 4rem;
-  line-height: 1.2;
-  letter-spacing: -0.03em;
+  font-size: 4.2rem;
+  line-height: 1.04;
+  letter-spacing: -0.04em;
+  text-wrap: balance;
   font-weight: var(--weight-strong); --wght: var(--weight-strong);
 }
 .testimonial-slide__who {
   margin: 0;
   font-size: 1.6rem;
-  color: rgba(255, 255, 255, 0.55);
+  color: rgba(255, 255, 255, 0.5);
 }
-.testimonial-slide__who span { color: #ffffff; margin-right: 0.8rem; }
+.testimonial-slide__who span { color: #ffffff; margin-right: 0.4rem; }
+/* The words: out quickly with their slide, in after the photograph */
+.testimonial-slide blockquote,
+.testimonial-slide__who {
+  opacity: 0;
+  transform: translateY(1.6rem);
+  transition: opacity 0.4s ease, transform 0s linear 0.4s;
+}
+.testimonial-slide.is--active blockquote,
+.testimonial-slide.is--active .testimonial-slide__who {
+  opacity: 1;
+  transform: none;
+  transition: opacity 0.9s ease 0.35s, transform 1.1s var(--testimonial-ease) 0.35s;
+}
+.testimonial-slide.is--active .testimonial-slide__who { transition-delay: 0.5s; }
 
-/* The row of people along the bottom, as in the reference */
+/* The row of people along the foot, as in the reference: the active one
+   on a frosted ground, the rest quiet beside it; just clear of the
+   floating bar and its strip (--fnav-clearance) while the stage fills the
+   screen, so neither sits on the other */
 .testimonial-chips {
   position: absolute;
   z-index: 2;
-  left: var(--site-inset);
-  right: var(--site-inset);
-  bottom: 4rem;
+  left: var(--testimonial-pad);
+  right: var(--testimonial-pad);
+  bottom: calc(var(--fnav-clearance) + 1.6rem);
   display: flex;
-  gap: var(--grid-gap);
+  gap: 0.8rem;
   overflow-x: auto;
   scrollbar-width: none;
 }
 .testimonial-chips::-webkit-scrollbar { display: none; }
-
 .testimonial-chip {
-  flex: 1 1 0;
-  min-width: 22rem;
+  position: relative;
+  flex: none;
   display: flex;
   align-items: center;
-  gap: 1.6rem;
-  padding: 1.6rem;
+  gap: 1.4rem;
+  padding: 1.6rem 2.4rem 1.6rem 1.6rem;
   text-align: left;
-  color: rgba(255, 255, 255, 0.45);
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.42);
+  background-color: rgba(255, 255, 255, 0);
+  border: 0;
   border-radius: var(--radius);
   cursor: pointer;
-  transition: color 0.3s, background-color 0.3s, border-color 0.3s;
+  overflow: hidden;
+  transition: color 0.4s ease, background-color 0.4s ease;
 }
 .testimonial-chip:hover { color: rgba(255, 255, 255, 0.75); }
 .testimonial-chip.is--active {
   color: #ffffff;
-  background: rgba(255, 255, 255, 0.12);
-  border-color: rgba(255, 255, 255, 0.28);
+  background-color: rgba(255, 255, 255, 0.14);
+  -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(16px);
 }
-.testimonial-chip img { width: 4rem; height: 4rem; border-radius: 100em; object-fit: cover; flex: none; }
+.testimonial-chip:focus-visible { outline: 1px solid #ffffff; outline-offset: 0.2rem; }
+/* The person's face, cut from their photograph (--face, --zoom), with a
+   fine ring round it while theirs is the one showing */
+.testimonial-chip__face {
+  flex: none;
+  width: 4.4rem;
+  height: 4.4rem;
+  border-radius: 100em;
+  overflow: hidden;
+  outline: 1px solid rgba(255, 255, 255, 0);
+  outline-offset: 0.3rem;
+  transition: outline-color 0.4s ease;
+}
+.testimonial-chip.is--active .testimonial-chip__face { outline-color: rgba(255, 255, 255, 0.7); }
+.testimonial-chip__face img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: var(--face);
+  transform: scale(var(--zoom));
+  transform-origin: var(--face);
+  filter: grayscale(1);
+}
 .testimonial-chip__text { display: flex; flex-direction: column; gap: 0.2rem; min-width: 0; }
-.testimonial-chip__name { font-size: 1.5rem; color: inherit; }
-.testimonial-chip__role { opacity: 0.7; }
+.testimonial-chip__name { font-size: 1.4rem; line-height: 1.2; color: inherit; }
+.testimonial-chip__role { line-height: 1.3; opacity: 0.6; white-space: nowrap; }
+/* How long until the next: a fine line across the active one's foot,
+   filling over the interval; held while the row is pointed at or
+   focused, or the stage is off the screen (is--paused, partners.js) */
+.testimonial-chip__progress {
+  position: absolute;
+  left: 1.6rem;
+  right: 1.6rem;
+  bottom: 0.8rem;
+  height: 2px;
+  background-color: rgba(255, 255, 255, 0.18);
+  opacity: 0;
+  transition: opacity 0.4s ease;
+}
+.testimonial-chip.is--active .testimonial-chip__progress { opacity: 1; }
+.testimonial-chip__bar {
+  display: block;
+  height: 100%;
+  background-color: #ffffff;
+  transform: scaleX(0);
+  transform-origin: left center;
+}
+.testimonial-chip.is--active .testimonial-chip__bar { animation: testimonial-progress var(--testimonial-interval, 7s) linear forwards; }
+.testimonial-stage.is--paused .testimonial-chip__bar { animation-play-state: paused; }
+@keyframes testimonial-progress {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .testimonial-slide__bg,
+  .testimonial-slide.is--active .testimonial-slide__bg { transform: none; transition: none; }
+  .testimonial-slide blockquote,
+  .testimonial-slide__who { transform: none; }
+}
+@media screen and (max-width: 991px) {
+  .testimonial-slide__body { padding: 10rem var(--testimonial-pad) calc(var(--fnav-clearance) + 12rem); }
+  .testimonial-slide blockquote { font-size: 3.4rem; }
+}
+@media screen and (max-width: 767px) {
+  .testimonial-slide__body { justify-content: flex-end; padding: 8rem var(--testimonial-pad) calc(var(--fnav-clearance) + 11rem); }
+  .testimonial-slide__bg { object-position: var(--face); }
+  .testimonial-slide blockquote { font-size: 2.8rem; }
+  .testimonial-slide::after {
+    background: linear-gradient(180deg, rgba(10, 10, 10, 0.15) 0%, rgba(10, 10, 10, 0.75) 70%), rgba(10, 10, 10, 0.2);
+  }
+  /* Each person no wider than the screen's margins, the role over two
+     lines where it needs them */
+  .testimonial-chip { max-width: calc(100vw - 2 * var(--site-inset) - 2 * var(--testimonial-pad)); padding: 1.2rem 1.6rem 1.4rem 1.2rem; gap: 1rem; }
+  .testimonial-chip__role { white-space: normal; }
+  .testimonial-chip__face { width: 3.6rem; height: 3.6rem; }
+  .testimonial-chip__progress { left: 1.2rem; right: 1.2rem; bottom: 0.6rem; }
+}
 
 /* ---------- Map head ---------- */
 .map-spread__head {
@@ -6424,20 +6528,6 @@ strong, b, th { font-weight: var(--weight-strong); --wght: var(--weight-strong);
 .map-spread.is--influence { padding-top: 8rem; }
 
 @media screen and (max-width: 991px) {
-  .testimonial-stage { min-height: 0; }
-  .testimonial-slide__body {
-    max-width: none;
-    padding: 8rem var(--site-inset) 8rem;
-  }
-  .testimonial-slide blockquote { font-size: 2.8rem; }
-  .testimonial-slide::after {
-    background: linear-gradient(180deg, rgba(10, 10, 10, 0.5) 0%, rgba(10, 10, 10, 0.9) 60%);
-  }
-  .testimonial-chips {
-    position: static;
-    padding: 0 var(--site-inset) 4rem;
-    gap: 1.6rem;
-  }
   .map-spread__head { max-width: none; }
 }
 
@@ -7318,15 +7408,15 @@ html.is--page-transition .progress-bar-wrap {
   letter-spacing: -0.04em;
   font-weight: var(--weight-strong); --wght: var(--weight-strong);
 }
-/* One accent, the site's red, set on the baseline the way a full stop
-   would be */
+/* The full stop, set on the baseline as a full stop would be, in the
+   heading's own ink */
 .statement__dot {
   display: inline-block;
   width: 0.14em;
   height: 0.14em;
   margin-left: 0.06em;
   border-radius: 50%;
-  background: var(--cta-accent-color);
+  background: currentColor;
   vertical-align: baseline;
 }
 
@@ -7842,6 +7932,10 @@ html.is--fnav-open:not(.is--fnav-foot) .fnav__background {
 .fnav svg path { vector-effect: non-scaling-stroke; }
 .fnav__burger-svg { width: calc(2 * var(--fnav-u)); height: calc(1.1 * var(--fnav-u)); }
 .fnav__close-svg { width: calc(1.3 * var(--fnav-u)); height: calc(1.3 * var(--fnav-u)); }
+/* The close a little heavier than the bar's other lines, so it reads at
+   once as the close of the panel over it (the menu, the contact form, a
+   case study) */
+.fnav__close-svg path { stroke-width: 1.6; }
 
 /* The page's name, in the label face, rolled through this window when it
    changes; a long one is cut with an ellipsis */
@@ -8168,6 +8262,10 @@ html.is--page-transition .fnav-promo.is--shown {
   transition: transform calc(var(--fnav-rise) - var(--fnav-rise-parts)) var(--fnav-rise-ease) var(--fnav-rise-parts), opacity 0.3s var(--fnav-rise-parts), visibility 0s var(--fnav-rise-parts), clip-path var(--promo-close) var(--promo-close-ease) var(--fnav-rise-parts), --promo-ground 0.45s var(--cta-ease), color 0.45s var(--cta-ease);
 }
 .fnav-promo.is--contact .fnav-promo__track { animation-duration: 12s; }
+/* Start Your Project (the Partners page's), drawn as Contact Tom's: its
+   words half as many again, so its loop a little longer, at much the same
+   pace */
+.fnav-promo.is--project .fnav-promo__track { animation-duration: 18s; }
 .fnav-promo.is--contact .fnav-promo__item .fnav-promo__mark { background-color: #0a0a0a; }
 .fnav-promo.is--contact:focus-visible { --promo-ground: #121212; color: #ffffff; }
 .fnav-promo.is--contact:focus-visible .fnav-promo__item .fnav-promo__mark { background-color: rgba(244, 244, 244, 0.45); }
@@ -8477,14 +8575,16 @@ html.is--fnav-foot .fnav__home { pointer-events: auto; }
    are clipped to it as it grows and rise in once there is room. Over the
    bar and the backdrop, with the menu. Scrolls inside itself if a short
    screen cuts it. */
+/* Over the bar, where the menu's modules stand (--fnav-menu-bottom), the
+   bar's square under it its close (floatingnav.js, "The panels") */
 .fnav-contact {
   position: fixed;
   left: 50%;
-  bottom: var(--fnav-bottom);
+  bottom: var(--fnav-menu-bottom);
   z-index: 260;
   display: flex;
   width: min(calc(50 * var(--fnav-u)), calc(100vw - 3.2rem));
-  max-height: calc(100svh - var(--fnav-bottom) - 2 * var(--fnav-u));
+  max-height: var(--fnav-menu-room);
   color: #161616;
   transform: translateX(-50%);
   visibility: hidden;
@@ -8591,29 +8691,6 @@ html.is--fnav-foot .fnav__home { pointer-events: auto; }
   letter-spacing: var(--track-title);
   font-weight: var(--weight-strong); --wght: var(--weight-strong);
 }
-.fnav-contact__close {
-  position: relative;
-  flex: none;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  width: calc(4.4 * var(--fnav-u));
-  height: calc(4.4 * var(--fnav-u));
-  margin: calc(-0.8 * var(--fnav-u)) calc(-0.8 * var(--fnav-u)) 0 0;
-  padding: 0;
-  border: 0;
-  border-radius: var(--fnav-radius);
-  background-color: rgba(22, 22, 22, 0.06);
-  color: inherit;
-  cursor: pointer;
-  transition: background-color 0.25s var(--cta-ease);
-}
-.fnav-contact__close svg {
-  width: calc(1.3 * var(--fnav-u));
-  height: calc(1.3 * var(--fnav-u));
-  overflow: visible;
-}
-.fnav-contact__close svg path { vector-effect: non-scaling-stroke; }
 .fnav-contact__lead {
   margin: calc(-1.2 * var(--fnav-u)) 0 calc(0.4 * var(--fnav-u));
   font-size: calc(1.5 * var(--fnav-u));
@@ -8728,7 +8805,6 @@ html.is--fnav-foot .fnav__home { pointer-events: auto; }
 @media (hover: hover) and (pointer: fine) {
   .fnav-contact__submit:not(:disabled):hover { background-color: #2a2a2a; }
   .fnav-contact__submit:not(:disabled):hover .fnav-contact__submit-arrow { transform: translateX(0.4rem); }
-  .fnav-contact__close:hover { background-color: rgba(22, 22, 22, 0.1); }
 }
 .fnav-contact__status {
   font-size: calc(1.3 * var(--fnav-u));
@@ -8777,6 +8853,117 @@ html.is--fnav-foot .fnav__home { pointer-events: auto; }
      cards' top and the names stand level at their foot all the same */
   .fnav-tile__arrow { top: calc(1.6 * var(--fnav-u)); right: calc(1.6 * var(--fnav-u)); }
   .fnav-menu:not(.has-reel) { --fnav-menu-fixed: 15.9; }
+}
+
+/* ---------- The steps beside the bar's square ----------
+   While a panel of several things is open over the bar (the Partners
+   page's case studies), the one before and the one after: either side of
+   the bar's square, the close, a hair from it, each a square the bar's
+   height on the bar's own glass and corners, as the Architecture page's
+   arrows stand beside the bar (.arch-arrow). floatingnav.js brings them up
+   and takes them down with the panel. */
+/* Over the bar: they stand inside the bar's own box (its ground narrowed
+   to the square, its box still its full width), which would take their
+   presses otherwise */
+.fnav-step {
+  --fnav-step-gap: 3px;
+  position: fixed;
+  bottom: var(--fnav-bottom);
+  z-index: 251;
+  display: grid;
+  place-items: center;
+  width: var(--fnav-bar-h);
+  height: var(--fnav-bar-h);
+  padding: 0;
+  border: 0;
+  border-radius: var(--fnav-radius, 2px);
+  background: var(--fnav-surface);
+  -webkit-backdrop-filter: blur(calc(2 * var(--fnav-u)));
+  backdrop-filter: blur(calc(2 * var(--fnav-u)));
+  color: #f4f4f4;
+  cursor: pointer;
+  visibility: hidden;
+  opacity: 0;
+  transition: background-color 0.25s, color 0.25s;
+}
+.fnav-step.is--prev { left: calc(50% + var(--fnav-nudge) - var(--fnav-bar-h) / 2 - var(--fnav-step-gap) - var(--fnav-bar-h)); }
+.fnav-step.is--next { left: calc(50% + var(--fnav-nudge) + var(--fnav-bar-h) / 2 + var(--fnav-step-gap)); }
+.fnav-step .arrow { width: 0.95rem; height: 0.95rem; }
+@media (hover: hover) and (pointer: fine) {
+  .fnav-step:hover { background: #ffffff; color: #0a0a0a; }
+}
+.fnav-step:focus-visible { outline: 1px solid #ffffff; outline-offset: 0.2rem; }
+
+/* ---------- The case studies, grown out of the bar ----------
+   CaseStudyViewer.astro, casepanel.js; a panel of floatingnav.js's, as the
+   contact form is. Wide, landscape: the screen's width less a generous
+   margin either side, at most 128rem, and about three fifths as tall as it
+   is wide, never taller than the room over the bar; on the page's paper.
+   Two columns, as the case study sheet had: the words on the left (about
+   two fifths), the pictures on the right, each scrolling on its own; below the
+   desktop grid the panel takes the room over the bar, the two stack and the whole
+   scrolls. One case study shows at a time; the steps beside the bar's
+   square change it in place. */
+.fnav-case {
+  position: fixed;
+  left: 50%;
+  bottom: var(--fnav-menu-bottom);
+  z-index: 260;
+  display: flex;
+  width: min(128rem, calc(100vw - 2 * max(3.2rem, 6vw)));
+  height: min(var(--fnav-menu-room), 0.6 * min(128rem, calc(100vw - 2 * max(3.2rem, 6vw))));
+  color: #0a0a0a;
+  transform: translateX(-50%);
+  visibility: hidden;
+  pointer-events: none;
+}
+.fnav-case.is--open { pointer-events: auto; }
+.fnav-case__background {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: var(--paper);
+  border-radius: max(3px, 0.35 * var(--fnav-u));
+  transform-origin: 0 0;
+  pointer-events: none;
+}
+.fnav-case__inner {
+  position: relative;
+  display: flex;
+  width: 100%;
+  min-height: 0;
+  outline: none;
+}
+.fnav-case__study {
+  display: grid;
+  grid-template-columns: minmax(0, 0.42fr) minmax(0, 0.58fr);
+  width: 100%;
+  min-height: 0;
+}
+.fnav-case__study[hidden] { display: none; }
+/* The words and the pictures, set as the case study sheet's
+   (.case-panel__aside, .case-panel__media), in the panel's smaller room */
+.fnav-case .case-panel__aside { padding: 4.8rem 4rem 4.8rem 4.8rem; }
+.fnav-case .case-panel__title { font-size: clamp(3rem, 3vw, 5.2rem); }
+.fnav-case .case-panel__media { gap: 3.2rem; padding: 4.8rem 4.8rem 4.8rem 0; }
+.fnav-case :is(a, button):focus-visible { outline: 1px solid #0a0a0a; outline-offset: 0.3rem; }
+@media screen and (max-width: 991px) {
+  .fnav-case {
+    width: calc(100vw - 3.2rem);
+    height: var(--fnav-menu-room);
+  }
+  .fnav-case__study {
+    display: block;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-width: none;
+  }
+  .fnav-case .case-panel__aside { padding: 3.2rem 2.4rem 2.4rem; overflow: visible; }
+  .fnav-case .case-panel__media { padding: 0 2.4rem 3.2rem; overflow: visible; }
+}
+@media print {
+  .fnav-case,
+  .fnav-step { display: none; }
 }
 
 /* The page behind an open menu or the contact form, held down, and a click
@@ -9981,64 +10168,28 @@ html:has(.site-nav + .theme-light) .cursor-label__box {
 .shop-hero .shop-arc { margin-top: 100svh; }
 
 
-/* The Influence hero: the name on two lines (Architectural / Influence),
-   and the atlas behind it, centred across the first screen, its hotspots
-   still live (the name's layer lets the pointer through to them) */
-.shop-hero.is--influence {
-  position: relative;
-  overflow: clip;
-  /* The column of panels' top (.influence-strip): its second panel's
-     middle six cells under the screen's middle on arrival (so a small one
-     stands over the large one), never closer under the links than three
-     cells; and the large panel's foot, the words' (.influence-hero__about),
-     the small one's height, a cell and the large one's height under that */
-  --strip-top: max(calc(50svh - 30 * var(--grid-pitch)), calc(21 * var(--grid-pitch)));
-  --strip-lit-foot: calc(var(--strip-top) + 57 * var(--grid-pitch));
+/* The Shop hero (shop.astro): the page's name, and under it what the shop
+   holds, in the body face at 13.5px on 1.4, as the Influence page's
+   former hero set its words, flush left on the name's edge a gap under it;
+   only as tall as the two, its foot a section's space under the words */
+.shop-hero.is--shop {
+  min-height: 0;
+  padding-bottom: calc(var(--section-space) * 0.75);
 }
-.shop-hero.is--influence h1 { max-width: 7.4em; }
-.shop-hero.is--influence .shop-hero__body { position: relative; z-index: 1; pointer-events: none; }
-/* Well under the name, the words the home hero sets under this part's
-   name, as they are set there (.home-list__field.is--about: the body face
-   on 1.4, broken in the same three lines, its measure in its own ems), a
-   hair smaller (13.5px), flush left on the name's own left edge; their
-   last line's baseline level with the foot of the column's large panel
-   (--strip-lit-foot), the box trimmed to the letters so it is the letters
-   that line up */
-.influence-hero__about {
-  position: absolute;
-  z-index: 1;
-  top: var(--strip-lit-foot);
-  left: var(--hero-name-left);
+.shop-hero.is--shop .shop-hero__body { flex: none; }
+.shop-hero.is--shop h1 { max-width: 7.4em; margin-bottom: 0; }
+.shop-hero__about {
+  align-self: flex-start;
   max-width: 24em;
-  margin: 0;
-  transform: translateY(-100%);
-  text-box: trim-both cap alphabetic;
-  pointer-events: none;
+  margin: 4rem 0 0 calc(var(--hero-name-left) - var(--site-inset));
   font-family: var(--font-body);
   font-size: 13.5px;
   line-height: 1.4;
   letter-spacing: var(--track-body);
   text-align: left;
-  text-transform: none;
+  text-wrap: pretty;
   font-weight: var(--weight-body); --wght: var(--weight-body);
   color: #f4f4f4;
-}
-/* Under the words, on the same left edge: [Scroll Down], small in the
-   accent face (the label rule, "Typefaces"), a quiet cue, at the foot of
-   the first screen: on a row as tall as the studio's name's at the top
-   (.hero-nav__brand, three cells), as far up from the screen's foot as
-   that row is down from its top (--hero-top), so the two mirror each
-   other. On a screen too short for that, never nearer the words than four
-   cells under their last baseline. */
-.influence-hero__cue {
-  position: absolute;
-  z-index: 1;
-  top: max(calc(var(--strip-lit-foot) + 4 * var(--grid-pitch)), calc(100svh - var(--hero-top) - 3 * var(--grid-pitch)));
-  left: var(--hero-name-left);
-  margin: 0;
-  line-height: calc(3 * var(--grid-pitch));
-  pointer-events: none;
-  color: rgba(244, 244, 244, 0.56);
 }
 .influence-map {
   position: absolute;
@@ -10059,29 +10210,22 @@ html:has(.site-nav + .theme-light) .cursor-label__box {
 .influence-map__frame { position: sticky; top: 0; height: 100svh; display: flex; align-items: center; justify-content: center; overflow: hidden; }
 .influence-map .world-map-stage { flex: none; width: min(94vw, 100svh * 1.9); }
 .influence-map .world-map { opacity: 0.62; }
-/* The column of panels: on the pages' line (a cell left of the
-   links' text, under it), small panels one under another a cell apart,
-   all on the 7px grid (34 by 21 cells); the one on the focus line (where
-   the second stands on arrival) grown to the large one (56 by 35, room
-   for pictures in it), its left edge where it was, the next taking over
-   as the page scrolls (influence.js sets --t, 0 to 1, on each). Over the
-   map, under nothing; it lets the pointer through to the map. */
+/* The column of panels (the Partners page's outcomes, .is--results below):
+   small panels one under another a cell apart, all on the 7px grid (34
+   by 21 cells); the one on the focus line (the screen's middle) grown to
+   the large one (56 by 35), its left edge where it was, the next taking
+   over as the page scrolls (influence.js sets --t, 0 to 1, on each). */
 .influence-strip {
   --strip-w: calc(34 * var(--grid-pitch));
   --strip-h: calc(21 * var(--grid-pitch));
   --strip-lit-w: calc(56 * var(--grid-pitch));
   --strip-lit-h: calc(35 * var(--grid-pitch));
-  /* The panels' colours: the Partner page's paper, near-black words, the
-     channel's square in that page's squares' shade with a black mark */
+  /* The panels' colours: the Partner page's paper, near-black words */
   --strip-ground: var(--partner-paper);
   --strip-ink: #0a0a0a;
   --strip-ink-soft: rgba(10, 10, 10, 0.72);
-  --strip-square: var(--partner-social);
-  --strip-square-ink: #0a0a0a;
   position: absolute;
   z-index: 1;
-  top: var(--strip-top);
-  left: calc(var(--hero-links-left) - var(--grid-pitch));
   display: flex;
   flex-direction: column;
   align-items: flex-start;
@@ -10104,7 +10248,7 @@ html:has(.site-nav + .theme-light) .cursor-label__box {
   height: calc(var(--strip-h) + (var(--strip-lit-h) - var(--strip-h)) * var(--t));
   padding: var(--strip-pad);
   overflow: hidden;
-  /* Its words over its pictures, where it has some (below) */
+  /* Its words over its grain (below) */
   isolation: isolate;
   /* Only just rounded, as the floating menu's cards are */
   border-radius: var(--fnav-radius);
@@ -10136,43 +10280,10 @@ html:has(.site-nav + .theme-light) .cursor-label__box {
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
 }
-/* In each panel's bottom left corner, on its inset: a square
-   as the ways to Tom are at the top right of every page (.hero-nav__pill,
-   five cells less a pixel), in the panel's square colours (above), the
-   mark centred in it at the same share of the square, the square marks a
-   little under the wide one */
-.influence-strip__social {
-  --pill: calc(5 * var(--grid-pitch) - 1px);
-  --pill-mark: 0.4;
-  position: absolute;
-  left: var(--strip-pad);
-  bottom: var(--strip-pad);
-  width: var(--pill);
-  height: var(--pill);
-  border-radius: 1px;
-  background-color: var(--strip-square);
-  color: var(--strip-square-ink);
-}
-.influence-strip__social.is--instagram { --pill-mark-k: 0.88; }
-.influence-strip__mark {
-  display: block;
-  box-sizing: border-box;
-  width: 100%;
-  height: 100%;
-  padding: calc(var(--pill) * (1 - var(--pill-mark) * var(--pill-mark-k, 1)) / 2);
-}
-/* A panel with pictures (Instagram's and the total's, influence.astro):
-   three of the collage's photographs as the closing cards' Shop & Courses
-   fan (.explore-card__fan): loosely fanned cards from the panel's lower
-   middle up and out past its top right corner, each a little further
-   along, higher and turned a little more, the first in front, a third of
-   the panel's width each; in the panel's own proportions, so the fan keeps
-   its shape as the panel grows, the panel cropping what runs past its
-   edges, the words over them. The photographs as they are: in their own
-   colour and light, and clear of grain. The band's grain lies over all
-   its content (z-index 95), so the column stands just above it (under the
-   bar at the top, 150), and each panel lays the same grain over its own
-   paper alone, under its pictures, so the panels keep their texture. */
+/* Each panel keeps the band's grain on its own paper: the band's grain
+   lies over all its content (z-index 95), so the column stands just above
+   it (under the bar at the top, 150), and each panel lays the same grain
+   over its own paper, under its words. */
 .influence-strip { z-index: 96; }
 .influence-strip__item::before {
   content: "";
@@ -10193,62 +10304,12 @@ html:has(.site-nav + .theme-light) .cursor-label__box {
 }
 .influence-strip__label,
 .influence-strip__figure { position: relative; z-index: 2; }
-.influence-strip__fan {
-  position: absolute;
-  inset: 0;
-  z-index: 1;
-}
-.influence-strip__sheet {
-  position: absolute;
-  width: 32%;
-  aspect-ratio: 4 / 5;
-  overflow: hidden;
-  border-radius: var(--radius);
-  background-color: #1a1a1a;
-}
-.influence-strip__sheet img {
-  display: block;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-.influence-strip__sheet:nth-child(1) { left: 41%; top: 50%; z-index: 3; transform: rotate(-7deg); }
-.influence-strip__sheet:nth-child(2) { left: 58%; top: 21%; z-index: 2; transform: rotate(3deg); }
-.influence-strip__sheet:nth-child(3) { left: 76%; top: -9%; z-index: 1; transform: rotate(10deg); }
-/* A phone: no room beside the words, so the words follow the name and the
-   column follows them, all on the name's left edge, the copy no longer
-   stretched to push them down */
+/* A phone: the panels' words a size down */
 @media screen and (max-width: 767px) {
-  .shop-hero.is--influence .shop-hero__body { flex: none; }
-  /* The panels on the phone's smaller cells: their words a size down, so
-     the figure clears the square under it (9.5px over 22px, to 11.5px over
-     31px) */
+  /* The panels on the phone's smaller cells: their words a size down
+     (9.5px over 22px, to 11.5px over 31px) */
   .influence-strip__label { font-size: calc(0.95rem + 0.2rem * var(--t)); }
   .influence-strip__figure { font-size: calc(2.2rem + 0.9rem * var(--t)); }
-  .influence-hero__about {
-    position: relative;
-    top: auto;
-    left: auto;
-    align-self: flex-start;
-    margin: 16svh 0 0 calc(var(--hero-name-left) - var(--site-inset));
-    transform: none;
-    text-box: normal;
-  }
-  /* A phone: the column of panels fills the foot of the first screen, so
-     the cue follows the words instead, a cell nearer for its own row */
-  .influence-hero__cue {
-    position: relative;
-    top: auto;
-    left: auto;
-    align-self: flex-start;
-    margin: calc(3 * var(--grid-pitch)) 0 0 calc(var(--hero-name-left) - var(--site-inset));
-  }
-  .influence-strip {
-    position: relative;
-    top: auto;
-    left: auto;
-    margin: calc(12 * var(--grid-pitch)) 0 0 calc(var(--hero-name-left) - var(--site-inset));
-  }
 }
 /* The Influence page as one ground: no hairline between its sections
    (the registers' rule, "Design language" below), and the alternate
@@ -10258,6 +10319,9 @@ main[data-barba-namespace="influence"] section,
 .influence-ground { border-top: 0; }
 main[data-barba-namespace="influence"] .section-alt,
 .section-alt.influence-ground { background-color: #000000; }
+/* The Shop page as one ground too: its alternate sections on the same
+   black as its hero, the closing cards and the page behind them */
+main[data-barba-namespace="shop"] .section-alt { background-color: #000000; }
 /* The Partner page's hero on the paper, as the rest of that page */
 .shop-hero.is--partner { background: var(--paper); color: #0a0a0a; min-height: 0; padding-bottom: 0; }
 /* The hero's map: finer lines than the atlas section's, a hair */
@@ -10330,32 +10394,274 @@ main[data-barba-namespace="partner"] section + section { border-top: 0; }
 }
 
 /* ---------- The partners' stagger (partner.astro) ----------
-   After an editorial index: the partners' portraits, four columns on the
+   After an editorial index: the partners' cards, four columns on the
    page's own, each a column of portrait cards (the site's case-study card,
    .slide-card, 3:4) a gap apart, the columns set off from one another by a
    share of a card's height (--lift: a percentage of the column's width
-   times the card's shape), the left one lowest, the second higher, the
-   third highest and the right one a touch below it, so the cards step up
-   to the right under the introduction and run on down the page in a
-   rhythm, every one still on its column's lines. Below the desktop grid,
-   two columns, the left set lower. */
+   times the card's shape), so the stagger rises to the right, where the
+   page is open beside the hero's words, and sits lower on the left, under
+   them: the right-hand column highest, the third a little lower, clear of
+   the bar's column of pages over it, the second under the hero's call, and
+   the left one a touch lower again. The gap five cells, a little under the
+   grid's. Below the desktop grid, two columns, the left set lower. */
 .partner-stagger {
+  --stagger-gap: calc(5 * var(--grid-pitch));
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  column-gap: var(--grid-gap);
+  column-gap: var(--stagger-gap);
   align-items: start;
 }
 .partner-stagger__col {
   --lift: 0;
   display: flex;
   flex-direction: column;
-  gap: var(--grid-gap);
+  gap: var(--stagger-gap);
   min-width: 0;
   padding-top: calc(var(--lift) * 133.333%);
 }
-.partner-stagger__col:nth-child(1) { --lift: 0.55; }
-.partner-stagger__col:nth-child(2) { --lift: 0.3; }
-.partner-stagger__col:nth-child(4) { --lift: 0.12; }
+.partner-stagger__col:nth-child(1) { --lift: 0.2; }
+.partner-stagger__col:nth-child(2) { --lift: 0.06; }
+.partner-stagger__col:nth-child(3) { --lift: 0.24; }
+.partner-stagger__col:nth-child(4) { --lift: 0.06; }
+/* Each column drifts at its own pace as the page scrolls (partners.js) */
+@media screen and (min-width: 992px) {
+  .partner-stagger__col { will-change: transform; }
+}
+/* The pictures: the home hero's, in their own colour and light; and the
+   card's scrim (.slide-card::after) eased off to a breath at the foot,
+   enough for the name, so the photographs stay bright */
+.partner-stagger .slide-card::after {
+  background: linear-gradient(to bottom, rgba(10, 10, 10, 0.16) 0%, rgba(10, 10, 10, 0) 22%, rgba(10, 10, 10, 0) 64%, rgba(10, 10, 10, 0.42) 100%);
+}
+/* A partner's logo: its white artwork in the middle of the card, the same
+   box on every card (a little over half the card's width, a sixth of its
+   height), the logo fitted in it (named with its card, to outrank the
+   card's own rule, which sets every picture in it to fill the card) */
+.slide-card img.slide-card__logo {
+  position: absolute;
+  z-index: 1;
+  top: 50%;
+  left: 50%;
+  width: 56%;
+  height: 17%;
+  object-fit: contain;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+/* A mark in place of the partner's name at the card's foot (for now the
+   home page's logos as placeholders, partner.astro): where the name
+   stands, each in the same box (a little under half the card's width, the
+   name's height and a half), fitted to its foot and left edge, so marks of
+   any shape line up along the cards */
+.slide-card__name.is--mark { display: block; height: 2.8rem; }
+.slide-card img.slide-card__mark {
+  display: block;
+  width: 46%;
+  height: 100%;
+  object-fit: contain;
+  object-position: left bottom;
+}
+/* Opening the page: straight under the hero's name and its call, and on
+   the desktop grid risen into the hero by --partner-rise, so the
+   right-hand pair stand beside the name, below the column of pages, and
+   the cards fill the first screen; the left-hand pair start as far lower
+   again, under the call. The section's ground is clear where it lies over
+   the hero (the hero's paper shows, its name and call over it), and its
+   grain starts below that, so the hero's own is not doubled */
+.section.partner-intro { padding-top: 4.8rem; }
+@media screen and (min-width: 992px) {
+  .section.partner-intro {
+    --partner-rise: 33rem;
+    margin-top: calc(-1 * var(--partner-rise));
+    background-color: transparent;
+  }
+  .section.partner-intro::before { top: var(--partner-rise); }
+  .partner-stagger__col:nth-child(-n + 2) { padding-top: calc(var(--lift) * 133.333% + var(--partner-rise)); }
+  /* Lying over the hero, it lets the pointer through to the call there,
+     save on the cards themselves */
+  .section.partner-intro .container { pointer-events: none; }
+  .section.partner-intro .slide-card { pointer-events: auto; }
+}
+/* ---------- The enquiry (partner.astro) ----------
+   After an editorial contact page, on the page's paper: two rows on the
+   page's four columns, each with its name large in the first and its
+   content across the other three, a thin rule between them; roomy, and
+   nothing on it but the words and the fields. Contact: each detail a small
+   label in the label face over the detail itself. Form: name and email
+   side by side, the message across under them, each a label over a line
+   of text with a hairline under it, the placeholders a pale grey, the
+   line darkening while it has the focus and taking the error colour when
+   what is in it will not do (formvalidation.js, is--error); then the call
+   to send, the site's own. */
+.enquiry__row {
+  display: grid;
+  grid-template-columns: repeat(var(--grid-columns), minmax(0, 1fr));
+  column-gap: var(--grid-gap);
+  align-items: start;
+  padding-bottom: 12rem;
+}
+.enquiry__row + .enquiry__row {
+  padding: 6.4rem 0 0;
+  border-top: 1px solid var(--rule);
+}
+.enquiry__title {
+  grid-column: 1;
+  margin: 0;
+  font-size: 4rem;
+  line-height: 1;
+  letter-spacing: var(--track-title);
+  font-weight: var(--weight-strong); --wght: var(--weight-strong);
+}
+.enquiry__details,
+.enquiry__form-group { grid-column: 2 / -1; min-width: 0; }
+.enquiry__details {
+  display: flex;
+  flex-direction: column;
+  gap: 4rem;
+  margin: 0;
+}
+.enquiry__detail dt {
+  margin: 0 0 1.4rem;
+  font-family: var(--font-label);
+  font-size: var(--size-label);
+  letter-spacing: var(--track-label);
+  text-transform: uppercase;
+  line-height: 1;
+  color: rgba(10, 10, 10, 0.5);
+}
+.enquiry__detail dd { margin: 0; }
+.enquiry__socials {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem 2.4rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.enquiry__link {
+  font-size: 2rem;
+  line-height: 1.3;
+  letter-spacing: -0.01em;
+  font-weight: var(--weight-strong); --wght: var(--weight-strong);
+  color: #0a0a0a;
+  text-decoration: underline;
+  text-decoration-color: transparent;
+  text-underline-offset: 0.2em;
+  transition: text-decoration-color 0.25s var(--cta-ease);
+}
+@media (hover: hover) and (pointer: fine) {
+  .enquiry__link:hover { text-decoration-color: currentColor; }
+}
+.enquiry__form {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 4rem var(--grid-gap);
+}
+.enquiry__field { gap: 0.8rem; }
+.enquiry__field.is--wide,
+.enquiry__actions { grid-column: 1 / -1; }
+.enquiry__label {
+  font-size: 1.4rem;
+  line-height: 1.3;
+  color: #0a0a0a;
+}
+.enquiry__input {
+  display: block;
+  width: 100%;
+  margin: 0;
+  padding: 1rem 0 1.2rem;
+  border: 0;
+  border-bottom: 1px solid rgba(10, 10, 10, 0.16);
+  border-radius: 0;
+  background: transparent;
+  font: inherit;
+  font-size: 1.7rem;
+  line-height: 1.4;
+  color: #0a0a0a;
+  outline: none;
+  transition: border-color 0.25s var(--cta-ease);
+}
+.enquiry__input::placeholder { color: rgba(10, 10, 10, 0.32); }
+.enquiry__input:focus { border-bottom-color: #0a0a0a; }
+.enquiry__input.is--area { min-height: 9.6rem; resize: vertical; }
+.enquiry__field.is--error .enquiry__input { border-bottom-color: var(--form-error); }
+.enquiry__actions { margin-top: 0.8rem; }
+.enquiry .form-notifcation { margin-top: 2.4rem; }
+@media screen and (max-width: 767px) {
+  .enquiry__row { row-gap: 3.2rem; padding-bottom: 8rem; }
+  .enquiry__row + .enquiry__row { padding-top: 4.8rem; }
+  .enquiry__title { font-size: 3.2rem; }
+  .enquiry__title,
+  .enquiry__details,
+  .enquiry__form-group { grid-column: 1 / -1; }
+  .enquiry__form { grid-template-columns: 1fr; gap: 3.2rem; }
+}
+
+/* ---------- Influence: the parts to come (influence.astro) ----------
+   Placeholders after the gallery, each a screen on the page's black, its
+   name in the size and setting of the page's own (.influence-stage__title)
+   on the same edge (--hero-name-left), in the middle of the screen */
+.section.influence-part {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  min-height: 100vh;
+  min-height: 100svh;
+  padding-top: 0;
+  padding-bottom: 0;
+}
+.influence-part__title {
+  max-width: 7.4em;
+  margin: 0 0 0 calc(var(--hero-name-left) - var(--site-inset) - 0.02em);
+  color: #ffffff;
+  font-size: 8rem;
+  line-height: 0.95;
+  letter-spacing: -0.04em;
+  text-wrap: balance;
+  font-weight: var(--weight-strong); --wght: var(--weight-strong);
+}
+@media screen and (max-width: 991px) { .influence-part__title { font-size: 7.4rem; } }
+@media screen and (max-width: 767px) { .influence-part__title { font-size: 5.2rem; } }
+
+/* The first screen, from the page's top: no strip over the floating bar
+   while its middle is in it (partner.astro, floatingnav.js) */
+.shop-hero.is--partner { position: relative; }
+.partner-hero__first-screen {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 1px;
+  height: 100vh;
+  height: 100svh;
+  pointer-events: none;
+  visibility: hidden;
+}
+/* Under the name, its short description, set as the Influence page's
+   (.influence-stage__lead: the body face, 14.5px on 1.22, as wide, a gap
+   of 4rem under the name), flush left on the name's edge, in the paper's
+   ink; then the call, on the same edge */
+.shop-hero.is--partner h1 { margin-bottom: 0; }
+.partner-hero__lead {
+  align-self: flex-start;
+  width: min(300px, calc(33.4vw - var(--hero-name-left) - 2rem));
+  max-width: 100%;
+  margin: 4rem 0 0 calc(var(--hero-name-left) - var(--site-inset));
+  font-family: var(--font-body);
+  font-size: 14.5px;
+  line-height: 1.22;
+  letter-spacing: var(--track-body);
+  text-align: left;
+  text-wrap: pretty;
+  font-weight: var(--weight-body); --wght: var(--weight-body);
+  color: #0a0a0a;
+}
+.shop-hero.is--partner .shop-hero__actions {
+  align-self: flex-start;
+  margin: 3.2rem 0 0 calc(var(--hero-name-left) - var(--site-inset));
+}
+@media screen and (max-width: 767px) {
+  .partner-hero__lead { width: 300px; }
+}
 @media screen and (max-width: 991px) {
   .partner-stagger { grid-template-columns: repeat(2, minmax(0, 1fr)); row-gap: var(--grid-gap); }
   .partner-stagger__col:nth-child(odd) { --lift: 0.35; }
@@ -10395,8 +10701,8 @@ main.arch-page:not(:has(.home-hero)) .site-nav + .arch-stage { padding-top: calc
    end */
 .arch-stage__title { text-box: trim-both cap alphabetic; }
 /* Under the row, the words the home hero sets under this part's name
-   (home-hero.ts), set as the Influence page's former hero sets its own
-   (.influence-hero__about): the body face, 13.5px on 1.4, flush left on
+   (home-hero.ts), set as the Shop hero sets its own (.shop-hero__about):
+   the body face, 13.5px on 1.4, flush left on
    the name's left edge (the head's inset), a clear gap under the projects'
    names (--arch-about-gap past their height, --arch-label-h); on two short
    lines, evened out (its measure narrow enough to break its words in two);
@@ -10451,7 +10757,6 @@ main[data-barba-namespace="partner"] { --paper: var(--partner-paper); }
    line once the page has scrolled a panel's pitch (22 cells) for each one
    after the second, and the hero runs on a screen past that, so it is
    still the hero round it (a screen and a half at the least) */
-.shop-hero.is--influence { min-height: max(150svh, calc(100svh + (var(--strip-n, 5) - 2) * 22 * var(--grid-pitch))); }
 .influence-map__frame { position: absolute; inset: 0; height: auto; }
 
 /* ---------- Influence: the map at the edges ----------

@@ -24,7 +24,7 @@ export const partnersPage = defineType({
       leadField('The line under the heading.', 'note', 'Note', 2),
     ]),
     pageSection('statement', 'Statement', 'The headline, the portrait, the paragraph and the button beside it.', [
-      headingField('The headline. Its red full stop is added by the site.'),
+      headingField('The headline. Its full stop is added by the site.'),
       imageField('The portrait in the first column.'),
       leadField(undefined, 'lead', 'Paragraph', 4),
       buttonField('Links to the Partners archive.'),

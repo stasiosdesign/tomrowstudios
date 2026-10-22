@@ -73,13 +73,13 @@ export const PAGE_DEFAULTS = {
 
   partnersPage: {
     intro: {
-      heading: 'Partners',
-      lead: 'Content, strategy and collaboration for architecture, design and technology organisations',
+      heading: 'Shaping Brands in Architecture',
+      lead: 'We work with brands in architecture, design and technology to create content, tell better stories and build meaningful connections.',
       button: 'Get in touch',
     },
     clients: {
       label: 'Clients',
-      heading: 'Seen in the studios that shape our world',
+      heading: 'Brands We’ve Worked With',
       note: 'Brands we’ve worked with',
     },
     statement: {
@@ -91,7 +91,7 @@ export const PAGE_DEFAULTS = {
     services: { label: 'Services', lead: 'What Tom does' },
     results: {
       label: 'Results',
-      heading: 'What it delivered',
+      heading: 'The Outcomes',
       note: 'Averaged across partner campaigns run in the last two years.',
     },
     enquire: {

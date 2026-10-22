@@ -1,0 +1,244 @@
+---
+/* An experiment, apart from the Influence page (influence.astro, which this
+   leaves alone): its hero as an editorial composition of stepped panels
+   that unfold, with the scroll, into full-screen pictures. Not linked from
+   anywhere; open it at /influence-lab.
+
+   The stage (one screen, pinned while it plays): on the plain black, the
+   page's name large at the top left on the studio's name's edge, and four
+   panels standing on the screen's foot: the large
+   photograph on the right, and from the lower left towards the middle
+   three steps rising to it (after the reference: each panel's left edge,
+   top and width as shares of the screen, `x`, `y`, `w`, every one running
+   on to the foot; side by side they span the screen). As the page
+   scrolls, they all fan up together: each one's top rises to the top of
+   the screen, the photograph a beat ahead and the steps after it in turn
+   (FAN), until the four, full height edge to edge, fill the screen
+   completely; the name gives way as they rise over it, and the whole is
+   held a moment before the stage lets the page go on.
+
+   Each panel is a full-screen picture seen through a window (its
+   clip-path) the size of its place in the composition, the picture drawn
+   as if it covered that window (scaled by the larger of the window's
+   shares of the screen, centred on it). Rising, the window grows and the
+   picture grows with it, so the picture is never stretched, never shows an
+   edge and keeps its framing throughout; scrolling back lowers them again.
+   The stylesheet sets the composition itself, so it stands before any
+   script; the script below takes it from there (and with reduced motion
+   leaves it standing). */
+import BaseLayout from '../layouts/BaseLayout.astro';
+import SiteNav from '../components/SiteNav.astro';
+import SiteFooter from '../components/SiteFooter.astro';
+import ContactPanel from '../components/ContactPanel.astro';
+import StatementBlock from '../components/StatementBlock.astro';
+import { srcSet, urlFor } from '../sanity/image';
+import { INFLUENCE_PAGE_QUERY } from '../sanity/queries';
+import { PAGE_DEFAULTS } from '../sanity/page-defaults';
+
+const page = await Astro.locals.sanity.fetch(INFLUENCE_PAGE_QUERY);
+const D = PAGE_DEFAULTS.influencePage;
+
+// A photograph from the collage's library (influence.astro)
+const shot = (id: string) => {
+  const image = { asset: { _id: `image-${id}` } };
+  return { src: urlFor(image).width(1600).url(), srcset: srcSet(image, [800, 1200, 1600, 2000, 2400]) };
+};
+// The panels, in the order they set off as they fan up, the photograph
+// first; side by side, from the right edge to the left, they span the
+// screen. `position`: the picture's anchor in its frame.
+const panels = [
+  {
+    x: 0.573, y: 0.267, w: 0.427,
+    // Tom speaking, the home hero's About picture (the site's own library)
+    src: '/assets/images/hero/hero-about-1500.avif',
+    srcset: [960, 1200, 1500].map((width) => `/assets/images/hero/hero-about-${width}.avif ${width}w`).join(', '),
+    position: '50% 28%',
+  },
+  { x: 0.334, y: 0.528, w: 0.239, ...shot('36f402be0bf97c5317c7d97b747b6a6dab83c271-1200x799-jpg'), position: '50% 50%' },
+  { x: 0.121, y: 0.672, w: 0.213, ...shot('5cf058873169d56f24a8f1b8df4df4a5775e2394-1200x675-jpg'), position: '40% 50%' },
+  // A talk's audience, in the dark of the hall
+  { x: 0, y: 0.72, w: 0.121, ...shot('d6ef53755a50343456775c9a40ee1ae7cb248a22-1200x1800-jpg'), position: '50% 45%' },
+];
+---
+<BaseLayout title="Influence (preview) — Tomrowstudios" namespace="influence-lab" pageName="Influence" navSection="/influence">
+<div class="page-surface is--gridless" data-page-surface>
+<SiteNav />
+
+<section class="lab-stage" data-lab-stage aria-label={page?.hero?.heading ?? D.hero.heading}>
+  {panels.map(({ x, y, w, src, srcset, position }, i) => (
+  <div class="lab-panel" data-lab-panel data-x={x} data-y={y} data-w={w} style={`--x: ${x}; --y: ${y}; --w: ${w}; --i: ${i + 1};`}>
+    <img class="lab-panel__img" src={src} srcset={srcset} sizes="100vw" alt="" decoding="async" style={`object-position: ${position};`}>
+  </div>
+  ))}
+
+  <h1 class="lab-stage__title" data-lab-title>{page?.hero?.heading ?? D.hero.heading}</h1>
+</section>
+
+<section class="lab-after">
+  <StatementBlock text={page?.approach?.statement ?? D.approach.statement} />
+</section>
+</div>
+
+<SiteFooter />
+
+<ContactPanel />
+
+<script is:inline>
+  (() => {
+    // Screens of scrolling the rise takes, and the full screen's hold after
+    const RISE = 1.5;
+    const HOLD = 0.5;
+    // Each panel's rise, as a share of the whole, and how far after the one
+    // before it each sets off (the fan)
+    const SPAN = 0.7;
+    const FAN = 0.1;
+    const clamp = (v) => Math.min(1, Math.max(0, v));
+    const smooth = (t) => t * t * (3 - 2 * t);
+
+    function initInfluenceLab(scope) {
+      const stage = (scope || document).querySelector('[data-lab-stage]');
+      if (!stage || stage.__lab || typeof gsap === 'undefined' || typeof ScrollTrigger === 'undefined') return;
+      stage.__lab = true;
+      if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+      gsap.registerPlugin(ScrollTrigger);
+
+      const title = stage.querySelector('[data-lab-title]');
+      const panels = Array.from(stage.querySelectorAll('[data-lab-panel]')).map((el) => ({
+        el,
+        img: el.querySelector('img'),
+        x: Number(el.dataset.x),
+        y: Number(el.dataset.y),
+        w: Number(el.dataset.w),
+      }));
+
+      // Each panel `q` of the way up (0 its place in the composition, 1 the
+      // screen's full height in its own column): its window, and its
+      // picture centred in it, scaled to cover it
+      function place({ el, img, x, y, w }, q, vw, vh) {
+        const left = x * vw;
+        const width = w * vw;
+        const top = y * vh * (1 - q);
+        const height = vh - top;
+        el.style.clipPath = `inset(${top.toFixed(2)}px ${(vw - left - width).toFixed(2)}px 0px ${left.toFixed(2)}px)`;
+        const scale = Math.max(width / vw, height / vh);
+        const dx = left + width / 2 - vw / 2;
+        const dy = top + height / 2 - vh / 2;
+        img.style.transform = `translate3d(${dx.toFixed(2)}px, ${dy.toFixed(2)}px, 0) scale(${scale.toFixed(4)})`;
+      }
+      function draw(progress) {
+        const vw = stage.clientWidth;
+        const vh = stage.clientHeight;
+        const rise = clamp((progress * (RISE + HOLD)) / RISE);
+        panels.forEach((panel, i) => place(panel, smooth(clamp((rise - i * FAN) / SPAN)), vw, vh));
+        // The name gives way as the panels rise over it
+        const gone = clamp(rise * 2.2);
+        title.style.opacity = (1 - gone).toFixed(3);
+        title.style.transform = `translate3d(0, ${(-gone * 4).toFixed(2)}vh, 0)`;
+      }
+
+      // Pinned for the rise and the hold. Reparented to the body while
+      // it is pinned: the page's surface takes a transform as the footer
+      // comes near (footer.js), which would otherwise carry a fixed stage
+      // away with it. Measured before the footer's triggers, which were
+      // made first but stand after it on the page, so theirs take its
+      // length into account.
+      ScrollTrigger.create({
+        trigger: stage,
+        start: 'top top',
+        end: () => `+=${(RISE + HOLD) * window.innerHeight}`,
+        pin: true,
+        pinReparent: true,
+        refreshPriority: 1,
+        invalidateOnRefresh: true,
+        onUpdate: (self) => draw(self.progress),
+        onRefresh: (self) => draw(self.progress),
+      });
+      ScrollTrigger.sort();
+      ScrollTrigger.refresh();
+      draw(0);
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      initInfluenceLab();
+      // Arriving here again by a page transition (the browser's back), the
+      // stage is new: set it up then too
+      if (window.barba && !window.__influenceLabHook) {
+        window.__influenceLabHook = true;
+        window.barba.hooks.afterEnter((data) => initInfluenceLab(data.next.container));
+      }
+    });
+  })();
+</script>
+</BaseLayout>
+
+<style>
+  /* The stage: one screen, on the plain black. Over the page's own surface
+     (z-index 20): while it is pinned it is lifted out to the body, and the
+     surface goes onto a black layer of its own (z-index 10) as the footer
+     comes near (footer.js, is--footer-near), which would otherwise cover it */
+  .lab-stage {
+    position: relative;
+    z-index: 20;
+    height: 100vh;
+    height: 100svh;
+    overflow: hidden;
+    background-color: #000000;
+  }
+
+  /* A panel: the whole stage, seen through its window (--x, --y, --w as
+     shares of the screen, running on to the foot), its picture covering
+     the window, sharp-edged, the four side by side (--i, their order) */
+  .lab-panel {
+    position: absolute;
+    inset: 0;
+    z-index: var(--i);
+    clip-path: inset(calc(var(--y) * 100%) calc((1 - var(--x) - var(--w)) * 100%) 0 calc(var(--x) * 100%));
+    will-change: clip-path;
+  }
+  .lab-panel__img {
+    position: absolute;
+    inset: 0;
+    display: block;
+    width: 100%;
+    max-width: none;
+    height: 100%;
+    object-fit: cover;
+    /* Black and white, a little under their own light, so the light ones
+       sit back with the rest on the black */
+    filter: grayscale(1) brightness(0.72) contrast(1.05);
+    transform: translate(calc((var(--x) + var(--w) / 2 - 0.5) * 100%), calc(var(--y) / 2 * 100%)) scale(max(var(--w), 1 - var(--y)));
+    will-change: transform;
+  }
+
+  /* The name, large and white, on the studio's name's edge under the bar,
+     as the Influence hero sets it; over the panels until it gives way */
+  .lab-stage__title {
+    position: absolute;
+    z-index: 10;
+    top: var(--nav-height);
+    left: calc(var(--hero-name-left) - 0.02em);
+    max-width: 7.4em;
+    margin: 0;
+    color: #ffffff;
+    font-size: 8rem;
+    line-height: 0.95;
+    letter-spacing: -0.04em;
+    text-wrap: balance;
+    font-weight: var(--weight-strong); --wght: var(--weight-strong);
+    pointer-events: none;
+    will-change: opacity, transform;
+  }
+  @media screen and (max-width: 991px) {
+    .lab-stage__title { font-size: 7.4rem; }
+  }
+  @media screen and (max-width: 767px) {
+    .lab-stage__title { font-size: 5.2rem; }
+  }
+
+  /* After the stage, the page goes on: the approach, then the footer */
+  .lab-after {
+    position: relative;
+    background-color: #000000;
+    color: #ffffff;
+  }
+</style>

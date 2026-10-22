@@ -34,6 +34,11 @@ const ENTRIES: ReelEntry[] = [
   { title: 'Architectural Projects', lines: ['Architectural', 'Projects'], href: '/architecture', cursor: 'View Projects', about: 'Tom’s own design work, from early studies to his dissertation, with the drawings and the thinking behind each project gathered in one place.', picture: 'projects', position: '50% 50%' },
 ];
 
+/** The parts' pictures, for a page that shows them elsewhere (the Partners
+    page's stagger, partner.astro): each one's part, its file name and its
+    anchor in the frame */
+export const HERO_PICTURES = ENTRIES.map(({ title, picture, position }) => ({ title, picture, position }));
+
 // The widths each picture is in the library at: up to 1500 (its full size),
 // and Architectural Projects, supplied larger, up to 2400
 const WIDTHS = [480, 720, 960, 1200, 1500];

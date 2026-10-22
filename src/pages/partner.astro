@@ -7,23 +7,26 @@ import Arrow from '../components/Arrow.astro';
 import ContactButton from '../components/ContactButton.astro';
 import ServiceCards from '../components/ServiceCards.astro';
 import LogoRow from '../components/LogoRow.astro';
-import CaseStudyPanel from '../components/CaseStudyPanel.astro';
+import CaseStudyViewer from '../components/CaseStudyViewer.astro';
+import TestimonialStage, { type Testimonial } from '../components/TestimonialStage.astro';
 import { imageAttrs, urlFor, type SanityImage } from '../sanity/image';
-import { PARTNERS_PAGE_QUERY, PARTNERS_QUERY } from '../sanity/queries';
+import { HERO_PICTURES, reelImage } from '../components/home-hero';
+import { CLIENT_LOGOS_QUERY, PARTNERS_PAGE_QUERY, PARTNERS_QUERY } from '../sanity/queries';
 import { PAGE_DEFAULTS, type ImageDefault } from '../sanity/page-defaults';
-import { email } from '../components/site-links';
+import { email, socials } from '../components/site-links';
 import { CONTACT_ENDPOINT } from '../components/contact';
 import type { PARTNERS_QUERY_RESULT } from '../sanity/sanity.types';
 
 // The page's words and portrait, from the Partners page document (or the
 // page's defaults), and the partners: the case-study slider, the panels it
-// opens (CaseStudyPanel.astro) and the logo row. The services, the testimonials, the results
+// opens (CaseStudyViewer.astro) and the logo row. The services, the testimonials, the results
 // and the form stay here. The form sends as the contact panel's does: to
 // the address in contact.ts, offering the site's email whenever it was not
 // sent (formvalidation.js)
-const [page, allPartners] = await Promise.all([
+const [page, allPartners, clientLogos] = await Promise.all([
   Astro.locals.sanity.fetch(PARTNERS_PAGE_QUERY),
   Astro.locals.sanity.fetch(PARTNERS_QUERY),
+  Astro.locals.sanity.fetch(CLIENT_LOGOS_QUERY),
 ]);
 const D = PAGE_DEFAULTS.partnersPage;
 // The partners the page can show: those with a cover image
@@ -32,20 +35,46 @@ type Shown = Partner & { coverImage: NonNullable<Partner['coverImage']> };
 const partners = allPartners.filter((partner): partner is Shown => Boolean(partner.coverImage?.asset));
 // A partner with a case study to open: one with a title
 const hasCaseStudy = (partner: Partner) => Boolean(partner.caseStudy?.title);
-// The logos for the logo row (LogoRow.astro): the partners that have one,
-// or, while none has, the two supplied marks
-type Logo = { name: string; logo: NonNullable<Partner['logo']> };
-const withLogo = partners.flatMap((partner): Logo[] => (partner.logo?.asset ? [{ name: partner.name ?? '', logo: partner.logo }] : []));
-const partnerLogos = withLogo.length
-  ? withLogo.map(({ name, logo }) => ({ src: urlFor(logo).ignoreImageParams().width(600).height(240).url(), alt: name }))
-  : [{ src: '/assets/logos/finch-logo.png', alt: 'Finch' }, { src: '/assets/logos/Gendo-Logo-White.png', alt: 'Gendo' }];
-// The hero's stagger (style.css, "The partners' stagger"): the partners
-// dealt into four columns, the first two to the right-hand pair (which
-// stand highest), the next to the left-hand pair, and round again, so the
-// first cards meet the eye under the introduction and the rest run on down
+// The logo row (LogoRow.astro), on the paper: a dark logo for each partner.
+// None is to hand yet (the partners' logos in the Studio and the files in
+// public/assets/logos are white artwork, for a dark band), so each stands
+// as the studio's placeholder mark, named for its partner, until the dark
+// artwork is supplied (then: a `src` for each)
+const partnerLogos = partners.map((partner) => ({ alt: partner.name ?? '' }));
+// The hero's stagger (style.css, "The partners' stagger"): the first eight
+// partners (STAGGER_COUNT; every case study, these and the rest, is in the
+// viewer, stepped through from any of them), dealt into four columns, the
+// first two to the right-hand pair (which stand highest), the next to the
+// left-hand pair, and round again, so the first cards meet the eye beside
+// the introduction and the rest run on down
+const STAGGER_COUNT = 8;
 const STAGGER_ORDER = [2, 3, 1, 0];
 const staggerColumns: { partner: Shown; i: number }[][] = [[], [], [], []];
-partners.forEach((partner, i) => staggerColumns[STAGGER_ORDER[i % 4]].push({ partner, i }));
+partners.slice(0, STAGGER_COUNT).forEach((partner, i) => staggerColumns[STAGGER_ORDER[i % 4]].push({ partner, i }));
+// How fast each column rises past the page as it scrolls, a share of the
+// distance scrolled (partners.js, initPartnerStagger): the left-hand pair,
+// lowest, the quickest, the third a touch against the scroll, so the
+// stagger shifts a little as it passes
+const STAGGER_SPEEDS = [0.09, 0.05, -0.02, 0.035];
+// The stagger's pictures: the home hero's (home-hero.ts), all but
+// Architectural Influence's, in their own colour, dealt along
+// each row and moved on one for the next, so no column shows the same one
+// twice running and no row has a picture twice
+const staggerPictures = HERO_PICTURES.filter(({ title }) => title !== 'Architectural Influence');
+const staggerPicture = (i: number) => staggerPictures[(i + Math.floor(i / 4)) % staggerPictures.length];
+// Each partner's logo over its card: the one set in the Studio, or the white
+// artwork in public/assets/logos (Finch's and Gendo's); none for the rest
+// until their logos are supplied
+const LOGO_FILES: Record<string, string> = { Finch: '/assets/logos/finch-logo.png', Gendo: '/assets/logos/Gendo-Logo-White.png' };
+const logoOf = (partner: Partner) => (partner.logo?.asset ? urlFor(partner.logo).ignoreImageParams().width(600).url() : LOGO_FILES[partner.name ?? '']);
+// PLACEHOLDER: the mark at each card's foot in place of the partner's
+// name, while the page is designed: the home page's logos (its logo row's,
+// CLIENT_LOGOS_QUERY) dealt to the cards in turn, so they do NOT belong to
+// the partners they stand on. Off production only: there each card keeps
+// its partner's name. To use the right ones, make this the partner's own
+// logo (logoOf, above) and drop the production check where it is used.
+const placeholderLogos = __DEPLOYMENT__ === 'production' ? [] : clientLogos.map((client) => ({ src: urlFor(client.logo!).ignoreImageParams().width(400).url(), name: client.name ?? '' }));
+const cardMark = (i: number) => placeholderLogos[i % (placeholderLogos.length || 1)];
 // An <img>'s src, size and alt: the photo set in the Studio, or the page's own file
 const img = (image: SanityImage | null | undefined, fallback: ImageDefault, width: number) =>
   image?.asset ? { ...imageAttrs(image, width), alt: image.alt ?? fallback.alt } : { src: fallback.path, width: fallback.width, height: fallback.height, alt: fallback.alt };
@@ -56,6 +85,15 @@ const results = [
   { figure: '3.2&#215;', label: 'More qualified enquiries', foot: 'Inbound, year on year' },
   { figure: '+68%', label: 'Growth in organic audience reach', foot: 'Unpaid channels' },
   { figure: '+31%', label: 'Increase in conversion', foot: 'Landing to enquiry' },
+];
+// The testimonials (TestimonialStage.astro). Placeholders until real ones
+// are supplied: each photograph one of the site's own of a speaker at an
+// event, `face` where their face is in it for the row's small cut
+const testimonials: Testimonial[] = [
+  { quote: 'Tom didn’t just understand the brief. He understood the audience we were trying to reach before we did.', name: 'Oliver Thomas', role: 'Head of content, Archi-Tech Network', image: '/assets/photos/portraits/portrait-10.jpg', position: '62% 30%', face: '62% 42%', zoom: 3.2 },
+  { quote: 'We had the footage and none of the story. He found the through-line in an afternoon and we have used it ever since.', name: 'Marta Alvarez', role: 'Marketing lead, Rayon Design', image: '/assets/photos/portraits/portrait-09.jpg', position: '50% 30%', face: '51% 40%', zoom: 3.2 },
+  { quote: 'He speaks to architects as an architect. That is the whole reason the campaign landed the way it did.', name: 'Daniel Osei', role: 'Director, Studio North', image: '/assets/photos/portraits/portrait-07.jpg', position: '58% 25%', face: '57% 27%', zoom: 3.2 },
+  { quote: 'Booked him for one keynote and came away with a content plan for the year. Rare to get both from the same person.', name: 'Priya Raman', role: 'Programme lead, RIBA', image: '/assets/photos/portraits/portrait-03.jpg', position: '50% 62%', face: '15% 49%', zoom: 5 },
 ];
 // What Tom does: each service and the line that explains it
 const services = [
@@ -73,50 +111,65 @@ const services = [
   { name: 'Reporting', text: 'Turning what a channel did into something a team can actually act on next quarter.' },
 ];
 ---
-<BaseLayout title="Partners — Tomrowstudios" namespace="partner" pageName="Partners" pageDoc="partnersPage" navTitle="Partners">
+<BaseLayout title="Partners — Tomrowstudios" namespace="partner" pageName="Partners" pageDoc="partnersPage" navTitle="Partners" navPromo="project">
 <!-- The page itself, which shrinks into the footer as the footer arrives (footer.js) -->
 <div class="page-surface" data-page-surface>
 <SiteNav />
 
 <!-- The hero, laid out as the Shop and Influence pages' (.shop-hero): the
-     page's name large on the black, flush left on the studio's name in the
-     bar above -->
+     page's name large on the paper, flush left on the studio's name in the
+     bar above, under it its short description, set as the Influence
+     page's, and then the call to get in touch. The page asks for the
+     Start Your Project strip over the floating bar (navPromo), but
+     not over its first screen (the mark, data-nav-promo empty, a screen
+     tall from the page's top), so it comes up once the foot of that
+     screen has passed the middle of the screen, as Contact Tom's comes up
+     past the home hero -->
 <header class="shop-hero is--partner theme-light">
+  <span class="partner-hero__first-screen" data-nav-promo="" aria-hidden="true"></span>
   <div class="shop-hero__body">
     <div class="shop-hero__copy">
       <h1 data-page-field="intro.heading">{page?.intro?.heading ?? D.intro.heading}</h1>
+      <p class="partner-hero__lead" data-page-field="intro.lead">{page?.intro?.lead ?? D.intro.lead}</p>
+      <div class="actions shop-hero__actions">
+        <ContactButton data-page-field="intro.button" label={page?.intro?.button ?? D.intro.button} />
+      </div>
     </div>
   </div>
 </header>
 
 <div class="theme-light">
 
-<!-- Intro gallery -->
-<section class="section">
+<!-- Intro gallery: the stagger, its right-hand columns rising into the
+     hero beside the name (style.css, "The partners' stagger") -->
+<section class="section partner-intro">
   <div class="container">
-    <div class="section-head is--hero">
-      <div class="section-head__main"></div>
-      <div class="section-head__side">
-        <p class="lead" data-page-field="intro.lead">{page?.intro?.lead ?? D.intro.lead}</p>
-        <div class="actions">
-          <ContactButton data-page-field="intro.button" label={page?.intro?.button ?? D.intro.button} />
-        </div>
-      </div>
-    </div>
-    <!-- The partners' portraits as an editorial stagger: four columns on
-         the page's own, each a column of portrait cards set a little lower
-         or higher than its neighbour (style.css, "The partners' stagger"),
-         the first cards to the right, high, and the rest running on down
-         the page; on a smaller screen two columns -->
-    <div class="partner-stagger">
-      {staggerColumns.map((column) => (
-      <div class="partner-stagger__col">
+    <!-- The partners as an editorial stagger: four columns, each a column
+         of portrait cards set a little lower or higher than its neighbour
+         (style.css, "The partners' stagger"), the stagger rising to the
+         right, where the page is open beside the hero's words, and the
+         rest running on down the page; on a smaller screen two columns. Each
+         card one of the home hero's pictures in its own colour, the
+         partner's logo over it where there is one, and on the desktop
+         each column drifting at its own pace as the page scrolls
+         (partners.js, initPartnerStagger) -->
+    <div class="partner-stagger" data-partner-stagger>
+      {staggerColumns.map((column, c) => (
+      <div class="partner-stagger__col" data-speed={STAGGER_SPEEDS[c]}>
         {column.map(({ partner, i }) => {
           const index = String(i + 1).padStart(2, '0');
-          const picture = <img {...imageAttrs(partner.coverImage, 1200)} draggable="false" alt={partner.coverImage.alt ?? `Case study — ${partner.name}`} loading={i < 4 ? undefined : 'lazy'} decoding="async">;
-          const details = <><span class="slide-card__index">{index}</span><span class="slide-card__name">{partner.name}</span></>;
+          const shot = staggerPicture(i);
+          const { src, srcset } = reelImage(shot.picture);
+          const logo = logoOf(partner);
+          const picture = <><img class="partner-stagger__img" src={src} srcset={srcset} sizes="(max-width: 991px) 50vw, 25vw" width="1200" height="1500" style={`object-position: ${shot.position ?? '50% 50%'}`} draggable="false" alt="" loading={i < 4 ? undefined : 'lazy'} decoding="async">{logo && <img class="slide-card__logo" src={logo} alt="" draggable="false" loading="lazy" decoding="async">}</>;
+          const mark = cardMark(i);
+          const details = <><span class="slide-card__index">{index}</span>{mark ? (
+            <span class="slide-card__name is--mark"><img class="slide-card__mark" src={mark.src} alt="" draggable="false" loading="lazy" decoding="async"><span class="visually-hidden">{partner.name}</span></span>
+          ) : (
+            <span class="slide-card__name">{partner.name}</span>
+          )}</>;
           return hasCaseStudy(partner) ? (
-            <a class="slide-card" href={`#case-${partner.slug}`} data-case-open={`case-${partner.slug}`} data-barba-prevent="self" data-cursor-label="View Case Study">{picture}{details}</a>
+            <a class="slide-card" href={`#case-${partner.slug}`} data-case-open={`case-${partner.slug}`} data-barba-prevent="self">{picture}{details}</a>
           ) : (
             <div class="slide-card">{picture}{details}</div>
           );
@@ -128,12 +181,11 @@ const services = [
 </section>
 
 <!-- The partners' logos: the home page's logo row (LogoRow.astro), the
-     logos running sideways on a loop over their ruler, on the same dark
-     band, under the section's heading and its note -->
-<section class="logo-wall is--partner">
+     logos running sideways on a loop over their ruler, on the page's own
+     paper, under the section's one heading -->
+<section class="logo-wall is--partner is--light">
   <LogoRow logos={partnerLogos}>
     <h2 class="logo-grid__lead" data-page-field="clients.heading">{page?.clients?.heading ?? D.clients.heading}</h2>
-    <p class="logo-grid__note" data-page-field="clients.note">{page?.clients?.note ?? D.clients.note}</p>
   </LogoRow>
 </section>
 
@@ -163,7 +215,7 @@ const services = [
      screen readers, so the column of descriptions is decoration. -->
 <section class="section service-section">
   <div class="container">
-    <div class="scroll-list services" data-scroll-list>
+    <div class="scroll-list services" data-scroll-list data-scroll-list-hover="off">
       <div class="scroll-list__intro">
         <div class="scroll-list__stick">
           <div class="scroll-list__intro-inner">
@@ -190,70 +242,21 @@ const services = [
   </div>
 </section>
 
-<!-- Testimonial -->
-<section class="testimonial-feature">
-  <div data-testimonial class="testimonial-stage">
-    <div data-testimonial-slide class="testimonial-slide is--active" aria-hidden="false">
-      <img class="testimonial-slide__bg" src="/assets/photos/portraits/portrait-07.jpg" alt="">
-      <div class="testimonial-slide__body">
-        <blockquote>"Tom didn't just understand the brief. He understood the audience we were trying to reach before we did."</blockquote>
-        <p class="testimonial-slide__who"><span>Oliver Thomas</span> Head of content, Archi-Tech Network</p>
-      </div>
-    </div>
-    <div data-testimonial-slide class="testimonial-slide" aria-hidden="true">
-      <img class="testimonial-slide__bg" src="/assets/photos/events/event-06.jpg" alt="">
-      <div class="testimonial-slide__body">
-        <blockquote>"We had the footage and none of the story. He found the through-line in an afternoon and we have used it ever since."</blockquote>
-        <p class="testimonial-slide__who"><span>Marta Alvarez</span> Marketing lead, Rayon Design</p>
-      </div>
-    </div>
-    <div data-testimonial-slide class="testimonial-slide" aria-hidden="true">
-      <img class="testimonial-slide__bg" src="/assets/photos/talks/talk-09.jpg" alt="">
-      <div class="testimonial-slide__body">
-        <blockquote>"He speaks to architects as an architect. That is the whole reason the campaign landed the way it did."</blockquote>
-        <p class="testimonial-slide__who"><span>Daniel Osei</span> Director, Studio North</p>
-      </div>
-    </div>
-    <div data-testimonial-slide class="testimonial-slide" aria-hidden="true">
-      <img class="testimonial-slide__bg" src="/assets/photos/events/event-08.jpg" alt="">
-      <div class="testimonial-slide__body">
-        <blockquote>"Booked him for one keynote and came away with a content plan for the year. Rare to get both from the same person."</blockquote>
-        <p class="testimonial-slide__who"><span>Priya Raman</span> Programme lead, RIBA</p>
-      </div>
-    </div>
+<!-- Testimonials: the full-screen stage (TestimonialStage.astro), moving
+     on by itself, the row of people along its foot -->
+<TestimonialStage testimonials={testimonials} />
 
-    <div role="tablist" aria-label="Choose a testimonial" class="testimonial-chips">
-      <button data-testimonial-chip role="tab" aria-selected="true" class="testimonial-chip is--active">
-        <img src="/assets/photos/portraits/portrait-03.jpg" alt="">
-        <span class="testimonial-chip__text"><span class="testimonial-chip__name">Oliver Thomas</span><span class="testimonial-chip__role">Archi-Tech Network</span></span>
-      </button>
-      <button data-testimonial-chip role="tab" aria-selected="false" class="testimonial-chip">
-        <img src="/assets/photos/portraits/portrait-08.jpg" alt="">
-        <span class="testimonial-chip__text"><span class="testimonial-chip__name">Marta Alvarez</span><span class="testimonial-chip__role">Rayon Design</span></span>
-      </button>
-      <button data-testimonial-chip role="tab" aria-selected="false" class="testimonial-chip">
-        <img src="/assets/photos/portraits/portrait-10.jpg" alt="">
-        <span class="testimonial-chip__text"><span class="testimonial-chip__name">Daniel Osei</span><span class="testimonial-chip__role">Studio North</span></span>
-      </button>
-      <button data-testimonial-chip role="tab" aria-selected="false" class="testimonial-chip">
-        <img src="/assets/photos/portraits/portrait-07.jpg" alt="">
-        <span class="testimonial-chip__text"><span class="testimonial-chip__name">Priya Raman</span><span class="testimonial-chip__role">RIBA</span></span>
-      </button>
-    </div>
-  </div>
-</section>
-
-<!-- Results — what the work returned, not how it was made: the Shop hero's
-     column of panels (InfluenceStory.astro, style.css "The column of
-     panels"), in white on this page's paper, one panel a result, the one
-     on the screen's middle grown large as the page scrolls by and the next
-     taking over (influence.js, initInfluenceStrip); each figure counts up
-     with the site's odometer as its panel comes in. Beside them, held
-     while they pass, the section's name, its note and its calls to action. -->
+<!-- The outcomes — what the work returned, not how it was made: a column
+     of panels (style.css "The column of panels"), in white on this page's
+     paper, one panel a result, the one on the screen's middle grown large
+     as the page scrolls by and the next taking over (influence.js,
+     initInfluenceStrip); each figure counts up with the site's odometer as
+     its own panel becomes the large one, and again each time it does
+     (data-odometer-manual). Beside them, held while they pass, the
+     section's name, its note and its calls to action. -->
 <section class="section theme-light results-section">
   <div class="container results-layout">
     <div class="results-layout__head">
-      <p class="tagline label-pill" data-page-field="results.label">{page?.results?.label ?? D.results.label}</p>
       <h2 data-page-field="results.heading">{page?.results?.heading ?? D.results.heading}</h2>
       <p class="lead" data-page-field="results.note">{page?.results?.note ?? D.results.note}</p>
       <div class="actions">
@@ -263,7 +266,7 @@ const services = [
     </div>
     <ul class="influence-strip is--results" data-influence-strip>
       {results.map(({ figure, label, foot }) => (
-      <li class="influence-strip__item" data-strip-item data-odometer-group>
+      <li class="influence-strip__item" data-strip-item data-odometer-group data-odometer-manual>
         <p class="influence-strip__label">{label}</p>
         <p class="influence-strip__figure" data-odometer-element data-odometer-duration="1.6" set:html={figure}></p>
         <p class="influence-strip__foot">{foot}</p>
@@ -273,103 +276,53 @@ const services = [
   </div>
 </section>
 
-<!-- Enquiry form -->
-<section class="section" id="enquire">
+<!-- The enquiry, after an editorial contact page: two rows on the page's
+     columns, a thin rule between them, each with its name large in the
+     first column and its content in the other three (style.css, "The
+     enquiry"). Contact: the site's address and Tom's channels, each under
+     a small label. Form: name and email side by side, the message across
+     under them, each a label over a line of text with a hairline under
+     it, and the call to send; it checks and sends as before
+     (formvalidation.js: to the address in contact.ts, offering the site's
+     email whenever it was not sent). -->
+<section class="section enquiry" id="enquire">
   <div class="container">
-    <div class="contact-split">
-      <div>
-        <p class="tagline" data-page-field="enquire.label">{page?.enquire?.label ?? D.enquire.label}</p>
-        <h2 data-page-field="enquire.heading">{page?.enquire?.heading ?? D.enquire.heading}</h2>
-        <p class="lead" data-page-field="enquire.lead">{page?.enquire?.lead ?? D.enquire.lead}</p>
-        <ul class="contact-details" data-dim-group>
-          <li><img src="/assets/ui/mail.svg" alt=""><a href="mailto:tom@tomrowstudios.com" data-split-hover="link">tom@tomrowstudios.com</a></li>
-          <li><img src="/assets/ui/call.svg" alt=""><a href="tel:+61280000000" data-split-hover="link">+61 2 8000 0000</a></li>
-        </ul>
-      </div>
+    <div class="enquiry__row">
+      <h2 class="enquiry__title">Contact</h2>
+      <dl class="enquiry__details">
+        <div class="enquiry__detail">
+          <dt>General</dt>
+          <dd><a class="enquiry__link" href={`mailto:${email}`}>{email}</a></dd>
+        </div>
+        <div class="enquiry__detail">
+          <dt>Social</dt>
+          <dd>
+            <ul class="enquiry__socials" role="list">
+              {socials.map(({ label, href }) => <li><a class="enquiry__link" href={href} target="_blank" rel="noopener">{label}</a></li>)}
+            </ul>
+          </dd>
+        </div>
+      </dl>
+    </div>
 
-      <div data-form-validate class="form-group">
-        <form class="form" action={CONTACT_ENDPOINT || undefined} method="post" name="partner-enquiry" data-endpoint={CONTACT_ENDPOINT} data-email={email} data-subject="Partnership enquiry">
-          <div class="form-field-row">
-            <div data-validate class="form-field-group">
-              <label for="first-name" class="form-label">First name <span class="form-required">*</span></label>
-              <div class="form-field">
-                <input class="form-input" id="first-name" name="first-name" type="text" placeholder="Your first name" maxlength="256" min="2" required>
-                <div class="form-field-icon is--success"><svg xmlns="http://www.w3.org/2000/svg" width="100%" viewBox="0 0 24 24" fill="none"><path d="M11.25 14.25L9 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path><path d="M15 10.5L11.25 14.25" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path><path d="M3 12C3 16.9706 7.02943 21 12 21C16.9706 21 21 16.9706 21 12C21 7.02943 16.9706 3 12 3C7.02943 3 3 7.02943 3 12Z" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"></path></svg></div>
-                <div class="form-field-icon is--error"><svg xmlns="http://www.w3.org/2000/svg" width="100%" viewBox="0 0 24 24" fill="none"><path opacity="0.1" d="M12 3C16.971 3 21 7.029 21 12C21 16.971 16.971 21 12 21C7.029 21 3 16.971 3 12C3 7.029 7.029 3 12 3Z" fill="currentColor" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path><path d="M12 3C16.971 3 21 7.029 21 12C21 16.971 16.971 21 12 21C7.029 21 3 16.971 3 12C3 7.029 7.029 3 12 3Z" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"></path><path d="M12 12.5V7.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path><path d="M11.996 14.5C11.444 14.5 10.996 14.948 11 15.5C11 16.052 11.448 16.5 12 16.5C12.552 16.5 13 16.052 13 15.5C13 14.948 12.552 14.5 11.996 14.5Z" fill="currentColor"></path></svg></div>
-              </div>
-            </div>
-            <div data-validate class="form-field-group">
-              <label for="last-name" class="form-label">Last name <span class="form-required">*</span></label>
-              <div class="form-field">
-                <input class="form-input" id="last-name" name="last-name" type="text" placeholder="Your last name" maxlength="256" min="2" required>
-                <div class="form-field-icon is--success"><svg xmlns="http://www.w3.org/2000/svg" width="100%" viewBox="0 0 24 24" fill="none"><path d="M11.25 14.25L9 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path><path d="M15 10.5L11.25 14.25" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path><path d="M3 12C3 16.9706 7.02943 21 12 21C16.9706 21 21 16.9706 21 12C21 7.02943 16.9706 3 12 3C7.02943 3 3 7.02943 3 12Z" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"></path></svg></div>
-                <div class="form-field-icon is--error"><svg xmlns="http://www.w3.org/2000/svg" width="100%" viewBox="0 0 24 24" fill="none"><path opacity="0.1" d="M12 3C16.971 3 21 7.029 21 12C21 16.971 16.971 21 12 21C7.029 21 3 16.971 3 12C3 7.029 7.029 3 12 3Z" fill="currentColor" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path><path d="M12 3C16.971 3 21 7.029 21 12C21 16.971 16.971 21 12 21C7.029 21 3 16.971 3 12C3 7.029 7.029 3 12 3Z" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"></path><path d="M12 12.5V7.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path><path d="M11.996 14.5C11.444 14.5 10.996 14.948 11 15.5C11 16.052 11.448 16.5 12 16.5C12.552 16.5 13 16.052 13 15.5C13 14.948 12.552 14.5 11.996 14.5Z" fill="currentColor"></path></svg></div>
-              </div>
-            </div>
+    <div class="enquiry__row">
+      <h2 class="enquiry__title">Form</h2>
+      <div data-form-validate class="enquiry__form-group">
+        <form class="form enquiry__form" action={CONTACT_ENDPOINT || undefined} method="post" name="partner-enquiry" data-endpoint={CONTACT_ENDPOINT} data-email={email} data-subject="Partnership enquiry">
+          <div data-validate class="form-field-group enquiry__field">
+            <label for="enquiry-page-name" class="enquiry__label">Name</label>
+            <input class="enquiry__input" id="enquiry-page-name" name="name" type="text" autocomplete="name" placeholder="Your name" maxlength="256" min="2" required>
           </div>
-          <div class="form-field-row">
-            <div data-validate class="form-field-group">
-              <label for="email" class="form-label">Email address <span class="form-required">*</span></label>
-              <div class="form-field">
-                <input class="form-input" id="email" name="email" type="email" placeholder="Your email" maxlength="256" required>
-                <div class="form-field-icon is--success"><svg xmlns="http://www.w3.org/2000/svg" width="100%" viewBox="0 0 24 24" fill="none"><path d="M11.25 14.25L9 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path><path d="M15 10.5L11.25 14.25" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path><path d="M3 12C3 16.9706 7.02943 21 12 21C16.9706 21 21 16.9706 21 12C21 7.02943 16.9706 3 12 3C7.02943 3 3 7.02943 3 12Z" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"></path></svg></div>
-                <div class="form-field-icon is--error"><svg xmlns="http://www.w3.org/2000/svg" width="100%" viewBox="0 0 24 24" fill="none"><path opacity="0.1" d="M12 3C16.971 3 21 7.029 21 12C21 16.971 16.971 21 12 21C7.029 21 3 16.971 3 12C3 7.029 7.029 3 12 3Z" fill="currentColor" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path><path d="M12 3C16.971 3 21 7.029 21 12C21 16.971 16.971 21 12 21C7.029 21 3 16.971 3 12C3 7.029 7.029 3 12 3Z" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"></path><path d="M12 12.5V7.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path><path d="M11.996 14.5C11.444 14.5 10.996 14.948 11 15.5C11 16.052 11.448 16.5 12 16.5C12.552 16.5 13 16.052 13 15.5C13 14.948 12.552 14.5 11.996 14.5Z" fill="currentColor"></path></svg></div>
-              </div>
-            </div>
-            <div data-validate class="form-field-group">
-              <label for="phone" class="form-label">Phone</label>
-              <div class="form-field">
-                <input class="form-input" id="phone" name="phone" type="tel" placeholder="Optional" maxlength="256">
-                <div class="form-field-icon is--success"><svg xmlns="http://www.w3.org/2000/svg" width="100%" viewBox="0 0 24 24" fill="none"><path d="M11.25 14.25L9 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path><path d="M15 10.5L11.25 14.25" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path><path d="M3 12C3 16.9706 7.02943 21 12 21C16.9706 21 21 16.9706 21 12C21 7.02943 16.9706 3 12 3C7.02943 3 3 7.02943 3 12Z" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"></path></svg></div>
-                <div class="form-field-icon is--error"><svg xmlns="http://www.w3.org/2000/svg" width="100%" viewBox="0 0 24 24" fill="none"><path opacity="0.1" d="M12 3C16.971 3 21 7.029 21 12C21 16.971 16.971 21 12 21C7.029 21 3 16.971 3 12C3 7.029 7.029 3 12 3Z" fill="currentColor" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path><path d="M12 3C16.971 3 21 7.029 21 12C21 16.971 16.971 21 12 21C7.029 21 3 16.971 3 12C3 7.029 7.029 3 12 3Z" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"></path><path d="M12 12.5V7.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path><path d="M11.996 14.5C11.444 14.5 10.996 14.948 11 15.5C11 16.052 11.448 16.5 12 16.5C12.552 16.5 13 16.052 13 15.5C13 14.948 12.552 14.5 11.996 14.5Z" fill="currentColor"></path></svg></div>
-              </div>
-            </div>
+          <div data-validate class="form-field-group enquiry__field">
+            <label for="enquiry-page-email" class="enquiry__label">Email</label>
+            <input class="enquiry__input" id="enquiry-page-email" name="email" type="email" autocomplete="email" placeholder="Your email" maxlength="256" required>
           </div>
-
-          <div class="form-field-group">
-            <label for="project-type" class="form-label">Project type</label>
-            <div class="form-field">
-              <select class="form-input is--select" id="project-type" name="project-type">
-                <option value="">Select one...</option>
-                <option>Strategy</option>
-                <option>Production</option>
-                <option>Partnerships</option>
-                <option>Speaking</option>
-              </select>
-            </div>
+          <div data-validate class="form-field-group enquiry__field is--wide">
+            <label for="enquiry-page-message" class="enquiry__label">Message</label>
+            <textarea class="enquiry__input is--area" id="enquiry-page-message" name="message" rows="3" placeholder="Your brand, what you are planning and when" maxlength="5000" min="10" required></textarea>
           </div>
-
-          <fieldset class="form-field-group radios">
-            <legend class="form-label">Your role</legend>
-            <div class="radio-grid">
-              <label><input type="radio" name="role" value="Director"> Director</label>
-              <label><input type="radio" name="role" value="Marketing lead"> Marketing lead</label>
-              <label><input type="radio" name="role" value="Practice manager"> Practice manager</label>
-              <label><input type="radio" name="role" value="Architect"> Architect</label>
-              <label><input type="radio" name="role" value="Designer"> Designer</label>
-              <label><input type="radio" name="role" value="Other"> Other</label>
-            </div>
-          </fieldset>
-
-          <div data-validate class="form-field-group">
-            <label for="message" class="form-label">Message <span class="form-required">*</span></label>
-            <div class="form-field">
-              <textarea class="form-input is--textarea" id="message" name="message" placeholder="Project details, timeframe and budget range." maxlength="5000" min="10" required></textarea>
-              <div class="form-field-icon is--success"><svg xmlns="http://www.w3.org/2000/svg" width="100%" viewBox="0 0 24 24" fill="none"><path d="M11.25 14.25L9 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path><path d="M15 10.5L11.25 14.25" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path><path d="M3 12C3 16.9706 7.02943 21 12 21C16.9706 21 21 16.9706 21 12C21 7.02943 16.9706 3 12 3C7.02943 3 3 7.02943 3 12Z" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"></path></svg></div>
-              <div class="form-field-icon is--error"><svg xmlns="http://www.w3.org/2000/svg" width="100%" viewBox="0 0 24 24" fill="none"><path opacity="0.1" d="M12 3C16.971 3 21 7.029 21 12C21 16.971 16.971 21 12 21C7.029 21 3 16.971 3 12C3 7.029 7.029 3 12 3Z" fill="currentColor" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path><path d="M12 3C16.971 3 21 7.029 21 12C21 16.971 16.971 21 12 21C7.029 21 3 16.971 3 12C3 7.029 7.029 3 12 3Z" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"></path><path d="M12 12.5V7.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path><path d="M11.996 14.5C11.444 14.5 10.996 14.948 11 15.5C11 16.052 11.448 16.5 12 16.5C12.552 16.5 13 16.052 13 15.5C13 14.948 12.552 14.5 11.996 14.5Z" fill="currentColor"></path></svg></div>
-            </div>
-          </div>
-
-          <label class="checkbox"><input type="checkbox" name="consent"> I agree to be contacted about this enquiry</label>
-
-          <div class="form-field-group">
-            <div class="form-divider"></div>
-          </div>
-
-          <div class="form-field-group">
-            <div class="form-field">
-              <div data-submit tabindex="0" role="button" data-split-hover="link" class="hero-nav__contact form-submit-btn"><span class="hero-nav__contact-label"><span data-cta-label data-split-hover="target">Send enquiry</span></span><span class="hero-nav__contact-square"><Arrow class="hero-nav__contact-arrow" shape="straight" /></span><input type="submit" data-wait="Please wait..." class="form-submit" value="Send enquiry"></div>
-            </div>
+          <div class="enquiry__actions">
+            <div data-submit tabindex="0" role="button" data-split-hover="link" class="hero-nav__contact form-submit-btn"><span class="hero-nav__contact-label"><span data-cta-label data-split-hover="target">Send enquiry</span></span><span class="hero-nav__contact-square"><Arrow class="hero-nav__contact-arrow" shape="straight" /></span><input type="submit" data-wait="Please wait..." class="form-submit" value="Send enquiry"></div>
           </div>
         </form>
         <div class="form-notifcation" data-form-success role="status" tabindex="-1">
@@ -396,9 +349,9 @@ const services = [
 
 <SiteFooter />
 
-<!-- Case study panels, one per partner with a case study, each grown out of
-     its card when pressed (casepanel.js) -->
-{partners.filter(hasCaseStudy).map((partner) => <CaseStudyPanel partner={partner} />)}
+<!-- The case studies, a panel the floating bar grows into when a card is
+     pressed (CaseStudyViewer.astro, casepanel.js) -->
+<CaseStudyViewer partners={partners.filter(hasCaseStudy)} />
 
 <ContactPanel />
 </BaseLayout>

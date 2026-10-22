@@ -7,7 +7,6 @@ import Arrow from '../components/Arrow.astro';
 import Button from '../components/Button.astro';
 import ServiceCards from '../components/ServiceCards.astro';
 import ProductCard from '../components/ProductCard.astro';
-import InfluenceStory from '../components/InfluenceStory.astro';
 import { SHOP_ITEMS_QUERY, SHOP_PAGE_QUERY } from '../sanity/queries';
 import { FAQ_DEFAULTS, PAGE_DEFAULTS } from '../sanity/page-defaults';
 
@@ -23,21 +22,42 @@ const [page, items] = await Promise.all([
 ]);
 const D = PAGE_DEFAULTS.shopPage;
 const questions = page?.faq?.questions?.length ? page.faq.questions : FAQ_DEFAULTS;
+// The quotes: real five-star reviews of Tom's courses, in the reviewers'
+// own words (their spelling and grammar kept). A long review is cut to an
+// excerpt of about the others' length, each cut marked [...], nothing
+// added; a short one is left whole and set a size larger (is--short)
+// rather than lengthened. Each reviewer by their initials, not a picture.
+// One more review, whose name is cut off in the source, waits for its
+// name: "Just finished your course mate, well worth it! Architects tend to
+// love to gatekeep their design process and it was really insightful and
+// proper helpful as I go into third year. Cheers."
+const reviews = [
+  { name: 'Mattia Amato', quote: 'The course shows the work and method of a truly prepared guy. I was able to see [...] the difference in approach to the graphic construction of the architectural project.' },
+  { name: 'Dan May', quote: 'The course was amazing! It’s really changed how I present my work and the process I design in order to present. My tutors have already commented on the difference [...]' },
+  { name: 'Bashayer Abduallah', quote: 'I finished two modules but so far it’s been good can’t wait to start the others modules.' },
+  { name: 'Ferrin', quote: 'In the architectural graphic design course, I gained valuable experiences that have influenced my understanding of the field. [...] Overall, the course equipped me with practical skills [...]' },
+  { name: 'Alex Bndv', quote: 'Really interesting, fun way of learning!' },
+];
+const initials = (name: string) => name.split(/\s+/).map((part) => part[0]).join('').slice(0, 2).toUpperCase();
 ---
 <BaseLayout title="Shop — Tomrowstudios" namespace="shop" pageName="Shop" pageDoc="shopPage">
 <!-- The page itself, which shrinks into the footer as the footer arrives
-     (footer.js); no column lines on this page, the grain kept, as the
-     Influence page's former hero above has it (is--gridless) -->
+     (footer.js); no column lines on this page, the grain kept (is--gridless) -->
 <div class="page-surface is--gridless" data-page-surface>
 <SiteNav />
 
-<!-- For now, in place of the Shop's own hero: the Influence page's former
-     hero (InfluenceStory.astro), as it stood there, without its map,
-     under the Shop's own name (the Shop page's heading, its field here);
-     its other words are the Influence page's, so they carry no Visual
-     editor fields here (this page's document is the Shop's). The Shop's
-     own sections follow as they were. -->
-<InfluenceStory fields={false} heading={page?.hero?.heading ?? D.hero.heading} headingField="hero.heading" />
+<!-- The hero, laid out as the other pages' (.shop-hero): the page's name
+     large on the black, flush left on the studio's name in the bar above,
+     and under it what the shop holds, set as the Influence and Partners
+     pages' descriptions are -->
+<header class="shop-hero is--shop">
+  <div class="shop-hero__body">
+    <div class="shop-hero__copy">
+      <h1 data-page-field="hero.heading">{page?.hero?.heading ?? D.hero.heading}</h1>
+      <p class="shop-hero__about">Tom’s book, courses and downloadable guides for architects and students: practical methods for drawing, presenting and writing about your work.</p>
+    </div>
+  </div>
+</header>
 
 <!-- Products: one card to a column -->
 <section class="section section-alt" id="catalogue">
@@ -72,71 +92,30 @@ const questions = page?.faq?.questions?.length ? page.faq.questions : FAQ_DEFAUL
       </div>
     </div>
 
-    <div data-slider-autoplay-duration="4" aria-label="Testimonial Slider" data-centered-slider="wrapper" data-slider-autoplay="true" class="centered-slider-group">
+    <div data-slider-autoplay-duration="6" aria-label="Testimonial Slider" data-centered-slider="wrapper" data-slider-autoplay="true" class="centered-slider-group">
       <div class="container">
         <div class="centered-slider-content">
           <ul role="tablist" class="centered-slider-bullet__list">
-            <li class="centered-slider-bullet__item"><button data-centered-slider="bullet" role="tab" aria-selected="false" class="centered-slider-bullet"><img src="/assets/photos/portraits/portrait-02.jpg" alt="Lena Müller"></button></li>
-            <li class="centered-slider-bullet__item"><button data-centered-slider="bullet" role="tab" aria-selected="false" class="centered-slider-bullet"><img src="/assets/photos/portraits/portrait-03.jpg" alt="James Okonkwo"></button></li>
-            <li class="centered-slider-bullet__item"><button data-centered-slider="bullet" role="tab" aria-selected="false" class="centered-slider-bullet"><img src="/assets/photos/portraits/portrait-06.jpg" alt="Sofia Reyes"></button></li>
-            <li class="centered-slider-bullet__item"><button data-centered-slider="bullet" role="tab" aria-selected="false" class="centered-slider-bullet"><img src="/assets/photos/portraits/portrait-08.jpg" alt="Elena Kowalski"></button></li>
-            <li class="centered-slider-bullet__item"><button data-centered-slider="bullet" role="tab" aria-selected="false" class="centered-slider-bullet"><img src="/assets/photos/portraits/portrait-09.jpg" alt="Daniel Chen"></button></li>
-            <li class="centered-slider-bullet__item"><button data-centered-slider="bullet" role="tab" aria-selected="false" class="centered-slider-bullet"><img src="/assets/photos/portraits/portrait-10.jpg" alt="Amara Okafor"></button></li>
-            <li class="centered-slider-bullet__item"><button data-centered-slider="bullet" role="tab" aria-selected="false" class="centered-slider-bullet"><img src="/assets/photos/portraits/portrait-11.jpg" alt="Clara Johansson"></button></li>
-            <li class="centered-slider-bullet__item"><button data-centered-slider="bullet" role="tab" aria-selected="false" class="centered-slider-bullet"><img src="/assets/photos/portraits/portrait-07.jpg" alt="Omar Farouk"></button></li>
+            {reviews.map(({ name }) => (
+            <li class="centered-slider-bullet__item"><button data-centered-slider="bullet" role="tab" aria-selected="false" aria-label={name} class="centered-slider-bullet"><span class="slide-demo__initials" aria-hidden="true">{initials(name)}</span></button></li>
+            ))}
           </ul>
         </div>
       </div>
       <div class="centered-slider-row">
         <div aria-label="slides" data-centered-slider="list" role="group" class="centered-slider-list">
+          {reviews.map(({ name, quote }) => (
           <div data-centered-slider="slide" class="centered-slider-slide">
             <div class="centered-slider-slide__inner">
-              <p class="slide-demo__description">"The presentation course cut through everything I was overcomplicating. My drawings are cleaner now, and I spend far less time second-guessing what belongs on a sheet."</p>
-              <div class="slide-demo__details"><img src="/assets/photos/portraits/portrait-02.jpg" alt="" class="slide-demo__avatar"><span class="slide-demo__eyebrow">Lena Müller</span></div>
+              <div class="slide-demo__quote">
+                <img class="slide-demo__stars" src="/assets/ui/stars.svg" alt="Rated five out of five stars" width="116" height="19">
+                <p class:list={['slide-demo__description', { 'is--short': quote.length < 100 }]}>"{quote}"</p>
+              </div>
+              <div class="slide-demo__details"><span class="slide-demo__avatar slide-demo__initials" aria-hidden="true">{initials(name)}</span><span class="slide-demo__eyebrow">{name}</span></div>
+              <span class="centered-slider-progress" aria-hidden="true"><span class="centered-slider-progress__bar" data-centered-slider="progress"></span></span>
             </div>
           </div>
-          <div data-centered-slider="slide" class="centered-slider-slide">
-            <div class="centered-slider-slide__inner">
-              <p class="slide-demo__description">"I stopped writing project descriptions that nobody read. The communication package gave me a structure I use every week."</p>
-              <div class="slide-demo__details"><img src="/assets/photos/portraits/portrait-03.jpg" alt="" class="slide-demo__avatar"><span class="slide-demo__eyebrow">James Okonkwo</span></div>
-            </div>
-          </div>
-          <div data-centered-slider="slide" class="centered-slider-slide">
-            <div class="centered-slider-slide__inner">
-              <p class="slide-demo__description">"The book changed how I talk about my work in crits. Less explaining, more showing. My tutors noticed within a fortnight."</p>
-              <div class="slide-demo__details"><img src="/assets/photos/portraits/portrait-06.jpg" alt="" class="slide-demo__avatar"><span class="slide-demo__eyebrow">Sofia Reyes</span></div>
-            </div>
-          </div>
-          <div data-centered-slider="slide" class="centered-slider-slide">
-            <div class="centered-slider-slide__inner">
-              <p class="slide-demo__description">"Worth it for the module on handling critique alone. I walked into my next review knowing which questions were coming and what I actually thought."</p>
-              <div class="slide-demo__details"><img src="/assets/photos/portraits/portrait-08.jpg" alt="" class="slide-demo__avatar"><span class="slide-demo__eyebrow">Elena Kowalski</span></div>
-            </div>
-          </div>
-          <div data-centered-slider="slide" class="centered-slider-slide">
-            <div class="centered-slider-slide__inner">
-              <p class="slide-demo__description">"Practical rather than theoretical. Every session ends with something you can apply to the sheet you are already working on."</p>
-              <div class="slide-demo__details"><img src="/assets/photos/portraits/portrait-09.jpg" alt="" class="slide-demo__avatar"><span class="slide-demo__eyebrow">Daniel Chen</span></div>
-            </div>
-          </div>
-          <div data-centered-slider="slide" class="centered-slider-slide">
-            <div class="centered-slider-slide__inner">
-              <p class="slide-demo__description">"My final review panel said it was the clearest presentation they had seen all day. That came directly from this approach."</p>
-              <div class="slide-demo__details"><img src="/assets/photos/portraits/portrait-10.jpg" alt="" class="slide-demo__avatar"><span class="slide-demo__eyebrow">Amara Okafor</span></div>
-            </div>
-          </div>
-          <div data-centered-slider="slide" class="centered-slider-slide">
-            <div class="centered-slider-slide__inner">
-              <p class="slide-demo__description">"The frameworks are simple, but they force you to be honest about what your project is actually doing. That is the hard part."</p>
-              <div class="slide-demo__details"><img src="/assets/photos/portraits/portrait-11.jpg" alt="" class="slide-demo__avatar"><span class="slide-demo__eyebrow">Clara Johansson</span></div>
-            </div>
-          </div>
-          <div data-centered-slider="slide" class="centered-slider-slide">
-            <div class="centered-slider-slide__inner">
-              <p class="slide-demo__description">"It helped me move from describing my project to defending it. Those are two different skills and nobody had told me that."</p>
-              <div class="slide-demo__details"><img src="/assets/photos/portraits/portrait-07.jpg" alt="" class="slide-demo__avatar"><span class="slide-demo__eyebrow">Omar Farouk</span></div>
-            </div>
-          </div>
+          ))}
         </div>
       </div>
       <div class="container">

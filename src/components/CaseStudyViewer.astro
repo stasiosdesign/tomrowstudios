@@ -1,0 +1,31 @@
+---
+/* The partners' case studies, as a panel the floating bar grows into
+   (floatingnav.js, "The panels"; casepanel.js), as it grows into the
+   contact form: a wide, landscape panel over the bar, on the page's paper,
+   one case study showing at a time (CaseStudyPanel.astro), the bar's
+   square under it its close and the steps either side of the square going
+   to the one before and the one after. Opened by any card naming a case
+   study in data-case-open (the Partners page's stagger, the Partners
+   archive grid). Styles: "The case studies, grown out of the bar" in
+   style.css. */
+import CaseStudyPanel from './CaseStudyPanel.astro';
+import type { PARTNERS_QUERY_RESULT } from '../sanity/sanity.types';
+// Mockups for testing the viewer, after the real case studies (to remove:
+// this import, the mockups added to `studies` and case-study-mockups.ts)
+import { caseStudyMockups } from './case-study-mockups';
+
+interface Props {
+  partners: PARTNERS_QUERY_RESULT[number][];
+}
+
+const { partners } = Astro.props;
+const studies = [...partners, ...caseStudyMockups(partners)];
+---
+{studies.length > 0 && (
+<div class="fnav-case" data-case-viewer role="dialog" aria-modal="true" aria-label="Case study" aria-hidden="true" inert>
+  <div class="fnav-case__inner" data-case-inner data-lenis-prevent tabindex="-1">
+    {studies.map((partner) => <CaseStudyPanel partner={partner} mockup={'mockup' in partner} />)}
+  </div>
+  <div class="fnav-case__background" data-case-bg></div>
+</div>
+)}
