@@ -2,6 +2,7 @@
 import { defineConfig, envField } from 'astro/config';
 import sitemap from '@astrojs/sitemap';
 import vercel from '@astrojs/vercel';
+import { readdirSync } from 'node:fs';
 import { loadEnv } from 'vite';
 
 /* One codebase, built three ways. Which one comes from Vercel (VERCEL_ENV),
@@ -63,6 +64,15 @@ const buildStamp = () => ({
   },
 });
 
+// The home hero's pictures as its mosaic reads their colours on the server
+// (src/components/hero-palette.ts, from public/ on the disk: the 480px
+// copies). Staging's function renders every request and carries no public/
+// of its own, so these go into it; without them its mosaic had no colours
+// and the home page's ground stayed a plain near-black there alone.
+const heroPaletteFiles = readdirSync(new URL('./public/assets/images/hero/', import.meta.url))
+  .filter((name) => name.endsWith('-480.avif'))
+  .map((name) => `./public/assets/images/hero/${name}`);
+
 // https://astro.build/config
 export default defineConfig({
   site,
@@ -70,7 +80,7 @@ export default defineConfig({
   // Production: static, no adapter; Vercel serves `dist/` as files. Staging and
   // development render every request, through the Vercel adapter.
   output: onDemand ? 'server' : 'static',
-  adapter: onDemand ? vercel() : undefined,
+  adapter: onDemand ? vercel({ includeFiles: heroPaletteFiles }) : undefined,
 
   integrations: [
     // /parked holds sections taken off the site; on production it only
