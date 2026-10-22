@@ -6,42 +6,23 @@
    footer-reveal (its mask) holding a footer-reveal__item (the part that
    rises); in a link the item is also what the hover roll splits.
 
-   Laid out as the agency reference: the wordmark on the left, four columns
-   on the right (contact, pages, the four parts of the practice, socials),
-   and across the very foot, small, the copyright and the legal links,
-   either side of the floating bar's square: at the foot of the page the
-   floating navigation opens of itself as the footer's own navigation
-   (FloatingNav.astro, floatingnav.js), over the room the footer keeps for
-   it above that line. Pages without a footer — the architecture index and
-   the project pages — simply leave it out. */
-import { pages, socials, email } from './site-links';
-type Link = { label: string; href: string; panel?: boolean; external?: boolean };
-const columns: { heading: string; links: Link[] }[] = [
-  {
-    heading: 'Contact',
-    links: [
-      { label: email, href: `mailto:${email}` },
-      { label: 'Start a project', href: '#contact', panel: true },
-    ],
-  },
-  {
-    heading: 'Pages',
-    links: pages,
-  },
-  {
-    heading: 'Expertise',
-    links: [
-      { label: 'Partnerships', href: '/partner' },
-      { label: 'Architectural Projects', href: '/architecture' },
-      { label: 'Courses & Resources', href: '/shop' },
-      { label: 'Architecture & Influence', href: '/influence' },
-    ],
-  },
-  {
-    heading: 'Links',
-    links: socials.map((link) => ({ ...link, external: true })),
-  },
-];
+   Laid out after a studio reference: a first row of Menu (the five
+   pages), Socials (Tom's channels, as the four squares that stood at the
+   top right of the pages) and Newsletter (a line and the sign-up
+   field across the right half), small grey headings over the links; then
+   the wordmark; and across the very foot, small, the copyright and the
+   legal links, either side of the floating bar's square: at the foot of
+   the page the floating navigation opens of itself as the footer's own
+   navigation (FloatingNav.astro, floatingnav.js), over the room the footer
+   keeps for it above that line. Pages without a footer — the architecture
+   index and the project pages — simply leave it out.
+
+   The sign-up has no mailing list behind it yet: its field checks the
+   address and the form holds still on submit (footer.js), saying nothing
+   it has not done, until a list is connected. */
+import { pages } from './site-links';
+import Arrow from './Arrow.astro';
+import SocialSquares from './SocialSquares.astro';
 const legal = [
   { label: 'Privacy', href: '/privacy' },
   { label: 'Terms of use', href: '/terms' },
@@ -55,20 +36,38 @@ const legal = [
 <div data-footer class="footer-wrap">
   <div class="footer-ground" aria-hidden="true"></div>
   <footer data-footer-inner class="site-footer">
+    <!-- The first row: Menu, Socials and Newsletter, on the page's columns
+         (the first, the second, the right half) -->
+    <div class="site-footer__intro">
+      <nav class="site-footer__group" aria-label="Menu">
+        <p class="site-footer__label"><span class="footer-reveal"><span class="footer-reveal__item">Menu</span></span></p>
+        <ul class="site-footer__links" role="list" data-dim-group>
+          {pages.map(({ href, label }) => (
+          <li><a data-split-hover="link" href={href} class="site-footer__a"><span class="footer-reveal"><span class="footer-reveal__item" data-split-hover="target">{label}</span></span></a></li>
+          ))}
+        </ul>
+      </nav>
+      <!-- Socials: a line, as the Newsletter has, then the four ways to Tom
+           that stood at the top right of every page (SocialSquares.astro),
+           rising in as one line of the footer, level with the sign-up field
+           and as tall as it (style.css) -->
+      <div class="site-footer__group is--socials">
+        <p class="site-footer__label"><span class="footer-reveal"><span class="footer-reveal__item">Socials</span></span></p>
+        <p class="site-footer__pitch"><span class="footer-reveal"><span class="footer-reveal__item">Follow Tom’s work online</span></span></p>
+        <div class="site-footer__socials footer-reveal"><div class="footer-reveal__item"><SocialSquares /></div></div>
+      </div>
+      <div class="site-footer__group is--newsletter">
+        <p class="site-footer__label"><span class="footer-reveal"><span class="footer-reveal__item">Newsletter</span></span></p>
+        <p class="site-footer__pitch" id="footer-newsletter-pitch"><span class="footer-reveal"><span class="footer-reveal__item">Subscribe to get updates on new projects and insights</span></span></p>
+        <form class="site-footer__signup" data-newsletter novalidate>
+          <label class="visually-hidden" for="footer-newsletter-email">Email address</label>
+          <input class="site-footer__email" id="footer-newsletter-email" type="email" name="email" placeholder="Email address" autocomplete="email" required aria-describedby="footer-newsletter-pitch">
+          <button class="site-footer__subscribe" type="submit">Subscribe<Arrow class="site-footer__arrow" shape="straight" /></button>
+        </form>
+      </div>
+    </div>
     <div class="site-footer__top">
       <a href="/" class="site-footer__logo" aria-label="Tomrowstudios, home"><span class="footer-reveal"><span class="footer-reveal__item">tomrowstudios<sup>©</sup></span></span></a>
-      <div class="site-footer__cols">
-        {columns.map(({ heading, links }) => (
-        <div class="site-footer__col">
-          <p class="site-footer__heading"><span class="footer-reveal"><span class="footer-reveal__item">{heading}</span></span></p>
-          <ul class="site-footer__list" role="list" data-dim-group>
-            {links.map((link) => (
-            <li><a data-split-hover="link" href={link.href} class="site-footer__a" {...(link.panel ? { 'data-panel-open': 'contact', 'data-barba-prevent': 'self' } : {})} {...(link.external ? { target: '_blank', rel: 'noopener' } : {})}><span class="footer-reveal"><span class="footer-reveal__item" data-split-hover="target">{link.label}</span></span></a></li>
-            ))}
-          </ul>
-        </div>
-        ))}
-      </div>
     </div>
     <!-- The foot: the copyright on the left, the legal links on the right,
          on the floating bar's line, either side of its square -->

@@ -11,7 +11,8 @@
    The menu: a set of separate modules standing just above the bar, close
    together, with no panel round them: the four parts of the practice as
    off-white cards, two by two, what each stands for small at the top
-   left, its name under it, a small diagonal arrow at the top right;
+   left, its name under it, a small diagonal arrow at the top right
+   (Arrow.astro, its corner shape, at the site's arrow's weight);
    under them one row of two: the Play Reel card, two thirds of the width, which grows into the
    reel's player when pressed (reel.js), and Contact, the last third, in
    the same off-white with the same arrow; and Home across the full
@@ -20,14 +21,16 @@
 
    The footer's form: at the foot of the page the menu opens of itself
    (floatingnav.js, from the footer's position), as the footer's own
-   navigation: the four parts of the practice alone (data-fnav-foot), the
-   rest of the modules left out, no backdrop over the page, and in the
+   navigation: the four parts of the practice and, across under them,
+   Contact (data-fnav-foot), the rest of the modules left out, no backdrop
+   over the page, and in the
    bar's square the studio's mark as the home link (data-fnav-home) where
    the close control would be. It drops back into the bar as the page
    leaves the foot.
 
-   The contact form: a white panel holding a short enquiry form (name,
-   company, email, the project) that grows up out of the bar at the foot
+   The contact form: a white panel in two blocks, Contact (the address and
+   Tom's channels) over Form (a short enquiry form: name, company, email,
+   the project), that grows up out of the bar at the foot
    of the screen. Opened from Contact, in one movement: the menu's modules
    sink back towards the bar while the form grows out of the bar's square
    under them, and its fields rise in; closing runs it back into the square
@@ -54,15 +57,28 @@
    footer, and takes the page's name and section from the container
    (data-nav-title, data-nav-section, BaseLayout.astro). Styles: "Floating
    navigation" in style.css. */
-import { pages, email } from './site-links';
+import { pages, email, socials } from './site-links';
 import { CONTACT_ENDPOINT } from './contact';
 import { REEL_SRC, REEL_FALLBACK_POSTER, REEL_POSTER_SRCSET, reelPoster, reelPreview, reelPreviewSmall } from './reel';
 import { urlFor } from '../sanity/image';
+import Arrow from './Arrow.astro';
 import BookIcon from './BookIcon.astro';
 import BrandMark from './BrandMark.astro';
+import MenuIcon from './MenuIcon.astro';
+import SocialMark from './SocialMark.astro';
 
-const tiles = ['/architecture', '/influence', '/shop', '/partner'].flatMap((href) => pages.filter((page) => page.href === href));
+// The four parts of the practice, in the navigation's order (site-links.ts)
+const tiles = pages.filter((page) => page.href !== '/');
 const home = pages.find((page) => page.href === '/')!;
+// The ways to Tom beside the reel, in the order the footer has them
+const socialLinks = (['youtube', 'instagram', 'linkedin'] as const).map((name) => socials.find((social) => social.icon === name)!);
+// Each page's drawing in the menu (MenuIcon.astro)
+const ICON: Record<string, 'partners' | 'influence' | 'shop' | 'architecture'> = {
+  '/partner': 'partners',
+  '/influence': 'influence',
+  '/shop': 'shop',
+  '/architecture': 'architecture',
+};
 // The reel's card: on production only once there is a reel (reel.ts). Its
 // still is cut to 16:9 here, so the card and the player's placeholder show
 // exactly the same picture as one grows into the other.
@@ -71,19 +87,15 @@ const reelStill = reelPoster || urlFor({ asset: { _id: REEL_FALLBACK_POSTER } })
 // The marquees' words, one strip each. Two identical halves of four, each
 // wider than the strip, so moving the pair by one half brings it back to
 // where it started.
-// The cards' arrow (the four parts of the practice, and Contact): an open
-// head whose arms run along the top and the right of a square, and a shaft
-// from its point most of the way to the opposite corner
-const ARROW = '<path d="M2.5 1.5H10.5V9.5" stroke="currentColor" stroke-width="1.25"/><path d="M10.5 1.5 2 10" stroke="currentColor" stroke-width="1.25"/>';
 const promos = [
   { key: 'book', label: 'Architectural Influence Book', href: '/book', contact: false },
   { key: 'contact', label: 'Contact Tom', href: '#contact', contact: true },
 ];
 // The contact form's single-line fields; the project's text follows them
-const fields: { name: string; label: string; type: 'text' | 'email'; autocomplete: 'name' | 'organization' | 'email'; required: boolean; half?: boolean }[] = [
-  { name: 'name', label: 'Name', type: 'text', autocomplete: 'name', required: true, half: true },
-  { name: 'company', label: 'Company', type: 'text', autocomplete: 'organization', required: false, half: true },
-  { name: 'email', label: 'Email address', type: 'email', autocomplete: 'email', required: true },
+const fields: { name: string; label: string; placeholder: string; type: 'text' | 'email'; autocomplete: 'name' | 'organization' | 'email'; required: boolean; half?: boolean }[] = [
+  { name: 'name', label: 'Name', placeholder: 'Your name', type: 'text', autocomplete: 'name', required: true, half: true },
+  { name: 'company', label: 'Company', placeholder: 'Your practice or studio', type: 'text', autocomplete: 'organization', required: false, half: true },
+  { name: 'email', label: 'Email address', placeholder: 'Your email', type: 'email', autocomplete: 'email', required: true },
 ];
 ---
 <div class="fnav-backdrop" data-fnav-backdrop aria-hidden="true"></div>
@@ -91,15 +103,17 @@ const fields: { name: string; label: string; type: 'text' | 'email'; autocomplet
 <div class:list={['fnav-menu', { 'has-reel': showReel }]} id="fnav-menu" data-fnav-menu aria-hidden="true" inert>
   <nav class="fnav-menu__nav" aria-label="Site menu">
     <!-- The four parts of the practice: off-white cards, what each stands
-         for small at the top left, its name large under it, a small
-         diagonal arrow at the top right -->
+         for small at the top left, its name large at the bottom left, and
+         at the top right its own small line drawing (MenuIcon.astro, ICON
+         below), or the diagonal arrow where a page has none
+         (Arrow.astro, shape="corner") -->
     <ul class="fnav-menu__tiles" role="list">
       {tiles.map(({ href, label, note }) => (
         <li class="fnav-menu__cell" data-fnav-reveal data-fnav-foot data-fnav-item={href}>
           <a href={href} class="fnav-tile is--card" data-fnav-link data-split-hover="link">
             <span class="fnav-tile__note">{note}</span>
             <span class="fnav-tile__title" data-split-hover="target">{label}</span>
-            <svg class="fnav-tile__arrow" viewBox="0 0 12 12" fill="none" aria-hidden="true" set:html={ARROW} />
+            {ICON[href] ? <MenuIcon name={ICON[href]} class="fnav-tile__arrow is--icon" /> : <Arrow class="fnav-tile__arrow" shape="corner" />}
           </a>
         </li>
       ))}
@@ -119,38 +133,80 @@ const fields: { name: string; label: string; type: 'text' | 'email'; autocomplet
       </button>
     </div>
     )}
-    <a href="#contact" class="fnav-menu__contact" data-fnav-reveal data-fnav-button data-fnav-contact-open data-barba-prevent="self" aria-haspopup="dialog" aria-controls="fnav-contact" data-split-hover="link">
-      <span class="fnav-menu__contact-label" data-split-hover="target">Contact</span>
-      <svg class="fnav-tile__arrow" viewBox="0 0 12 12" fill="none" aria-hidden="true" set:html={ARROW} />
-    </a>
+    <!-- Beside the reel, the four ways to Tom (site-links.ts), each a circle
+         in the cards' colour holding its mark, two by two; the email one
+         copies the address, as it does in the footer (social-copy.js), its
+         envelope opening -->
+    <div class="fnav-menu__socials" data-fnav-reveal>
+      <div class="fnav-menu__socials-grid">
+      {socialLinks.map(({ href, label, icon }) => (
+      <a class="fnav-social" href={href} target="_blank" rel="noopener" aria-label={label}><SocialMark name={icon} class="fnav-social__icon" /></a>
+      ))}
+      <button type="button" class="fnav-social is--email" data-copy-email={email} aria-label={`Copy the email address, ${email}`}>
+        <svg class="fnav-social__icon is--envelope" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path class="hero-nav__envelope-closed" d="M22 4.5H2V19.5H22V4.5Z" fill="currentColor"/>
+          <path class="hero-nav__envelope-open" d="M22 21V8L12 1.5L2 8V21H22Z" fill="currentColor"/>
+          <path class="hero-nav__envelope-flap" d="M2 4.5L12 12L22 4.5" stroke-width="2"/>
+        </svg>
+        <span class="visually-hidden" role="status" aria-live="polite" data-copy-status></span>
+      </button>
+      </div>
     </div>
-    <!-- Home, across the full width, under the reel and Contact Tom -->
-    <ul class="fnav-menu__tiles is--home" role="list">
-      <li class="fnav-menu__cell is--wide" data-fnav-reveal data-fnav-item={home.href}>
+    </div>
+    <!-- The foot: Home and Contact side by side, half and half, each a
+         single row on the middle line -->
+    <div class="fnav-menu__foot">
+      <div class="fnav-menu__cell is--wide" data-fnav-reveal data-fnav-item={home.href}>
         <a href={home.href} class="fnav-tile is--wide" data-fnav-link data-split-hover="link">
           <span class="fnav-tile__title" data-split-hover="target">{home.label}</span>
           <span class="fnav-tile__note">{home.note}</span>
         </a>
-      </li>
-    </ul>
+      </div>
+      <a href="#contact" class="fnav-menu__contact" data-fnav-reveal data-fnav-button data-fnav-contact-open data-barba-prevent="self" aria-haspopup="dialog" aria-controls="fnav-contact" data-split-hover="link">
+        <span class="fnav-menu__contact-label" data-split-hover="target">Contact</span>
+        <Arrow class="fnav-tile__arrow" shape="corner" />
+      </a>
+    </div>
   </nav>
 </div>
 
 <div class="fnav-contact" id="fnav-contact" data-fnav-contact role="dialog" aria-modal="true" aria-labelledby="fnav-contact-title" aria-hidden="true" inert>
   <div class="fnav-contact__inner" data-fnav-contact-inner data-lenis-prevent tabindex="-1">
-    <div class="fnav-contact__head" data-fnav-contact-reveal>
-      <h2 class="fnav-contact__title" id="fnav-contact-title">Get in touch</h2>
-      <button type="button" class="fnav-contact__close" data-fnav-contact-close aria-label="Close the contact form">
-        <svg viewBox="0 0 13 13" fill="none" aria-hidden="true"><path d="M0.354 11.667 11.667 0.354" stroke="currentColor"/><path d="M0.354 0.354 11.667 11.667" stroke="currentColor"/></svg>
-      </button>
-    </div>
+    <!-- Two blocks, one over the other: Contact (the address and Tom's
+         channels) and Form, each with its heading on top -->
+    <section class="fnav-contact__block">
+      <div class="fnav-contact__head" data-fnav-contact-reveal>
+        <h2 class="fnav-contact__title" id="fnav-contact-title">Contact</h2>
+        <button type="button" class="fnav-contact__close" data-fnav-contact-close aria-label="Close the contact form">
+          <svg viewBox="0 0 13 13" fill="none" aria-hidden="true"><path d="M0.354 11.667 11.667 0.354" stroke="currentColor"/><path d="M0.354 0.354 11.667 11.667" stroke="currentColor"/></svg>
+        </button>
+      </div>
+      <dl class="fnav-contact__details" data-fnav-contact-reveal>
+        <div class="fnav-contact__detail">
+          <dt>General</dt>
+          <dd><a class="fnav-contact__link" href={`mailto:${email}`}>{email}</a></dd>
+        </div>
+        <div class="fnav-contact__detail">
+          <dt>Social</dt>
+          <dd>
+            <ul class="fnav-contact__socials" role="list">
+              {socials.map(({ label, href }) => (
+              <li><a class="fnav-contact__link" href={href} target="_blank" rel="noopener">{label}</a></li>
+              ))}
+            </ul>
+          </dd>
+        </div>
+      </dl>
+    </section>
+    <section class="fnav-contact__block" aria-labelledby="fnav-contact-form-title">
+    <h2 class="fnav-contact__title" id="fnav-contact-form-title" data-fnav-contact-reveal>Form</h2>
     <p class="fnav-contact__lead" data-fnav-contact-reveal>Tell Tom about your project.</p>
     <form class="fnav-contact__form" data-enquiry-form data-endpoint={CONTACT_ENDPOINT} data-email={email} action={CONTACT_ENDPOINT || undefined} method="post" novalidate>
       <div class="fnav-contact__fields">
-        {fields.map(({ name, label, type, autocomplete, required, half }) => (
+        {fields.map(({ name, label, placeholder, type, autocomplete, required, half }) => (
         <div class:list={['fnav-field', { 'is--half': half }]} data-fnav-contact-reveal data-enquiry-field>
           <label class="fnav-field__label" for={`enquiry-${name}`}>{label}{required ? <span class="fnav-field__mark" aria-hidden="true"> *</span> : <span class="fnav-field__optional"> (optional)</span>}</label>
-          <input class="fnav-field__input" id={`enquiry-${name}`} name={name} type={type} autocomplete={autocomplete} maxlength="256" required={required} aria-describedby={`enquiry-${name}-error`} {...(type === 'email' ? { inputmode: 'email', autocapitalize: 'off', spellcheck: 'false' } : {})}>
+          <input class="fnav-field__input" id={`enquiry-${name}`} name={name} type={type} autocomplete={autocomplete} placeholder={placeholder} maxlength="256" required={required} aria-describedby={`enquiry-${name}-error`} {...(type === 'email' ? { inputmode: 'email', autocapitalize: 'off', spellcheck: 'false' } : {})}>
           <p class="fnav-field__error" id={`enquiry-${name}-error`}></p>
         </div>
         ))}
@@ -163,7 +219,7 @@ const fields: { name: string; label: string; type: 'text' | 'email'; autocomplet
       <div class="fnav-contact__actions" data-fnav-contact-reveal>
         <button type="submit" class="fnav-contact__submit" data-enquiry-submit>
           <span class="fnav-contact__submit-label" data-enquiry-label>Submit Enquiry</span>
-          <svg class="fnav-contact__submit-arrow" viewBox="0 0 12 12" fill="none" aria-hidden="true"><path d="M4 1.5 8.5 6 4 10.5" stroke="currentColor" stroke-width="1.25" stroke-linecap="square"/></svg>
+          <Arrow class="fnav-contact__submit-arrow" />
         </button>
         <div class="fnav-contact__status" data-enquiry-status role="status" aria-live="polite"></div>
       </div>
@@ -172,6 +228,7 @@ const fields: { name: string; label: string; type: 'text' | 'email'; autocomplet
       <p class="fnav-contact__done-title">Thank you.</p>
       <p class="fnav-contact__done-text">Your enquiry has been sent to Tom.</p>
     </div>
+    </section>
   </div>
   <div class="fnav-contact__background" data-fnav-contact-bg></div>
 </div>

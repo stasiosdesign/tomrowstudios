@@ -1,26 +1,30 @@
 // -----------------------------------------
-// PARALLAX IMAGE SLIDER (Smooothy) + HORIZONTAL SCROLL PROGRESS
+// THE ARCHITECTURE ROW (Smooothy) + ITS PROGRESS LINE
 // -----------------------------------------
 // The Architecture index does not scroll down — it is one screen that moves
-// sideways. Smooothy carries the drag and the easing; the wheel is read here,
-// a vertical wheel as sideways movement, which is the whole point of the
-// page. The card nearest the row's middle is marked is--active (shown in
-// colour, style.css). With `infinite` on (the Architecture page)
-// the row loops both ways: past the last project the first comes round
-// again, and the progress line fills over one whole cycle and starts again.
-// A bounded run (infinite off) stops at its ends, and its parallax is worked
-// out here rather than taken from Smooothy (see below).
+// sideways (architecture.astro; "Parallax slider" in style.css). The row
+// loops both ways: past the last project the first comes round again.
+//
+// Smooothy lays the cards out, loops them round, drifts each picture in its
+// frame and reads the drag; where the row is and how it moves is this
+// file's own (below, "The row's motion"). The card nearest the middle of
+// the screen is marked is--active and shown in colour; the progress line
+// over the floating bar fills once per cycle.
+//
+// Smooothy is loaded with the first row (lifecycle.js) rather than on every
+// page; if it cannot be had, a plain scrolling track stands in. Everything
+// set up here is taken down when the page is left.
 
-// Smooothy is used only here, so it is loaded with the first slider
-// (lifecycle.js) rather than on every page; if it cannot be had, the plain
-// scroll-snap track below stands in. The slider's frame loop and listeners
-// are taken down when the page is left.
 function initParallaxImageSlider() {
-  const roots = Array.from(document.querySelectorAll("[data-parallax-init]")).filter((root) => !root.__parallaxSlider);
+  const all = Array.from(document.querySelectorAll("[data-parallax-init]"));
+  // A row already built (before its page came in, transitions.js) is
+  // measured again now the page has landed
+  all.forEach((root) => { if (root.__parallaxSlider && root.__parallaxSlider.remeasure) root.__parallaxSlider.remeasure(); });
+  const roots = all.filter((root) => !root.__parallaxSlider);
   if (!roots.length) return;
   // The row is held unseen until the slider has measured itself and set
-  // each picture's drift: before that the cards sat at a wrong width and the
-  // pictures unshifted, then jumped into place (the clip on arrival)
+  // each picture's drift: before that the cards sat at a wrong width and
+  // the pictures unshifted, then jumped into place
   roots.forEach((root) => { root.__parallaxSlider = true; root.classList.add("is--pending"); });
   const show = () => roots.forEach((root) => root.classList.remove("is--pending"));
   setTimeout(show, 2500);
@@ -36,79 +40,82 @@ function initParallaxImageSlider() {
     });
 }
 
+// ---- The row's motion: how it feels ----
+// A mouse wheel's notches count a fraction of a card each, and the row
+// glides straight to the card they come to; a trackpad moves the row pixel
+// for pixel, the row easing after it, and gliding into place once it
+// stops; a drag holds it exactly under the hand, and on letting go it
+// glides on with the flick. The card it comes to rest on is the one
+// nearest where the input was taking it, or, if the input went at least
+// ROW_INTENT of a card from where it started, at least the next card that
+// way, so one notch or a short swipe moves on a project rather than
+// springing back. Every glide is a critically damped spring started at the
+// row's own speed, so it carries the movement on rather than jerking it.
+// It always comes to rest with a card exactly centred.
+const ROW_NOTCH = 0.24;      // cards counted for a wheel's notch
+const ROW_FOLLOW = 14;       // how closely the row eases after a trackpad (per second)
+const ROW_IDLE = 140;        // ms without trackpad input before it glides into place
+const ROW_INTENT = 0.12;     // cards: past this from the start, it moves on a card
+const ROW_MOMENTUM = 0.3;    // s: how far a released drag carries, at its speed
+const ROW_GLIDE = 8;         // the glide's spring rate (per second), from a stop
+const ROW_GLIDE_MIN = 6;     // bounds on the rate when it carries a movement on
+const ROW_GLIDE_MAX = 14;
+
 function buildParallaxSlider(root) {
   const wrapper = root.querySelector("[data-parallax-slider]");
   if (!wrapper) return;
 
-  const amountAttr = wrapper.getAttribute("data-parallax-amount");
-  const amount = amountAttr !== null ? parseFloat(amountAttr) : 12;
-
-  const snap = wrapper.getAttribute("data-parallax-snap") !== "false";
-  const infinite = wrapper.getAttribute("data-parallax-infinite") === "true";
-
-  const lerpAttr = wrapper.getAttribute("data-parallax-lerp");
-  const lerp = lerpAttr !== null ? parseFloat(lerpAttr) : 0.3;
-
-  const maxOffset = 25;
-  // The projects (the row may hold copies of them, below)
-  const count = wrapper.children.length;
-  // Where a looping row stands in its cycle, 0 to 1, from its position in
-  // cards (negative as it moves forward)
-  const cycleAt = (position) => (((-position % count) + count) % count) / count;
+  // How far each picture drifts in its frame, per card from the start
+  const amount = parseFloat(wrapper.getAttribute("data-parallax-amount")) || 10;
+  const maxDrift = 25;
 
   const prevButton = root.querySelector("[data-parallax-prev]");
   const nextButton = root.querySelector("[data-parallax-next]");
   const progressBar = root.querySelector("[data-parallax-progress]");
   const progressWrap = root.querySelector("[data-parallax-progress-wrap]");
-  const counter = root.querySelector("[data-parallax-counter]");
+  // The projects (the row may hold copies of them, below)
+  const count = wrapper.children.length;
 
   // Opening a project should still be a click, not the tail of a drag
   guardSlideClicks(wrapper);
   // The track is moved by transforms alone: a card brought into view by
   // focus would otherwise scroll the clipped track itself and shift the
-  // whole row off the slider's reckoning (and off the middle card)
-  const unscroll = () => { if (!wrapper.classList.contains("is--fallback") && wrapper.scrollLeft) wrapper.scrollLeft = 0; };
-  wrapper.addEventListener("scroll", unscroll, { passive: true });
+  // whole row off the slider's reckoning
+  wrapper.addEventListener("scroll", () => {
+    if (!wrapper.classList.contains("is--fallback") && wrapper.scrollLeft) wrapper.scrollLeft = 0;
+  }, { passive: true });
 
   if (typeof window.Smooothy !== "function") {
-    // The CDN did not answer. Fall back to a plain scroll-snap track so the
-    // projects are still reachable rather than stranded off screen.
-    root.__parallaxSlider = initFallbackTrack(wrapper, { prevButton, nextButton, progressBar, progressWrap, counter, count });
+    root.__parallaxSlider = initFallbackTrack(wrapper, { prevButton, nextButton, progressBar });
     return;
   }
 
-  // Looping, Smooothy keeps half the row's cards on either side of the
-  // current one, so the row has to be long enough to run past both edges
-  // of the screen with a card to spare: the projects are repeated until it
-  // is. The copies are for the eye alone (hidden from screen readers, out
-  // of the tab order); a cycle is still the projects once round.
-  if (infinite) {
-    const originals = [...wrapper.children];
-    const card = originals[0] ? originals[0].offsetWidth : 0;
-    const needed = 2 * (wrapper.clientWidth + card);
-    // At most four rounds of copies, should the cards measure small early
-    while (card && wrapper.children.length * card < needed && wrapper.children.length < originals.length * 5) {
-      originals.forEach((slide) => {
-        const copy = slide.cloneNode(true);
-        copy.setAttribute("aria-hidden", "true");
-        copy.querySelectorAll("a, button").forEach((el) => { el.tabIndex = -1; });
-        wrapper.appendChild(copy);
-      });
-    }
+  // Smooothy keeps half the row's cards either side of the current one, so
+  // the row has to run past both edges of the screen with a card to spare:
+  // the projects are repeated until it does. The copies are for the eye
+  // alone (hidden from screen readers, out of the tab order).
+  const originals = [...wrapper.children];
+  const card = originals[0] ? originals[0].offsetWidth : 0;
+  const needed = 2 * (wrapper.clientWidth + card);
+  while (card && wrapper.children.length * card < needed && wrapper.children.length < originals.length * 5) {
+    originals.forEach((slide) => {
+      const copy = slide.cloneNode(true);
+      copy.setAttribute("aria-hidden", "true");
+      copy.querySelectorAll("a, button").forEach((el) => { el.tabIndex = -1; });
+      wrapper.appendChild(copy);
+    });
   }
-  // One parallax layer per slide
   const slides = [...wrapper.children];
-  const parallaxItems = slides.map((slide) => slide.querySelector("[data-parallax-inner]"));
-  // The slide nearest the row's middle, shown in colour (is--active)
+  const drifts = slides.map((slide) => slide.querySelector("[data-parallax-inner]"));
   let activeSlide = null;
   // The track's left padding, where the first slide starts (remeasure)
   let inset = 0;
 
-  // Looping, a second line over the progress line, unseen, that holds the
-  // line as it was for a moment as the loop comes round (onUpdate)
+  // A second line over the progress line, unseen, that holds the line as
+  // it was for a moment as the loop comes round
   let lastProgress = 0;
   let progressGhost = null;
-  if (infinite && progressBar) {
+  if (progressBar) {
     progressGhost = progressBar.cloneNode(false);
     progressGhost.removeAttribute("data-parallax-progress");
     progressGhost.classList.add("is--ghost");
@@ -118,53 +125,23 @@ function buildParallaxSlider(root) {
   }
 
   const slider = new Smooothy(wrapper, {
-    infinite,
-    snap,
-    // Smooothy closes on its target at a rate of 1 / lerpFactor per second
-    // (an exponential damp), so the lower the factor the tighter the row
-    // follows the hand: at 0.2 it trailed by a fifth of a second, which
-    // read as lag, worst on a reversal
-    lerpFactor: lerp,
-    // The wheel is read here rather than by Smooothy (forwardWheel, below):
-    // its own reader took over the track alone, at a different rate from
-    // the rest of the page, and kept queued distance through a reversal
+    infinite: true,
+    snap: false,
+    // The wheel is read below, not by Smooothy
     scrollInput: false,
-    // Stop with the last card flush against the right edge. Smooothy's
-    // default stops one card-width from the end of the track, which on a
-    // run this short leaves half a screen of black after the last project.
-    // wrapperWidth is clientWidth, so it counts the track's left inset —
-    // taking it off twice leaves the run inset by the same amount at both
-    // ends, which is what puts the first card on the page's own grid line.
-    // (Looping, Smooothy places the cards round the current one itself.)
-    ...(infinite ? {} : {
-      setOffset: (viewport) => {
-        const inset = parseFloat(getComputedStyle(wrapper).paddingLeft) || 0;
-        return (viewport.wrapperWidth - inset * 2) || viewport.itemWidth;
-      },
-    }),
     onUpdate: (core) => {
-      // Looping, Smooothy hands back each slide's own parallax value (it
-      // moves the slides round itself, so only it knows where each one
-      // stands). On a bounded run every slide gets the same number, which
-      // would shove every image the same way: there the offset is worked
-      // out from where each card actually sits.
+      // Smooothy hands back each slide's place in cards from the track's
+      // start: its middle on the screen, its picture's drift, and the slide
+      // nearest the middle of the screen (in colour)
       const width = core.viewport.itemWidth || 0;
-      const track = core.current * width;
-      const half = (core.viewport.wrapperWidth || 1) / 2;
+      const half = (core.viewport.wrapperWidth || 0) / 2;
       let nearest = null;
       let nearestDistance = Infinity;
-      parallaxItems.forEach((item, i) => {
-        // Where the slide's middle stands in the row: looping, Smooothy's
-        // value is the slide's place in cards from the track's start
-        const centre = infinite
-          ? inset + ((core.parallaxValues[i] || 0) + 0.5) * width
-          : (core.itemOffsets[i] || 0) + track + (core.itemWidths[i] || 0) / 2;
-        const distance = Math.abs(centre - half);
+      drifts.forEach((drift, i) => {
+        const place = core.parallaxValues[i] || 0;
+        const distance = Math.abs(inset + (place + 0.5) * width - half);
         if (distance < nearestDistance) { nearestDistance = distance; nearest = slides[i]; }
-        if (!item) return;
-        const shift = infinite ? (core.parallaxValues[i] || 0) * amount : -((centre - half) / (half * 2)) * amount;
-        const offset = gsap.utils.clamp(-maxOffset, maxOffset, shift);
-        item.style.transform = `translateX(${offset}%)`;
+        if (drift) drift.style.transform = `translateX(${gsap.utils.clamp(-maxDrift, maxDrift, place * amount)}%)`;
       });
       if (nearest !== activeSlide) {
         if (activeSlide) activeSlide.classList.remove("is--active");
@@ -172,80 +149,186 @@ function buildParallaxSlider(root) {
         activeSlide = nearest;
       }
 
-      // Looping, how far through the current cycle (from where the row is,
-      // not where it is going, so the line moves with the cards), back to
-      // nothing as the first project comes round again
-      const progress = infinite ? cycleAt(core.current) : core.progress;
-      if (progressBar) {
-        // Round the loop's end the line starts again; rather than snap from
-        // full to nothing (or back), the line it was fades off over the one
-        // it now is, which comes in under it
-        if (infinite && progressGhost && Math.abs(progress - lastProgress) > 0.5) {
-          gsap.fromTo(progressGhost, { opacity: 1, scaleX: lastProgress }, { opacity: 0, duration: 0.5, ease: "power2.out", overwrite: true });
-          gsap.fromTo(progressBar, { opacity: 0 }, { opacity: 1, duration: 0.5, ease: "power2.out", overwrite: true });
-        }
-        lastProgress = progress;
-        progressBar.style.transform = `scale3d(${progress}, 1, 1)`;
+      // How far through the cycle the row is (where it is, not where it is
+      // going, so the line moves with the cards); round the loop's end, the
+      // line it was fades off over the one it now is
+      if (!progressBar) return;
+      const progress = (((-core.current % count) + count) % count) / count;
+      if (progressGhost && Math.abs(progress - lastProgress) > 0.5) {
+        gsap.fromTo(progressGhost, { opacity: 1, scaleX: lastProgress }, { opacity: 0, duration: 0.5, ease: "power2.out", overwrite: true });
+        gsap.fromTo(progressBar, { opacity: 0 }, { opacity: 1, duration: 0.5, ease: "power2.out", overwrite: true });
       }
-
-      // Position is read off the progress, not off the slide index: the run
-      // stops with the last card against the right edge rather than centred,
-      // so the index alone never reaches the final slide.
-      if (counter) {
-        const at = infinite ? Math.round(progress * count) % count + 1 : Math.round(progress * (count - 1)) + 1;
-        const label = String(at).padStart(2, "0");
-        if (counter.textContent !== label) counter.textContent = label;
-      }
-
-      // The run has ends, so say so rather than letting a dead arrow sit lit
-      if (!infinite) {
-        if (prevButton) prevButton.classList.toggle("is--disabled", progress <= 0.001);
-        if (nextButton) nextButton.classList.toggle("is--disabled", progress >= 0.999);
-      }
-    }
+      lastProgress = progress;
+      progressBar.style.transform = `scale3d(${progress}, 1, 1)`;
+    },
   });
 
-  // Free scrolling can leave the track between two cards, so an arrow steps
-  // from the nearest whole card rather than from wherever it came to rest
-  // from the nearest whole card rather than from wherever it came to rest;
-  // looping, on round past either end
-  const stepBy = (direction) => {
-    const from = Math.round(-slider.current);
-    if (infinite) slider.target = -(from + direction);
-    else slider.goToIndex(gsap.utils.clamp(0, count - 1, from + direction));
+  // ---- The row's motion ----
+  // x: where the row is, in cards (Smooothy's `current`, falling as the row
+  // goes forward); v: how fast, in cards a second. Smooothy is told where
+  // the row is every frame (its own easing has nothing to do). Slide i
+  // stands x + i cards from the track's start, so the places that centre a
+  // card are one fixed offset from the whole numbers.
+  const centreOffset = () => ((slider.viewport.wrapperWidth || 0) / 2 - inset) / (slider.viewport.itemWidth || 1) - 0.5;
+  const nearestCentred = (p) => {
+    const offset = centreOffset();
+    return offset + Math.round(p - offset);
+  };
+  const same = (a, b) => Math.abs(a - b) < 0.01;
+
+  let x = 0;
+  let v = 0;
+  let mode = "rest"; // rest | wheel | drag | glide
+  let aim = 0;       // where the wheel has sent the row
+  let glide = null;  // the spring: { to, a, b, rate, t0 }
+  let from = null;   // the centred card the present gesture started from
+  let gesture = null; // notch | wheel | drag, while one is under way
+  let lastWheel = 0;
+  let lastTick = 0;
+  const trail = [];  // where the row has been over the last moments
+
+  // The card a gesture comes to rest on: the centred one nearest where the
+  // input was taking the row; or, should that be the card it started from
+  // though the input went on past ROW_INTENT, the next card that way
+  const restingCard = (start, to) => {
+    const nearest = nearestCentred(to);
+    if (same(nearest, start) && Math.abs(to - start) > ROW_INTENT) return start + Math.sign(to - start);
+    return nearest;
+  };
+  // The card the row is on now, or heading for
+  const currentCard = () => (mode === "glide" ? glide.to : nearestCentred(x));
+
+  // A glide from where the row is, at its speed, to `to`, from time t0:
+  //   x(t) = to + (a + b t) e^(-rate t), a = x0 - to, b = v0 + rate a
+  // Already moving that way, the rate is the one at which its own speed
+  // carries it exactly there (rate = v / distance, so b = 0): a plain
+  // slowing down, within bounds; from a stop, the gentle ROW_GLIDE
+  const glideTo = (to, t0 = performance.now()) => {
+    const a = x - to;
+    const rate = Math.abs(v) > 0.2 && -a * v > 0 ? gsap.utils.clamp(ROW_GLIDE_MIN, ROW_GLIDE_MAX, v / -a) : ROW_GLIDE;
+    glide = { to, a, b: v + rate * a, rate, t0 };
+    mode = "glide";
   };
 
-  if (prevButton) {
-    prevButton.classList.toggle("is--disabled", !infinite);
-    prevButton.addEventListener("click", () => stepBy(-1));
-  }
+  // The arrows and keys: a card on from the one the row is on or heading for
+  const stepBy = (direction) => {
+    gesture = null;
+    glideTo(currentCard() - direction);
+  };
+  if (prevButton) prevButton.addEventListener("click", () => stepBy(-1));
   if (nextButton) nextButton.addEventListener("click", () => stepBy(1));
 
-  // The bar doubles as a scrubber: click along it to jump to that project
+  // The progress line doubles as a scrubber: pressed, the row glides to
+  // that project in the cycle it is in now
   if (progressWrap) {
     progressWrap.addEventListener("click", (event) => {
       const rect = progressWrap.getBoundingClientRect();
       const ratio = gsap.utils.clamp(0, 1, (event.clientX - rect.left) / rect.width);
-      if (!infinite) return slider.goToIndex(Math.round(ratio * (count - 1)));
-      // Looping: that project in the cycle the row is in now, so it goes
-      // there directly rather than running back through every lap
-      const lap = Math.floor(-slider.current / count) * count;
-      slider.target = -(lap + Math.min(count - 1, Math.round(ratio * count)));
+      const lap = Math.floor(-x / count) * count;
+      gesture = null;
+      glideTo(nearestCentred(-(lap + Math.min(count - 1, Math.round(ratio * count)))));
     });
   }
 
+  // The wheel, anywhere on the page, vertical read as sideways.
+  //   - A mouse wheel's notch (a whole number of the browser's 120, or a
+  //     line or page step) counts ROW_NOTCH of a card, and the row glides
+  //     straight to the card the run of notches so far comes to: one
+  //     movement, never an ease towards the notch and then a second one
+  //     into place. The first notch moves on a card; after it, about every
+  //     fourth. A notch the other way starts the count again from the card
+  //     the row is on or heading for.
+  //   - A trackpad's flow moves the row pixel for pixel, the row easing
+  //     after it; once it stops, the row glides into place. Turning back
+  //     drops what the row still had to travel the old way.
+  const isNotch = (event) => {
+    if (event.deltaMode !== 0) return true;
+    const notch = event.wheelDeltaY || event.wheelDeltaX || 0;
+    return Math.abs(notch) >= 120 && notch % 120 === 0;
+  };
+  const onWheel = (event) => {
+    event.preventDefault();
+    if (slider.isDragging) return;
+    const delta = Math.abs(event.deltaY) > Math.abs(event.deltaX) ? event.deltaY : event.deltaX;
+    if (!delta) return;
+    unpoint();
+    if (isNotch(event)) {
+      const move = -Math.sign(delta) * ROW_NOTCH;
+      if (gesture !== "notch" || move * (aim - from) < 0) {
+        from = currentCard();
+        aim = from;
+        gesture = "notch";
+      }
+      aim += move;
+      const to = restingCard(from, aim);
+      if (mode !== "glide" || !same(to, glide.to)) glideTo(to);
+      return;
+    }
+    const move = -delta / (slider.viewport.itemWidth || 1);
+    if (mode !== "wheel") {
+      from = currentCard();
+      aim = mode === "glide" && move * (glide.to - x) > 0 ? glide.to : x;
+    }
+    if (move * (aim - x) < 0) aim = x;
+    aim += move;
+    mode = "wheel";
+    gesture = "wheel";
+    lastWheel = performance.now();
+  };
+  window.addEventListener("wheel", onWheel, { passive: false });
+  onPageLeave(() => window.removeEventListener("wheel", onWheel));
+
+  // The arrow keys step a card either way (not while typing, or with the
+  // menu or the contact form open)
+  const onKey = (event) => {
+    if (event.defaultPrevented || event.altKey || event.ctrlKey || event.metaKey) return;
+    if (event.key !== "ArrowLeft" && event.key !== "ArrowRight") return;
+    if (event.target.closest && event.target.closest("input, textarea, select, [contenteditable]")) return;
+    const html = document.documentElement.classList;
+    if (html.contains("is--fnav-open") || html.contains("is--fnav-contact")) return;
+    event.preventDefault();
+    unpoint();
+    stepBy(event.key === "ArrowRight" ? 1 : -1);
+  };
+  document.addEventListener("keydown", onKey);
+  onPageLeave(() => document.removeEventListener("keydown", onKey));
+
+  // The pointer's own colour (style.css, is--pointing): a card takes the
+  // colour from the middle one only once the mouse is actually moved over
+  // it, not because the row has carried it under a resting pointer; any
+  // other way of moving the row hands the colour back to the middle card
+  const point = (event) => {
+    if (event.pointerType === "mouse" && (event.movementX || event.movementY)) wrapper.classList.add("is--pointing");
+  };
+  const unpoint = () => wrapper.classList.remove("is--pointing");
+  wrapper.addEventListener("pointermove", point, { passive: true });
+  wrapper.addEventListener("pointerleave", unpoint);
+  wrapper.addEventListener("pointerdown", unpoint);
+
   // Smooothy measures the track the moment it is built, which on this page
-  // is before the fluid rem scale and the page transition have settled — it
-  // came out with a 17px wrapper and cards a third of their real width, so
-  // one arrow press moved a third of a card. Re-measure once the layout is
-  // real, and again whenever the window changes, which Smooothy never
-  // watches on its own.
-  // A drag moves the row exactly as far as the hand (Smooothy counts it in
-  // cards per pixel, so that follows the card's width)
+  // is before the fluid rem scale and the page transition have settled.
+  // Re-measure once the layout is real, whenever the window changes, and
+  // once the page has landed (initParallaxImageSlider, run again then). A
+  // drag moves the row exactly as far as the hand (Smooothy counts it in
+  // cards per pixel). At rest the row is put straight on its centred card
+  // for the new measure; gliding, it is sent there.
+  //
+  // Smooothy reads a card's width off the screen (getBoundingClientRect)
+  // but the track's off the layout (clientWidth). Arriving by a page
+  // transition, the page is built while it is still carried in at a
+  // smaller size (transitions.js, pushed back in depth), so the cards came
+  // out a fifth too narrow against the track: the row stood off centre,
+  // and stayed so. The card's width is put back to its layout size by the
+  // page's present scale.
   const remeasure = () => {
     slider.resize();
+    const scale = wrapper.getBoundingClientRect().width / (wrapper.offsetWidth || 1);
+    if (scale > 0 && Math.abs(scale - 1) > 0.001) slider.viewport.itemWidth /= scale;
     inset = parseFloat(getComputedStyle(wrapper).paddingLeft) || 0;
     slider.config.dragSensitivity = 1 / (slider.viewport.itemWidth || 1);
+    if (mode === "rest") x = nearestCentred(x);
+    else if (mode === "glide") glideTo(nearestCentred(glide.to));
+    slider.current = slider.target = x;
     slider.update();
   };
   requestAnimationFrame(() => requestAnimationFrame(remeasure));
@@ -256,58 +339,63 @@ function buildParallaxSlider(root) {
   // transition, so take one more reading after it has landed
   setTimeout(remeasure, 400);
 
-  // A wheel anywhere on the page walks the row, over the cards or not, at
-  // one rate: a pixel of wheel is a little over a pixel of row, vertical
-  // read as sideways. Turning back drops whatever distance the row still
-  // had to travel the old way, so it turns at once rather than first
-  // running out the old gesture.
-  const forwardWheel = (event) => {
-    event.preventDefault();
-    if (slider.isDragging) return;
-    const unit = event.deltaMode === 1 ? 33 : event.deltaMode === 2 ? window.innerHeight : 1;
-    const delta = (Math.abs(event.deltaY) > Math.abs(event.deltaX) ? event.deltaY : event.deltaX) * unit;
-    const width = slider.viewport.itemWidth || 1;
-    const step = -(delta * 1.2) / width;
-    if (step * (slider.target - slider.current) < 0) slider.target = slider.current;
-    const target = slider.target + step;
-    slider.target = infinite ? target : gsap.utils.clamp(slider.maxScroll, 0, target);
-  };
-  window.addEventListener('wheel', forwardWheel, { passive: false });
-  onPageLeave(() => window.removeEventListener('wheel', forwardWheel));
-
-  // Let go of a drag mid-swing and the row carries on a little, as far as
-  // the hand was moving over its last tenth of a second (Smooothy stops
-  // dead where the drag ends)
-  let swing = [];
-  const trackSwing = (event) => {
-    if (!slider.isDragging) { swing = []; return; }
+  // One frame. Held, the row is where the hand has put it (Smooothy reads
+  // the drag into its target); let go, it glides on from its speed. After
+  // the wheel, it eases towards where the wheel has sent it, and glides
+  // into place once the wheel has stopped. Gliding, it is where the spring
+  // has it. Then Smooothy draws it, and its speed is read from its last
+  // few moments.
+  const tick = () => {
     const now = performance.now();
-    swing.push({ x: event.clientX, t: now });
-    while (swing.length > 2 && now - swing[0].t > 100) swing.shift();
-  };
-  const releaseSwing = () => {
-    if (slider.isDragging && swing.length > 1) {
-      const first = swing[0];
-      const last = swing[swing.length - 1];
-      const velocity = (last.x - first.x) / Math.max(16, last.t - first.t);
-      if (performance.now() - last.t < 80) {
-        const target = slider.target + (velocity * 160) / (slider.viewport.itemWidth || 1);
-        slider.target = infinite ? target : gsap.utils.clamp(slider.maxScroll, 0, target);
+    const previous = lastTick || now;
+    const dt = Math.min(0.05, (now - previous) / 1000);
+    lastTick = now;
+
+    if (slider.isDragging) {
+      if (mode !== "drag") from = currentCard();
+      mode = "drag";
+      gesture = "drag";
+      glide = null;
+      x = slider.target;
+    } else if (mode === "drag") {
+      glideTo(restingCard(from, x + v * ROW_MOMENTUM), previous);
+    }
+
+    if (mode === "wheel") {
+      x += (aim - x) * (1 - Math.exp(-ROW_FOLLOW * dt));
+      if (now - lastWheel > ROW_IDLE) glideTo(restingCard(from, aim), now);
+    }
+
+    if (mode === "glide") {
+      const t = Math.max(0, (now - glide.t0) / 1000);
+      const { to, a, b, rate } = glide;
+      const decay = Math.exp(-rate * t);
+      x = to + (a + b * t) * decay;
+      v = (b - rate * (a + b * t)) * decay;
+      // Within a fraction of a pixel and all but still: there
+      if (Math.abs(x - to) < 0.0015 && Math.abs(v) < 0.02) {
+        x = to;
+        v = 0;
+        glide = null;
+        from = null;
+        gesture = null;
+        mode = "rest";
       }
     }
-    swing = [];
-  };
-  window.addEventListener("pointermove", trackSwing, { passive: true });
-  window.addEventListener("pointerup", releaseSwing);
-  onPageLeave(() => {
-    window.removeEventListener("pointermove", trackSwing);
-    window.removeEventListener("pointerup", releaseSwing);
-  });
 
-  const tick = () => slider.update();
+    slider.current = slider.target = x;
+    slider.update();
+
+    trail.push([now, x]);
+    while (trail.length > 2 && now - trail[0][0] > 60) trail.shift();
+    if (mode === "drag" || mode === "wheel") {
+      const [then, was] = trail[0];
+      v = now > then ? (x - was) / ((now - then) / 1000) : 0;
+    } else if (mode === "rest") v = 0;
+  };
   gsap.ticker.add(tick);
 
-  root.__parallaxSlider = { slider, tick, remeasure };
+  root.__parallaxSlider = { slider, remeasure };
   onPageLeave(() => {
     gsap.ticker.remove(tick);
     window.removeEventListener("resize", remeasure);
@@ -320,11 +408,9 @@ function buildParallaxSlider(root) {
 // happens to finish over a card must not open it
 function guardSlideClicks(wrapper) {
   let start = null;
-
   wrapper.addEventListener("pointerdown", (event) => {
     start = { x: event.clientX, y: event.clientY };
   });
-
   wrapper.addEventListener("click", (event) => {
     // A keyboard activation never sets a start point, and must open the link
     if (!start) return;
@@ -335,45 +421,36 @@ function guardSlideClicks(wrapper) {
       event.stopPropagation();
     }
   }, true);
-
   wrapper.addEventListener("dragstart", (event) => event.preventDefault());
 }
 
-// Smooothy unavailable: native horizontal scrolling, same controls
+// Smooothy unavailable: native horizontal scrolling, the same controls
 function initFallbackTrack(wrapper, ui) {
   wrapper.classList.add("is--fallback");
-
   const step = () => {
     const first = wrapper.children[0];
     return first ? first.getBoundingClientRect().width : wrapper.clientWidth * 0.5;
   };
-
   const sync = () => {
     const max = wrapper.scrollWidth - wrapper.clientWidth;
     const ratio = max > 0 ? wrapper.scrollLeft / max : 0;
     if (ui.progressBar) ui.progressBar.style.transform = `scale3d(${ratio}, 1, 1)`;
-    const index = Math.round(ratio * (ui.count - 1));
-    if (ui.counter) ui.counter.textContent = String(index + 1).padStart(2, "0");
     if (ui.prevButton) ui.prevButton.classList.toggle("is--disabled", wrapper.scrollLeft <= 1);
     if (ui.nextButton) ui.nextButton.classList.toggle("is--disabled", wrapper.scrollLeft >= max - 1);
   };
-
   wrapper.addEventListener("scroll", sync, { passive: true });
   if (ui.prevButton) ui.prevButton.addEventListener("click", () => wrapper.scrollBy({ left: -step(), behavior: "smooth" }));
   if (ui.nextButton) ui.nextButton.addEventListener("click", () => wrapper.scrollBy({ left: step(), behavior: "smooth" }));
-
   // A vertical wheel still has to read as sideways movement
   wrapper.addEventListener("wheel", (event) => {
     if (Math.abs(event.deltaY) <= Math.abs(event.deltaX)) return;
     event.preventDefault();
     wrapper.scrollLeft += event.deltaY;
   }, { passive: false });
-
   sync();
   return { fallback: true };
 }
 
-// Initialize Parallax Image Slider (Smooothy)
 document.addEventListener("DOMContentLoaded", () => {
   initParallaxImageSlider();
 });

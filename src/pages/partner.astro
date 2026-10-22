@@ -3,6 +3,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 import SiteNav from '../components/SiteNav.astro';
 import SiteFooter from '../components/SiteFooter.astro';
 import ContactPanel from '../components/ContactPanel.astro';
+import Arrow from '../components/Arrow.astro';
 import Button from '../components/Button.astro';
 import ServiceCards from '../components/ServiceCards.astro';
 import CaseStudyPanel from '../components/CaseStudyPanel.astro';
@@ -54,7 +55,7 @@ const services = [
   { name: 'Reporting', text: 'Turning what a channel did into something a team can actually act on next quarter.' },
 ];
 ---
-<BaseLayout title="Partners — Tomrowstudios" namespace="partner" pageName="Partners" pageDoc="partnersPage" navTitle="Partner">
+<BaseLayout title="Partners — Tomrowstudios" namespace="partner" pageName="Partners" pageDoc="partnersPage" navTitle="Partners">
 <!-- The page itself, which shrinks into the footer as the footer arrives (footer.js) -->
 <div class="page-surface" data-page-surface>
 <SiteNav />
@@ -105,11 +106,11 @@ const services = [
       </div>
       <div class="swiper-navigation">
         <button data-swiper-prev class="swiper-navigation__button">
-          <svg xmlns="http://www.w3.org/2000/svg" width="100%" viewBox="0 0 24 24" fill="none" class="swiper-navigation__button-arorw is--prev"><path d="M14 19L21 12L14 5" stroke="currentColor" stroke-miterlimit="10" stroke-width="2"></path><path d="M21 12H2" stroke="currentColor" stroke-miterlimit="10" stroke-width="2"></path></svg>
+          <Arrow class="swiper-navigation__button-arorw is--prev" />
         </button>
         <div class="swiper-pagination"></div>
         <button data-swiper-next class="swiper-navigation__button">
-          <svg xmlns="http://www.w3.org/2000/svg" width="100%" viewBox="0 0 24 24" fill="none" class="swiper-navigation__button-arorw"><path d="M14 19L21 12L14 5" stroke="currentColor" stroke-miterlimit="10" stroke-width="2"></path><path d="M21 12H2" stroke="currentColor" stroke-miterlimit="10" stroke-width="2"></path></svg>
+          <Arrow class="swiper-navigation__button-arorw" />
         </button>
       </div>
     </div>
@@ -356,7 +357,7 @@ const services = [
             <div data-validate class="form-field-group">
               <label for="first-name" class="form-label">First name <span class="form-required">*</span></label>
               <div class="form-field">
-                <input class="form-input" id="first-name" name="first-name" type="text" placeholder="Tom" maxlength="256" min="2" required>
+                <input class="form-input" id="first-name" name="first-name" type="text" placeholder="Your first name" maxlength="256" min="2" required>
                 <div class="form-field-icon is--success"><svg xmlns="http://www.w3.org/2000/svg" width="100%" viewBox="0 0 24 24" fill="none"><path d="M11.25 14.25L9 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path><path d="M15 10.5L11.25 14.25" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path><path d="M3 12C3 16.9706 7.02943 21 12 21C16.9706 21 21 16.9706 21 12C21 7.02943 16.9706 3 12 3C7.02943 3 3 7.02943 3 12Z" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"></path></svg></div>
                 <div class="form-field-icon is--error"><svg xmlns="http://www.w3.org/2000/svg" width="100%" viewBox="0 0 24 24" fill="none"><path opacity="0.1" d="M12 3C16.971 3 21 7.029 21 12C21 16.971 16.971 21 12 21C7.029 21 3 16.971 3 12C3 7.029 7.029 3 12 3Z" fill="currentColor" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path><path d="M12 3C16.971 3 21 7.029 21 12C21 16.971 16.971 21 12 21C7.029 21 3 16.971 3 12C3 7.029 7.029 3 12 3Z" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"></path><path d="M12 12.5V7.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path><path d="M11.996 14.5C11.444 14.5 10.996 14.948 11 15.5C11 16.052 11.448 16.5 12 16.5C12.552 16.5 13 16.052 13 15.5C13 14.948 12.552 14.5 11.996 14.5Z" fill="currentColor"></path></svg></div>
               </div>
@@ -364,7 +365,7 @@ const services = [
             <div data-validate class="form-field-group">
               <label for="last-name" class="form-label">Last name <span class="form-required">*</span></label>
               <div class="form-field">
-                <input class="form-input" id="last-name" name="last-name" type="text" placeholder="Rowntree" maxlength="256" min="2" required>
+                <input class="form-input" id="last-name" name="last-name" type="text" placeholder="Your last name" maxlength="256" min="2" required>
                 <div class="form-field-icon is--success"><svg xmlns="http://www.w3.org/2000/svg" width="100%" viewBox="0 0 24 24" fill="none"><path d="M11.25 14.25L9 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path><path d="M15 10.5L11.25 14.25" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path><path d="M3 12C3 16.9706 7.02943 21 12 21C16.9706 21 21 16.9706 21 12C21 7.02943 16.9706 3 12 3C7.02943 3 3 7.02943 3 12Z" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"></path></svg></div>
                 <div class="form-field-icon is--error"><svg xmlns="http://www.w3.org/2000/svg" width="100%" viewBox="0 0 24 24" fill="none"><path opacity="0.1" d="M12 3C16.971 3 21 7.029 21 12C21 16.971 16.971 21 12 21C7.029 21 3 16.971 3 12C3 7.029 7.029 3 12 3Z" fill="currentColor" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path><path d="M12 3C16.971 3 21 7.029 21 12C21 16.971 16.971 21 12 21C7.029 21 3 16.971 3 12C3 7.029 7.029 3 12 3Z" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"></path><path d="M12 12.5V7.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path><path d="M11.996 14.5C11.444 14.5 10.996 14.948 11 15.5C11 16.052 11.448 16.5 12 16.5C12.552 16.5 13 16.052 13 15.5C13 14.948 12.552 14.5 11.996 14.5Z" fill="currentColor"></path></svg></div>
               </div>
@@ -374,7 +375,7 @@ const services = [
             <div data-validate class="form-field-group">
               <label for="email" class="form-label">Email address <span class="form-required">*</span></label>
               <div class="form-field">
-                <input class="form-input" id="email" name="email" type="email" placeholder="you@practice.com" maxlength="256" required>
+                <input class="form-input" id="email" name="email" type="email" placeholder="Your email" maxlength="256" required>
                 <div class="form-field-icon is--success"><svg xmlns="http://www.w3.org/2000/svg" width="100%" viewBox="0 0 24 24" fill="none"><path d="M11.25 14.25L9 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path><path d="M15 10.5L11.25 14.25" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path><path d="M3 12C3 16.9706 7.02943 21 12 21C16.9706 21 21 16.9706 21 12C21 7.02943 16.9706 3 12 3C7.02943 3 3 7.02943 3 12Z" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"></path></svg></div>
                 <div class="form-field-icon is--error"><svg xmlns="http://www.w3.org/2000/svg" width="100%" viewBox="0 0 24 24" fill="none"><path opacity="0.1" d="M12 3C16.971 3 21 7.029 21 12C21 16.971 16.971 21 12 21C7.029 21 3 16.971 3 12C3 7.029 7.029 3 12 3Z" fill="currentColor" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path><path d="M12 3C16.971 3 21 7.029 21 12C21 16.971 16.971 21 12 21C7.029 21 3 16.971 3 12C3 7.029 7.029 3 12 3Z" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"></path><path d="M12 12.5V7.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path><path d="M11.996 14.5C11.444 14.5 10.996 14.948 11 15.5C11 16.052 11.448 16.5 12 16.5C12.552 16.5 13 16.052 13 15.5C13 14.948 12.552 14.5 11.996 14.5Z" fill="currentColor"></path></svg></div>
               </div>
@@ -431,7 +432,7 @@ const services = [
 
           <div class="form-field-group">
             <div class="form-field">
-              <div data-submit tabindex="0" role="button" data-cta data-split-hover="link" class="cta form-submit-btn"><span class="cta__line is--top" aria-hidden="true"></span><span class="cta__line is--left" aria-hidden="true"></span><span class="cta__line is--bottom" aria-hidden="true"></span><span class="cta__content"><span data-cta-label data-split-hover="target" class="cta__label">Send enquiry</span><svg class="cta__icon" viewBox="0 0 12 12" fill="none" aria-hidden="true"><path d="M4 1.5 8.5 6 4 10.5" stroke="currentColor" stroke-width="1.25" stroke-linecap="square"/></svg></span><input type="submit" data-wait="Please wait..." class="form-submit" value="Send enquiry"></div>
+              <div data-submit tabindex="0" role="button" data-cta data-split-hover="link" class="cta form-submit-btn"><span class="cta__line is--top" aria-hidden="true"></span><span class="cta__line is--left" aria-hidden="true"></span><span class="cta__line is--bottom" aria-hidden="true"></span><span class="cta__content"><span data-cta-label data-split-hover="target" class="cta__label">Send enquiry</span><Arrow class="cta__icon" /></span><input type="submit" data-wait="Please wait..." class="form-submit" value="Send enquiry"></div>
             </div>
           </div>
         </form>

@@ -6,7 +6,7 @@
 // the home page, from the first paint:
 //   1. on the dark grid, a row of small squares, all dim (laid out on the
 //      grid by the inline script in index.astro);
-//   2. the squares light from the middle outwards, both ways at once, each
+//   2. the squares light from left to right, one after another, each
 //      simply on (no fade), as
 //      the page loads, and the share loaded counts up beside them. The
 //      share is real: the fonts, the page's scripts and each of the hero's
@@ -15,8 +15,8 @@
 //      SWEEP), so the lighting keeps an even rhythm; a slow photograph is
 //      not waited for beyond MAX_WAIT;
 //   3. all lit, the row turns into a column round its middle square —
-//      the left half rising, the right half falling — every square on the
-//      grid's cells as it goes;
+//      the left half rising, the right half falling, setting off from the
+//      left in turn — every square on the grid's cells as it goes;
 //   4. the five squares carrying the hero's pictures (the middle one and
 //      the four below it; for the list, the column's right edges on the
 //      middle of the screen, where the pictures' stand, each growing out of
@@ -30,15 +30,19 @@
 //      exactly where the squares stopped, and the page scrolls again.
 // Squares move by their position and size — thirteen elements at most,
 // only during the opening; the grid itself is a background and never moves.
-// A visit after the first in the same session sweeps faster.
+// A visit after the first in the same session sweeps faster. Steps 3 to 5
+// run at LOADER_PACE, so the whole opening is brisk.
 //
 // Only while the root is is--intro, which the page sets itself on a fresh
 // load (not with reduced motion). Arriving by a page transition, the
 // markup comes in inert and is removed here (initAfterEnterFunctions).
 // Whatever happens, the page is shown within STUCK of the start.
 
-const LOADER_SWEEP = 2;        // s, the quickest full sweep of the lights
-const LOADER_SWEEP_SEEN = 1;   // s, the same on a later visit this session
+const LOADER_SWEEP = 1;        // s, the quickest full sweep of the lights
+const LOADER_SWEEP_SEEN = 0.6; // s, the same on a later visit this session
+const LOADER_HOLD = 120;       // ms, the lit row held before it turns
+const LOADER_PACE = 1.4;       // the turn into the hero, played this much faster than written
+const LOADER_STAGGER = 0.014;  // s, between one square setting off and the next, left to right
 const LOADER_MAX_WAIT = 5000;  // ms, the most the lights wait for the page
 const LOADER_STUCK = 12000;    // ms, the page shown regardless
 
@@ -116,7 +120,7 @@ function runHomeLoader(loader) {
   }));
   cap = setTimeout(() => { real = 1; }, LOADER_MAX_WAIT);
 
-  // ---- The lights, from the middle outwards, following the share
+  // ---- The lights, from left to right, following the share
   let seen = false;
   try { seen = sessionStorage.getItem('tomrow:opening') === '1'; } catch (_) {}
   const sweep = seen ? LOADER_SWEEP_SEEN : LOADER_SWEEP;
@@ -124,9 +128,9 @@ function runHomeLoader(loader) {
   function paint(value) {
     count.textContent = `${Math.round(value * 100)}%`;
     if (!grid) return;
-    // How far out from the middle the light has come, in squares
-    const reach = value * (grid.c + 1);
-    grid.order.forEach((el, i) => el.classList.toggle('is--lit', value > 0 && Math.abs(i - grid.c) < reach));
+    // How far along the row from its left end the light has come, in squares
+    const reach = value * grid.order.length;
+    grid.order.forEach((el, i) => el.classList.toggle('is--lit', value > 0 && i < reach));
   }
   paint(0);
   let then = 0;
@@ -137,7 +141,7 @@ function runHomeLoader(loader) {
     shown = Math.min(real, shown + dt / sweep);
     paint(shown);
     if (shown >= 1) {
-      setTimeout(morph, 220);
+      setTimeout(morph, LOADER_HOLD);
       return;
     }
     requestAnimationFrame(frame);
@@ -172,13 +176,15 @@ function runHomeLoader(loader) {
     // (home:arrive, home-list.js)
     const columnLeft = Math.floor(window.innerWidth / 2) - sq;
     const tl = gsap.timeline({ onComplete: finish });
+    tl.timeScale(LOADER_PACE);
     tl.to([count, label], { autoAlpha: 0, duration: 0.35, ease: 'power2.out' }, 0);
-    // 3. The row turns into a column round its middle square
+    // 3. The row turns into a column round its middle square, the squares
+    // setting off from the left one after another
     order.forEach((el, i) => {
-      tl.to(el, { left: columnLeft, top: columnTop(i), duration: 1, ease: 'power3.inOut' }, 0.05 + Math.abs(i - c) * 0.022);
+      tl.to(el, { left: columnLeft, top: columnTop(i), duration: 1, ease: 'power3.inOut' }, 0.05 + i * LOADER_STAGGER);
     });
     // Once every square has arrived in the column
-    tl.addLabel('grow', 0.05 + (c + 1) * 0.022 + 1);
+    tl.addLabel('grow', 0.05 + (order.length - 1) * LOADER_STAGGER + 1);
     // 4. The picture squares grow into the hero's pictures, their
     // photographs coming up in them
     cards.forEach((el, k) => {

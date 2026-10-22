@@ -12,6 +12,7 @@
    floatingnav.js); the page's Contact Tom comes up below it.
 
    Its parts and pictures come from home-hero.ts (index.astro). */
+import Arrow from './Arrow.astro';
 import HeroNav from './HeroNav.astro';
 import { reelImage, type HomeHeroData } from './home-hero';
 
@@ -34,17 +35,27 @@ const { reel, filmStill, tintPalettes, reelSrc, reelPreview, reelFilm } = data;
       <!-- The right: the lit part's name, set as the closing cards' titles
            are, and its overview beside it, on the screen's middle line;
            the values split into place line by line as the part changes
-           (home-list.js) -->
-      <div class="home-list__meta" data-list-meta aria-hidden="true">
-        <div class="home-list__field is--title">
+           (home-list.js). Level with the name, on the background's second
+           line, Learn more: a link to the lit part's page, which
+           home-list.js points at the part (About, the film, has none). The name and
+           the overview are for the eye (each picture names its part to a
+           screen reader); the link is for everyone. -->
+      <div class="home-list__meta" data-list-meta>
+        <div class="home-list__field is--title" aria-hidden="true">
           <span class="home-list__values">
             {reel.map(({ lines }, i) => <span class:list={['home-list__value', { 'is--active': i === 0 }]} data-list-panel={i}>{lines.map((line, j) => <>{j > 0 && <br />}{line}</>)}</span>)}
           </span>
         </div>
-        <div class="home-list__field is--about">
+        <div class="home-list__field is--about" aria-hidden="true">
           <span class="home-list__values">
             {reel.map(({ about }, i) => <span class:list={['home-list__value', { 'is--active': i === 0 }]} data-list-panel={i}>{about}</span>)}
           </span>
+        </div>
+        <div class:list={['home-list__field is--cta', { 'is--off': reel[0].film }]} aria-hidden={reel[0].film ? 'true' : undefined}>
+          <a class="home-list__cta" href={reel[0].href} data-list-cta tabindex={reel[0].film ? -1 : undefined}>
+            <span class="home-list__cta-label">Learn more<span class="visually-hidden" data-list-cta-name>: {reel[0].title}</span></span>
+            <Arrow class="home-list__cta-arrow" shape="straight" />
+          </a>
         </div>
       </div>
     </div>
@@ -55,7 +66,7 @@ const { reel, filmStill, tintPalettes, reelSrc, reelPreview, reelFilm } = data;
        lit one the one on the middle line (home-list.js). -->
   <ol class="home-list" role="list" data-list>
     {reel.map(({ title, about, href, picture, film, position, cursor }, i) => (
-    <li class="home-list__item" data-list-item data-tint-palette={tintPalettes[i] ? JSON.stringify(tintPalettes[i]) : undefined}>
+    <li class="home-list__item" data-list-item data-list-title={title} data-tint-palette={tintPalettes[i] ? JSON.stringify(tintPalettes[i]) : undefined}>
       {film ? (
       <button type="button" class="home-list__shot home-reel__img is--film" data-list-shot data-reel-card data-cursor-label={cursor} data-reel-src={reelSrc} data-reel-poster={filmStill} data-reel-preview={reelPreview} aria-haspopup="dialog" aria-label={`${title}: play the film. ${about}`}>
         <span class="home-list__visual" data-list-drift data-reel-media>

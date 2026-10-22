@@ -36,9 +36,21 @@ if (!project) return new Response('Not found', { status: 404 });
 // The next project on the Architecture slider, wrapping round at the end
 const next = projects.length > 1 ? projects[(projects.findIndex((p) => p._id === project._id) + 1) % projects.length] : null;
 
-const eyebrow = ['Architecture', project.context, project.year].filter(Boolean).join(' — ');
-// The award label's variant for each kind of credit
-const creditClass = { won: 'is--won', award: undefined, detail: 'is--meta' };
+// The facts beside the title, a row each, empty rows left out: the
+// project, its context, the plain credits (the school, the subject; not
+// the context or the year again), the prizes with how each went, the year
+const credits = project.credits ?? [];
+const said = new Set([project.context, project.year].filter(Boolean).map(String));
+const details = credits.filter((c) => (c.kind ?? 'detail') === 'detail' && c.name && !said.has(c.name)).map((c) => ({ name: c.name, note: c.note }));
+const prizes = credits.filter((c) => c.kind === 'won' || c.kind === 'award').map((c) => ({ name: c.name, note: c.note }));
+type Fact = { label: string; lines: { name?: string | null; note?: string | null }[] };
+const facts: Fact[] = ([
+  { label: 'Project', lines: [{ name: project.name }] },
+  { label: 'Context', lines: [{ name: project.context }] },
+  { label: 'Details', lines: details },
+  { label: 'Recognition', lines: prizes },
+  { label: 'Year', lines: [{ name: project.year ? String(project.year) : null }] },
+] as Fact[]).map((fact) => ({ ...fact, lines: fact.lines.filter((line) => line.name) })).filter((fact) => fact.lines.length);
 // The gallery tiles' aspect ratio; "natural" leaves every picture uncropped
 const framingClass = { wide: 'is--wide', square: 'is--square', tall: 'is--tall', natural: undefined };
 ---
@@ -46,13 +58,12 @@ const framingClass = { wide: 'is--wide', square: 'is--square', tall: 'is--tall',
 <SiteNav />
 
 
-<!-- Project header, laid out as the Shop, Influence and Partner pages'
-     (.shop-hero): the title large, flush left on the studio's name in the
-     bar above; under it, past a rule, the standfirst beside the awards. All
-     of it over the project's cover, a screen tall, edge to edge and
-     darkened: the picture the Architecture row's card grows into when it is
-     opened (project-expand.js), the same file, so it is already there. No
-     column lines and no grain on these pages (is--bare). -->
+<!-- Project header: the project's cover in a band across the top of the
+     screen, edge to edge, under the bar; under it, on the black, the title large on the
+     left, flush on the studio's name in the bar above, and from the bar's
+     pages' line on the right the project's facts, a ruled row each, with
+     the standfirst under them. No column lines and no grain on these pages
+     (is--bare). -->
 <header class="shop-hero is--project">
   {project.coverImage && (
   <div class="project-hero__bg" data-project-bg aria-hidden="true">
@@ -60,24 +71,22 @@ const framingClass = { wide: 'is--wide', square: 'is--square', tall: 'is--tall',
     <span class="project-hero__shade"></span>
   </div>
   )}
-  <div class="shop-hero__body">
+  <div class="shop-hero__body project-hero__body">
     <div class="shop-hero__copy">
       <h1>{project.title}</h1>
     </div>
     <div class="project-hero__meta">
-      <div class="project-hero__lead">
-        <p class="tagline project-hero__eyebrow">{eyebrow}</p>
-        <p>{project.lead}</p>
-      </div>
-      <div class="project-hero__side">
-      {project.credits?.length ? (
-      <ul class="award-labels">
-        {project.credits.map((credit) => (
-        <li class:list={['award-label', creditClass[credit.kind ?? 'detail']]}><span class="award-label__name">{credit.name}</span>{credit.note && <span class="award-label__note">{credit.note}</span>}</li>
+      {facts.length ? (
+      <dl class="project-facts">
+        {facts.map(({ label, lines }) => (
+        <div class="project-facts__row">
+          <dt>{label}</dt>
+          <dd>{lines.map(({ name, note }) => <span class="project-facts__line">{name}{note && <span class="project-facts__note"> · {note}</span>}</span>)}</dd>
+        </div>
         ))}
-      </ul>
+      </dl>
       ) : null}
-      </div>
+      {project.lead && <p class="project-hero__lead">{project.lead}</p>}
     </div>
   </div>
 </header>

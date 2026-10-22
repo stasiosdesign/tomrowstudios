@@ -1,0 +1,96 @@
+---
+/* The Influence page's former hero, as it stood before the stepped hero
+   took its place (influence.astro): the page's name, its words, its
+   [Scroll Down] cue and its column of figure panels, its words from the
+   Influence page document, without the line map that stood behind it
+   (the Influence page's own section now). Only the hero: the rest of that
+   former page is not carried. The Shop page's hero for now (shop.astro),
+   to be made the Shop's own later.
+
+   Its scripts find it by its data attributes, wherever it stands
+   (influence.js, odometer.js; transitions.js runs them on each arrival).
+   `fields`: whether its words carry the Influence page's fields for the
+   Visual editor (only on a page whose document is the Influence page's). */
+import SocialMark from './SocialMark.astro';
+import { srcSet, urlFor } from '../sanity/image';
+import { INFLUENCE_PAGE_QUERY } from '../sanity/queries';
+import { PAGE_DEFAULTS } from '../sanity/page-defaults';
+
+interface Props {
+  fields?: boolean;
+  /** The hero's name in place of the Influence page's (the page holding it, its own) */
+  heading?: string;
+  /** That name's field in the page's own document, for the Visual editor */
+  headingField?: string;
+}
+const { fields = true, heading, headingField } = Astro.props;
+const f = (name: string) => (fields ? name : undefined);
+
+// The page's words, from the Influence page document (or the page's
+// defaults); the numbers and the panels' photographs are set here
+const page = await Astro.locals.sanity.fetch(INFLUENCE_PAGE_QUERY);
+const D = PAGE_DEFAULTS.influencePage;
+
+// A photograph from the Studio's library, by its asset's id
+const shotImage = (id: string) => ({ asset: { _id: `image-${id}` } });
+// The platform in figures, the hero's column of panels from the top: the
+// followers on each channel with figures (YouTube's and Instagram's), each
+// with its mark in the corner; the total across them all (the page's reach
+// figure); then the book (its creators) and the prize. `field`: where the
+// figure is edited, for the Visual editor. `fan`: photographs from the
+// collage's library fanned across the panel, front first, as the closing
+// cards' Shop & Courses (style.css, .influence-strip__fan): Instagram's,
+// Tom at a summit, Tom speaking, Tom with a guest; the total's, Tom
+// drawing, a talk's audience, Tom at a model.
+type StripCard = { label: string; figure: string; field?: string; channel?: 'youtube' | 'instagram'; fan?: string[] };
+const stripCards: StripCard[] = [
+  { label: 'Total YouTube followers', figure: '24,800', channel: 'youtube' },
+  { label: 'Total Instagram followers', figure: '96,400', channel: 'instagram', fan: ['6d3dd1b7a59b141b839bcaa8b6d932177ba26861-1200x1800-jpg', '36f402be0bf97c5317c7d97b747b6a6dab83c271-1200x799-jpg', '47972355868e5f78ced56cb0edee370ad0f508c3-1200x1600-jpg'] },
+  { label: 'Total followers', figure: page?.reach?.number ?? D.reach.number, field: 'reach.number', fan: ['3b3fee8b11e79a6ee109938ddbf2b463e8d45907-1200x2133-jpg', 'd6ef53755a50343456775c9a40ee1ae7cb248a22-1200x1800-jpg', 'c1d5861d068d9c3f91d90a5ebed6f1632ab6b40b-1200x1500-jpg'] },
+  { label: 'Creators in the RIBA book', figure: '21' },
+  { label: 'RIBA West London prize', figure: 'Winner' },
+];
+// A figure with digits in it rolls up to its value (odometer.js)
+const counts = (figure: string) => /\d/.test(figure);
+---
+<!-- No strip over the bar over the hero (data-nav-promo empty). The hero,
+     laid out as the Shop page's (its styles, .shop-hero): the
+     page's name large on the black, flush left on the studio's name in
+     the bar above; as tall as its column of panels needs (--strip-n) -->
+<header class="shop-hero is--influence" data-nav-promo="" style={`--strip-n: ${stripCards.length};`}>
+  <div class="shop-hero__body">
+    <div class="shop-hero__copy">
+      <h1 data-page-field={heading ? headingField : f('hero.heading')}>{heading ?? page?.hero?.heading ?? D.hero.heading}</h1>
+    </div>
+  </div>
+  <!-- The words under this part's name in the home hero (home-hero.ts),
+       set as they are there; their foot level with the large panel's -->
+  <p class="influence-hero__about">Content and a personal brand that build authority in architecture, through long-form explainers, walkthroughs and interviews shared online.</p>
+  <!-- The cue to scroll, in the accent face, on their left edge at the
+       foot of the first screen, mirroring the studio's name at its top -->
+  <p class="influence-hero__cue" aria-hidden="true">[Scroll Down]</p>
+  <!-- The panels in one column on the pages' line (under the links),
+       small, one under another, in the Partner page's colours; the one on
+       the focus line grows into the large one as the page scrolls
+       (influence.js, initInfluenceStrip, which sizes them before the page
+       is seen). Each says what it counts, small at the top, with the
+       figure large under it, rolling up to its value as the panel comes
+       into view (odometer.js); a channel's panel has a square holding its
+       mark in its bottom left corner. The page's figures are here alone. -->
+  <ul class="influence-strip" data-influence-strip>
+    {stripCards.map(({ label, figure, field, channel, fan }) => (
+    <li class="influence-strip__item" data-strip-item data-odometer-group={counts(figure) ? '' : undefined}>
+      {fan && (
+      <span class="influence-strip__fan" aria-hidden="true">
+        {fan.map((id) => (
+        <span class="influence-strip__sheet"><img src={urlFor(shotImage(id)).width(400).url()} srcset={srcSet(shotImage(id), [200, 400, 600])} sizes="(max-width: 767px) 22vw, 12vw" alt="" loading="lazy" decoding="async"></span>
+        ))}
+      </span>
+      )}
+      <p class="influence-strip__label">{label}</p>
+      <p class="influence-strip__figure" data-odometer-element={counts(figure) ? '' : undefined} data-odometer-duration={counts(figure) ? '1.6' : undefined} data-page-field={field && f(field)}>{figure}</p>
+      {channel && <span class={`influence-strip__social is--${channel}`}><SocialMark name={channel} class="influence-strip__mark" /></span>}
+    </li>
+    ))}
+  </ul>
+</header>

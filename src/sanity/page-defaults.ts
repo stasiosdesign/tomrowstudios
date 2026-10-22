@@ -34,8 +34,7 @@ export const PAGE_DEFAULTS = {
     },
     approach: {
       label: 'Approach',
-      statement:
-        'A more entrepreneurial approach to architecture. Architectural influence is about using content, social media and personal brand to build visibility, authority and opportunity within architecture.',
+      statement: 'Content and personal brand that build visibility, authority and opportunity in architecture.',
     },
     origins: { label: 'Origins', heading: 'From architecture to influence' },
     insights: {

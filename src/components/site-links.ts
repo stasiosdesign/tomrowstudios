@@ -2,14 +2,16 @@
    floating navigation (FloatingNav.astro) and the footer (SiteFooter.astro),
    so a page, the address or a channel is named in one place. */
 
-/** The five pages, in the order every navigation lists them, each with the
-    part of the practice it stands for (the footer's Expertise column) */
+/** The five pages, in the order every navigation lists them (the home
+    hero's parts follow it too, home-hero.ts), each with the part of the
+    practice it stands for (the floating menu's cards). Partners keeps its
+    address, /partner. */
 export const pages = [
   { href: '/', label: 'Home', note: 'Tomrowstudios' },
+  { href: '/partner', label: 'Partners', note: 'Partnerships' },
   { href: '/influence', label: 'Influence', note: 'Architecture & influence' },
-  { href: '/architecture', label: 'Architecture', note: 'Architectural projects' },
   { href: '/shop', label: 'Shop', note: 'Courses & resources' },
-  { href: '/partner', label: 'Partner', note: 'Partnerships' },
+  { href: '/architecture', label: 'Architecture', note: 'Architectural projects' },
 ];
 
 export const email = 'hello@tomrowstudios.com';

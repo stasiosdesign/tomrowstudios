@@ -1,7 +1,8 @@
 ---
 /* The closing call to action that ends most pages: four cards, two by two,
-   one per part of the practice, each leading to its page: Partners &
-   Collabs, Architectural Projects, Shop & Courses, Architectural Influence. The titles and links
+   one per part of the practice, each leading to its page, in the
+   navigation's order (site-links.ts): Partners & Collabs, Architectural
+   Influence, Shop & Courses, Architectural Projects. The titles and links
    stay here, with the navigation's. The home page passes the Home page
    document it has already fetched; every other page has it fetched here.
 
@@ -28,6 +29,7 @@
    map, world-map.ts), whole and solid across the card: the Atlantic world,
    the UK and Africa on the right, South America on the left, framed so the
    heading stands over open ocean, the card's edges cropping the drawing. */
+import Arrow from './Arrow.astro';
 import { srcSet, urlFor } from '../sanity/image';
 import { MAP_FINE, MAP_COARSE } from './world-map';
 import { explorePictures, MAP_BOX_WIDE } from './explore';
@@ -52,9 +54,9 @@ const { shopPictures, logoUrls, orbitPlaces, projectCover } = explorePictures(ho
 const cards = [
   // Set on two lines, the ampersand with the second, a size down
   { title: 'Partners & Collabs', lines: ['Partners', '& Collabs'], href: '/partner', image: home?.partners?.images?.[0], kind: orbitPlaces.length ? 'logos' : 'photo' },
-  { title: 'Architectural Projects', href: '/architecture', image: projectCover, kind: 'axon' },
-  { title: 'Shop & Courses', href: '/shop', image: home?.courses?.images?.[0], kind: shopPictures.length === 3 ? 'fan' : 'photo' },
   { title: 'Architectural Influence', href: '/influence', image: home?.influence?.images?.[0], kind: 'map' },
+  { title: 'Shop & Courses', href: '/shop', image: home?.courses?.images?.[0], kind: shopPictures.length === 3 ? 'fan' : 'photo' },
+  { title: 'Architectural Projects', href: '/architecture', image: projectCover, kind: 'axon' },
 ];
 // The atlas's region for the card (explore.ts)
 const mapBox = MAP_BOX_WIDE;
@@ -91,7 +93,7 @@ const mapBox = MAP_BOX_WIDE;
         ) : image?.asset && <img src={urlFor(image).width(900).url()} srcset={srcSet(image, [600, 900, 1200])} sizes="(max-width: 767px) 100vw, 45vw" alt="" loading="lazy" decoding="async" class="explore-card__img">}
         <span class="explore-card__body">
           <span class:list={['explore-card__title', { 'is--lines': lines }]}>{lines ? lines.map((line, i) => <>{i > 0 && ' '}<span class="explore-card__title-line">{line}</span></>) : title}</span>
-          <span class="explore-card__button"><span data-split-hover="target">Learn more</span><svg class="explore-card__icon" viewBox="0 0 12 12" fill="none" aria-hidden="true"><path d="M3 9 9 3M4 3h5v5" stroke="currentColor" stroke-width="1.25" stroke-linecap="square"/></svg></span>
+          <span class="explore-card__button"><span data-split-hover="target">Learn more</span><Arrow class="explore-card__icon" /></span>
         </span>
       </a>
       ))}

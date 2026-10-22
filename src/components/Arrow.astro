@@ -1,0 +1,45 @@
+---
+/* The site's arrow, the one arrow everywhere (after Foster + Partners'):
+   a bold stem down from the top that turns at a right angle and runs on to
+   an open head, the turn and the head's point sharp, the ends cut square.
+   Drawn on a 24 square in currentColor, its stroke a tenth of the square, so
+   it is the same weight at any size and takes the colour of where it stands.
+   Its size, colour and movement are each place's own (style.css, by the
+   class it is given), as before; it only ever reads the same.
+
+   Its base points right, on along the line: forward, next, open, go. Turned
+   another way: `flip` mirrors it to point left (back, previous), `rotate`
+   turns it by so many degrees. Both are set as the separate `scale` and
+   `rotate` properties, not `transform`, so a place's own movement
+   (a nudge on hover, button.js's step) still moves it as before. A place
+   that turns its arrow from its stylesheet (a previous button) does the
+   same, with `scale` or `rotate`.
+
+   One other shape, the floating menu's (FloatingNav.astro), also on the
+   Architecture row's arrows, turned to point left and right: `corner`,
+   the menu cards' own arrow kept, an open head whose arms run along the
+   top and the right of the square and a shaft from its point most of the
+   way to the opposite corner, drawn the same way as the site's arrow (the
+   same square, square ends and sharp corners), a little smaller within its
+   square and a little heavier, so it holds its own at the menu's small
+   size.
+
+   And `straight`: a plain arrow, a level shaft to an open head, drawn the
+   same way (the home hero's Learn more). */
+interface Props {
+  class?: string;
+  flip?: boolean;
+  rotate?: number;
+  shape?: 'turn' | 'corner' | 'straight';
+}
+const { class: className, flip = false, rotate = 0, shape = 'turn' } = Astro.props;
+const style = [flip && 'scale: -1 1', rotate && `rotate: ${rotate}deg`].filter(Boolean).join('; ') || undefined;
+// Each shape's path and stroke, on the 24 square
+const SHAPES = {
+  turn: { d: 'M5 3V15H17.6M14 10L19 15L14 20', weight: 2.4 },
+  corner: { d: 'M6 4.5H19.5V18M19.5 4.5L5.5 18.5', weight: 3.2 },
+  straight: { d: 'M3.5 12H19.5M13.5 6L19.5 12L13.5 18', weight: 2.4 },
+};
+const { d, weight } = SHAPES[shape];
+---
+<svg class:list={['arrow', className]} style={style} viewBox="0 0 24 24" fill="none" aria-hidden="true" focusable="false"><path d={d} stroke="currentColor" stroke-width={weight} stroke-linecap="square" stroke-linejoin="miter"/></svg>

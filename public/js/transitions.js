@@ -53,6 +53,13 @@ function initBeforeEnterFunctions(next) {
   // when that page goes, not with the page going now (pageStartsArriving,
   // the beforeEnter hook)
   if (typeof initParallaxImageSlider === "function") initParallaxImageSlider();
+  // The Influence hero's column of panels, sized as it will stand at the
+  // page's top (influence.js), and the page's figures at the start of
+  // their count (odometer.js): set now, so the page comes in as it will be
+  // once it has landed rather than changing then; each follows the scroll
+  // from the page's arrival (initAfterEnterFunctions)
+  if (typeof initInfluenceStrip === "function") initInfluenceStrip(nextPage, { arriving: true });
+  if (typeof initNumberOdometer === "function") initNumberOdometer(nextPage, { prepare: true });
 }
 
 function initAfterEnterFunctions(next) {
@@ -81,8 +88,13 @@ function initAfterEnterFunctions(next) {
   if (typeof initSequence === "function") initSequence(nextPage);
   if (typeof initScrollLists === "function") initScrollLists(nextPage);
   if (typeof initHomeList === "function") initHomeList(nextPage);
-  // The Influence page's hero collage, and its book band (influence.js)
+  // The Influence page's stepped hero; and its former layout's collage,
+  // column of panels (sized already, initBeforeEnterFunctions) and book
+  // band, now on the Shop page (influence.js)
+  if (typeof initInfluenceStage === "function") initInfluenceStage(nextPage);
+  if (typeof initStatementCentre === "function") initStatementCentre(nextPage);
   if (typeof initInfluenceHero === "function") initInfluenceHero(nextPage);
+  if (typeof initInfluenceStrip === "function") initInfluenceStrip(nextPage);
   if (typeof initBookBand === "function") initBookBand(nextPage);
   // The closing cards' Partners & Collabs logos, going round their ring
   if (typeof initOrbitTiles === "function") initOrbitTiles(nextPage);
@@ -206,14 +218,14 @@ const PAGE_RADIUS = "0.6rem";
 // When the floating bar takes the new page, into the transition (seconds)
 const NAV_ARRIVES = 0.35;
 
-function runPageLeaveAnimation(current, next) {
+async function runPageLeaveAnimation(current, next) {
   const parent = current.parentElement || document.body;
 
   // An open menu is closing already (the `before` hook); this only makes
   // sure of it
   if (window.floatingNav) window.floatingNav.close({ quick: true });
-  // A card's picture that began to grow and was not taken up (project-expand.js)
-  if (typeof dropProjectExpand === "function") dropProjectExpand();
+  // The incoming page painted at its own size first (stageArrivingPage)
+  if (!reducedMotion) await afterFrames(STAGE_FRAMES);
 
   // Helper function to prepare transition structure
   const { wrapper } = prepareForTransition(parent, current, next);
@@ -271,22 +283,6 @@ function runPageLeaveAnimation(current, next) {
   return tl;
 }
 
-// From the Architecture row to a project: the card's picture grows into the
-// project page's background (project-expand.js) in place of the pages
-// passing. The row's page is one screen at the top, so it is simply fixed
-// where it stands, over the new page, which waits unseen in the flow under
-// it until the picture has filled the screen; then the two change places
-// under the picture, and the picture's copy goes.
-async function runProjectExpandLeave(current, next) {
-  // The outgoing page was held in the `before` hook; nothing here moves it
-  heldPage = null;
-  document.documentElement.classList.add("is--page-transition");
-  gsap.set(current, { position: "fixed", top: 0, left: 0, width: "100%", height: "100vh", zIndex: 1 });
-  if (typeof arriveFloatingNavPage === "function") arriveFloatingNavPage(next);
-  await finishProjectExpand(current, next);
-  document.documentElement.classList.remove("is--page-transition");
-}
-
 function runPageEnterAnimation(next){
   const tl = gsap.timeline();
 
@@ -298,8 +294,13 @@ function runPageEnterAnimation(next){
     return new Promise(resolve => tl.call(resolve, null, "pageReady"));
   }
 
+  // Not the window's scroll here: this runs alongside the leave, which
+  // holds the outgoing page where it was seen and only then takes the
+  // window to the top (prepareForTransition), a couple of frames on.
+  // Taken to the top now, the outgoing page would show from its top for
+  // those frames, a jump the further down it was left (the footer's).
   tl.add("pageReady");
-  tl.call(resetPage, [next], "pageReady");
+  tl.call(resetPage, [next, { keepScroll: true }], "pageReady");
 
   return new Promise(resolve => {
     tl.call(resolve, null, "pageReady");
@@ -318,7 +319,7 @@ function runPageEnterAnimation(next){
 // (`html:has(.arch-page)`), which unsticks everything on the outgoing page
 // the moment it is added. (.seq__stage is the parked home page's, /parked.)
 let heldPage = null;
-const STICKY = ".seq__stage, .home-reel__surface-inner, .home-reel__chrome-inner, .scroll-list__stick, .scroll-list__aside, .scroll-next__inner, .atlas-modal__top";
+const STICKY = ".seq__stage, .influence-stage__screen, .home-reel__surface-inner, .home-reel__chrome-inner, .scroll-list__stick, .scroll-list__aside, .scroll-next__inner, .atlas-modal__top";
 
 function freezeCurrentPage(current) {
   // Marked as leaving, for whatever watches the scroll in its own way (the
@@ -389,26 +390,52 @@ function prepareForTransition(parent, current, next){
   });
   pin();
 
-  // Initial state of the next page
-  gsap.set(next, {
-    position: "fixed",
-    top: 0,
-    left: 0,
-    right: 0,
-    width: "100%",
-    height: "100vh",
-    overflow: "clip",
-    zIndex: 1,
-    transformStyle: "preserve-3d",
-    willChange: "transform, opacity",
-    backfaceVisibility: "hidden",
-    yPercent: PAGE_SHIFT,
-    z: PAGE_DEPTH,
-    autoAlpha: 1,
-    clipPath: `rect(0% 100% 100% 0% round ${PAGE_RADIUS})`
-  });
+  // Initial state of the next page: staged already (stageArrivingPage), now
+  // drawn back in depth
+  gsap.set(next, { ...ARRIVING_PAGE, z: PAGE_DEPTH });
 
   return { wrapper, scrollY };
+}
+
+// The incoming page, below the screen, on its own layer at its full size
+// for a moment before it is drawn back in depth (the `beforeEnter` of the
+// default transition, then the leave waits out STAGE_FRAMES). The browser
+// rasterises a layer marked will-change at the scale it first has and keeps
+// that while it moves: first seen drawn back, at four fifths, the page
+// would be painted at that size and enlarged as it came forward, its
+// hairlines (the Influence map's) and its type softer and dimmer all the
+// way in, and sharp again only once the transition had cleared it. Painted
+// at its own size and then reduced, it comes in looking as it will at rest.
+const ARRIVING_PAGE = {
+  position: "fixed",
+  top: 0,
+  left: 0,
+  right: 0,
+  width: "100%",
+  height: "100vh",
+  overflow: "clip",
+  zIndex: 1,
+  transformStyle: "preserve-3d",
+  willChange: "transform, opacity",
+  backfaceVisibility: "hidden",
+  yPercent: PAGE_SHIFT,
+  autoAlpha: 1,
+  clipPath: `rect(0% 100% 100% 0% round ${PAGE_RADIUS})`
+};
+const STAGE_FRAMES = 2;
+
+function stageArrivingPage(next) {
+  if (reducedMotion) return;
+  gsap.set(next, { ...ARRIVING_PAGE, z: 0 });
+}
+
+// A few frames drawn, or a moment if frames are paused (a page out of sight)
+function afterFrames(count) {
+  return new Promise(resolve => {
+    const tick = () => (--count <= 0 ? resolve() : requestAnimationFrame(tick));
+    requestAnimationFrame(tick);
+    setTimeout(resolve, 100);
+  });
 }
 
 
@@ -488,27 +515,12 @@ barba.init({
   preventRunning: true,
   transitions: [
     {
-      // A card pressed in the Architecture row, its picture already
-      // growing (project-expand.js); never the browser's back or forward
-      name: "project-expand",
-      sync: true,
-      custom: ({ trigger }) => Boolean(typeof projectExpand !== "undefined" && projectExpand && trigger && trigger === projectExpand.link),
-
-      beforeEnter(data) {
-        hideForProjectExpand(data.next.container);
-      },
-
-      async leave(data) {
-        return runProjectExpandLeave(data.current.container, data.next.container);
-      },
-
-      async enter(data) {
-        return runPageEnterAnimation(data.next.container);
-      }
-    },
-    {
       name: "default",
       sync: true,
+
+      beforeEnter(data) {
+        stageArrivingPage(data.next.container);
+      },
 
       // First load
       async once(data) {
@@ -561,8 +573,10 @@ function initLenis() {
   gsap.ticker.lagSmoothing(0);
 }
 
-function resetPage(container){
-  window.scrollTo(0, 0);
+// `keepScroll`: the transition takes the window to the top itself, once the
+// outgoing page is held (prepareForTransition)
+function resetPage(container, { keepScroll = false } = {}){
+  if (!keepScroll) window.scrollTo(0, 0);
   // Its position only: it runs as the page transition starts, while the
   // new page is still being moved, and the transition clears the rest
   // (its transform included) when it ends

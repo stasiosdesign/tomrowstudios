@@ -16,10 +16,10 @@ export type PageEntry = {type: string; title: string; route: string}
 /** Every static page, in the site's navigation order; the home page first. Each is a singleton whose _id is its type. */
 export const PAGES: PageEntry[] = [
   {type: 'homePage', title: 'Home', route: '/'},
-  {type: 'architecturePage', title: 'Architecture', route: '/architecture'},
-  {type: 'influencePage', title: 'Influence', route: '/influence'},
   {type: 'partnersPage', title: 'Partners', route: '/partner'},
+  {type: 'influencePage', title: 'Influence', route: '/influence'},
   {type: 'shopPage', title: 'Shop', route: '/shop'},
+  {type: 'architecturePage', title: 'Architecture', route: '/architecture'},
   {type: 'privacyPage', title: 'Privacy', route: '/privacy'},
   {type: 'termsPage', title: 'Terms', route: '/terms'},
 ]

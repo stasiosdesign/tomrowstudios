@@ -65,6 +65,7 @@ const countries = [
     img: "/assets/photos/events/event-09.jpg",
   },
 ];
+import Arrow from './Arrow.astro';
 ---
 <!-- Clicking the plate away from a marker closes the drawer -->
 <div data-hotspot-control="close" class="atlas-hotspots__close"></div>
@@ -107,14 +108,14 @@ const countries = [
       <div class="atlas-modal__bottom">
         <div class="atlas-modal__controls">
           <button type="button" data-hotspot-control="prev" aria-label="Previous country" class="atlas-modal__arrow is--prev">
-            <svg viewBox="0 0 12 12" fill="none" aria-hidden="true"><path d="M4 1.5 8.5 6 4 10.5" stroke="currentColor" stroke-width="1.25" stroke-linecap="square"/></svg>
+            <Arrow />
           </button>
           <!-- One dot as the template; hotspot.js makes one per card -->
           <div data-hotspot-generate-dots class="atlas-modal__dots">
             <button type="button" data-hotspot-control="1" data-hotspot-control-status="active" aria-label="Go to country 1" aria-current="true" class="atlas-modal__dot"></button>
           </div>
           <button type="button" data-hotspot-control="next" aria-label="Next country" class="atlas-modal__arrow">
-            <svg viewBox="0 0 12 12" fill="none" aria-hidden="true"><path d="M4 1.5 8.5 6 4 10.5" stroke="currentColor" stroke-width="1.25" stroke-linecap="square"/></svg>
+            <Arrow />
           </button>
         </div>
       </div>

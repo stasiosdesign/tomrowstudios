@@ -30,7 +30,8 @@
 // At the foot of the page the menu opens of itself, in a second form, the
 // footer's own (setFootMode, from initFloatingNavPage's trigger on the
 // footer: on once the page is within a fifth of a screen of its end, off
-// again as it goes back up). The same modules move the same way, but only
+// again as soon as it is scrolled back up a little). The same modules move
+// the same way, but only
 // the four parts of the practice rise, with no backdrop over the page and
 // the page still free to scroll, and the studio's mark comes up into the
 // bar's square in the close control's place, as the home link. Nothing on
@@ -111,6 +112,25 @@ function initFloatingNav() {
   const contactBg = contactPanel && contactPanel.querySelector('[data-fnav-contact-bg]');
   const contactInner = contactPanel && contactPanel.querySelector('[data-fnav-contact-inner]');
   const contactReveals = contactPanel ? Array.from(contactPanel.querySelectorAll('[data-fnav-contact-reveal]')) : [];
+
+  // How far up from the screen's foot the footer's form reaches: its two
+  // rows of cards, at the menu's own size, the gap between them and the
+  // room under them, for the footer to keep clear (--fnav-foot-reach,
+  // style.css). Measured from the cards as they are (laid out while the
+  // menu is hidden too), now and whenever they change size.
+  const firstCard = menu.querySelector('.fnav-tile.is--card');
+  const cardGrid = firstCard && firstCard.closest('.fnav-menu__tiles');
+  const measureFootReach = () => {
+    if (!firstCard || !firstCard.offsetHeight) return;
+    const gap = parseFloat(getComputedStyle(cardGrid).rowGap) || 0;
+    const bottom = parseFloat(getComputedStyle(menu).bottom) || 0;
+    document.documentElement.style.setProperty('--fnav-foot-reach', `${bottom + 2 * firstCard.offsetHeight + gap}px`);
+  };
+  measureFootReach();
+  if (firstCard && typeof ResizeObserver !== 'undefined') new ResizeObserver(measureFootReach).observe(firstCard);
+  // The email circle among the ways to Tom copies the address, as the
+  // footer's square does (social-copy.js; the pages bind their own)
+  if (typeof initSocialCopy === 'function') initSocialCopy(menu);
   const barParts = [logo, title, burger];
   const root = document.documentElement;
   const promos = Array.from(document.querySelectorAll('[data-fnav-promo]'));
@@ -540,6 +560,11 @@ function initFloatingNav() {
       groundIn(tl, 0);
       tl.to(contactReveals, { autoAlpha: 1, y: 0, duration: 0.7, stagger: 0.045, ease: 'expo.out' }, 0.42);
     }
+    // Grown: Contact and Form take their own white and the one ground
+    // fades from under them, opening the gap between the two panels
+    contactPanel.classList.remove('is--split');
+    tl.call(() => contactPanel.classList.add('is--split'), null, 0.9)
+      .to(contactBg, { opacity: 0, duration: 0.3, ease: 'power1.out' }, 0.9);
     setContactAttributes(true);
     contactTimeline = tl;
 
@@ -586,7 +611,11 @@ function initFloatingNav() {
       document.dispatchEvent(new CustomEvent('fnav:contactclosed'));
     };
 
+    // The one ground back under the two panels, closing the gap, before
+    // the whole shrinks as one
     const tl = gsap.timeline({ defaults: { overwrite: 'auto' } })
+      .to(contactBg, { opacity: 1, duration: 0.12, ease: 'power1.in' }, 0)
+      .call(() => contactPanel.classList.remove('is--split'), null, 0.12)
       .to([...contactReveals].reverse(), { autoAlpha: 0, y: '0.8rem', duration: 0.22, stagger: 0.015, ease: 'power2.in' }, 0)
       .to(morph, { p: 0, duration: 0.75, ease: 'expo.inOut', onUpdate: drawContact }, 0.12);
     groundOut(tl, 0.55);
@@ -676,7 +705,7 @@ function initFloatingNav() {
   // marquee, two copies end to end moved by one copy's width on a loop, at
   // an even reading pace, faded out at both edges (style.css). Measured
   // again when the window or the fonts change.
-  const TITLE_PACE = 32; // pixels a second
+  const TITLE_PACE = 18; // pixels a second
   let titleText = titleInner.textContent;
   function writeTitle(text) {
     titleText = text;
@@ -1033,17 +1062,45 @@ function initFloatingNavPage(container) {
   // over the room the footer keeps for them (style.css, .site-footer)
   const FOOT_FORM = 0.2;
   // From where the page actually is — a reload part way down starts right
-  nav.setFootMode(!!footer && footer.getBoundingClientRect().bottom <= window.innerHeight * (1 + FOOT_FORM));
+  const startsAtFoot = !!footer && footer.getBoundingClientRect().bottom <= window.innerHeight * (1 + FOOT_FORM);
+  nav.setFootMode(startsAtFoot);
 
   // Barba runs this on the first load as well as the page's own startup:
-  // one trigger per footer
+  // one trigger per footer. Going down, the form comes on entering that
+  // last fifth. Going back up, it goes as soon as the page has been
+  // scrolled up a little (FOOT_LEAVE of a screen, from the lowest point it
+  // reached), not only once it is out of that fifth again, so a scroll up
+  // away from the footer takes it down at once. Back down again inside the
+  // fifth, it comes back once the page has gone as far down again; the two
+  // moves each have to be made in full, so a scroll wavering in one place
+  // never sets it going on and off.
+  const FOOT_LEAVE = 0.04;
   if (footer && window.ScrollTrigger && !footer.__fnavFoot) {
     footer.__fnavFoot = true;
+    const travel = () => Math.max(32, FOOT_LEAVE * window.innerHeight);
+    let on = startsAtFoot;
+    let turn = window.scrollY; // the lowest scroll since it came on, or the highest since it went off
+    const set = (value, scroll) => {
+      on = value;
+      turn = scroll;
+      nav.setFootMode(value);
+    };
     ScrollTrigger.create({
       trigger: footer,
       start: `bottom bottom+=${FOOT_FORM * 100}%`,
-      onEnter: () => nav.setFootMode(true),
-      onLeaveBack: () => nav.setFootMode(false),
+      onEnter: (self) => set(true, self.scroll()),
+      onLeaveBack: (self) => set(false, self.scroll()),
+      onUpdate: (self) => {
+        const scroll = self.scroll();
+        if (on) {
+          turn = Math.max(turn, scroll);
+          if (turn - scroll > travel()) set(false, scroll);
+        } else if (self.isActive) {
+          turn = Math.min(turn, scroll);
+          if (scroll - turn > travel()) set(true, scroll);
+        }
+      },
+      onRefresh: (self) => { on = self.isActive && on; turn = self.scroll(); },
     });
   }
 }

@@ -1,0 +1,47 @@
+---
+/* Four ways to Tom (YouTube, Instagram, LinkedIn, the email address), each
+   a charcoal square five of the grid's cells wide holding its white mark,
+   close together. Under the pointer (or focused) a square opens leftwards
+   into its name; the email one, pressed, copies the address and its
+   envelope opens (social-copy.js). Their styles: style.css, "The ways to
+   Tom". Placed by the footer, under its Socials heading (SiteFooter.astro);
+   they stood at the top right of every page before Contact took that
+   place (HeroNav.astro). */
+import SocialMark from './SocialMark.astro';
+import { socials, email } from './site-links';
+
+interface Props {
+  class?: string;
+}
+const { class: className } = Astro.props;
+const youtube = socials.find((social) => social.icon === 'youtube')!;
+const instagram = socials.find((social) => social.icon === 'instagram')!;
+const linkedin = socials.find((social) => social.icon === 'linkedin')!;
+---
+<div class:list={['hero-nav__social', className]} data-hero-social>
+  <a class="hero-nav__pill is--youtube" href={youtube.href} target="_blank" rel="noopener" aria-label="YouTube">
+    <span class="hero-nav__pill-label" aria-hidden="true"><span class="hero-nav__pill-text">YouTube</span></span>
+    <SocialMark name="youtube" class="hero-nav__pill-icon" />
+  </a>
+  <a class="hero-nav__pill is--instagram" href={instagram.href} target="_blank" rel="noopener" aria-label="Instagram">
+    <span class="hero-nav__pill-label" aria-hidden="true"><span class="hero-nav__pill-text">Instagram</span></span>
+    <SocialMark name="instagram" class="hero-nav__pill-icon" />
+  </a>
+  <a class="hero-nav__pill is--linkedin" href={linkedin.href} target="_blank" rel="noopener" aria-label="LinkedIn">
+    <span class="hero-nav__pill-label" aria-hidden="true"><span class="hero-nav__pill-text">LinkedIn</span></span>
+    <SocialMark name="linkedin" class="hero-nav__pill-icon" />
+  </a>
+  <!-- The address: pressed, copied to the clipboard (social-copy.js); its
+       envelope, solid and closed, opens as it is (the closed body gives way
+       to the open one, and the flap, a line cut through the body in the
+       square's own colour, lifts) -->
+  <button type="button" class="hero-nav__pill is--email" data-copy-email={email} data-copy-rest="Click to copy email" data-copy-done="Copied to clipboard!" data-copy-fail="Couldn't copy" aria-label={`Copy the email address, ${email}`}>
+    <span class="hero-nav__pill-label" aria-hidden="true"><span class="hero-nav__pill-text" data-copy-label>Click to copy email</span></span>
+    <svg class="hero-nav__pill-icon is--envelope" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path class="hero-nav__envelope-closed" d="M22 4.5H2V19.5H22V4.5Z" fill="currentColor"/>
+      <path class="hero-nav__envelope-open" d="M22 21V8L12 1.5L2 8V21H22Z" fill="currentColor"/>
+      <path class="hero-nav__envelope-flap" d="M2 4.5L12 12L22 4.5" stroke-width="2"/>
+    </svg>
+    <span class="visually-hidden" role="status" aria-live="polite" data-copy-status></span>
+  </button>
+</div>

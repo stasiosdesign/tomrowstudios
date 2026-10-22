@@ -200,6 +200,45 @@ function paletteOf(px3: Float32Array, n: number): HeroPalette {
   };
 }
 
+/** The site's signal red (#f20607), the one red the home hero's red tone
+    is made from */
+const SIGNAL_RED = [242, 6, 7];
+/** How far the red is laid over each grey: from the darkest to the
+    lightest, the accent's strength and share, and the cast's */
+const RED_OVER = { dark: 0.18, light: 0.34, accent: 0.5, accentShare: 0.03, cast: 0.22 };
+
+/** A palette in the signal red, for a black and white picture (the About
+    part's, home-hero.ts), which would otherwise give the mosaic greys
+    alone. Each grey takes the red itself, dimmed to the grey's own depth
+    (so its green and blue stay level and it reads as red, not as the rose
+    a red greyed to the same lightness would), and is laid lightly over
+    the grey (RED_OVER): a touch in the dark ones, a little more in the
+    lighter, so the red is an air in the field rather than its colour. One
+    rarer accent, the red itself dimmed, joins them in its place by
+    lightness, and the cast takes a hint of the red as well. Still dark,
+    still the picture's own values, its shares as they were. */
+export function redTone(palette: HeroPalette | null): HeroPalette | null {
+  if (!palette) return palette;
+  const n = palette.palette.length;
+  const value = ([r, g, b]: number[]) => (r + g + b) / 3;
+  const whole = (c: number[]) => c.map(Math.round) as [number, number, number];
+  // The red at a grey's depth, laid over the grey by `k`
+  const redden = (rgb: number[], k: number) => {
+    const v = value(rgb);
+    const red = SIGNAL_RED.map((c) => Math.min(255, c * (v / 128)));
+    return whole(rgb.map((c, ch) => c + (red[ch] - c) * k));
+  };
+  const colours: HeroColour[] = palette.palette.map(({ rgb, share, accent }, i) => ({
+    rgb: redden(rgb, RED_OVER.dark + (n > 1 ? i / (n - 1) : 0) * (RED_OVER.light - RED_OVER.dark)),
+    share,
+    accent,
+  }));
+  const red: HeroColour = { rgb: whole(SIGNAL_RED.map((c) => c * RED_OVER.accent)), share: RED_OVER.accentShare, accent: true };
+  const at = colours.findIndex((c) => value(c.rgb) > value(red.rgb));
+  colours.splice(at < 0 ? colours.length : at, 0, red);
+  return { palette: colours, cast: redden(palette.cast, RED_OVER.cast) };
+}
+
 // A colour as the tesserae take it: its own hue, its saturation drawn out,
 // its lightness held below the pale and, if it is coloured, lifted out of
 // the dark (a neutral black stays black, a deep navy becomes a navy that

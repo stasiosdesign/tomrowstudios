@@ -149,11 +149,10 @@ html.is--loading body { opacity: 0; }
    noted at the call site, so this rule can sit here with the rest of the
    typography rather than having to come last to win. */
 .tagline,
+.influence-hero__cue,
 .logo-strip__note,
 .form-label,
 .panel-meta dt,
-.insights-row__link,
-.award-label__note,
 .parallax-slider__item-meta,
 .results-card__foot,
 .scroll-next__sub,
@@ -179,7 +178,6 @@ html.is--loading body { opacity: 0; }
 /* Counters and indices. Uppercase does nothing to a digit; these are here for
    the face, which is the one that lines its numbers up. */
 .panel-form-step .step-number,
-.insights-row__index,
 .slide-card__index {
   font-family: var(--font-label);
   text-transform: uppercase;
@@ -501,7 +499,7 @@ textarea { font-family: inherit; }
   background-color: transparent;
   /* The band's height is --nav-height (below), which the pages clear; the
      studio's name and the hero's navigation stand in it on the hero's own
-     lines (.hero-nav__logo, .hero-nav__brand, .hero-nav__links, .hero-nav__social) */
+     lines (.hero-nav__logo, .hero-nav__brand, .hero-nav__links, .hero-nav__contact) */
   min-height: var(--nav-height);
   color: #f4f4f4;
   /* Lifted again, to 150, in the layering rules at the foot of the file. */
@@ -1036,7 +1034,6 @@ h3 {
   overflow: hidden;
   border-radius: var(--radius);
   background-color: #1a1a1a;
-  box-shadow: 0 1.2rem 3.2rem rgba(0, 0, 0, 0.45);
   pointer-events: auto;
   transition: transform 0.8s var(--cta-ease);
 }
@@ -1101,7 +1098,7 @@ h3 {
 .explore-card:hover .explore-card__button,
 .explore-card:focus-visible .explore-card__button { background-color: var(--explore-button-hover); }
 .explore-card:hover .explore-card__icon,
-.explore-card:focus-visible .explore-card__icon { transform: translate(0.2rem, -0.2rem); }
+.explore-card:focus-visible .explore-card__icon { transform: translateX(0.2rem); }
 .explore-card:hover .explore-card__img,
 .explore-card:focus-visible .explore-card__img { transform: scale(1); opacity: 1; }
 .explore-card:focus-visible { outline: 1px solid #ffffff; outline-offset: 0.4rem; }
@@ -1438,9 +1435,10 @@ html.is--page-transition [data-barba="container"] { background-color: #000000; }
   color: #ffffff;
   transition: transform 0.3s var(--cta-ease);
 }
-.case-panel__visit svg { width: 1.2rem; height: 1.2rem; }
+.case-panel__visit svg { width: 1.2rem; height: 1.2rem; transition: transform 0.3s var(--cta-ease); }
+/* Under the pointer the arrow steps on, as the site's arrows do */
 @media (hover: hover) and (pointer: fine) {
-  .case-panel__visit:hover { transform: rotate(45deg); }
+  .case-panel__visit:hover svg { transform: translateX(0.15rem); }
 }
 .case-panel__tag {
   display: inline-flex;
@@ -2141,20 +2139,92 @@ html.is--case-open body { overflow: hidden; }
    flap itself is moved; elsewhere it changes with the body). */
 .hero-nav__social {
   --pill: calc(5 * var(--grid-pitch) - 1px);
+  display: flex;
+  justify-content: flex-start;
+  gap: 3px;
+  pointer-events: auto;
+}
+/* At the top right, where the four stood (they are the footer's now,
+   SocialSquares.astro): Contact, as tall as their squares, on the same top
+   line and right margin, as two boxes a pixel apart that are one link: its
+   word, in the column of pages' own face (the label type: mono, capitals)
+   a little under their size, and the site's arrow centred in a square
+   beside it. Both in the Partners page's paper (--partner-paper) with
+   black type; on that page, where the paper is the ground, black with
+   off-white type. Pressed, it opens the contact form out of the floating
+   bar (floatingnav.js). Under the pointer its word rolls as the pages'
+   links do (split-hover.js), the boxes take the paper's darker shade and
+   the arrow steps on. */
+.hero-nav__contact {
+  --pill: calc(5 * var(--grid-pitch) - 1px);
+  --contact-bg: var(--partner-paper);
+  --contact-bg-hover: var(--partner-social);
+  --contact-ink: #0a0a0a;
   position: absolute;
   top: var(--hero-top);
   right: var(--hero-right);
   display: flex;
-  justify-content: flex-end;
-  gap: 3px;
+  gap: 1px;
+  height: var(--pill);
+  color: var(--contact-ink);
+  text-decoration: none;
   pointer-events: auto;
+}
+.hero-nav__contact-label,
+.hero-nav__contact-square {
+  display: flex;
+  align-items: center;
+  border-radius: 1px;
+  background-color: var(--contact-bg);
+  transition: background-color 0.25s var(--cta-ease);
+}
+.hero-nav__contact-label {
+  padding: 0 calc(2.5 * var(--grid-pitch));
+  font-family: var(--font-label);
+  text-transform: uppercase;
+  letter-spacing: var(--track-label);
+  font-size: calc(0.88 * var(--hero-type));
+  line-height: 1.2;
+  font-weight: var(--weight-ui); --wght: var(--weight-ui);
+  /* The mono is one light cut: given a little body as the Partners page's
+     labels are, with a hairline stroke */
+  -webkit-text-stroke: 0.4px currentColor;
+}
+.hero-nav__contact-square {
+  flex: none;
+  justify-content: center;
+  width: var(--pill);
+}
+.hero-nav__contact-arrow {
+  display: block;
+  flex: none;
+  width: calc(0.4 * var(--pill));
+  height: calc(0.4 * var(--pill));
+  transition: transform 0.3s var(--cta-ease);
+}
+main[data-barba-namespace="partner"] .hero-nav__contact {
+  --contact-bg: #0a0a0a;
+  --contact-bg-hover: #262626;
+  --contact-ink: #f4f4f4;
+}
+@media (hover: hover) and (pointer: fine) {
+  .hero-nav__contact:hover :is(.hero-nav__contact-label, .hero-nav__contact-square) { background-color: var(--contact-bg-hover); }
+  .hero-nav__contact:hover .hero-nav__contact-arrow { transform: translateX(0.25rem); }
+}
+.hero-nav__contact:focus-visible { outline: 1px solid var(--hero-social-ring, #e6e4e0); outline-offset: 2px; }
+@media (prefers-reduced-motion: reduce) {
+  .hero-nav__contact-label,
+  .hero-nav__contact-square,
+  .hero-nav__contact-arrow { transition: none; }
 }
 /* The square holds its words' column, closed, and room for its mark at
    the right (padding), the mark itself pinned there out of the column's
    way: opening, the column alone grows, the square's right edge stays where
    it is, and so does the mark */
+/* The squares' charcoal */
+:root { --hero-social-ground: #151515; }
 .hero-nav__pill {
-  --hero-social-bg: #151515;
+  --hero-social-bg: var(--hero-social-ground);
   position: relative;
   display: grid;
   grid-template-columns: 0fr;
@@ -2328,101 +2398,26 @@ html.is--intro .home-reel__chrome { opacity: 0; visibility: hidden; transition: 
   image-rendering: pixelated;
   pointer-events: none;
 }
-/* The screen (the hero carries is--screen, index.astro; take the class off
-   to go back to the flat mosaic): the mosaic seen as the picture on an old
-   television. The tesserae are still the grid's squares (the canvas, a
-   pixel a square), but they are no longer shown as flat squares: each
-   square's colour bleeds into its neighbours' and the field becomes a soft
-   glow, lifted and saturated a little so it reads through what is laid
-   over it, with a broad backlight in the picture's cast behind it and the
-   tesserae's own light bled wide over it. Over that, the screen's own
-   raster: fine vertical phosphor stripes, red, green and blue a pixel
-   each, two to a cell, faint and fainter still towards the screen's
-   edges; and the grid's lines, turned to a faint scan grid, so the squares
-   are still there, as a screen's pixels are, but seen through the glass
-   and the glow. All of the glow is drawn into the one canvas by
-   hero-tint.js (it reads the strengths below), and the raster is a second,
-   still canvas: no filter, blend mode or mask on anything, so the browser
-   has only plain layers to composite while the page scrolls. The canvas is
-   scaled up smoothly here, which is what softens the squares.
-   The glass in front of it all, so the pixels read as light behind a pane
-   rather than as squares under a grid: each cell's light falling off a
-   little towards its lines (with the scan grid, still); the bloom laid
-   again over the lines, faint, as the light the glass catches and spills
-   over the gaps (a third canvas, hero-tint.js, which also parts the
-   bloom's red and blue a touch towards the edges); and the pane itself, a
-   still layer over everything in the screen: its curve, darkening to the
-   edges and corners, and a faint sheen in its upper part, as the
-   reference television's glass. Still: no flicker, no rolling band. */
-/* Set towards glass rather than smoke: the near-black stays near-black (a
-   faint backlight, the field barely lifted), the colour shows as clean,
-   saturated glow rather than a grey-brown haze, the scan grid and the
-   stripes are light over it, the pane's curve darkens its corners only a
-   little, and its reflection is plainer to see */
+/* The light (the hero carries is--screen, index.astro): the screen behind
+   the list as light shining through frosted glass, soft, continuous and
+   grained, in the lit picture's colours, with no squares (hero-tint.js
+   draws all of it into the one canvas, with a shader, and reads the
+   strengths below). A broad light falls in from the upper right in the
+   picture's cast; the picture's colours drift through it, more where the
+   light falls; the pane's seams, very soft, hold it back down the page's
+   column lines and once across; and grain, fine, in the light itself,
+   stronger where it is brighter. The grid's squares and lines are not
+   drawn over it. No filter, blend mode or mask on anything, so the browser
+   has only plain layers to composite while the page scrolls. */
 .home-reel.is--screen {
-  --screen-backlight: 0.04;  /* the backlight's strength, behind everything */
-  --screen-bloom: 0.9;       /* the lit tesserae's own light, bled wide */
-  --screen-lift: 1;          /* the field brightened, to show through the raster… */
-  --screen-colour: 1.8;      /* …and its colour drawn out */
-  --screen-phosphor: 0.035;  /* the stripes' strength, at the most */
-  --screen-scan: 0.12;       /* the scan grid's */
-  --screen-cell: 0.08;       /* each cell's falloff towards its lines */
-  --screen-fringe: 1.2;      /* squares the bloom's red and blue part, at the sides */
-  --screen-halation: 0.3;    /* the light caught in the glass, over the lines */
-  --screen-vignette: 0.18;   /* the pane's curve, darkening the corners… */
-  --screen-edge: 0.16;       /* …and its edges */
-  --screen-sheen: 0.06;      /* the reflection in its upper part */
+  --light-glow: 0.2;       /* the light falling in, at its brightest, in the cast */
+  --light-colour: 0.3;     /* the picture's colours dispersed through it */
+  --light-saturate: 1.15;  /* those colours drawn out a little */
+  --light-seams: 0.24;     /* how much light the pane's seams hold back */
+  --light-grain: 0.12;     /* the grain, at its strongest */
 }
 .home-reel.is--screen .home-reel__tint { image-rendering: auto; }
-/* The raster (hero-tint.js draws it, once a size): the phosphor stripes,
-   over the glow, under the scan grid */
-.home-reel__raster {
-  position: absolute;
-  top: 0;
-  left: 0;
-  z-index: 1;
-  display: block;
-  max-width: none;
-  pointer-events: none;
-}
-.home-reel.is--screen .home-reel__surface-inner::after {
-  z-index: 2;
-  background:
-    linear-gradient(90deg, rgba(0, 0, 0, var(--screen-scan)) 1px, transparent 1px) 0 0 / var(--grid-pitch) var(--grid-pitch),
-    linear-gradient(rgba(0, 0, 0, var(--screen-scan)) 1px, transparent 1px) 0 0 / var(--grid-pitch) var(--grid-pitch),
-    radial-gradient(circle closest-side at calc(50% + 0.5px) calc(50% + 0.5px), transparent 35%, rgba(0, 0, 0, var(--screen-cell)) 100%) 0 0 / var(--grid-pitch) var(--grid-pitch);
-}
-/* The halation (hero-tint.js, drawn with the glow): over the scan grid */
-.home-reel__halo {
-  position: absolute;
-  top: 0;
-  left: 0;
-  z-index: 3;
-  display: block;
-  max-width: none;
-  pointer-events: none;
-}
-/* The pane: its curve and its sheen, still, over everything in the screen
-   (the pictures and the type are above the screen, and stay clear of it);
-   it comes in with the hero as the opening hands over */
-.home-reel.is--screen .home-reel__surface-inner::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  z-index: 4;
-  pointer-events: none;
-  background:
-    /* The pane's reflection: a broad soft light in its upper left, and a
-       long faint band across it on the diagonal, as a window's light lies
-       on glass */
-    radial-gradient(ellipse 62% 42% at 34% -4%, rgba(255, 255, 255, var(--screen-sheen)), rgba(255, 255, 255, calc(0.45 * var(--screen-sheen))) 45%, transparent 100%),
-    linear-gradient(115deg, transparent 30%, rgba(255, 255, 255, calc(0.5 * var(--screen-sheen))) 44%, rgba(255, 255, 255, calc(0.7 * var(--screen-sheen))) 50%, rgba(255, 255, 255, calc(0.3 * var(--screen-sheen))) 58%, transparent 70%),
-    linear-gradient(rgba(255, 255, 255, calc(0.5 * var(--screen-sheen))), transparent 38%),
-    radial-gradient(75% 70% at 50% 50%, transparent 60%, rgba(0, 0, 0, var(--screen-vignette)) 100%);
-  box-shadow: inset 0 0 clamp(60px, 10vmin, 120px) rgba(0, 0, 0, var(--screen-edge));
-  transition: opacity 1.2s ease;
-}
-html.is--intro .home-reel.is--screen .home-reel__surface-inner::before { opacity: 0; }
+.home-reel.is--screen .home-reel__surface-inner::after { content: none; }
 .home-list__meta { color: var(--list-ink); }
 /* On the grid, as the Book a call button is: each frame whole cells wide
    and tall less the line, every edge just inside a line; the right edge
@@ -2499,6 +2494,8 @@ html.is--intro .home-reel.is--screen .home-reel__surface-inner::before { opacity
   height: 130%;
   object-fit: cover;
   object-position: var(--reel-position, 50% 50%);
+  /* A shade less saturated, the films over them the same */
+  filter: saturate(0.9);
   -webkit-user-select: none;
   user-select: none;
   -webkit-user-drag: none;
@@ -2644,6 +2641,76 @@ html.is--intro .home-reel.is--screen .home-reel__surface-inner::before { opacity
 }
 .home-list__field.is--title { top: var(--list-title-top); }
 .home-list__field.is--about { bottom: calc(100% - var(--list-top) - var(--list-h)); }
+/* Learn more: on the background's second line down, the bottom of its
+   underline on the foot of the name's last line as the eye reads it
+   (--cta-x, --cta-y, from the fields' top left, home-list.js); faded out
+   where the part has none (About) */
+.home-list__field.is--cta {
+  top: var(--cta-y, var(--list-title-top));
+  left: var(--cta-x, 0px);
+  right: auto;
+  pointer-events: none;
+  transition: opacity 0.4s var(--cta-ease), visibility 0s linear 0s;
+}
+.home-list__field.is--cta.is--off {
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.25s var(--cta-ease), visibility 0s linear 0.25s;
+}
+/* A plain link, small, in the body face: the words underlined, a plain
+   arrow beside them. Under the pointer the arrow steps on a little and
+   the line runs out to the right and draws back in from the left. */
+.home-list__cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.7em;
+  font-family: var(--font-body);
+  font-size: max(1.2rem, 11px);
+  line-height: 1.3;
+  letter-spacing: var(--track-body);
+  text-transform: none;
+  font-weight: var(--weight-ui); --wght: var(--weight-ui);
+  color: var(--list-ink);
+  text-decoration: none;
+  white-space: nowrap;
+  pointer-events: auto;
+}
+.home-list__cta-label { position: relative; }
+/* The line close under the words (about a quarter of their size below
+   their baseline), so it hangs no lower than the name's round letters dip
+   below theirs and the link reads as standing on the name's line */
+.home-list__cta-label::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0.05em;
+  height: 1px;
+  background-color: currentColor;
+  transform-origin: right center;
+}
+.home-list__cta-arrow {
+  flex: none;
+  width: 1em;
+  height: 1em;
+  transition: transform 0.35s var(--cta-ease);
+}
+@keyframes home-cta-line {
+  0% { transform: scaleX(1); transform-origin: right center; }
+  45% { transform: scaleX(0); transform-origin: right center; }
+  46% { transform: scaleX(0); transform-origin: left center; }
+  100% { transform: scaleX(1); transform-origin: left center; }
+}
+@media (hover: hover) and (pointer: fine) {
+  .home-list__cta:hover .home-list__cta-label::after { animation: home-cta-line 0.7s var(--cta-ease); }
+  .home-list__cta:hover .home-list__cta-arrow { transform: translateX(0.35em); }
+}
+.home-list__cta:focus-visible { outline: 1px solid var(--list-ink); outline-offset: 0.4rem; }
+@media (prefers-reduced-motion: reduce) {
+  .home-list__field.is--cta { transition: none; }
+  .home-list__cta-arrow { transition: none; }
+  .home-list__cta:hover .home-list__cta-label::after { animation: none; }
+}
 .home-list__values {
   display: grid;
   flex: 1;
@@ -2659,7 +2726,10 @@ html.is--intro .home-reel.is--screen .home-reel__surface-inner::before { opacity
    ("Explore": the heading face, strong, close-set, on the heading's
    leading), a size down, wrapping within its column */
 .home-list__field.is--title .home-list__values { max-width: none; }
+/* Each name its own height, not the tallest's, so Learn more can follow
+   the lit one */
 .home-list__field.is--title .home-list__value {
+  align-self: start;
   font-family: var(--font-body);
   font-size: var(--list-title-type);
   line-height: var(--leading-heading);
@@ -2726,7 +2796,8 @@ html.is--intro .home-reel.is--arrived .home-reel__chrome {
     row-gap: 1.1em;
   }
   .home-list__field.is--title,
-  .home-list__field.is--about { position: static; }
+  .home-list__field.is--about,
+  .home-list__field.is--cta { position: static; }
   .home-reel[data-reel-layout="list"] { --list-title-type: 2.8rem; }
 }
 
@@ -2984,15 +3055,21 @@ html.is--intro .home-loader {
 }
 
 /* ---------- The clients' logos ----------
-   index.astro. A short heading on two lines, then one row of charcoal
-   tiles across the band's full width, each 3:2 with a white logo centred
-   on it, bounded on both axes (a long wordmark runs wide, a tall mark is
-   held down) so they carry a similar weight. The row is Osmo's marquee
-   with scroll direction (marquee.js, the .marquee-advanced classes under
-   "Logo marquee"): it runs left on a loop, slowly and evenly, turns round
-   while the page scrolls back up, fades in and out at the screen's edges,
-   and holds still under the pointer and off screen. Reduced motion: the
-   script leaves it still, and it can be scrolled sideways instead. */
+   index.astro. A short heading on two lines, then one row of white logos
+   across the band's full width, on the band itself (no tiles), each
+   centred in a cell of its own and bounded on both axes (a long wordmark
+   runs wide, a tall mark is held down) so they carry a similar weight.
+   Under them, a ruler: fine ticks at a tenth of a cell, a taller one under
+   each logo's middle, drawn in each cell, so it runs with the logos and
+   the cells meet into one continuous scale. The cell is rounded to
+   whole tens of pixels, so every tick falls on a pixel. The row is Osmo's
+   marquee with scroll direction (marquee.js, the .marquee-advanced
+   classes under "Logo marquee"): it runs left on a loop, slowly and
+   evenly, turns round while the page scrolls back up and is carried a
+   little further by the scroll, fades in and out at the screen's edges,
+   and holds still off screen.
+   Reduced motion: the script leaves it still, and it can be scrolled
+   sideways instead. */
 .logo-grid {
   padding: 12rem 0 0;
 }
@@ -3014,11 +3091,19 @@ html.is--intro .home-loader {
 }
 .logo-grid__row {
   --logo-tile: 22rem;
-  --logo-gap: 0.8rem;
+  --logo-zone: 8rem;       /* the logos' band, over the ruler */
+  --logo-mark-h: 3.4rem;   /* a logo's height at most */
+  --ruler-gap: 2rem;       /* from the logos' band to the ruler */
+  --ruler-h: 1.8rem;       /* the tall ticks; the fine ones under half */
+  --tick-fine: rgba(255, 255, 255, 0.22);
+  --tick-strong: rgba(255, 255, 255, 0.5);
   width: 100%;
   overflow: hidden;
   -webkit-mask-image: linear-gradient(90deg, transparent, #000 6%, #000 94%, transparent);
   mask-image: linear-gradient(90deg, transparent, #000 6%, #000 94%, transparent);
+}
+@supports (width: round(1px, 1px)) {
+  .logo-grid__row { --logo-tile: round(22rem, 10px); }
 }
 .logo-grid__list {
   display: flex;
@@ -3028,25 +3113,39 @@ html.is--intro .home-loader {
   padding: 0;
   list-style: none;
 }
-/* Each tile carries its gap on its right, so the collection and its clone
-   meet without a seam */
+/* A cell each, the logo in the band at its top and the cell's stretch of
+   the ruler at its foot; the cells touch, so the collection and its clone
+   meet without a seam in the logos' spacing or the ruler's */
 .logo-grid__tile {
+  position: relative;
   flex: none;
   display: flex;
   justify-content: center;
   align-items: center;
+  box-sizing: border-box;
   width: var(--logo-tile);
-  aspect-ratio: 3 / 2;
-  margin: 0 var(--logo-gap) 0 0;
-  border-radius: var(--radius);
-  background-color: #1e1e1e;
+  height: calc(var(--logo-zone) + var(--ruler-gap) + var(--ruler-h));
+  margin: 0;
+  padding-bottom: calc(var(--ruler-gap) + var(--ruler-h));
+}
+.logo-grid__tile::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: var(--ruler-h);
+  background:
+    linear-gradient(var(--tick-strong), var(--tick-strong)) calc(var(--logo-tile) / 2) 0 / 1px 100% no-repeat,
+    repeating-linear-gradient(90deg, var(--tick-fine) 0 1px, transparent 1px calc(var(--logo-tile) / 10)) 0 0 / 100% 40% no-repeat;
+  pointer-events: none;
 }
 .logo-grid__logo {
   display: block;
   width: auto;
   height: auto;
-  max-width: 58%;
-  max-height: 30%;
+  max-width: 62%;
+  max-height: var(--logo-mark-h);
   object-fit: contain;
 }
 @media (prefers-reduced-motion: reduce) {
@@ -3056,14 +3155,23 @@ html.is--intro .home-loader {
   .logo-grid { padding-top: 8rem; }
   .logo-grid__lead { font-size: 2.8rem; }
   .logo-grid__head { margin-bottom: 3.2rem; }
-  .logo-grid__row { --logo-tile: 20rem; }
+  .logo-grid__row { --logo-tile: 20rem; --logo-zone: 7.2rem; --logo-mark-h: 3rem; }
+}
+@supports (width: round(1px, 1px)) {
+  @media screen and (max-width: 991px) {
+    .logo-grid__row { --logo-tile: round(20rem, 10px); }
+  }
 }
 @media screen and (max-width: 767px) {
   .logo-grid { padding-top: 6.4rem; }
   .logo-grid__lead { font-size: 2.4rem; }
   .logo-grid__head { gap: 1.6rem; margin-bottom: 2.4rem; }
-  .logo-grid__row { --logo-tile: 15rem; --logo-gap: 0.6rem; }
-  .logo-grid__logo { max-height: 32%; }
+  .logo-grid__row { --logo-tile: 15rem; --logo-zone: 5.6rem; --logo-mark-h: 2.6rem; --ruler-gap: 1.4rem; --ruler-h: 1.4rem; }
+}
+@supports (width: round(1px, 1px)) {
+  @media screen and (max-width: 767px) {
+    .logo-grid__row { --logo-tile: round(15rem, 10px); }
+  }
 }
 
 /* The clients: white logos at the right edge of the content, each bounded
@@ -3713,9 +3821,9 @@ html.is--intro .home-loader {
 }
 
 /* The footer, after the agency reference (sized from it at 1920 wide, where
-   the root type is 12.5px): a dark grey panel under the black page; the
-   wordmark top left; four columns of links in the right 55% of the content
-   width, spread edge to edge; and across the very foot, small and grey,
+   the root type is 12.5px): a dark grey panel under the black page; its
+   first row of links ("The footer's first row", below); the wordmark
+   under it on the left; and across the very foot, small and grey,
    the copyright and the legal links. All in the body face, white. Its
    grey, its column lines and its grain are its ground's (.footer-ground,
    above), which it stands on, clear itself.
@@ -3725,18 +3833,47 @@ html.is--intro .home-loader {
    on the bar's line and its four tiles above it. The footer is laid out
    round it: the foot line stands on the bar's line, either side of the
    square (its height the bar's, --fnav-bottom from the foot), and the
-   columns end above the tiles' reach (--fnav-foot-reach, "Floating
-   navigation") and a margin. */
+   wordmark's row ends above the tiles' reach (--fnav-foot-reach, "Floating
+   navigation") and a margin (--footer-clear).
+
+   All of it on one screen at the foot of the page, less the strip the
+   page keeps at the screen's top over it (--footer-peek: the page, shrunk
+   into the footer, still showing its black foot there; the footer's
+   height, --footer-room): what the footer stands above the tiles
+   (--footer-above: its top inset, its first row, the wordmark and that
+   margin) and the tiles' reach are what it needs besides the gap under
+   its first row; that gap takes what the room leaves, from
+   --footer-gap-max down to --footer-gap-min. The tiles are the menu's
+   own size here too, so on a screen too short even then the strip gives
+   way. The first row's height is measured
+   (footer.js, --footer-intro-h; the desktop row's own until then). */
 :root {
   --footer-color: #1b1b1b;
   /* The footer's grain: one sheet, on its ground */
   --footer-grain: 0.038;
+  --footer-peek: 10svh;
+  --footer-room: calc(100svh - var(--footer-peek));
+  --footer-pad-top: 2.8rem;
+  --footer-intro-h: 16.6rem;
+  --footer-mark-h: 2.56rem;
+  --footer-clear: 3.6rem;
+  --footer-gap-min: 3.6rem;
+  --footer-gap-max: 12rem;
+  /* The sign-up field's height, and the Socials squares' beside it */
+  --footer-field-h: 3.76rem;
+  --footer-above: calc(var(--footer-pad-top) + var(--footer-intro-h) + var(--footer-mark-h) + var(--footer-clear));
+}
+@media screen and (max-width: 991px) {
+  :root { --footer-gap-min: 3.2rem; --footer-gap-max: 6.4rem; }
+}
+@media screen and (max-width: 767px) {
+  :root { --footer-pad-top: 4rem; }
 }
 .site-footer {
   display: flex;
   flex-direction: column;
-  min-height: 90svh;
-  padding: 2.8rem var(--site-inset) var(--fnav-bottom);
+  min-height: var(--footer-room);
+  padding: var(--footer-pad-top) var(--site-inset) var(--fnav-bottom);
   overflow: hidden;
   color: #f4f4f4;
   font-size: 1.44rem;
@@ -3753,7 +3890,7 @@ html.is--intro .home-loader {
   gap: var(--grid-gap);
   /* Clear of the tiles of the footer's navigation, which reach up from
      the screen's foot past the foot line */
-  margin-bottom: calc(var(--fnav-foot-reach) - var(--fnav-bottom) - var(--fnav-bar-h) + 5.6rem);
+  margin-bottom: calc(var(--fnav-foot-reach) - var(--fnav-bottom) - var(--fnav-bar-h) + var(--footer-clear));
 }
 .site-footer__logo {
   flex: none;
@@ -3771,23 +3908,6 @@ html.is--intro .home-loader {
   letter-spacing: 0;
 }
 
-.site-footer__cols {
-  display: flex;
-  justify-content: space-between;
-  gap: var(--grid-gap);
-  width: 55%;
-}
-.site-footer__col { min-width: 0; }
-.site-footer__heading {
-  margin: 0 0 2.9rem;
-  font-weight: var(--weight-strong); --wght: var(--weight-strong);
-}
-.site-footer__list {
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-.site-footer__list li { line-height: 1.72; }
 .site-footer__a {
   color: inherit;
   text-decoration: none;
@@ -3826,19 +3946,11 @@ html.is--intro .home-loader {
 
 @media screen and (max-width: 991px) {
   .site-footer { min-height: 0; font-size: 1.6rem; }
-  .site-footer__top { flex-direction: column; gap: 4.8rem; }
-  .site-footer__cols {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 4rem var(--grid-gap);
-    width: 100%;
-  }
   .site-footer__a { white-space: normal; }
   .site-footer__bottom { font-size: 1.15rem; }
 }
 
 @media screen and (max-width: 767px) {
-  .site-footer { padding-top: 4rem; }
   /* Either side keeps to its own half, clear of the square: the
      copyright on two lines (its break, .site-footer__br, shows here
      alone), the links one under another against the right edge */
@@ -3846,8 +3958,141 @@ html.is--intro .home-loader {
   .site-footer__bottom > * { flex: 0 1 calc(50% - var(--fnav-bar-h) / 2 - 0.8rem); }
   .site-footer__br { display: inline; }
   .site-footer__legal { gap: 0.2rem 1.2rem; }
-  /* The address will not break: the contact column takes the full width */
-  .site-footer__col:first-child { grid-column: 1 / -1; }
+}
+
+/* ---------- The footer's first row ----------
+   SiteFooter.astro, after a studio reference (measured at 1900 wide, the
+   footer's sizes in its own terms at 1920): Menu in the page's first
+   column, Socials in the second, Newsletter across the right half; each a
+   small grey heading over its links, the links at the footer's size, one
+   under another on an open leading. The Newsletter: its line at the
+   links' size, then the sign-up, one low field the width of the half, a
+   shade lighter than the footer's grey, the address on its left and
+   Subscribe with its arrow at its right end, both small. It rises with
+   the footer's lines (the field fades up with them). Then a wide gap down
+   to the footer as it was. Below the desktop grid, Menu and Socials side
+   by side and the Newsletter under them across the width. */
+.site-footer__intro {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  column-gap: var(--grid-gap);
+  align-items: start;
+  /* What the screen leaves (the footer's section, above) */
+  margin-bottom: clamp(var(--footer-gap-min), var(--footer-room) - var(--footer-above) - var(--fnav-foot-reach), var(--footer-gap-max));
+}
+.site-footer__group { min-width: 0; }
+.site-footer__group.is--newsletter { grid-column: 3 / -1; }
+.site-footer__label {
+  margin: 0 0 1.4rem;
+  color: rgba(244, 244, 244, 0.5);
+  font-size: 1.05rem;
+  line-height: 1.3;
+  letter-spacing: 0;
+}
+.site-footer__links {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.site-footer__links li { line-height: 1.92; }
+/* The four squares under Socials, on the column's left edge, as tall as
+   the sign-up field (--footer-field-h); one line of the footer's reveal,
+   its mask as wide as they are (opening a square widens it) */
+.site-footer__socials { max-width: none; }
+.site-footer__socials .hero-nav__social { --pill: var(--footer-field-h); --hero-social-ring: #f4f4f4; }
+/* Where the three stand side by side, they share the row's lines (a
+   subgrid): the headings on one, the Socials and Newsletter lines on the
+   next, the squares and the field on the next, so the squares stand
+   level with the field, top and foot, whatever the lines' wrapping; the
+   Menu's list runs down from the second line into a last row of its own,
+   so its length moves none of them */
+@media screen and (min-width: 992px) {
+  .site-footer__intro { grid-template-rows: auto auto auto 1fr; }
+  .site-footer__group {
+    display: grid;
+    grid-row: 1 / -1;
+    grid-template-rows: subgrid;
+    align-content: start;
+  }
+  .site-footer__group > .site-footer__links { grid-row: 2 / -1; }
+}
+.site-footer__pitch { margin: 0 0 1.4rem; line-height: 1.5; }
+.site-footer__signup {
+  display: flex;
+  align-items: center;
+  height: var(--footer-field-h);
+  background-color: rgba(244, 244, 244, 0.07);
+  opacity: 0;
+  transform: translateY(0.8rem);
+  transition: opacity 0.8s ease, transform 1s cubic-bezier(0.165, 0.84, 0.44, 1);
+}
+.footer-wrap.is--visible .site-footer__signup {
+  opacity: 1;
+  transform: none;
+  transition-delay: 0.45s;
+}
+.site-footer__email {
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  margin: 0;
+  padding: 0 1.12rem;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  color: #f4f4f4;
+  font: inherit;
+  font-size: 1.05rem;
+  letter-spacing: 0;
+  outline: none;
+}
+.site-footer__email::placeholder { color: rgba(244, 244, 244, 0.72); opacity: 1; }
+.site-footer__signup:focus-within { background-color: rgba(244, 244, 244, 0.1); }
+.site-footer__subscribe {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 0.8rem;
+  height: 100%;
+  margin: 0;
+  padding: 0 1.2rem 0 1.6rem;
+  border: 0;
+  background: none;
+  color: #f4f4f4;
+  font: inherit;
+  font-size: 1.05rem;
+  letter-spacing: 0;
+  cursor: pointer;
+}
+.site-footer__arrow {
+  width: 1.3rem;
+  height: 1.3rem;
+  transition: transform 0.3s var(--cta-ease);
+}
+.site-footer__subscribe:focus-visible { outline: 1px solid rgba(244, 244, 244, 0.6); outline-offset: -0.4rem; }
+@media (hover: hover) and (pointer: fine) {
+  .site-footer__subscribe:hover .site-footer__arrow { transform: translateX(0.3rem); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .site-footer__signup { opacity: 1; transform: none; transition: none; }
+}
+@media screen and (max-width: 991px) {
+  .site-footer__intro { grid-template-columns: repeat(2, minmax(0, 1fr)); row-gap: 4rem; }
+  .site-footer__group.is--newsletter { grid-column: 1 / -1; }
+  .site-footer__label,
+  .site-footer__email,
+  .site-footer__subscribe { font-size: 1.15rem; }
+  .site-footer { --footer-field-h: 4.4rem; }
+}
+@media screen and (max-width: 767px) {
+  .site-footer__label,
+  .site-footer__email,
+  .site-footer__subscribe { font-size: 1.3rem; }
+  /* Never under 16px in the field, or a phone zooms in on it; Subscribe
+     at the field's size */
+  .site-footer__email,
+  .site-footer__subscribe { font-size: max(1.3rem, 16px); }
+  .site-footer { --footer-field-h: 4.8rem; }
 }
 
 /* ---------- Link groups ----------
@@ -3887,9 +4132,9 @@ html.is--intro .home-loader {
 /* The studio's mark, its name and the column of pages set their own
    off-white (they stand on the dark everywhere else): here they take the
    bar's dark too,
-   and the ways to Tom, charcoal on the white, are ringed in it when focused */
+   and Contact, off-white on the white, is ringed in it when focused */
 .site-nav:has(+ .theme-light) :is(.hero-nav__logo, .hero-nav__brand, .hero-nav__links) { color: inherit; }
-.site-nav:has(+ .theme-light) .hero-nav__social { --hero-social-ring: #0a0a0a; }
+.site-nav:has(+ .theme-light) .hero-nav__contact { --hero-social-ring: #0a0a0a; }
 
 /* ---------- Nav height ---------- */
 /* Height of the fixed bar: 3.2rem top padding, 2.4rem bottom, plus the
@@ -4067,6 +4312,13 @@ html.is--intro .home-loader {
 .cta__label {
   display: block;
   white-space: nowrap;
+}
+/* The site's arrow (Arrow.astro), wherever it stands: a block of its own,
+   its square corner and head never clipped; its size is each place's */
+.arrow {
+  display: block;
+  flex: none;
+  overflow: visible;
 }
 .cta__icon {
   flex: none;
@@ -4329,8 +4581,9 @@ body{
   display: flex;
 }
 
+/* Previous: the site's arrow mirrored, not turned over */
 .swiper-navigation__button-arorw.is--prev {
-  transform: rotate(-180deg);
+  scale: -1 1;
 }
 
 /* Slides keep the site's own card treatment rather than the demo card */
@@ -4357,7 +4610,7 @@ body{
 .swiper-group { margin-bottom: 5.6rem; }
 
 /* =============================================================
-   Influence page: headline figure, insights, map spread, steps
+   Influence page: the number odometer, the map spread, the steps
    ============================================================= */
 
 /* ---------- Number odometer ---------- */
@@ -4382,91 +4635,6 @@ body{
   white-space: pre;
   text-align: center;
   will-change: transform;
-}
-
-/* ---------- Headline figure (total followers) ---------- */
-/* The label in the first column, the figure and its caption from the second,
-   as the statement under it sits */
-.figure-lead {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  column-gap: var(--grid-gap);
-  align-items: start;
-}
-.figure-lead > .tagline { grid-column: 1; grid-row: 1 / span 2; margin: 1.2rem 0 0; }
-.figure-lead__number {
-  grid-column: 2 / -1;
-  margin: 0 0 2.4rem;
-  font-size: 16rem;
-  line-height: 1;
-  letter-spacing: -0.08em;
-  font-weight: var(--weight-strong); --wght: var(--weight-strong);
-}
-.figure-lead__label {
-  grid-column: 2 / span 2;
-  margin: 0;
-  font-size: 1.8rem;
-  color: rgba(255, 255, 255, 0.65);
-}
-@media screen and (max-width: 991px) {
-  .figure-lead { grid-template-columns: 1fr; }
-  .figure-lead > .tagline,
-  .figure-lead__number,
-  .figure-lead__label { grid-column: 1 / -1; grid-row: auto; }
-  .figure-lead > .tagline { margin: 0 0 1.6rem; }
-  .figure-lead__number { font-size: 9.6rem; }
-}
-
-/* ---------- Insights (in-depth analytics) ---------- */
-.insights-list {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.15);
-}
-.insights-row {
-  display: grid;
-  /* The index takes the page's first column exactly; the figure closes flush
-     on the last line. The label between them is the flexible track, so its
-     end is wherever the figure begins rather than a column boundary — the two
-     edges that read as structure are on the grid, the filler is not. */
-  grid-template-columns: var(--grid-col-1) 1fr auto;
-  gap: var(--grid-gap);
-  align-items: baseline;
-  padding: 2.4rem 0;
-  border-top: 1px solid rgba(255, 255, 255, 0.15);
-}
-.insights-row__index {
-  margin: 0;
-  font-weight: var(--weight-label); --wght: var(--weight-label);
-  color: rgba(255, 255, 255, 0.5);
-}
-.insights-row__body { min-width: 0; }
-.insights-row__label {
-  margin: 0 0 0.4rem;
-  font-size: 2rem;
-  line-height: var(--leading-title);
-  letter-spacing: var(--track-title);
-}
-.insights-row__note {
-  margin: 0;
-  font-size: 1.6rem;
-  color: rgba(255, 255, 255, 0.6);
-}
-.insights-row__value {
-  margin: 0;
-  font-size: 6.4rem;
-  line-height: 1;
-  letter-spacing: -0.04em;
-  font-weight: var(--weight-strong); --wght: var(--weight-strong);
-  justify-self: end;
-}
-/* Entries with no figure of their own carry a short phrase at the same
-   weight, so the column still reads as one run of large values */
-.insights-row__value.is--words {
-  font-size: 4.8rem;
-  letter-spacing: -0.03em;
-  text-align: right;
 }
 
 /* ---------- Map spread (full page width) ---------- */
@@ -4673,7 +4841,7 @@ body{
 .atlas-modal__arrow:focus-visible { border-color: #ffffff; outline: none; }
 .atlas-modal__arrow:hover svg,
 .atlas-modal__arrow:focus-visible svg { color: var(--cta-accent-color); }
-.atlas-modal__arrow.is--prev svg { transform: scaleX(-1); }
+.atlas-modal__arrow.is--prev svg { scale: -1 1; }
 
 .atlas-modal__collection {
   flex: 1;
@@ -4912,20 +5080,7 @@ body{
 .step-timeline__p { margin: 0; }
 
 @media screen and (max-width: 991px) {
-  .figure-lead__number { font-size: 10rem; }
-  .figure-lead__label,
   .map-spread__caption { max-width: none; }
-
-  .insights-row {
-    grid-template-columns: 1fr;
-    gap: 1.6rem;
-  }
-  .insights-row__value {
-    justify-self: start;
-    font-size: 4.8rem;
-  }
-  .insights-row__value.is--words { font-size: 3.6rem; text-align: left; }
-
   .map-spread__footer {
     flex-direction: column;
     align-items: flex-start;
@@ -4934,12 +5089,6 @@ body{
 
   .step-timeline__list { gap: 6rem; }
   .step-timeline__item { gap: 2.4rem; }
-}
-
-@media screen and (max-width: 479px) {
-  .figure-lead__number { font-size: 7.2rem; }
-  .insights-row__value { font-size: 4rem; }
-  .insights-row__value.is--words { font-size: 3.2rem; }
 }
 
 /* =============================================================
@@ -5137,8 +5286,9 @@ body{
   border-color: rgba(255, 255, 255, 0.25);
 }
 
-.centered-slider-button.is--prev {
-  transform: rotate(-180deg);
+/* Previous: the site's arrow mirrored, not turned over */
+.centered-slider-button.is--prev .slider-button-arrow {
+  scale: -1 1;
 }
 
 .slider-button-arrow {
@@ -5329,7 +5479,6 @@ main section + section,
   margin-left: calc(var(--arc-card) / -2);
   border-radius: calc(var(--arc-card) * 0.014);
   background-color: #222222;
-  box-shadow: 0 0 calc(var(--arc-card) * 0.12) rgba(0, 0, 0, 0.55);
   transform:
     translate(calc(var(--n) * var(--arc-step)), calc((0.09 * var(--a) + 0.04 * var(--a) * var(--a)) * var(--arc-card)))
     rotate(calc(var(--n) * 5.2deg));
@@ -5500,9 +5649,11 @@ main section + section,
 :root {
   --form-text: #ffffff;
   --form-muted: rgba(255, 255, 255, 0.5);
+  --form-placeholder: rgba(255, 255, 255, 0.34);
   --form-field-bg: rgba(255, 255, 255, 0.06);
-  --form-field-border: rgba(255, 255, 255, 0.14);
-  --form-field-border-focus: rgba(255, 255, 255, 0.45);
+  --form-field-border: rgba(255, 255, 255, 0.16);
+  --form-field-border-focus: rgba(255, 255, 255, 0.6);
+  --form-button-text: #0a0a0a;
   --form-success: #5aa87f;
   --form-error: #e2674b;
 }
@@ -5510,9 +5661,11 @@ main section + section,
 .panel {
   --form-text: #131313;
   --form-muted: rgba(19, 19, 19, 0.45);
+  --form-placeholder: rgba(19, 19, 19, 0.34);
   --form-field-bg: rgba(10, 10, 10, 0.05);
-  --form-field-border: rgba(10, 10, 10, 0.12);
-  --form-field-border-focus: rgba(10, 10, 10, 0.4);
+  --form-field-border: rgba(10, 10, 10, 0.16);
+  --form-field-border-focus: rgba(10, 10, 10, 0.6);
+  --form-button-text: #ffffff;
   --form-success: #0b8f49;
   --form-error: #d1462a;
 }
@@ -5525,10 +5678,13 @@ main section + section,
   margin-bottom: 0;
 }
 
+/* Light, as the contact form in the floating bar is: no boxes, each field
+   a label over a line of text with a hairline under it, the placeholders a
+   pale grey, roomy between the rows */
 .form {
   display: flex;
   flex-direction: column;
-  gap: 2.4rem;
+  gap: 3.6rem;
   width: 100%;
 }
 /* Once the enquiry is in, the fields step aside for the confirmation */
@@ -5554,53 +5710,77 @@ main section + section,
   position: relative;
 }
 
-/* Labels borrow the site's small-caps register rather than the reference's
-   sentence case, so they read with the taglines and index bands */
+/* Labels in the body type, sentence case, in the text's own colour, small
+   (the mono label register is taken off them here) */
 .form-label {
   width: 100%;
   margin-bottom: 0;
-  font-weight: var(--weight-label); --wght: var(--weight-label);
-  line-height: 1;
-  text-transform: uppercase;
-  color: var(--form-muted);
+  font-family: var(--font-body);
+  font-size: 1.4rem;
+  line-height: 1.3;
+  letter-spacing: var(--track-body);
+  font-weight: var(--weight-ui); --wght: var(--weight-ui);
+  text-transform: none;
+  color: var(--form-text);
 }
 
-.form-required { color: var(--form-error); }
+.form-required { color: var(--form-muted); }
 
 .form-input {
   width: 100%;
   height: auto;
   margin-bottom: 0;
-  padding: 1.4rem 5.6rem 1.4rem 1.6rem;
+  padding: 0 3.2rem 1.2rem 0;
   font: inherit;
   font-size: 1.6rem;
-  line-height: 1.2;
+  line-height: 1.4;
   color: var(--form-text);
-  background-color: var(--form-field-bg);
-  border: 1px solid var(--form-field-border);
-  border-radius: var(--radius);
+  background-color: transparent;
+  border: 0;
+  border-bottom: 1px solid var(--form-field-border);
+  border-radius: 0;
   outline: 0 solid transparent;
   outline-offset: 0;
   box-sizing: border-box;
   vertical-align: middle;
   -webkit-appearance: none;
   appearance: none;
-  transition: border-color 0.2s ease;
+  transition: border-color 0.25s var(--cta-ease);
 }
 
 .form-input.is--textarea {
-  min-height: 14rem;
+  min-height: 9rem;
   resize: vertical;
 }
 
 .form-input.is--select {
-  padding-right: 1.6rem;
+  padding-right: 3.2rem;
   cursor: pointer;
 }
+.form-input.is--select option { color: #131313; }
+/* Nothing chosen yet: its prompt as pale as the placeholders */
+.form-input.is--select:has(option[value=""]:checked) { color: var(--form-placeholder); }
+/* The select's mark: a small chevron at the line's end, in the text's colour */
+.form-field:has(> .form-input.is--select)::after {
+  content: "";
+  position: absolute;
+  top: 0.5em;
+  right: 0.4rem;
+  width: 0.6rem;
+  height: 0.6rem;
+  border-right: 1px solid var(--form-muted);
+  border-bottom: 1px solid var(--form-muted);
+  transform: rotate(45deg);
+  pointer-events: none;
+}
 
-.form-input:focus { border-color: var(--form-field-border-focus); }
-.form-input::placeholder { color: var(--form-muted); }
+.form-input:focus { border-bottom-color: var(--form-field-border-focus); }
+.form-input::placeholder {
+  color: var(--form-placeholder);
+  opacity: 1;
+}
 
+/* The tick or the warning, small, at the end of the line */
 .form-field-icon {
   opacity: 0;
   pointer-events: none;
@@ -5609,14 +5789,12 @@ main section + section,
   display: flex;
   justify-content: center;
   align-items: center;
-  width: 5.6rem;
-  max-height: 5.6rem;
-  padding: 0 1.6rem;
-  border-radius: var(--radius);
+  width: 1.8rem;
+  height: 1.8rem;
+  padding: 0;
   position: absolute;
-  top: 1px;
-  bottom: 1px;
-  right: 1px;
+  top: 0.1rem;
+  right: 0;
   transition: opacity 0.2s ease;
 }
 
@@ -5633,6 +5811,42 @@ main section + section,
 }
 
 .form-submit-btn { cursor: pointer; }
+/* The site's CTA, made a small solid button for the form, as the floating
+   bar's contact form has it: no red bar or drawn frame, its words and arrow
+   close together in the body type */
+.form .form-submit-btn.cta {
+  width: auto;
+  min-height: 4.4rem;
+  padding: 0 2rem;
+  border-radius: var(--radius);
+  background-color: var(--form-text);
+  color: var(--form-button-text);
+  transition: opacity 0.25s var(--cta-ease);
+}
+.form .form-submit-btn.cta::before,
+.form .form-submit-btn .cta__line { display: none; }
+.form .form-submit-btn .cta__content { gap: 1.2rem; }
+.form .form-submit-btn .cta__label {
+  font-family: var(--font-body);
+  font-size: 1.4rem;
+  letter-spacing: var(--track-body);
+  text-transform: none;
+  -webkit-text-stroke: 0;
+}
+.form .form-submit-btn .cta__icon {
+  width: 1rem;
+  height: 1rem;
+  color: inherit;
+  transition: transform 0.3s var(--cta-ease);
+}
+@media (hover: hover) and (pointer: fine) {
+  .form .form-submit-btn.cta:hover { opacity: 0.86; }
+  .form .form-submit-btn.cta:hover .cta__icon { color: inherit; transform: translateX(0.4rem); }
+}
+.form .form-submit-btn.cta:focus-visible { outline: 1px solid var(--form-text); outline-offset: 0.3rem; }
+.form .form-submit-btn.cta:focus-visible .cta__icon { color: inherit; }
+/* No rule above the button: the space alone parts it from the fields */
+.form .form-field-group:has(> .form-divider) { display: none; }
 
 .form-divider {
   width: 100%;
@@ -5687,19 +5901,46 @@ main section + section,
 }
 
 /* Field: Error */
-[data-validate].is--error .form-input { border-color: var(--form-error); }
+[data-validate].is--error .form-input { border-bottom-color: var(--form-error); }
 [data-validate].is--error .form-field-icon.is--error { opacity: 1; }
 
 /* Field: Success — the reference ticks any field that passes, which means an
    untouched optional field shows a tick; require a value too */
 [data-validate].is--success.is--filled .form-field-icon.is--success { opacity: 1; }
 
-/* Radios and the consent checkbox keep the same register as the labels */
+/* Radios and the consent checkbox as light as the fields: small hairline
+   marks, filled when chosen, the words in the text's colour */
 .form-group .radios { border: 0; margin: 0; padding: 0; }
-.form-group .radios legend { padding: 0 0 1.2rem; }
+.form-group .radios legend { padding: 0 0 1.4rem; }
 .form-group .radio-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.2rem 2.4rem; width: 100%; }
 .form-group .radio-grid label,
-.form-group .checkbox { display: flex; gap: 1.2rem; align-items: center; font-size: 1.6rem; }
+.form-group .checkbox { display: flex; gap: 1rem; align-items: center; font-size: 1.5rem; color: var(--form-text); cursor: pointer; }
+.form-group :is(.radio-grid, .checkbox) input {
+  flex: none;
+  display: grid;
+  place-content: center;
+  width: 1.4rem;
+  height: 1.4rem;
+  margin: 0;
+  border: 1px solid var(--form-field-border-focus);
+  border-radius: 50%;
+  background: transparent;
+  -webkit-appearance: none;
+  appearance: none;
+  cursor: pointer;
+}
+.form-group .checkbox input { border-radius: 2px; }
+.form-group :is(.radio-grid, .checkbox) input::before {
+  content: "";
+  width: 0.6rem;
+  height: 0.6rem;
+  border-radius: inherit;
+  background-color: var(--form-text);
+  transform: scale(0);
+  transition: transform 0.2s var(--cta-ease);
+}
+.form-group :is(.radio-grid, .checkbox) input:checked::before { transform: scale(1); }
+.form-group :is(.radio-grid, .checkbox) input:focus-visible { outline: 1px solid var(--form-text); outline-offset: 0.2rem; }
 
 @media screen and (max-width: 991px) {
   .form-field-row { grid-template-columns: 1fr; }
@@ -5736,8 +5977,9 @@ main section + section,
    Influence: the hero, a collage in parallax
    =============================================================
    On the geometry of ESE's "Discover our history" (influence.astro, where
-   the frames are measured): on the black, the page's name large in the
-   middle of the first screen, and round it thirteen photographs of four
+   the frames are measured): on the black, the approach statement large in
+   the middle of the first screen (where the reference has its heading, and
+   called "the name" below), and round it thirteen photographs of four
    widths (15, 20, 25 and 30vw on a desktop) and the reference's shapes,
    placed as the reference places them round its heading, some running off
    the screen's edges. Each photograph is a frame (.influence-hero__shot:
@@ -5748,16 +5990,28 @@ main section + section,
    go up past the slower ones, the negative ones drift down against the
    page, so the photographs part and pass one another round the name,
    which holds its place in the page. The hero runs on below the name as
-   far as the reference's section does below its heading (--tail, vw),
-   and clips what runs past its edges. Reduced motion: the collage holds
-   still. */
+   far as the reference's section does below its heading (--tail, vw).
+   It is open above and below, clipped only across (so nothing widens the
+   page): the frames set higher than it (the reference's, over its
+   heading) stand in the page's hero above and rise on through it, and a
+   frame still low as its foot comes up passes over the next section's
+   top, so the bands read as one ground. The photographs stand in the
+   page's own stack (z-index 0, the band itself no layer of its own, which
+   would also lift its grain off the page's blend): over the hero's map,
+   behind its name, its words and its panels (z-index 1). Reduced motion:
+   the collage holds still. */
 .influence-hero {
   --y-from: 50svh;
   position: relative;
   height: calc(var(--y-from) + var(--tail) * 1vw);
+  overflow: visible;
+  overflow-x: clip;
   background-color: #000000;
   color: #ffffff;
 }
+/* What the photographs stand round: a screen tall from the section's top,
+   its words in the middle, over the photographs (the approach,
+   StatementBlock.astro) */
 .influence-hero__head {
   position: absolute;
   top: 0;
@@ -5771,22 +6025,11 @@ main section + section,
   padding: 0 var(--site-inset);
   pointer-events: none;
 }
-/* Two lines, centred, wrapping between the words at any length; a little
-   under the reference's size (9vw) */
-.influence-hero__title {
-  max-width: 7.2em;
-  margin: 0;
-  font-size: 8vw;
-  line-height: 0.9;
-  letter-spacing: -0.05em;
-  text-align: center;
-  font-weight: var(--weight-strong); --wght: var(--weight-strong);
-}
 .influence-hero__shot {
   position: absolute;
   left: calc(var(--x) * 1vw);
   top: calc(var(--y-from) + var(--y) * 1vw);
-  z-index: 1;
+  z-index: 0;
   width: calc(var(--w) * 1vw);
   aspect-ratio: var(--r);
 }
@@ -5803,7 +6046,6 @@ main section + section,
 }
 @media screen and (max-width: 991px) {
   .influence-hero { height: calc(var(--y-from) + var(--ttail) * 1vw); }
-  .influence-hero__title { font-size: 11vw; }
   .influence-hero__shot {
     left: calc(var(--tx) * 1vw);
     top: calc(var(--y-from) + var(--ty) * 1vw);
@@ -5819,6 +6061,15 @@ main section + section,
     width: calc(var(--mw) * 1vw);
     aspect-ratio: var(--mr);
   }
+}
+
+/* Room held open above the collage (influence.astro), for later: a
+   screen and a half of the page's black with its grain (a band, .section),
+   nothing in it but the foot of the collage's highest photographs, which
+   rise into it, so a clear screen is left over them */
+.influence-space {
+  height: 150svh;
+  padding: 0;
 }
 
 /* The page's column lines, not drawn on the Influence page (its own
@@ -5882,11 +6133,6 @@ main section + section,
 h2 { margin-bottom: 3.2rem; }
 .section-title h2 { margin-bottom: 2rem; }
 .rich-split h3 + * { margin-top: 0; }
-
-/* Award and insight rows read as a list, so let them breathe a little more
-   than the tightened default */
-.insights-row { padding: 2.8rem 0; }
-.insights-row__note { line-height: 1.4; }
 
 /* Meta lists had the label set larger than the value it labels. Flip the
    hierarchy onto the same small-caps label the rest of the site uses. */
@@ -6031,24 +6277,6 @@ strong, b, th { font-weight: var(--weight-strong); --wght: var(--weight-strong);
 .map-spread__head h2 { margin-bottom: 0; }
 .map-spread.is--influence { padding-top: 8rem; }
 
-/* ---------- Insight row: link beside a word value ---------- */
-.insights-row__value-group {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 0.8rem;
-  justify-self: end;
-}
-.insights-row__link {
-  text-transform: uppercase;
-  color: var(--form-muted);
-  text-decoration: none;
-  border-bottom: 1px solid var(--rule);
-  padding-bottom: 0.4rem;
-  transition: color 0.2s, border-color 0.2s;
-}
-.insights-row__link:hover { color: #ffffff; border-color: rgba(255, 255, 255, 0.5); }
-
 @media screen and (max-width: 991px) {
   .testimonial-stage { min-height: 0; }
   .testimonial-slide__body {
@@ -6108,27 +6336,26 @@ strong, b, th { font-weight: var(--weight-strong); --wght: var(--weight-strong);
 :root {
   --project-rhythm: 12rem;
   --project-inset: var(--site-inset);
+  /* The cover's band across the top of the page */
+  --project-band: 55vh;
 }
 
 /* ---------- Hero ----------
-   The title as the Shop, Influence and Partner pages' name (.shop-hero),
-   the hero only as tall as it needs. Underneath, a rule splits the
-   eyebrow and standfirst from the awards and the download: the
-   standfirst on the left, the awards one above another on the line the
-   bar's pages start from (--hero-links-left; the hero's own inset taken
-   off), with the download under them. */
+   The cover in a band across the top; under it, on the black, the title
+   large on the left, flush on the studio's name in the bar above, and on
+   the right, from the line the bar's pages start from (--hero-links-left;
+   the hero's own inset taken off), the project's facts in ruled rows with
+   the standfirst under them. */
 .shop-hero.is--project { min-height: 0; padding-bottom: var(--project-rhythm); }
 
-/* The project's cover behind the header: a screen tall from the very top
-   (under the bar), edge to edge, cut to fill as the Architecture card's
-   picture is, in colour and darkened under the words, falling off to the
-   page's black at its foot so the header runs on into the page without an
-   edge. The header is at least that screen tall. The card grows into
-   exactly this box (project-expand.js), the shade included. */
+/* The project's cover: a band from the very top (under the bar), edge to
+   edge, cut to fill as the Architecture card's picture is, in colour,
+   shaded only at the top so the bar's words read over it. The header's
+   words start under it. */
 .shop-hero.is--project:has(.project-hero__bg) {
   position: relative;
   isolation: isolate;
-  min-height: 100vh;
+  padding-top: calc(var(--project-band) + 4.8rem);
 }
 .project-hero__bg {
   position: absolute;
@@ -6136,7 +6363,7 @@ strong, b, th { font-weight: var(--weight-strong); --wght: var(--weight-strong);
   left: 0;
   z-index: -1;
   width: 100%;
-  height: 100vh;
+  height: var(--project-band);
   overflow: hidden;
   pointer-events: none;
 }
@@ -6148,89 +6375,67 @@ strong, b, th { font-weight: var(--weight-strong); --wght: var(--weight-strong);
   max-width: none;
   object-fit: cover;
 }
+/* A fade at the top, under the bar's words: deep at the very top, easing
+   away (several stops, so it has no visible edge) by a little over half
+   way down; the rest of the picture as it is. */
 .project-hero__shade {
   position: absolute;
   inset: 0;
-  background: linear-gradient(to bottom, rgba(0, 0, 0, 0.66), rgba(0, 0, 0, 0.6) 45%, rgba(0, 0, 0, 0.74) 75%, #000000);
+  background: linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, 0.85) 0%,
+    rgba(0, 0, 0, 0.74) 12%,
+    rgba(0, 0, 0, 0.55) 24%,
+    rgba(0, 0, 0, 0.32) 36%,
+    rgba(0, 0, 0, 0.13) 48%,
+    rgba(0, 0, 0, 0) 60%
+  );
 }
-/* The card's picture growing into that background (project-expand.js): a
-   frame over the page and the row's progress line (240), under the
-   floating bar (250), clipping a copy of the picture; the script moves
-   both */
-.project-expand {
-  position: fixed;
-  z-index: 245;
-  overflow: hidden;
-  pointer-events: none;
-  background: #111111;
-}
-.project-expand__img {
-  position: absolute;
-  max-width: none;
-  object-fit: cover;
-}
-.project-hero__eyebrow { margin: 0 0 2.4rem; }
-
-.project-hero__meta {
+/* Two columns under the band: the title, and from the bar's pages' line
+   the facts with the standfirst under them, both from the same top */
+.project-hero__body {
   display: grid;
   grid-template-columns: minmax(0, calc(var(--hero-links-left) - var(--site-inset))) minmax(0, 1fr);
   align-items: start;
-  align-self: stretch;
-  padding-top: 3.2rem;
-  border-top: 1px solid var(--rule);
-  text-align: left;
+  gap: 0;
 }
-.project-hero__lead p:last-child { margin: 0; }
-.project-hero__lead {
-  margin: 0;
-  max-width: 44rem;
-  padding-right: var(--grid-gap);
-  font-size: 2rem;
-  line-height: 1.4;
-  color: rgba(255, 255, 255, 0.7);
-}
-.project-hero__side { min-width: 0; }
-
-/* One above another, each as wide as its own words: the labels read as a
-   list of credits, which is what they are */
-.award-labels {
-  list-style: none;
+.project-hero__body .shop-hero__copy { align-self: start; padding-right: var(--grid-gap); }
+/* The title a size down from the other heroes' names: the projects' names
+   run long, and it shares the width with the facts */
+.shop-hero.is--project h1 { margin-bottom: 0; font-size: 5.6rem; line-height: 1; max-width: none; }
+.project-hero__meta {
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
-  gap: 0.8rem;
-  margin: 0 0 3.2rem;
-  padding: 0;
+  gap: 4.8rem;
+  min-width: 0;
+  text-align: left;
 }
-.award-label {
-  display: inline-flex;
-  align-items: baseline;
-  gap: 0.8rem;
-  padding: 0.9rem 1.4rem;
-  border: 1px solid var(--rule);
-  border-radius: var(--radius);
-  font-size: 1.3rem;
-  font-weight: var(--weight-label); --wght: var(--weight-label);
-  line-height: 1;
-  letter-spacing: 0.04em;
-  color: rgba(255, 255, 255, 0.72);
+
+/* The facts: a label and its value a row, each row ruled under, the label
+   quiet and the value in the text's own white; a value of several lines
+   (the school and the subject, the prizes) stacks in its cell, a prize's
+   result after it in the label's grey */
+.project-facts { margin: 0; }
+.project-facts__row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: var(--grid-gap);
+  padding: 0.5rem 0;
+  border-bottom: 1px solid var(--rule);
+  font-size: 1.5rem;
+  line-height: 1.4;
 }
-.award-label__name { color: #ffffff; }
-.award-label__note {
-  text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.45);
+.project-facts dt { color: rgba(255, 255, 255, 0.5); }
+.project-facts dd { margin: 0; color: #ffffff; }
+.project-facts__line { display: block; }
+.project-facts__note { color: rgba(255, 255, 255, 0.5); }
+.project-hero__lead {
+  margin: 0;
+  max-width: 64rem;
+  font-size: 1.5rem;
+  line-height: 1.5;
+  color: rgba(255, 255, 255, 0.85);
 }
-/* A win is worth more than a nomination, so let it sit brighter */
-.award-label.is--won {
-  border-color: rgba(255, 255, 255, 0.45);
-  background: rgba(255, 255, 255, 0.06);
-}
-.award-label.is--meta {
-  border-style: dashed;
-  border-color: rgba(255, 255, 255, 0.14);
-}
-/* The credits close the column: nothing under them */
-.project-hero__side .award-labels { margin-bottom: 0; }
 
 /* ---------- Full-bleed plate ----------
    Edge to edge, no gutter and no corner. The plate keeps its own proportions:
@@ -6322,9 +6527,13 @@ strong, b, th { font-weight: var(--weight-strong); --wght: var(--weight-strong);
 
 @media screen and (max-width: 767px) {
   :root { --project-rhythm: 6rem; }
-  /* On a phone, where the pages are not on that line: one column */
-  .project-hero__meta { grid-template-columns: 1fr; gap: 3.2rem; }
-  .project-hero__lead { max-width: none; padding-right: 0; font-size: 1.8rem; }
+  /* On a phone, where the pages are not on that line: one column, the
+     title over the facts, the band a little shallower */
+  :root { --project-band: 44vh; }
+  .project-hero__body { grid-template-columns: 1fr; gap: 3.2rem; }
+  .project-hero__body .shop-hero__copy { padding-right: 0; }
+  .shop-hero.is--project h1 { font-size: 4rem; }
+  .project-hero__meta { gap: 3.2rem; }
 }
 
 /* =============================================================
@@ -6435,57 +6644,50 @@ body:has(.arch-page) {
 /* The arrows: squares, the navigation's own corner, a hairline round each */
 .arch-arrows { display: flex; gap: 0.6rem; }
 .arch-arrow {
+  display: grid;
+  place-items: center;
   width: 2.8rem;
   height: 2.8rem;
   padding: 0;
   border: 1px solid rgba(255, 255, 255, 0.24);
   border-radius: var(--fnav-radius, 2px);
   background: transparent;
+  color: #ffffff;
   position: relative;
   cursor: pointer;
-  transition: background-color 0.25s, border-color 0.25s, opacity 0.25s;
+  transition: background-color 0.25s, border-color 0.25s, color 0.25s, opacity 0.25s;
 }
-.arch-arrow:hover { background: #ffffff; border-color: #ffffff; }
-.arch-arrow:hover::after { border-color: #0a0a0a; }
+/* The floating menu's arrow (Arrow.astro, its corner shape), turned to
+   point right, and left for the previous one */
+.arch-arrow .arrow { width: 0.95rem; height: 0.95rem; }
+.arch-arrow:hover { background: #ffffff; border-color: #ffffff; color: #0a0a0a; }
 /* The run has two ends; a dead arrow says so rather than pretending */
 .arch-arrow.is--disabled { opacity: 0.25; pointer-events: none; }
-.arch-arrow::after {
-  content: "";
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 0.6rem;
-  height: 0.6rem;
-  border-top: 1px solid #ffffff;
-  border-right: 1px solid #ffffff;
-}
-.arch-arrow.is--prev::after { transform: translate(-30%, -50%) rotate(-135deg); }
-.arch-arrow.is--next::after { transform: translate(-70%, -50%) rotate(45deg); }
 
 /* ---------- The row's progress ----------
-   A fine line just above the floating bar, as wide as it and on its
-   middle, part of the bar's own set: the run's position in white along a
-   faint track. It rises with the bar (hidden while the bar is down), and
-   steps aside, as the bar's marquees do, while the menu or the contact
-   form is open or a page transition runs. Its target is taller than the
-   line, so a press along it is easy; the slider takes the press there. */
+   A fine line along the very foot of the screen, from edge to edge, under
+   the floating bar, two pixels so the screen's edge never loses it: the
+   run's position in white along a faint track. It
+   comes and goes with the bar (hidden while the bar is down), and steps
+   aside, as the bar's marquees do, while the menu or the contact form is
+   open or a page transition runs. Its target is taller than the line,
+   reaching up from the screen's foot, so a press along it is easy; the
+   slider takes the press there. */
 .progress-bar-wrap {
   position: fixed;
-  left: 50%;
-  bottom: calc(var(--fnav-bottom) + var(--fnav-bar-h) + var(--fnav-gap));
+  left: 0;
+  right: 0;
+  bottom: 0;
   z-index: 240;
-  width: var(--fnav-bar-w);
-  height: 1px;
-  margin-left: var(--fnav-nudge);
-  translate: -50% 0;
-  background-color: rgba(255, 255, 255, 0.14);
+  height: 2px;
+  background-color: rgba(255, 255, 255, 0.24);
   cursor: pointer;
   transition: opacity 0.45s var(--cta-ease) 0.2s, visibility 0s;
 }
 .progress-bar-wrap::before {
   content: "";
   position: absolute;
-  inset: -0.6rem 0;
+  inset: -1.2rem 0 0;
 }
 html:has(.fnav:not(.is--shown)) .progress-bar-wrap,
 html.is--fnav-open .progress-bar-wrap,
@@ -6610,7 +6812,7 @@ html.is--page-transition .progress-bar-wrap {
   translate: 0 0;
 }
 @media (hover: hover) and (pointer: fine) {
-  .parallax-slider__item-link:hover .parallax-slider__item-label {
+  .parallax-slider__list.is--pointing .parallax-slider__item-link:hover .parallax-slider__item-label {
     opacity: 1;
     translate: 0 0;
   }
@@ -6639,24 +6841,31 @@ html.is--page-transition .progress-bar-wrap {
   color: rgba(255, 255, 255, 0.72);
   white-space: nowrap;
 }
+/* Under the pointer the picture eases in a touch. The pointer's effects
+   count only once the mouse is moved over the row (is--pointing,
+   archslider.js): a card the row has carried under a resting pointer is
+   not being pointed at, and taking the colour then would leave the card
+   in the middle grey after every scroll */
 @media (hover: hover) and (pointer: fine) {
-  .parallax-slider__item-link:hover .parallax-slider__item-img { transform: scale(1.03); }
+  .parallax-slider__list.is--pointing .parallax-slider__item-link:hover .parallax-slider__item-img { transform: scale(1.03); }
 }
+/* Each card its own layer, so moving it never repaints its picture */
+.arch-page .parallax-slider__item { will-change: transform; }
 
 /* One picture in colour at a time: the card nearest the row's middle
-   (is--active, archslider.js), or the one under the pointer, which takes
-   it from the middle one while it is there. The rest stand back, in black
-   and white and a shade darker, still legible as pictures. */
+   (is--active, archslider.js), or the one the mouse is pointing at, which
+   takes it from the middle one while it is there. The rest stand
+   back, in black and white and a shade darker, still legible as pictures. */
 .parallax-slider__item-img {
   filter: grayscale(1) brightness(0.62);
   transition: transform 0.9s var(--cta-ease), opacity 0.7s ease, filter 0.45s ease;
 }
 .parallax-slider__item.is--active .parallax-slider__item-img { filter: none; }
 @media (hover: hover) and (pointer: fine) {
-  .parallax-slider__list:has(.parallax-slider__item-link:hover) .parallax-slider__item-img { filter: grayscale(1) brightness(0.62); }
-  .parallax-slider__list .parallax-slider__item-link:hover .parallax-slider__item-img { filter: none; }
-  /* The coloured card's name and context under it, as the hovered card's are */
-  .parallax-slider__list:not(:has(.parallax-slider__item-link:hover)) .parallax-slider__item.is--active .parallax-slider__item-label {
+  .parallax-slider__list.is--pointing:has(.parallax-slider__item-link:hover) .parallax-slider__item-img { filter: grayscale(1) brightness(0.62); }
+  .parallax-slider__list.is--pointing .parallax-slider__item-link:hover .parallax-slider__item-img { filter: none; }
+  /* The coloured card's name and context under it, as the pointed card's are */
+  .parallax-slider__list:not(.is--pointing:has(.parallax-slider__item-link:hover)) .parallax-slider__item.is--active .parallax-slider__item-label {
     opacity: 1;
     translate: 0 0;
   }
@@ -7105,6 +7314,36 @@ html.is--page-transition .progress-bar-wrap {
 .page-header .lead { margin-bottom: 2.4rem; max-width: 44rem; }
 .page-header .tags { margin: 0; }
 
+/* A shop item's title (the Shop's own pages, [slug].astro) stands as every
+   page's hero name does (.shop-hero h1): straight under the bar, at the top
+   of the header, flush left on the studio's name, less the large letters'
+   own side bearing. Its names run longer than the pages' two-word ones, so
+   it is a size down, on a measure that breaks them into two balanced
+   lines; the lead, tags and facts stay at the header's foot. */
+.page-header:has(> .page-header__title) {
+  flex-direction: column;
+  align-items: stretch;
+  padding-top: var(--nav-height);
+}
+.page-header:has(> .page-header__title) .page-header-body { margin-top: auto; }
+.page-header .page-header__title {
+  align-self: flex-start;
+  max-width: 11em;
+  margin: 0 0 6.4rem calc(var(--hero-name-left) - var(--site-inset) - 0.02em);
+  font-size: 6.4rem;
+  line-height: 0.95;
+  letter-spacing: -0.04em;
+  text-wrap: balance;
+  font-weight: var(--weight-strong); --wght: var(--weight-strong);
+}
+@media screen and (max-width: 991px) {
+  .page-header:has(> .page-header__title) { padding-top: var(--nav-height); }
+  .page-header .page-header__title { margin-bottom: 4.8rem; font-size: 5.6rem; }
+}
+@media screen and (max-width: 767px) {
+  .page-header .page-header__title { margin-bottom: 4rem; font-size: 4rem; }
+}
+
 /* Was 1fr 3fr with a single gap, which put the heading 24px wide of the
    column line. Four equal columns puts it back on the grid. */
 .rich-split {
@@ -7269,12 +7508,13 @@ html.is--page-transition .progress-bar-wrap {
   /* The menu's room: from just above the bar to near the top of the screen */
   --fnav-menu-bottom: calc(10 * var(--fnav-u));
   --fnav-menu-room: calc(100svh - 12 * var(--fnav-u));
-  /* The footer's form of the menu ("The footer's form", below): its
-     tiles' height, in the menu's units, and how far up from the screen's
-     foot the menu then reaches (its two rows of tiles and the gap between
-     them over its foot), which the footer keeps clear (.site-footer) */
-  --fnav-foot-tile: 12;
-  --fnav-foot-reach: calc(var(--fnav-menu-bottom) + (2 * var(--fnav-foot-tile) + 0.5) * var(--fnav-u-bar));
+  /* The footer's form of the menu ("The footer's form", below): how far
+     up from the screen's foot it reaches (its two rows of cards, at the
+     menu's own size, and the gap between them, over its foot), which the
+     footer keeps clear (.site-footer). Measured from the cards themselves
+     (floatingnav.js, measureFootReach); this, the cards at their largest,
+     until then. */
+  --fnav-foot-reach: calc(var(--fnav-menu-bottom) + 28 * var(--fnav-u-bar) + 0.5 * var(--fnav-u-bar));
 }
 @media screen and (max-width: 600px) {
   :root { --fnav-bottom: calc(3 * var(--fnav-u)); }
@@ -7460,23 +7700,47 @@ html.is--fnav-open:not(.is--fnav-foot) .fnav__background {
 /* A name wider than the window (a project's full title) runs round as a
    marquee (floatingnav.js): two copies end to end, each with half the gap
    either side, so moving the pair by half its width brings it back exactly
-   where it began; it fades out into the bar's glass at both edges rather
-   than being cut. Within the window between the home link and the menu
-   control, so it never runs under either. */
+   where it began. Its window is narrower than a name's that fits, a
+   compact strip well clear of the home link and the menu control, and the
+   words come up out of the bar's glass and go back into it over the
+   outer quarter of it each side: a fade eased at both ends (its stops on
+   a smooth curve, not a straight ramp, which reads as a cut), the same
+   both sides and fixed to the window, so it is the same wherever the
+   words are. No blur: it only smudged the letters.
+
+   The fade is the window's own (.fnav__title, which stands still), not the
+   running line's, and the window is one layer with everything in it, so
+   the fade covers the moving words whole. Masked on the running line
+   itself, the moving words were their own layer, clipped and masked each
+   on its own pixel grid: where the two disagreed by a pixel, a column of
+   letter at the window's edge showed unfaded, a thin white line. The
+   words also stop short of the window's edges (2px each side), so not even
+   a pixel's disagreement has anything in it to show. */
+.fnav__title:has(> .is--running) {
+  --fnav-title-fade: linear-gradient(90deg,
+    rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0) 3%, rgba(0, 0, 0, 0.06) 6%, rgba(0, 0, 0, 0.18) 9.5%, rgba(0, 0, 0, 0.36) 13%,
+    rgba(0, 0, 0, 0.56) 16.5%, rgba(0, 0, 0, 0.74) 20%, rgba(0, 0, 0, 0.88) 23.5%, rgba(0, 0, 0, 0.97) 26.5%, #000000 29%,
+    #000000 71%,
+    rgba(0, 0, 0, 0.97) 73.5%, rgba(0, 0, 0, 0.88) 76.5%, rgba(0, 0, 0, 0.74) 80%, rgba(0, 0, 0, 0.56) 83.5%,
+    rgba(0, 0, 0, 0.36) 87%, rgba(0, 0, 0, 0.18) 90.5%, rgba(0, 0, 0, 0.06) 94%, rgba(0, 0, 0, 0) 97%, rgba(0, 0, 0, 0) 100%);
+  width: calc(12 * var(--fnav-u));
+  will-change: transform;
+  -webkit-mask: var(--fnav-title-fade) no-repeat 0 0 / 100% 100%;
+  mask: var(--fnav-title-fade) no-repeat 0 0 / 100% 100%;
+}
 .fnav__title-inner.is--running {
+  margin: 0 2px;
   padding: 0;
   text-align: left;
   text-overflow: clip;
-  -webkit-mask-image: linear-gradient(90deg, transparent, #000000 2.6em, #000000 calc(100% - 2.6em), transparent);
-  mask-image: linear-gradient(90deg, transparent, #000000 2.6em, #000000 calc(100% - 2.6em), transparent);
 }
 .fnav__title-track {
   display: inline-flex;
-  animation: fnav-title-run var(--fnav-title-run, 12s) linear infinite;
+  animation: fnav-title-run var(--fnav-title-run, 20s) linear infinite;
 }
 .is--running .fnav__title-word {
   flex: none;
-  padding: 0 1.6em;
+  padding: 0 2.4em;
 }
 @keyframes fnav-title-run {
   to { transform: translateX(-50%); }
@@ -7562,19 +7826,13 @@ html.is--page-transition .fnav-promo.is--shown {
   transform: translate(-50%, calc(100% + var(--fnav-gap)));
   transition: transform var(--fnav-drop) var(--fnav-drop-ease), opacity calc(var(--fnav-drop) * 0.6) ease-in calc(var(--fnav-drop) * 0.3), visibility 0s linear var(--fnav-drop), --promo-ground 0.45s var(--cta-ease);
 }
-/* Handed over to the band in the page: gone at once, and back at once */
+/* Handed over to the band in the page: gone at once, and kept gone for the
+   rest of the page below it; back at once if the band hands back to it
+   (influence.js) */
 .fnav-promo.is--shown.is--docked {
   opacity: 0;
   visibility: hidden;
   transition: none;
-}
-/* Gone down behind the bar while the band is on screen above it, after
-   the band has been passed (influence.js); rising again as it always does */
-.fnav-promo.is--shown.is--away {
-  opacity: 0;
-  visibility: hidden;
-  transform: translate(-50%, calc(100% + var(--fnav-gap)));
-  transition: transform var(--fnav-drop) var(--fnav-drop-ease), opacity calc(var(--fnav-drop) * 0.6) ease-in calc(var(--fnav-drop) * 0.3), visibility 0s linear var(--fnav-drop), --promo-ground 0.45s var(--cta-ease);
 }
 /* The words fade in and out at the ends rather than being cut */
 .fnav-promo::before,
@@ -7745,9 +8003,9 @@ html.is--page-transition .fnav-promo.is--shown {
 
 /* ---------- The menu ----------
    Separate modules, close together, with no panel round them: the four
-   parts of the practice two by two, as off-white cards; under them the
-   reel and Contact Tom side by side, two thirds and a third; and Home as
-   a single row at the foot. Each module a plain block of colour, no edge
+   parts of the practice two by two, as cards on the Partners page's
+   paper; under them the reel and the four ways to Tom side by side, two
+   thirds and a third; and at the foot Home and Contact, half and half. Each module a plain block of colour, no edge
    line, corners slightly rounded (--fnav-radius, the menu's own); one
    inset for every label (--fnav-inset). The script raises them into place
    row by row, and a module gives a little under a press.
@@ -7755,8 +8013,9 @@ html.is--page-transition .fnav-promo.is--shown {
    Always whole on the screen, however short: nothing in it is squeezed
    (each part keeps its own height), and it is the four cards that give
    way. --fnav-menu-fixed is everything but them, in the menu's units —
-   three gaps (1.5), Home (--fnav-menu-home, 7.2) and the row of the reel
-   and Contact Tom (14.5: the reel, two thirds of the width, at 2:1) — so
+   three gaps (1.5), the foot of Home and Contact (--fnav-menu-home, 7.2)
+   and the row of the reel and the ways to Tom (14.5: the reel, two thirds
+   of the width, at 2:1) — so
    the cards take what the room leaves, at most 14 units each, at least 9
    (on a phone 11.5 and 9.5).
 
@@ -7772,11 +8031,12 @@ html.is--page-transition .fnav-promo.is--shown {
   --fnav-menu-tile: 14;
   --fnav-menu-tile-min: 9;
   /* The one type of the menu: every module's name, and every note */
-  --fnav-title-size: calc(2 * var(--fnav-u));
+  --fnav-title-size: calc(2.2 * var(--fnav-u));
   --fnav-note-size: calc(1.05 * var(--fnav-u));
-  /* The cards' off-white, a soft grey rather than white, and its ink */
-  --fnav-light: #e8e8e5;
-  --fnav-light-hover: #dcdcd8;
+  /* The cards' ground: the Partners page's paper, and its squares' shade
+     under the pointer; and the cards' ink */
+  --fnav-light: var(--partner-paper);
+  --fnav-light-hover: var(--partner-social);
   --fnav-ink: #161616;
   /* Only just rounded, every module alike (the bar keeps its own corners) */
   --fnav-radius: max(3px, 0.35 * var(--fnav-u));
@@ -7820,10 +8080,73 @@ html.is--page-transition .fnav-promo.is--shown {
   height: calc(var(--fnav-menu-row) * var(--fnav-u));
 }
 .fnav-menu__row > * { min-width: 0; height: 100%; }
-/* Without the reel, Contact Tom alone, a single row as Home is */
+/* Without the reel, the ways to Tom alone, a single row as Home is */
 .fnav-menu:not(.has-reel) .fnav-menu__row {
   grid-template-columns: minmax(0, 1fr);
   height: calc(var(--fnav-menu-home) * var(--fnav-u));
+}
+/* Beside the reel, in the third Contact had: the four ways to Tom, each a
+   circle in the cards' colour holding its mark in their ink, two by two,
+   the circles as large as the third's width or height allows (a gap
+   between them), centred in it. Under the pointer a circle takes the
+   cards' darker shade; the email one, pressed, copies the address and its
+   envelope opens (social-copy.js) */
+.fnav-menu__socials { container-type: size; }
+.fnav-menu__socials-grid {
+  --social-d: min((100cqw - var(--fnav-gap)) / 2, (100cqh - var(--fnav-gap)) / 2);
+  display: grid;
+  grid-template-columns: repeat(2, var(--social-d));
+  grid-template-rows: repeat(2, var(--social-d));
+  gap: var(--fnav-gap);
+  place-content: center;
+  height: 100%;
+}
+.fnav-social {
+  display: grid;
+  place-items: center;
+  width: var(--social-d);
+  height: var(--social-d);
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background-color: var(--fnav-light);
+  color: var(--fnav-ink);
+  cursor: pointer;
+  transition: background-color 0.25s var(--cta-ease), scale 0.25s var(--cta-ease);
+}
+.fnav-social:active { scale: 0.96; transition-duration: 0.12s; }
+.fnav-social__icon { display: block; width: 32%; height: 32%; }
+.fnav-social .hero-nav__envelope-flap { stroke: var(--fnav-light); transition: stroke 0.25s var(--cta-ease); }
+.fnav-social.is--copied .hero-nav__envelope-closed { opacity: 0; }
+.fnav-social.is--copied .hero-nav__envelope-open { opacity: 1; }
+@supports (d: path("M0 0h1")) {
+  .fnav-social.is--copied .hero-nav__envelope-flap { d: path("M2 8L12 14.5L22 8"); }
+}
+@supports not (d: path("M0 0h1")) {
+  .fnav-social.is--copied .hero-nav__envelope-flap { opacity: 0; }
+}
+.fnav-menu :is(a, button).fnav-social:focus-visible { outline-offset: 0.2rem; }
+/* Without the reel, the four in a single row of their own, as tall as
+   Home's */
+.fnav-menu:not(.has-reel) .fnav-menu__socials-grid {
+  --social-d: min((100cqw - 3 * var(--fnav-gap)) / 4, 100cqh);
+  grid-template-columns: repeat(4, var(--social-d));
+  grid-template-rows: var(--social-d);
+}
+/* The foot: Home and Contact side by side, half and half, Home's height,
+   each a single row with its name on the middle line (Contact's arrow
+   at its top right still) */
+.fnav-menu__foot {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--fnav-gap);
+  height: calc(var(--fnav-menu-home) * var(--fnav-u));
+}
+.fnav-menu__foot > * { min-width: 0; height: 100%; }
+.fnav-menu__foot .fnav-menu__contact {
+  align-items: center;
+  padding-block: 0;
 }
 
 .fnav-menu__tiles {
@@ -7834,7 +8157,6 @@ html.is--page-transition .fnav-promo.is--shown {
   list-style: none;
 }
 .fnav-menu__tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-.fnav-menu__cell.is--wide { grid-column: 1 / -1; }
 
 /* A part of the practice: its name, and under it what it stands for,
    at the foot of the tile */
@@ -7876,18 +8198,36 @@ html.is--page-transition .fnav-promo.is--shown {
 }
 /* The four parts of the practice, as cards (after the references'
    dashboard cards): the soft off-white, near-black type; at the top left,
-   small, what the part stands for, and directly under it, larger, its
-   name; at the top right a small diagonal arrow, an open head whose two
-   arms almost close a square, and a short shaft from its point. Under the pointer the card darkens a shade and the
-   arrow steps out towards its corner. */
+   small, what the part stands for, and at the bottom left, larger, its
+   name, as Contact's name sits at its foot, the room between them open;
+   at the top right the menu's own arrow, small, an open head along
+   the top and right of a square and a shaft from its point (Arrow.astro,
+   shape="corner", at the site's arrow's weight). Under the
+   pointer the card darkens a shade and the arrow steps out towards its corner. */
 .fnav-tile.is--card {
-  justify-content: flex-start;
+  justify-content: space-between;
   gap: calc(0.9 * var(--fnav-u));
   padding: calc(2 * var(--fnav-u));
   background-color: var(--fnav-light);
   color: var(--fnav-ink);
 }
 .fnav-tile.is--card .fnav-tile__note { padding-right: calc(2.4 * var(--fnav-u)); }
+/* The cards' labels as written, in the menu's own face, a size under the
+   notes elsewhere and a little heavier (the interface weight) */
+.fnav-tile.is--card .fnav-tile__note {
+  font-size: calc(0.9 * var(--fnav-note-size));
+  font-weight: var(--weight-ui); --wght: var(--weight-ui);
+}
+/* Each page's own drawing in its arrow's place (MenuIcon.astro): drawn
+   larger than the arrow's square (their lines run to the edge of the box,
+   the arrow's sit inside it), centred on the same point, their lines a
+   little under a pixel whatever their size */
+.fnav-tile__arrow.is--icon {
+  margin: calc(-0.3 * var(--fnav-u)) calc(-0.3 * var(--fnav-u)) 0 0;
+  width: calc(1.6 * var(--fnav-u));
+  height: calc(1.6 * var(--fnav-u));
+}
+.fnav-tile__arrow.is--icon path { stroke-width: 0.8px; vector-effect: non-scaling-stroke; }
 .fnav-tile__arrow {
   position: absolute;
   top: calc(2 * var(--fnav-u));
@@ -7897,9 +8237,9 @@ html.is--page-transition .fnav-promo.is--shown {
   overflow: visible;
   transition: transform 0.3s var(--cta-ease);
 }
-/* Contact: beside the reel, in the cards' off-white, its name set as
-   theirs are, at its foot, the cards' own arrow at its top right on their
-   inset. Opens the contact form in the navigation. */
+/* Contact: at the foot, beside Home, in the cards' colour, its name set
+   as theirs are, the cards' own arrow at its top right on their inset.
+   Opens the contact form in the navigation. */
 .fnav-menu__contact {
   position: relative;
   display: flex;
@@ -7925,29 +8265,24 @@ html.is--page-transition .fnav-promo.is--shown {
   transition-duration: 0.12s;
 }
 .fnav-menu__contact-label { flex: 1; }
-/* Alone in its row (no reel): its name on the middle line, the arrow at
-   the top right still */
-.fnav-menu:not(.has-reel) .fnav-menu__contact {
-  align-items: center;
-  padding-block: 0;
-}
 
 @media (hover: hover) and (pointer: fine) {
   .fnav-tile:hover { background-color: var(--fnav-module-hover); }
   .fnav-tile:is(.is--card, .is--wide):hover { background-color: var(--fnav-light-hover); }
   :is(.fnav-tile.is--card, .fnav-menu__contact):hover .fnav-tile__arrow { transform: translate(0.2rem, -0.2rem); }
   .fnav-menu__contact:hover { background-color: var(--fnav-light-hover); }
+  .fnav-social:hover { background-color: var(--fnav-light-hover); }
+  .fnav-social:hover .hero-nav__envelope-flap { stroke: var(--fnav-light-hover); }
 }
 .fnav-menu :is(a, button):focus-visible { outline: 1px solid #ffffff; outline-offset: 0.2rem; }
-/* Home's own list, after the reel's row: one column */
-.fnav-menu__tiles.is--home { grid-template-columns: minmax(0, 1fr); }
 
 /* ---------- The footer's form ----------
    The menu opened of itself at the foot of the page (floatingnav.js), as
    the footer's own navigation. The bar gives way to its square, with the
    studio's mark in it as the home link, and nothing else on it answers to
-   the pointer; the menu shows the four parts of the practice alone, at
-   one height (--fnav-foot-tile), the same off-white cards as the menu's.
+   the pointer; the menu shows the four parts of the practice alone, the
+   menu's own cards at the menu's own size: no Home between them, no reel
+   and no Contact under them.
    No backdrop (the script never raises it); the square keeps the
    bar's own glass, as it looks everywhere else. The footer keeps the room
    (.site-footer). */
@@ -7956,8 +8291,7 @@ html.is--fnav-foot .fnav {
   cursor: default;
 }
 html.is--fnav-foot .fnav__home { pointer-events: auto; }
-.fnav-menu.is--foot :is(.fnav-menu__cell.is--wide, .fnav-menu__row) { display: none; }
-.fnav-menu.is--foot .fnav-tile { height: calc(var(--fnav-foot-tile) * var(--fnav-u)); }
+.fnav-menu.is--foot :is(.fnav-menu__row, .fnav-menu__foot) { display: none; }
 
 /* ---------- The contact form ----------
    The navigation grown into a panel (floatingnav.js): standing on the
@@ -7998,17 +8332,77 @@ html.is--fnav-foot .fnav__home { pointer-events: auto; }
 .fnav-contact__inner {
   display: flex;
   flex-direction: column;
-  gap: calc(2.4 * var(--fnav-u));
   width: 100%;
+  gap: var(--fnav-gap);
   min-height: 0;
-  padding: calc(3.2 * var(--fnav-u));
   overflow-y: auto;
   overscroll-behavior: contain;
   scrollbar-width: none;
   outline: none;
 }
 .fnav-contact__inner > *,
+.fnav-contact__block > *,
 .fnav-contact__form > * { flex: none; }
+
+/* Two separate white panels, Contact over Form, each with its heading on
+   top, the menu's gap between them. The panel grows out of the bar on its
+   one white ground; once open, the panels take their own white and that
+   ground fades (is--split, floatingnav.js), so the gap opens between them;
+   closing, the ground comes back first and the whole shrinks as one. */
+.fnav-contact__block {
+  display: flex;
+  flex-direction: column;
+  gap: calc(2.4 * var(--fnav-u));
+  padding: calc(3.2 * var(--fnav-u));
+  border-radius: max(3px, 0.35 * var(--fnav-u));
+}
+.fnav-contact.is--split .fnav-contact__block { background: #ffffff; }
+
+/* The address and the channels, on the fields' two columns: the address
+   over Name, the channels over Company */
+.fnav-contact__details {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: calc(2.4 * var(--fnav-u)) calc(2 * var(--fnav-u));
+  margin: 0;
+}
+.fnav-contact__detail {
+  display: flex;
+  flex-direction: column;
+  gap: calc(1 * var(--fnav-u));
+  min-width: 0;
+}
+.fnav-contact__detail dt {
+  font-family: var(--font-label);
+  font-size: calc(1.1 * var(--fnav-u));
+  line-height: 1.3;
+  letter-spacing: var(--track-label);
+  text-transform: uppercase;
+  color: rgba(22, 22, 22, 0.45);
+}
+.fnav-contact__detail dd { margin: 0; }
+.fnav-contact__socials {
+  display: flex;
+  flex-wrap: wrap;
+  gap: calc(0.4 * var(--fnav-u)) calc(1.2 * var(--fnav-u));
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.fnav-contact__link {
+  font-size: calc(1.5 * var(--fnav-u));
+  line-height: 1.35;
+  color: #161616;
+  text-decoration: underline;
+  text-decoration-color: transparent;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.3em;
+  overflow-wrap: anywhere;
+  transition: text-decoration-color 0.25s var(--cta-ease);
+}
+@media (hover: hover) and (pointer: fine) {
+  .fnav-contact__link:hover { text-decoration-color: currentColor; }
+}
 
 .fnav-contact__head {
   display: flex;
@@ -8055,16 +8449,19 @@ html.is--fnav-foot .fnav__home { pointer-events: auto; }
 
 .fnav-contact__form { display: contents; }
 .fnav-contact__form[hidden] { display: none; }
+/* The fields, light: no boxes, each a label over a line of text with a
+   hairline under it, the placeholders a pale grey; roomy between the rows,
+   a column's gutter between the pairs */
 .fnav-contact__fields {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: calc(2.2 * var(--fnav-u)) calc(1.4 * var(--fnav-u));
+  gap: calc(3.6 * var(--fnav-u)) calc(2 * var(--fnav-u));
 }
 .fnav-field { grid-column: 1 / -1; }
 .fnav-field.is--half { grid-column: auto; }
 .fnav-field__label {
   display: block;
-  margin-bottom: calc(0.8 * var(--fnav-u));
+  margin-bottom: calc(1.2 * var(--fnav-u));
   font-family: var(--font-body);
   font-size: calc(1.3 * var(--fnav-u));
   line-height: 1.3;
@@ -8072,38 +8469,46 @@ html.is--fnav-foot .fnav__home { pointer-events: auto; }
   font-weight: var(--weight-ui); --wght: var(--weight-ui);
   color: #161616;
 }
-.fnav-field__mark { color: rgba(22, 22, 22, 0.45); }
-.fnav-field__optional { color: rgba(22, 22, 22, 0.45); }
+.fnav-field__mark { color: rgba(22, 22, 22, 0.4); }
+.fnav-field__optional { color: rgba(22, 22, 22, 0.4); }
 /* At least 16px, so a phone does not zoom in on the field */
 .fnav-field__input {
   display: block;
   width: 100%;
-  height: calc(5 * var(--fnav-u));
+  height: auto;
   margin: 0;
-  padding: 0 calc(1.4 * var(--fnav-u));
-  border: 1px solid rgba(22, 22, 22, 0.14);
-  border-radius: var(--fnav-radius);
-  background-color: #f5f5f3;
+  padding: 0 0 calc(1.2 * var(--fnav-u));
+  border: 0;
+  border-bottom: 1px solid rgba(22, 22, 22, 0.14);
+  border-radius: 0;
+  background-color: transparent;
   color: #161616;
   font: inherit;
   font-size: max(16px, calc(1.5 * var(--fnav-u)));
-  line-height: 1.3;
-  transition: border-color 0.2s var(--cta-ease), background-color 0.2s var(--cta-ease);
+  line-height: 1.4;
+  -webkit-appearance: none;
+  appearance: none;
+  transition: border-color 0.25s var(--cta-ease);
 }
 .fnav-field__input.is--area {
-  height: calc(12 * var(--fnav-u));
-  padding-top: calc(1.3 * var(--fnav-u));
-  padding-bottom: calc(1.3 * var(--fnav-u));
+  height: calc(9 * var(--fnav-u));
+  min-height: calc(5 * var(--fnav-u));
   line-height: 1.45;
   resize: vertical;
 }
-.fnav-field__input::placeholder { color: rgba(22, 22, 22, 0.38); }
+.fnav-field__input::placeholder {
+  color: rgba(22, 22, 22, 0.32);
+  opacity: 1;
+}
 .fnav-field__input:focus {
   outline: none;
-  border-color: rgba(22, 22, 22, 0.55);
-  background-color: #ffffff;
+  border-bottom-color: rgba(22, 22, 22, 0.6);
 }
-.fnav-field.is--invalid .fnav-field__input { border-color: #c42c17; }
+.fnav-field__input:-webkit-autofill {
+  -webkit-box-shadow: 0 0 0 100px #ffffff inset;
+  -webkit-text-fill-color: #161616;
+}
+.fnav-field.is--invalid .fnav-field__input { border-bottom-color: #c42c17; }
 .fnav-field__error {
   margin: calc(0.6 * var(--fnav-u)) 0 0;
   font-size: calc(1.2 * var(--fnav-u));
@@ -8112,35 +8517,37 @@ html.is--fnav-foot .fnav__home { pointer-events: auto; }
 }
 .fnav-field__error:empty { display: none; }
 
-/* Submit Enquiry: black, across the panel, in the site's own type */
+/* Submit Enquiry: a small black button under the fields, left, its words
+   and arrow close together, in the labels' weight */
 .fnav-contact__actions {
   display: flex;
   flex-direction: column;
+  align-items: flex-start;
   gap: calc(1.2 * var(--fnav-u));
-  margin-top: calc(0.4 * var(--fnav-u));
+  margin-top: calc(1.2 * var(--fnav-u));
 }
 .fnav-contact__submit {
   position: relative;
-  display: flex;
-  justify-content: space-between;
+  display: inline-flex;
   align-items: center;
-  width: 100%;
-  height: calc(5.6 * var(--fnav-u));
-  padding: 0 calc(1.6 * var(--fnav-u));
+  gap: calc(1.2 * var(--fnav-u));
+  width: auto;
+  height: calc(4.4 * var(--fnav-u));
+  padding: 0 calc(2 * var(--fnav-u));
   border: 0;
   border-radius: var(--fnav-radius);
   background-color: #111111;
   color: #ffffff;
   font-family: var(--font-body);
-  font-size: calc(1.5 * var(--fnav-u));
+  font-size: calc(1.3 * var(--fnav-u));
   letter-spacing: var(--track-body);
-  font-weight: var(--weight-strong); --wght: var(--weight-strong);
+  font-weight: var(--weight-ui); --wght: var(--weight-ui);
   cursor: pointer;
   transition: background-color 0.25s var(--cta-ease), opacity 0.25s;
 }
 .fnav-contact__submit-arrow {
-  width: calc(1.2 * var(--fnav-u));
-  height: calc(1.2 * var(--fnav-u));
+  width: calc(1 * var(--fnav-u));
+  height: calc(1 * var(--fnav-u));
   transition: transform 0.3s var(--cta-ease);
 }
 .fnav-contact__submit:disabled { opacity: 0.7; cursor: progress; }
@@ -8175,7 +8582,8 @@ html.is--fnav-foot .fnav__home { pointer-events: auto; }
 }
 
 @media screen and (max-width: 600px) {
-  .fnav-contact__inner { gap: calc(2 * var(--fnav-u)); padding: calc(2.4 * var(--fnav-u)); }
+  .fnav-contact__block { gap: calc(2 * var(--fnav-u)); padding: calc(2.4 * var(--fnav-u)); }
+  .fnav-contact__details { grid-template-columns: 1fr; }
   .fnav-field.is--half { grid-column: 1 / -1; }
 }
 
@@ -8187,13 +8595,12 @@ html.is--fnav-foot .fnav__home { pointer-events: auto; }
     --fnav-menu-row: 12.5;
     --fnav-menu-tile: 11.5;
     --fnav-menu-tile-min: 9.5;
-    --fnav-title-size: calc(1.7 * var(--fnav-u));
+    --fnav-title-size: calc(1.85 * var(--fnav-u));
     width: calc(34 * var(--fnav-u));
   }
   .fnav-tile.is--card { padding: calc(1.6 * var(--fnav-u)); }
-  /* A label may run to two lines here: each keeps two lines' room, so the
-     names stand level across the cards */
-  .fnav-tile.is--card .fnav-tile__note { min-height: 2.5em; }
+  /* A label may run to two lines here; the labels start level at the
+     cards' top and the names stand level at their foot all the same */
   .fnav-tile__arrow { top: calc(1.6 * var(--fnav-u)); right: calc(1.6 * var(--fnav-u)); }
   .fnav-menu:not(.has-reel) { --fnav-menu-fixed: 15.9; }
 }
@@ -8758,13 +9165,15 @@ html.is--fnav-foot .fnav__home { pointer-events: auto; }
 }
 
 /* ---------- Set to the site ----------
-   Nearly the whole screen: the player's frame fills the screen less a
-   small, even margin (--film-pad, and the device's safe areas), its shape
-   held within an eighth of the film's own (16:9 until the video gives its
-   own, reel.js), and the film covers it (Osmo's cover mode). So on a
-   desktop the margin is the same on all four sides, and on a phone held
-   upright the frame is the film's width; the film is never stretched,
-   and cropped by an eighth at most. Its corners are barely rounded, as
+   A contained view, not the whole screen (full screen is the player's own
+   control): the player's frame is the screen less one clear margin, the
+   same on all four sides (--film-pad: 8% of the screen's height, at most
+   6% of its width, and the device's safe areas), and the film covers it
+   (Osmo's cover mode), never stretched, trimmed only by the little the
+   screen's shape differs from the film's. On a screen held upright, where
+   covering would cut most of the film away, the frame is the film's own
+   shape instead (16:9 until the video gives its own, reel.js), the full
+   width less the margin, and centred. Its corners are barely rounded, as
    the page transition's; the close control stands inside the frame's top
    right corner, the navigation's own square, in sight whenever the player
    is open.
@@ -8790,7 +9199,7 @@ html.is--fnav-foot .fnav__home { pointer-events: auto; }
 .bunny-lightbox[data-reel-lightbox] {
   --reel-dark: 0.92;
   --film-ratio: 1.7778;
-  --film-pad: max(12px, min(2.4vw, 2.4rem));
+  --film-pad: max(16px, min(6vw, 8svh));
   --film-inset: max(10px, min(1.6vw, 1.6rem));
   --film-radius: max(3px, 0.4rem);
   --film-key: max(32px, 3.2rem);
@@ -8806,8 +9215,14 @@ html.is--fnav-foot .fnav__home { pointer-events: auto; }
 .bunny-lightbox[data-reel-lightbox]:focus { outline: none; }
 .bunny-lightbox[data-reel-lightbox] .bunny-lightbox__calc {
   flex: none;
-  width: min(100cqw, 100cqh * var(--film-ratio) * 1.125);
-  height: min(100cqh, 100cqw * 1.125 / var(--film-ratio));
+  width: 100cqw;
+  height: 100cqh;
+}
+@media (orientation: portrait) {
+  .bunny-lightbox[data-reel-lightbox] .bunny-lightbox__calc {
+    width: min(100cqw, 100cqh * var(--film-ratio));
+    height: min(100cqh, 100cqw / var(--film-ratio));
+  }
 }
 .bunny-lightbox[data-reel-lightbox] .bunny-lightbox__calc,
 .bunny-lightbox[data-reel-lightbox] .bunny-lightbox__dark,
@@ -9277,12 +9692,14 @@ html:has(.site-nav + .theme-light) .cursor-label__box {
 .logo-strip__head,
 .logo-strip__note,
 .arch-stage__head,
+.arch-stage__about,
 .map-spread__head,
 .map-spread__footer,
 .book-feature,
 .testimonial-slide__who,
 .project-note,
-.project-close {
+.project-close,
+.page-header__title {
   position: relative;
   z-index: 91;
 }
@@ -9447,9 +9864,62 @@ html:has(.site-nav + .theme-light) .cursor-label__box {
 /* The Influence hero: the name on two lines (Architectural / Influence),
    and the atlas behind it, centred across the first screen, its hotspots
    still live (the name's layer lets the pointer through to them) */
-.shop-hero.is--influence { position: relative; overflow: clip; min-height: 260svh; }
+.shop-hero.is--influence {
+  position: relative;
+  overflow: clip;
+  /* The column of panels' top (.influence-strip): its second panel's
+     middle six cells under the screen's middle on arrival (so a small one
+     stands over the large one), never closer under the links than three
+     cells; and the large panel's foot, the words' (.influence-hero__about),
+     the small one's height, a cell and the large one's height under that */
+  --strip-top: max(calc(50svh - 30 * var(--grid-pitch)), calc(21 * var(--grid-pitch)));
+  --strip-lit-foot: calc(var(--strip-top) + 57 * var(--grid-pitch));
+}
 .shop-hero.is--influence h1 { max-width: 7.4em; }
 .shop-hero.is--influence .shop-hero__body { position: relative; z-index: 1; pointer-events: none; }
+/* Well under the name, the words the home hero sets under this part's
+   name, as they are set there (.home-list__field.is--about: the body face
+   on 1.4, broken in the same three lines, its measure in its own ems), a
+   hair smaller (13.5px), flush left on the name's own left edge; their
+   last line's baseline level with the foot of the column's large panel
+   (--strip-lit-foot), the box trimmed to the letters so it is the letters
+   that line up */
+.influence-hero__about {
+  position: absolute;
+  z-index: 1;
+  top: var(--strip-lit-foot);
+  left: var(--hero-name-left);
+  max-width: 24em;
+  margin: 0;
+  transform: translateY(-100%);
+  text-box: trim-both cap alphabetic;
+  pointer-events: none;
+  font-family: var(--font-body);
+  font-size: 13.5px;
+  line-height: 1.4;
+  letter-spacing: var(--track-body);
+  text-align: left;
+  text-transform: none;
+  font-weight: var(--weight-body); --wght: var(--weight-body);
+  color: #f4f4f4;
+}
+/* Under the words, on the same left edge: [Scroll Down], small in the
+   accent face (the label rule, "Typefaces"), a quiet cue, at the foot of
+   the first screen: on a row as tall as the studio's name's at the top
+   (.hero-nav__brand, three cells), as far up from the screen's foot as
+   that row is down from its top (--hero-top), so the two mirror each
+   other. On a screen too short for that, never nearer the words than four
+   cells under their last baseline. */
+.influence-hero__cue {
+  position: absolute;
+  z-index: 1;
+  top: max(calc(var(--strip-lit-foot) + 4 * var(--grid-pitch)), calc(100svh - var(--hero-top) - 3 * var(--grid-pitch)));
+  left: var(--hero-name-left);
+  margin: 0;
+  line-height: calc(3 * var(--grid-pitch));
+  pointer-events: none;
+  color: rgba(244, 244, 244, 0.56);
+}
 .influence-map {
   position: absolute;
   inset: 0;
@@ -9469,6 +9939,205 @@ html:has(.site-nav + .theme-light) .cursor-label__box {
 .influence-map__frame { position: sticky; top: 0; height: 100svh; display: flex; align-items: center; justify-content: center; overflow: hidden; }
 .influence-map .world-map-stage { flex: none; width: min(94vw, 100svh * 1.9); }
 .influence-map .world-map { opacity: 0.62; }
+/* The column of panels: on the pages' line (a cell left of the
+   links' text, under it), small panels one under another a cell apart,
+   all on the 7px grid (34 by 21 cells); the one on the focus line (where
+   the second stands on arrival) grown to the large one (56 by 35, room
+   for pictures in it), its left edge where it was, the next taking over
+   as the page scrolls (influence.js sets --t, 0 to 1, on each). Over the
+   map, under nothing; it lets the pointer through to the map. */
+.influence-strip {
+  --strip-w: calc(34 * var(--grid-pitch));
+  --strip-h: calc(21 * var(--grid-pitch));
+  --strip-lit-w: calc(56 * var(--grid-pitch));
+  --strip-lit-h: calc(35 * var(--grid-pitch));
+  /* The panels' colours: the Partner page's paper, near-black words, the
+     channel's square in that page's squares' shade with a black mark */
+  --strip-ground: var(--partner-paper);
+  --strip-ink: #0a0a0a;
+  --strip-ink-soft: rgba(10, 10, 10, 0.72);
+  --strip-square: var(--partner-social);
+  --strip-square-ink: #0a0a0a;
+  position: absolute;
+  z-index: 1;
+  top: var(--strip-top);
+  left: calc(var(--hero-links-left) - var(--grid-pitch));
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--grid-pitch);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  pointer-events: none;
+}
+.influence-strip__item {
+  --t: 0;
+  /* Its inset, two cells when small and three when large, growing with it */
+  --strip-pad: calc(var(--grid-pitch) * (2 + var(--t)));
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  box-sizing: border-box;
+  width: calc(var(--strip-w) + (var(--strip-lit-w) - var(--strip-w)) * var(--t));
+  height: calc(var(--strip-h) + (var(--strip-lit-h) - var(--strip-h)) * var(--t));
+  padding: var(--strip-pad);
+  overflow: hidden;
+  /* Its words over its pictures, where it has some (below) */
+  isolation: isolate;
+  /* Only just rounded, as the floating menu's cards are */
+  border-radius: var(--fnav-radius);
+  background: var(--strip-ground);
+  color: var(--strip-ink);
+}
+/* What it counts, small at the top, and the figure large under it, both
+   in the body face; each grows with the panel (--t), from what reads in a
+   small panel (11px over 28px) to what fills the large one (13px over
+   42px), so the panel coming up carries its words up with it. The figure
+   medium and close-set, as a dial's reading. */
+.influence-strip__label {
+  margin: 0;
+  font-family: var(--font-body);
+  font-size: calc(1.1rem + 0.2rem * var(--t));
+  line-height: 1.3;
+  letter-spacing: var(--track-body);
+  font-weight: var(--weight-body); --wght: var(--weight-body);
+  white-space: nowrap;
+  color: var(--strip-ink-soft);
+}
+.influence-strip__figure {
+  margin: calc(0.4rem + 0.8rem * var(--t)) 0 0;
+  font-family: var(--font-body);
+  font-size: calc(2.8rem + 1.4rem * var(--t));
+  line-height: 1;
+  letter-spacing: -0.02em;
+  font-weight: 500; --wght: 500;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+/* In each panel's bottom left corner, on its inset: a square
+   as the ways to Tom are at the top right of every page (.hero-nav__pill,
+   five cells less a pixel), in the panel's square colours (above), the
+   mark centred in it at the same share of the square, the square marks a
+   little under the wide one */
+.influence-strip__social {
+  --pill: calc(5 * var(--grid-pitch) - 1px);
+  --pill-mark: 0.4;
+  position: absolute;
+  left: var(--strip-pad);
+  bottom: var(--strip-pad);
+  width: var(--pill);
+  height: var(--pill);
+  border-radius: 1px;
+  background-color: var(--strip-square);
+  color: var(--strip-square-ink);
+}
+.influence-strip__social.is--instagram { --pill-mark-k: 0.88; }
+.influence-strip__mark {
+  display: block;
+  box-sizing: border-box;
+  width: 100%;
+  height: 100%;
+  padding: calc(var(--pill) * (1 - var(--pill-mark) * var(--pill-mark-k, 1)) / 2);
+}
+/* A panel with pictures (Instagram's and the total's, influence.astro):
+   three of the collage's photographs as the closing cards' Shop & Courses
+   fan (.explore-card__fan): loosely fanned cards from the panel's lower
+   middle up and out past its top right corner, each a little further
+   along, higher and turned a little more, the first in front, a third of
+   the panel's width each; in the panel's own proportions, so the fan keeps
+   its shape as the panel grows, the panel cropping what runs past its
+   edges, the words over them. The photographs as they are: in their own
+   colour and light, and clear of grain. The band's grain lies over all
+   its content (z-index 95), so the column stands just above it (under the
+   bar at the top, 150), and each panel lays the same grain over its own
+   paper alone, under its pictures, so the panels keep their texture. */
+.influence-strip { z-index: 96; }
+.influence-strip__item::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 0;
+  width: calc(100% + var(--grain-tile-w));
+  height: calc(100% + var(--grain-tile-h));
+  background: url("/assets/graphics/grain-noise-fine.png") 0 0 / var(--grain-tile-w) var(--grain-tile-h) repeat;
+  mix-blend-mode: soft-light;
+  opacity: calc(var(--footer-grain) * var(--grain-gain));
+  pointer-events: none;
+  animation: grain-shift 3.2s steps(1, end) infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .influence-strip__item::before { animation: none; }
+}
+.influence-strip__label,
+.influence-strip__figure { position: relative; z-index: 2; }
+.influence-strip__fan {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+}
+.influence-strip__sheet {
+  position: absolute;
+  width: 32%;
+  aspect-ratio: 4 / 5;
+  overflow: hidden;
+  border-radius: var(--radius);
+  background-color: #1a1a1a;
+}
+.influence-strip__sheet img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.influence-strip__sheet:nth-child(1) { left: 41%; top: 50%; z-index: 3; transform: rotate(-7deg); }
+.influence-strip__sheet:nth-child(2) { left: 58%; top: 21%; z-index: 2; transform: rotate(3deg); }
+.influence-strip__sheet:nth-child(3) { left: 76%; top: -9%; z-index: 1; transform: rotate(10deg); }
+/* A phone: no room beside the words, so the words follow the name and the
+   column follows them, all on the name's left edge, the copy no longer
+   stretched to push them down */
+@media screen and (max-width: 767px) {
+  .shop-hero.is--influence .shop-hero__body { flex: none; }
+  /* The panels on the phone's smaller cells: their words a size down, so
+     the figure clears the square under it (9.5px over 22px, to 11.5px over
+     31px) */
+  .influence-strip__label { font-size: calc(0.95rem + 0.2rem * var(--t)); }
+  .influence-strip__figure { font-size: calc(2.2rem + 0.9rem * var(--t)); }
+  .influence-hero__about {
+    position: relative;
+    top: auto;
+    left: auto;
+    align-self: flex-start;
+    margin: 16svh 0 0 calc(var(--hero-name-left) - var(--site-inset));
+    transform: none;
+    text-box: normal;
+  }
+  /* A phone: the column of panels fills the foot of the first screen, so
+     the cue follows the words instead, a cell nearer for its own row */
+  .influence-hero__cue {
+    position: relative;
+    top: auto;
+    left: auto;
+    align-self: flex-start;
+    margin: calc(3 * var(--grid-pitch)) 0 0 calc(var(--hero-name-left) - var(--site-inset));
+  }
+  .influence-strip {
+    position: relative;
+    top: auto;
+    left: auto;
+    margin: calc(12 * var(--grid-pitch)) 0 0 calc(var(--hero-name-left) - var(--site-inset));
+  }
+}
+/* The Influence page as one ground: no hairline between its sections
+   (the registers' rule, "Design language" below), and the alternate
+   section on the same black as the rest; and the Influence page's former
+   layout so too, wherever it stands (InfluenceStory.astro, .influence-ground) */
+main[data-barba-namespace="influence"] section,
+.influence-ground { border-top: 0; }
+main[data-barba-namespace="influence"] .section-alt,
+.section-alt.influence-ground { background-color: #000000; }
 /* The Partner page's hero on the paper, as the rest of that page */
 .shop-hero.is--partner { background: var(--paper); color: #0a0a0a; min-height: 0; padding-bottom: 0; }
 /* The hero's map: finer lines than the atlas section's, a hair */
@@ -9476,31 +10145,28 @@ html:has(.site-nav + .theme-light) .cursor-label__box {
 
 /* ---------- Partner page only ---------- */
 /* The mono (one static 300 cut) given a little body with a hairline stroke */
-main[data-barba-namespace="partner"] :is(.site-nav__link, .cta__label, .slide-card__index, .tagline, .logo-strip__note, .testimonial-chip__role, .results-card__index, .results-card__tag, .results-card__foot, .form-label, .case-panel__tag, .case-panel__label, .step-number) {
+main[data-barba-namespace="partner"] :is(.site-nav__link, .cta__label, .slide-card__index, .tagline, .logo-strip__note, .testimonial-chip__role, .results-card__index, .results-card__tag, .results-card__foot, .case-panel__tag, .case-panel__label, .step-number) {
   -webkit-text-stroke: 0.4px currentColor;
 }
 /* No column lines on this page */
 main[data-barba-namespace="partner"],
 main[data-barba-namespace="partner"] :is(.theme-light, .section, [class]) { --grid-line: transparent; }
-/* The ways to Tom in their light form: black marks on squares a shade under the paper */
-main[data-barba-namespace="partner"] .hero-nav__pill { --hero-social-bg: #e4e2de; color: #0a0a0a; }
 
 
 /* The Architecture page's name set as the Shop, Influence and Partner heroes':
    the same size, flush left on the studio's name, its arrows kept beside it */
 .arch-stage__title { margin-left: -0.02em; font-size: 8rem; line-height: 0.95; letter-spacing: -0.04em; }
-/* On a wide screen the name stands up beside the column of pages, a size
-   larger, its foot on Partner's (the last link's baseline, 12.13rem down
-   the bar): its box is trimmed to its capitals (0.728em of the face), so
-   the stage's top padding is that baseline less their height (set as the
-   rule that clears the bar on every inner page is, to outrank it) */
-@media screen and (min-width: 992px) {
-  .arch-page { --arch-title-size: 8.8rem; }
-  main.arch-page:not(:has(.home-hero)) .site-nav + .arch-stage { padding-top: calc(12.13rem - 0.728 * var(--arch-title-size)); }
-  .arch-stage__title { font-size: var(--arch-title-size); }
-}
-@media screen and (max-width: 991px) { .arch-stage__title { font-size: 6.8rem; } }
-@media screen and (max-width: 767px) { .arch-stage__title { font-size: 4.8rem; } }
+/* The name stands just under the column of pages: its capitals' top a
+   short gap (--arch-title-gap) below the foot of the last link
+   (its baseline, --arch-partner-foot down the bar, measured at each
+   width). Its box is trimmed to its capitals, so that is the stage's top
+   padding (set as the rule that clears the bar on every inner page is, to
+   outrank it). On a wide screen, a size larger. */
+.arch-page { --arch-title-size: 8rem; --arch-partner-foot: 12.13rem; --arch-title-gap: 1.2rem; }
+@media screen and (max-width: 991px) { .arch-page { --arch-title-size: 6.2rem; --arch-partner-foot: 13.41rem; } }
+@media screen and (max-width: 767px) { .arch-page { --arch-title-size: 4.4rem; --arch-partner-foot: 14.26rem; --arch-title-gap: 1.2rem; } }
+main.arch-page:not(:has(.home-hero)) .site-nav + .arch-stage { padding-top: calc(var(--arch-partner-foot) + var(--arch-title-gap)); }
+.arch-stage__title { font-size: var(--arch-title-size); }
 /* How many projects, in square brackets: small and raised at the name's
    top right, in the name's own ems so it keeps its place at every size, a
    hair clear of the last letter */
@@ -9517,8 +10183,31 @@ main[data-barba-namespace="partner"] .hero-nav__pill { --hero-social-bg: #e4e2de
 /* The name's box ends on its letters' foot (the baseline), so the room
    under it, and the row centred in it, start where the eye sees the name
    end */
-.arch-stage__title { text-box: trim-end cap alphabetic; }
-@media screen and (min-width: 992px) { .arch-stage__title { text-box: trim-both cap alphabetic; } }
+.arch-stage__title { text-box: trim-both cap alphabetic; }
+/* Under the row, the words the home hero sets under this part's name
+   (home-hero.ts), set as the Influence page's former hero sets its own
+   (.influence-hero__about): the body face, 13.5px on 1.4, flush left on
+   the name's left edge (the head's inset), a clear gap under the projects'
+   names (--arch-about-gap past their height, --arch-label-h); on two short
+   lines, evened out (its measure narrow enough to break its words in two);
+   its box trimmed to its letters. Like the names, it is left out of the
+   row's centring (its room taken back under it, the two lines about
+   2.2em), so the pictures stay centred where they were. */
+.arch-stage__about {
+  --arch-about-gap: 4rem;
+  flex: none;
+  width: 17em;
+  text-wrap: balance;
+  margin: calc(var(--arch-label-h) + var(--arch-about-gap)) 0 calc(-1 * (var(--arch-label-h) + var(--arch-about-gap) + 2.2em)) var(--hero-name-left);
+  text-box: trim-both cap alphabetic;
+  font-family: var(--font-body);
+  font-size: 13.5px;
+  line-height: 1.4;
+  letter-spacing: var(--track-body);
+  text-transform: none;
+  font-weight: var(--weight-body); --wght: var(--weight-body);
+  color: #f4f4f4;
+}
 /* The arrows start under the YouTube square: the ways to Tom's row of four squares, measured from the same right edge */
 .arch-arrows { width: calc(4 * (5 * var(--grid-pitch) - 1px) + 9px); justify-content: flex-start; }
 /* The row in the middle of the room between the name's foot and the top of
@@ -9527,7 +10216,7 @@ main[data-barba-namespace="partner"] .hero-nav__pill { --hero-social-bg: #e4e2de
    (--arch-label-h) left out of the centring */
 .arch-stage { --arch-foot: calc(var(--fnav-bottom) + var(--fnav-bar-h)); padding-bottom: var(--arch-foot); }
 .arch-page { --arch-label-h: calc(1.2rem + 1.4rem * 1.2); }
-.arch-stage__slider { flex: 1; min-height: 0; display: flex; align-items: center; }
+.arch-stage__slider { flex: 1; min-height: 0; display: flex; flex-direction: column; justify-content: center; }
 .arch-stage__slider .parallax-slider__collection { margin-bottom: calc(-1 * var(--arch-label-h)); }
 /* The row unseen until the slider has set itself (archslider.js), then faded in */
 .arch-stage__slider { transition: opacity 0.5s ease; }
@@ -9540,21 +10229,229 @@ main[data-barba-namespace="partner"] .hero-nav__pill { --hero-social-bg: #e4e2de
   /* The context under the name: two lines */
   .arch-page { --arch-label-h: calc(1.2rem + 1.4rem * 1.2 + 0.4rem + 0.9rem * 1.5); }
 }
-/* The Influence map painted in its opening, zoomed-in state from the first
-   frame (the same values influence.js starts its zoom from), so it never
-   shows the whole map before the script takes over */
-.influence-map .world-map-stage { transform: translate(-1%, -26%) scale(1.5); }
-@media (prefers-reduced-motion: reduce) {
-  .influence-map .world-map-stage { transform: none; }
+/* The Partner page on a cool, paper off-white, its squares a shade under
+   it (named once, as the Influence hero's panels take them too) */
+:root {
+  --partner-paper: #dcdee1;
+  --partner-social: #cbced2;
 }
-/* The Partner page on a cool, paper off-white */
-main[data-barba-namespace="partner"] { --paper: #dcdee1; }
-main[data-barba-namespace="partner"] .hero-nav__pill { --hero-social-bg: #cbced2; }
+main[data-barba-namespace="partner"] { --paper: var(--partner-paper); }
 /* The Influence map without the scroll zoom: held at its zoomed-in framing,
    running on past the first screen and scrolling away with the page; the
-   cities lit throughout */
-.shop-hero.is--influence { min-height: 150svh; }
+   cities lit throughout. The hero as long as its column of panels needs
+   (--strip-n of them, influence.astro): the last one comes onto the focus
+   line once the page has scrolled a panel's pitch (22 cells) for each one
+   after the second, and the hero runs on a screen past that, so it is
+   still the hero round it (a screen and a half at the least) */
+.shop-hero.is--influence { min-height: max(150svh, calc(100svh + (var(--strip-n, 5) - 2) * 22 * var(--grid-pitch))); }
 .influence-map__frame { position: absolute; inset: 0; height: auto; }
+
+/* ---------- Influence: the map at the edges ----------
+   The hero's map drawn as two groups (WorldMapLines.astro, `parted`), the
+   Americas and the rest of the world, each pushed out to its own edge of
+   the screen, so the map is a texture at the two sides and the middle,
+   where the name stands, is the page's open black: the Americas' eastern
+   coasts (Brazil, Greenland at the top) just in from the left edge
+   (--map-west, in the plate's own units), the west of Africa, Iberia and
+   the British Isles in from the right (--map-east), the rest of each
+   running off the screen. The plate is set by its own units across the
+   screen (--atlas-k: about 760 of them showing), from x 400 at the left
+   edge (the plate starts at 117) before the groups move, and from y 52 at
+   the top of its section (.influence-atlas, on the Influence page, as it
+   was at the top of the page's former hero). Denser than the atlas elsewhere, and quiet: fuller
+   strokes, twice as many of them (a second field between the first,
+   WorldMapLines.astro), at about a third of full strength, a texture behind the
+   page rather than a picture. */
+.influence-atlas {
+  --atlas-k: calc(100vw / 760);
+  --atlas-x0: 400;
+  --atlas-y0: 52;
+  /* Brazil's tip about a fifth of the way in, Greenland's east coast about
+     a third; the west of Africa from about 82% across */
+  --map-west: 20px;
+  --map-east: 410px;
+}
+/* On a phone, a closer view (about 400 units), the two coasts in from the
+   edges by about the same share */
+@media screen and (max-width: 767px) {
+  .influence-atlas {
+    --atlas-k: calc(100vw / 400);
+    --atlas-x0: 420;
+    --map-west: -35px;
+    --map-east: 135px;
+  }
+}
+.influence-map__frame { display: block; }
+/* The plate's box starts at x 117, y 1 (MAP_VIEWBOX) */
+.influence-map .world-map-stage {
+  position: absolute;
+  top: calc((1 - var(--atlas-y0)) * var(--atlas-k));
+  left: calc((117 - var(--atlas-x0)) * var(--atlas-k));
+  width: calc(1238 * var(--atlas-k));
+}
+.influence-map .world-map { opacity: 0.92; overflow: visible; }
+.influence-map .world-map__field { stroke-opacity: 0.34; stroke-width: 0.5px; }
+.world-map.is--parted .world-map__part.is--americas { transform: translateX(var(--map-west, 0px)); }
+.world-map.is--parted .world-map__part.is--rest { transform: translateX(var(--map-east, 0px)); }
+/* The map's own section on the Influence page (influence.astro), held
+   for later: nothing in it but the map, on the page's black and grain (a
+   band, .section), as tall as the hero it stood behind was at the least,
+   so it shows as it did there */
+.influence-atlas {
+  min-height: 150svh;
+  padding: 0;
+}
+
+/* ---------- Influence: the stepped hero ----------
+   influence.astro; influence.js, initInfluenceStage. A screen tall and a
+   spread more (--stage-spread: the scrolling over which the four spread,
+   while the screen is held; spread, they go straight on up with the page),
+   scrolling as any section does (nothing holds the page), on the plain
+   black: the page's name large at the top left on the studio's name's
+   edge, part of the page, scrolling away with it; and the stage's screen
+   (sticky: held to the screen by the browser itself while the stage's
+   first screen scrolls by, then going on up with it) holding four
+   photographs on its foot, side by side from the left edge to the right:
+   in the composition, three steps rising from the lower left towards the
+   middle and the large photograph on the right: one deep step down from
+   the photograph's top to the first of the three (--stage-first), then
+   two smaller, even ones (--stage-step), as shares of the screen's height
+   in svh.
+
+   One number moves it all: --p, how far the stage's first screen has
+   scrolled towards the full spread (0 to 1, the script's one write a
+   frame, straight from the scroll). From it each panel's left edge, width
+   and top are drawn as a straight line between the composition (--x, --w
+   and its step) and the spread (--xf, --wf: four even columns, the
+   screen's full height), all four together, so the stair opens into the
+   row as one movement, and closes again the same way. Each panel is a box
+   that only shows what is inside it; its picture is a fixed size (the
+   screen's height, the wider of the panel's two widths, --pw), on its own
+   layer, centred on the panel and standing on its foot, so as the box grows
+   it shows more of the picture, which is never scaled, never stretched and
+   never drawn again. Nothing here is measured or repainted while it moves:
+   four boxes laid out in a screen of their own (contain), their pictures
+   moved with them. The photographs in their own colour, muted (a little
+   under their saturation and their light). Reduced motion: the
+   composition simply stands.
+
+   Under the name, on its edge, the page's short description: the foot of
+   the text's column (--stage-text-foot) level with the first step's top,
+   so the description stands well below the name, over the second step and
+   clear of it, no wider than that step; on a screen too short for that, it
+   follows the name at a set gap instead, and the deep step grows deeper
+   (so the second step starts a gap below the text's foot at its longest,
+   --stage-text-h). Each picture also starts lowered in its
+   frame by half its panel's top (--stage-lift), rising to its place as
+   the frame opens (a move, never a scale), so the large photograph shows
+   Tom's head in the composition. */
+.influence-stage {
+  --stage-top: 26.3svh;
+  --stage-title-size: 8rem;
+  /* The text a little above the line the inner pages clear the bar by */
+  --stage-text-top: calc(var(--nav-height) - 3rem);
+  --stage-text-h: calc(var(--stage-text-top) + 1.9 * var(--stage-title-size) + 4rem + 5 * 1.22 * 14.5px);
+  --stage-step: 11.8svh;
+  --stage-first: max(28.1svh, calc(var(--stage-text-h) + 3rem - var(--stage-top) - var(--stage-step)));
+  --stage-text-foot: calc(var(--stage-top) + var(--stage-first));
+  --stage-lift: 0.5;
+  --stage-spread: 85svh;
+  position: relative;
+  height: 185vh;
+  height: calc(100svh + var(--stage-spread));
+  overflow: clip;
+  background-color: #000000;
+}
+/* The first thing under the bar, which every inner page's first block
+   clears (padding); the stage is laid out under the bar itself */
+main:not(:has(.home-hero)) .site-nav + .influence-stage:not(.page-header) { padding-top: 0; }
+.influence-stage__screen {
+  --p: 0;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  height: 100svh;
+  overflow: hidden;
+  contain: layout paint;
+}
+.influence-stage__panel {
+  --y: calc(var(--stage-top) + min(var(--step), 1) * var(--stage-first) + max(var(--step) - 1, 0) * var(--stage-step));
+  position: absolute;
+  bottom: 0;
+  left: calc((var(--x) + (var(--xf) - var(--x)) * var(--p)) * 100%);
+  width: calc((var(--w) + (var(--wf) - var(--w)) * var(--p)) * 100%);
+  top: calc(var(--y) * (1 - var(--p)));
+  overflow: hidden;
+}
+.influence-stage__img {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  display: block;
+  width: calc(var(--pw) * 100vw);
+  max-width: none;
+  height: 100vh;
+  height: 100svh;
+  object-fit: cover;
+  filter: saturate(0.7) brightness(0.8) contrast(1.04);
+  transform: translate(-50%, calc(var(--y) * var(--stage-lift) * (1 - var(--p))));
+  will-change: transform;
+}
+.influence-stage__text {
+  position: absolute;
+  z-index: 10;
+  top: var(--stage-text-top);
+  left: var(--hero-name-left);
+  right: var(--site-inset);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: flex-start;
+  min-height: calc(var(--stage-text-foot) - var(--stage-text-top));
+  pointer-events: none;
+}
+.influence-stage__lead {
+  width: min(300px, calc(33.4vw - var(--hero-name-left) - 2rem));
+  max-width: 100%;
+  margin: 4rem 0 0;
+  font-family: var(--font-body);
+  font-size: 14.5px;
+  line-height: 1.22;
+  letter-spacing: var(--track-body);
+  text-wrap: pretty;
+  font-weight: var(--weight-body); --wght: var(--weight-body);
+  color: #f4f4f4;
+}
+.influence-stage__title {
+  max-width: 7.4em;
+  margin: 0 0 0 -0.02em;
+  color: #ffffff;
+  font-size: var(--stage-title-size);
+  line-height: 0.95;
+  letter-spacing: -0.04em;
+  text-wrap: balance;
+  font-weight: var(--weight-strong); --wght: var(--weight-strong);
+  pointer-events: none;
+}
+@media screen and (max-width: 991px) {
+  .influence-stage { --stage-title-size: 7.4rem; }
+}
+/* On a phone the name runs the screen's width, so the text comes first,
+   the description at its gap under the name, and the stair starts below
+   them both (about the text's height under the bar, half the screen at
+   the least), its three steps sharing what is left down to 85% of the
+   screen */
+@media screen and (max-width: 767px) {
+  .influence-stage {
+    --stage-title-size: 5.2rem;
+    --stage-top: max(50svh, calc(var(--nav-height) + 24rem));
+    --stage-step: calc((85svh - var(--stage-top)) / 3);
+    --stage-first: var(--stage-step);
+    --stage-text-top: calc(var(--nav-height) - 1.5rem);
+  }
+  .influence-stage__text { min-height: 0; }
+  .influence-stage__lead { width: 300px; }
+}
 
 /* ---------- Statement block (StatementBlock.astro) ---------- */
 /* One rectangular block across the page between the side insets, the
@@ -9578,7 +10475,22 @@ main[data-barba-namespace="partner"] .hero-nav__pill { --hero-social-bg: #cbced2
   .statement-block__text { font-size: 3.2rem; text-indent: 16%; }
 }
 .logo-wall__statement.is--block { padding: 0; }
-.influence-statement { position: relative; z-index: 1; background: #000000; color: #f4f4f4; }
+/* Centred by its lines (StatementBlock.astro, `centred`): the block moved
+   over as a whole, by what the script measures; the text inside it set as
+   ever */
+.statement-block.is--centred .statement-block__text { translate: var(--statement-shift, 0px) 0; }
+/* On Influence, the approach in the middle of the collage's first screen
+   (.influence-hero__head), over the photographs: a narrower block, each
+   line centred, no indent, the lines evened out */
+.influence-hero__head .statement-block { padding: 0; }
+.influence-hero__head .statement-block__text {
+  color: #f4f4f4;
+  max-width: 15em;
+  margin: 0 auto;
+  text-align: center;
+  text-indent: 0;
+  text-wrap: balance;
+}
 /* The indent is the block's first line only: the scroll highlight wraps each
    word in a box of its own (text-highlight.js), which would inherit it */
 .statement-block__text * { text-indent: 0; }

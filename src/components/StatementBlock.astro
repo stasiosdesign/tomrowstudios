@@ -6,9 +6,12 @@ interface Props {
   text: string;
   field?: string;
   highlight?: boolean;
+  /** The block centred in its section by its lines' own extent, the text
+      still set from the left (influence.js, initStatementCentre) */
+  centred?: boolean;
 }
-const { text, field, highlight } = Astro.props;
+const { text, field, highlight, centred } = Astro.props;
 ---
-<div class="statement-block">
+<div class:list={['statement-block', { 'is--centred': centred }]}>
   <h2 class="statement-block__text" data-page-field={field} data-highlight-text={highlight ? '' : undefined}>{text}</h2>
 </div>

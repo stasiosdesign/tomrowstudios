@@ -4,7 +4,12 @@ gsap.registerPlugin(ScrollTrigger);
 // navigation without being stacked a second time
 let odometerResizeBound = false;
 
-function initNumberOdometer() {
+// `prepare`: only build the groups' rollers, each at its start, without
+// setting them going. A page coming in (transitions.js, beforeEnter) is
+// prepared while it is still unseen, so its figures arrive already at
+// their start rather than changing to it under the eye once it has landed;
+// the call once it has landed then sets them going on the scroll.
+function initNumberOdometer(scope, { prepare = false } = {}) {
   const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
   const initFlag = 'data-odometer-initialized'
   const activeTweens = new WeakMap()
@@ -23,13 +28,24 @@ function initNumberOdometer() {
   }
 
   // Scroll-triggered groups
-  document.querySelectorAll('[data-odometer-group]').forEach(group => {
+  const groups = (scope || document).querySelectorAll('[data-odometer-group]')
+  groups.forEach(group => {
     if (group.hasAttribute(initFlag)) return
-    group.setAttribute(initFlag, '')
 
     const elements = Array.from(group.querySelectorAll('[data-odometer-element]'))
-    if (!elements.length || prefersReducedMotion) return
+    if (!elements.length || prefersReducedMotion) {
+      group.setAttribute(initFlag, '')
+      return
+    }
 
+    if (!group.__odometer) group.__odometer = buildGroup(group, elements)
+    if (prepare) return
+    group.setAttribute(initFlag, '')
+    playGroup(group, group.__odometer)
+  })
+
+  // The group's rollers, built at their start
+  function buildGroup(group, elements) {
     const staggerOrder = group.getAttribute('data-odometer-stagger-order') || defaults.staggerOrder
     const triggerStart = group.getAttribute('data-odometer-trigger-start') || defaults.triggerStart
     const elementStagger = parseFloat(group.getAttribute('data-odometer-stagger')) || defaults.elementStagger
@@ -68,7 +84,11 @@ function initNumberOdometer() {
     })
 
     const ordered = applyStaggerOrder(elementData, staggerOrder)
+    return { elementData, ordered, triggerStart, elementStagger }
+  }
 
+  // The group rolled to its figures, once it comes into view
+  function playGroup(group, { elementData, ordered, triggerStart, elementStagger }) {
     const tl = gsap.timeline({
       scrollTrigger: {
         trigger: group,
@@ -105,7 +125,7 @@ function initNumberOdometer() {
         }, offset + reversedIdx * defaults.digitStagger)
       })
     })
-  })
+  }
 
   // Programmatic update (optional add-on)
   const updateOdometer = function (el, newText, options = {}) {

@@ -11,10 +11,38 @@
    the fine pitch scaled to a phone would close up into a grey fill. Colour,
    weight and the swap live in the map-spread block of style.css. The path
    data itself lives in world-map.ts, shared with the home page's
-   Architectural Influence card. */
-import { MAP_VIEWBOX, MAP_FINE, MAP_COARSE } from './world-map';
+   Architectural Influence card.
+
+   `parted`: the Americas and the rest of the world as two groups
+   (partAtlantic, world-map.ts), so a page can move them apart (the
+   Influence hero pushes each to its own edge of the screen, style.css).
+   Parted, the map is also twice as dense: each field drawn a second time,
+   half its pitch along, so a stroke stands between every two (a coast is
+   off by that half pitch at most, a texture's worth). */
+import { MAP_VIEWBOX, MAP_FINE, MAP_COARSE, partAtlantic } from './world-map';
+
+interface Props {
+  parted?: boolean;
+}
+const { parted = false } = Astro.props;
+const fine = parted ? partAtlantic(MAP_FINE.d) : null;
+const coarse = parted ? partAtlantic(MAP_COARSE.d) : null;
+const between = (pitch: number) => `translate(${pitch / 2} 0)`;
 ---
+{fine && coarse ? (
+<svg class="world-map is--parted" viewBox={MAP_VIEWBOX} fill="none" aria-hidden="true" focusable="false">
+  {(['americas', 'rest'] as const).map((part) => (
+  <g class={`world-map__part is--${part}`}>
+    <path class="world-map__field is--fine" d={fine[part]}/>
+    <path class="world-map__field is--fine" d={fine[part]} transform={between(MAP_FINE.pitch)}/>
+    <path class="world-map__field is--coarse" d={coarse[part]}/>
+    <path class="world-map__field is--coarse" d={coarse[part]} transform={between(MAP_COARSE.pitch)}/>
+  </g>
+  ))}
+</svg>
+) : (
 <svg class="world-map" viewBox={MAP_VIEWBOX} fill="none" aria-hidden="true" focusable="false">
   <path class="world-map__field is--fine" d={MAP_FINE.d}/>
   <path class="world-map__field is--coarse" d={MAP_COARSE.d}/>
 </svg>
+)}

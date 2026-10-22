@@ -62,14 +62,15 @@ export const project: CmsProjectConfig = {
   // The static pages (schemaTypes/pages): in the site's navigation order
   pages: PAGES,
 
-  // The Page editor's list: its order, its names, and each page's card on the
-  // overview. The Architecture page is here; the projects on it are not.
+  // The Page editor's list: its order (the site's navigation's), its names,
+  // and each page's card on the overview. The Architecture page is here; the
+  // projects on it are not.
   pageEditor: [
     {type: 'homePage', title: 'Home', description: 'The hero, client logos, slider and galleries.'},
+    {type: 'partnersPage', title: 'Partners', description: 'The clients, services, results and enquiry.'},
     {type: 'influencePage', title: 'Influence', description: 'Reach figures, approach, origins and the book.'},
-    {type: 'architecturePage', title: 'Architectural', description: 'The header above the projects.'},
     {type: 'shopPage', title: 'Shop', description: 'The opening, catalogue, testimonials and FAQ.'},
-    {type: 'partnersPage', title: 'Partner', description: 'The clients, services, results and enquiry.'},
+    {type: 'architecturePage', title: 'Architectural', description: 'The header above the projects.'},
     {type: 'privacyPage', title: 'Privacy policy', description: 'The privacy policy: its heading and text.'},
     {type: 'termsPage', title: 'Terms of use', description: 'The terms of use: their heading and text.'},
   ],

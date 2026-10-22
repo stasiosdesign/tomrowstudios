@@ -80,8 +80,47 @@ function initRevealParallax(){
    no transform at all, so nothing inside it — the sticky stage, a fixed
    drawer — is ever measured or placed against a scaled box. */
 
+/* The footer's newsletter sign-up (SiteFooter.astro). No mailing list is
+   connected yet, so the form never goes anywhere: an address that is not
+   one is pointed out, and a good one is simply held, nothing claimed for
+   it (and never put in the address bar, as a plain submit would). Once a
+   list is chosen, its sign-up call goes where the comment marks. */
+function bindNewsletter(scope){
+  scope.querySelectorAll('[data-newsletter]').forEach(form => {
+    if (form.__newsletter) return;
+    form.__newsletter = true;
+    const field = form.querySelector('input[type="email"]');
+    form.addEventListener('submit', (event) => {
+      event.preventDefault();
+      if (field && !field.checkValidity()) {
+        field.reportValidity();
+        return;
+      }
+      // The mailing list's sign-up, once there is one
+    });
+  });
+}
+
+/* The footer's first row's height, for the stylesheet to fit the footer
+   and the floating navigation's tiles on one screen (style.css, "Footer",
+   --footer-intro-h): measured now and whenever the row changes size */
+function measureFooterIntro(scope){
+  const intro = scope.querySelector('.site-footer__intro');
+  if (!intro || intro.__measured) return;
+  intro.__measured = true;
+  const root = document.documentElement;
+  const set = () => root.style.setProperty('--footer-intro-h', `${intro.offsetHeight}px`);
+  set();
+  if (typeof ResizeObserver === 'undefined') return;
+  const observer = new ResizeObserver(set);
+  observer.observe(intro);
+  if (typeof onPageLeave === 'function') onPageLeave(() => observer.disconnect());
+}
+
 function initFooterReveal(container){
   const scope = container || document;
+  bindNewsletter(scope);
+  measureFooterIntro(scope);
   const main = scope.matches && scope.matches('[data-barba="container"]') ? scope : document.querySelector('[data-barba="container"]');
   const footer = scope.querySelector('[data-footer]');
   const inner = footer && footer.querySelector('[data-footer-inner]');

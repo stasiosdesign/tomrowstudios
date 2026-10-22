@@ -10,6 +10,7 @@
    A round black close button at its top right. Rendered once per partner
    with a case study, as #case-<slug>, the id the Partners page's slider and
    the Partners archive grid name in data-case-open. */
+import Arrow from './Arrow.astro';
 import { PortableText } from 'astro-portabletext';
 import { imageAttrs } from '../sanity/image';
 import type { PARTNERS_QUERY_RESULT } from '../sanity/sanity.types';
@@ -40,7 +41,7 @@ const pictures = [study?.image, ...(study?.gallery ?? [])].filter((image) => ima
         <div class="case-panel__tags" data-case-reveal>
           {website && (
             <a class="case-panel__visit" href={website} target="_blank" rel="noopener" aria-label={`Visit ${websiteLabel}`}>
-              <svg viewBox="0 0 12 12" fill="none" aria-hidden="true"><path d="M3 9 9 3M4 3h5v5" stroke="currentColor" stroke-width="1.4" stroke-linecap="square"/></svg>
+              <Arrow />
             </a>
           )}
           {tags.map((tag) => <span class="case-panel__tag">{tag}</span>)}

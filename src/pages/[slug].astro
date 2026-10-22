@@ -58,12 +58,14 @@ const atlasImg = img(item.atlas?.image, 1600);
 <SiteNav />
 
 
-<!-- Header -->
+<!-- Header: the title at the top, set as the other pages' heroes are
+     (under the bar, flush left on the studio's name), a size down for the
+     longer names; the lead, tags and facts at the foot, over the picture -->
 <header class="page-header">
   {header && <img class="page-header-img" data-page-field="header.image" data-page-width="1600" {...header}>}
+  <h1 class="page-header__title" data-page-field="title">{item.title}</h1>
   <div class="page-header-body">
     <div class="page-header-main">
-      <h1 data-page-field="title">{item.title}</h1>
       <p class="lead" data-page-field="header.lead">{item.header?.lead}</p>
       {item.header?.tags?.length ? (
       <div class="tags">

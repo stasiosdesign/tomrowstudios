@@ -77,6 +77,7 @@ function initHomeList(scope) {
     first = top;
     pitch = n > 1 ? items[1].getBoundingClientRect().top - items[0].getBoundingClientRect().top : items[0].offsetHeight || 1;
     update();
+    if (active >= 0) pointCta(active);
   }
 
   // ---- In step with the scroll
@@ -91,6 +92,7 @@ function initHomeList(scope) {
     active = k;
     shots.forEach((shot, i) => shot && shot.classList.toggle('is--active', i === k));
     swapValues(was, k);
+    pointCta(k);
     if (tint) tint.show(k);
   }
 
@@ -99,8 +101,11 @@ function initHomeList(scope) {
     frame = 0;
     if (root.closest('[data-page-leaving]')) return;
     const r = along();
-    drift(r);
     const p = Math.min(Math.max(r, 0), n - 1);
+    // Held at the list's ends: past the last stop the page is the clients'
+    // band coming up, and the hero goes up whole under it (the cover, below),
+    // each photograph still in its frame
+    drift(p);
     const k = Math.round(p);
     if (k !== active) light(k);
   }
@@ -196,6 +201,68 @@ function initHomeList(scope) {
     }));
   }
 
+  // ---- Learn more (HomeHero.astro): one link for the lit part, pointed
+  // at its page and named for it; About (the film) has none, so there it
+  // fades and leaves the keys and screen readers. It stands on the
+  // background's second line down (hero-tint.js: the first runs just left
+  // of the name, the next a step on, a step being a quarter of the screen
+  // inside its 4.5% insets), as far right of that line as the name is of
+  // the first, its foot as seen (the bottom of its underline) on the
+  // name's foot as seen (its last line's baseline, and the dip of its
+  // round letters below that), so the two read as standing on one floor
+  // (--cta-x, --cta-y, from the fields' top left). The name's box is read,
+  // not its lines, which may be on their way in. On a phone it simply
+  // follows the overview.
+  const cta = root.querySelector('[data-list-cta]');
+  const ctaName = cta && cta.querySelector('[data-list-cta-name]');
+  const ctaLabel = cta && cta.querySelector('.home-list__cta-label');
+  const surface = root.querySelector('.home-reel__surface') || root;
+  const titles = values.filter((v) => v.closest('.home-list__field.is--title'));
+  const metrics = document.createElement('canvas').getContext('2d');
+  // An element's line height, and how far down a line box its baseline sits
+  function lineOf(el) {
+    const cs = getComputedStyle(el);
+    metrics.font = `${cs.fontStyle} ${cs.fontWeight} ${cs.fontSize} ${cs.fontFamily}`;
+    const m = metrics.measureText('H');
+    const ascent = m.fontBoundingBoxAscent;
+    const content = ascent + m.fontBoundingBoxDescent;
+    const height = parseFloat(cs.lineHeight) || content;
+    // How far its round letters (o, e, s) dip below the baseline: where
+    // the eye takes the foot of a line of them to be
+    const dip = Math.max(0, metrics.measureText('o').actualBoundingBoxDescent);
+    return { height, baseline: (height - content) / 2 + ascent, dip };
+  }
+  function pointCta(k) {
+    if (!cta || !shots[k]) return;
+    const field = cta.parentElement;
+    const film = shots[k].hasAttribute('data-reel-card');
+    field.classList.toggle('is--off', film);
+    field.setAttribute('aria-hidden', String(film));
+    cta.tabIndex = film ? -1 : 0;
+    if (film) return;
+    cta.setAttribute('href', shots[k].getAttribute('href') || '#');
+    if (ctaName) ctaName.textContent = `: ${items[k].dataset.listTitle || ''}`;
+    const title = titles.find((v) => Number(v.dataset.listPanel) === k);
+    if (!title || !meta || getComputedStyle(field).position !== 'absolute') return;
+    const box = meta.getBoundingClientRect();
+    const w = surface.clientWidth;
+    const step = (w - 2 * 0.045 * w) / 4;
+    const x = step;
+    // The foot of the name as seen: its last line's baseline, and the dip
+    // of its round letters below it
+    const nameLine = lineOf(title);
+    const nameFoot = title.getBoundingClientRect().bottom - nameLine.height + nameLine.baseline + nameLine.dip;
+    // The link's own foot as seen: the bottom of its underline, from its top
+    const label = ctaLabel || cta;
+    const lineBelow = parseFloat(getComputedStyle(label, '::after').bottom) || 0;
+    const ctaFoot = label.offsetTop + label.offsetHeight - lineBelow;
+    const y = nameFoot - box.top - ctaFoot;
+    meta.style.setProperty('--cta-x', `${Math.round(x)}px`);
+    meta.style.setProperty('--cta-y', `${Math.round(y)}px`);
+  }
+  // The faces change the type's measure once they are in
+  if (cta && document.fonts && document.fonts.ready) document.fonts.ready.then(() => { if (active >= 0) pointCta(active); });
+
   // ---- The opening's hand-over (loader.js): while it runs, the values
   // wait; as its squares become the pictures it says so (home:arrive), and
   // the lit values rise into their masks. Arriving any other way (a page
@@ -256,8 +323,9 @@ function initHomeList(scope) {
     || !!root.closest('[data-page-leaving]');
 
   const maxScroll = () => document.documentElement.scrollHeight - window.innerHeight;
-  // The photographs' drift: each by how far its picture is from the middle,
-  // only where that has changed (those well off screen hold at the most)
+  // The photographs' drift: each by how far its picture is from the middle
+  // (r, held within the list), only where that has changed (those well off
+  // screen hold at the most)
   const drifted = items.map(() => null);
   function drift(r) {
     drifts.forEach((layer, i) => {

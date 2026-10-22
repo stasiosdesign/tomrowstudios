@@ -3,10 +3,11 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 import SiteNav from '../components/SiteNav.astro';
 import SiteFooter from '../components/SiteFooter.astro';
 import ContactPanel from '../components/ContactPanel.astro';
+import Arrow from '../components/Arrow.astro';
 import Button from '../components/Button.astro';
 import ServiceCards from '../components/ServiceCards.astro';
 import ProductCard from '../components/ProductCard.astro';
-import BrandMark from '../components/BrandMark.astro';
+import InfluenceStory from '../components/InfluenceStory.astro';
 import { SHOP_ITEMS_QUERY, SHOP_PAGE_QUERY } from '../sanity/queries';
 import { FAQ_DEFAULTS, PAGE_DEFAULTS } from '../sanity/page-defaults';
 
@@ -22,40 +23,21 @@ const [page, items] = await Promise.all([
 ]);
 const D = PAGE_DEFAULTS.shopPage;
 const questions = page?.faq?.questions?.length ? page.faq.questions : FAQ_DEFAULTS;
-
-// The hero's arc, after Osmo's icon fan: nine square cards, left to right,
-// each the studio's mark with one word from the practice under it, the
-// middle one (Designing) the highest and in front. `n`: a card's place
-// from the middle.
-const arcWords = ['Sketching', 'Drawing', 'Modelling', 'Rendering', 'Designing', 'Visualising', 'Presenting', 'Learning', 'Detailing'];
-const arcCards = arcWords.map((word, i) => ({ word, n: i - (arcWords.length - 1) / 2 }));
 ---
 <BaseLayout title="Shop — Tomrowstudios" namespace="shop" pageName="Shop" pageDoc="shopPage">
 <!-- The page itself, which shrinks into the footer as the footer arrives
-     (footer.js); no column lines and no grain on this page (is--bare) -->
-<div class="page-surface is--bare" data-page-surface>
+     (footer.js); no column lines on this page, the grain kept, as the
+     Influence page's former hero above has it (is--gridless) -->
+<div class="page-surface is--gridless" data-page-surface>
 <SiteNav />
 
-<!-- Hero: the heading and the description under it, centred; below them
-     square cards in a wide, shallow arc across the page's full width,
-     overlapping, the middle one highest and in front, the rest stepping
-     down and turning outwards to either side, the whole kept clear of the
-     floating bar. A picture: hidden from screen readers. -->
-<header class="shop-hero">
-  <div class="shop-hero__body">
-    <div class="shop-hero__copy">
-      <h1 data-page-field="hero.heading">{page?.hero?.heading ?? D.hero.heading}</h1>
-    </div>
-    <div class="shop-arc" aria-hidden="true">
-      {arcCards.map(({ word, n }) => (
-      <div class="shop-arc__card" style={`--n: ${n}; --a: ${Math.abs(n)}; z-index: ${10 - Math.abs(n)}`}>
-        <BrandMark class="shop-arc__mark" />
-        <span class="shop-arc__word">{word}</span>
-      </div>
-      ))}
-    </div>
-  </div>
-</header>
+<!-- For now, in place of the Shop's own hero: the Influence page's former
+     hero (InfluenceStory.astro), as it stood there, without its map,
+     under the Shop's own name (the Shop page's heading, its field here);
+     its other words are the Influence page's, so they carry no Visual
+     editor fields here (this page's document is the Shop's). The Shop's
+     own sections follow as they were. -->
+<InfluenceStory fields={false} heading={page?.hero?.heading ?? D.hero.heading} headingField="hero.heading" />
 
 <!-- Products: one card to a column -->
 <section class="section section-alt" id="catalogue">
@@ -161,15 +143,9 @@ const arcCards = arcWords.map((word, i) => ({ word, n: i - (arcWords.length - 1)
         <div class="centered-slider-content">
           <div class="centered-slider-buttons">
             <button aria-label="previous slide" data-centered-slider="prev-button" class="centered-slider-button is--prev">
-              <svg xmlns="http://www.w3.org/2000/svg" width="100%" viewBox="0 0 24 24" fill="none" class="slider-button-arrow">
-                <path d="M14 19L21 12L14 5" stroke="currentColor" stroke-miterlimit="10"></path>
-                <path d="M21 12H2" stroke="currentColor" stroke-miterlimit="10"></path>
-              </svg>
+              <Arrow class="slider-button-arrow" />
             </button>
-            <button aria-label="next slide" data-centered-slider="next-button" class="centered-slider-button"><svg xmlns="http://www.w3.org/2000/svg" width="100%" viewBox="0 0 24 24" fill="none" class="slider-button-arrow">
-                <path d="M14 19L21 12L14 5" stroke="currentColor" stroke-miterlimit="10"></path>
-                <path d="M21 12H2" stroke="currentColor" stroke-miterlimit="10"></path>
-              </svg>
+            <button aria-label="next slide" data-centered-slider="next-button" class="centered-slider-button"><Arrow class="slider-button-arrow" />
             </button>
           </div>
         </div>

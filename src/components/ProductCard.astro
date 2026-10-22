@@ -2,6 +2,7 @@
 /* A shop item's card, on the Shop page and in the Related row of an item's
    own page: a strip of labels, the picture, the name with its format under
    it, and a ruled foot with the call to action. The whole card is the link. */
+import Arrow from './Arrow.astro';
 import { imageAttrs, type SanityImage } from '../sanity/image';
 
 interface Props {
@@ -37,6 +38,6 @@ const image = card?.image?.asset ? card.image : null;
   </span>
   <span class="product-card__foot">
     <span class="product-card__cta">{card?.button ?? 'View'}</span>
-    <span class="product-card__arrow" aria-hidden="true"><svg viewBox="0 0 12 12" fill="none"><path d="M4.5 2 8.5 6 4.5 10" stroke="currentColor" stroke-width="1.25"/></svg></span>
+    <span class="product-card__arrow" aria-hidden="true"><Arrow /></span>
   </span>
 </a>
