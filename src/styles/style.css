@@ -2160,10 +2160,8 @@ html.is--case-open body { overflow: hidden; }
   --contact-bg: var(--partner-paper);
   --contact-bg-hover: var(--partner-social);
   --contact-ink: #0a0a0a;
-  position: absolute;
-  top: var(--hero-top);
-  right: var(--hero-right);
-  display: flex;
+  position: relative;
+  display: inline-flex;
   gap: 1px;
   height: var(--pill);
   color: var(--contact-ink);
@@ -2202,11 +2200,30 @@ html.is--case-open body { overflow: hidden; }
   height: calc(0.4 * var(--pill));
   transition: transform 0.3s var(--cta-ease);
 }
-main[data-barba-namespace="partner"] .hero-nav__contact {
+html:has(main[data-barba-namespace="partner"]) .hero-nav__contact {
   --contact-bg: #0a0a0a;
   --contact-bg-hover: #262626;
   --contact-ink: #f4f4f4;
 }
+/* The header's own, held at the top right of the screen (SiteHead.astro) */
+.site-head__contact {
+  position: fixed;
+  z-index: 160;
+  top: var(--hero-top);
+  right: var(--hero-right);
+}
+/* The quieter one (`secondary`): the same two boxes drawn in a hairline,
+   clear inside, in the page's ink, filling a shade under the pointer */
+html:has(main) .hero-nav__contact.is--secondary {
+  --contact-bg: transparent;
+  --contact-bg-hover: rgba(10, 10, 10, 0.06);
+  --contact-ink: #0a0a0a;
+}
+.hero-nav__contact.is--secondary :is(.hero-nav__contact-label, .hero-nav__contact-square) {
+  box-shadow: inset 0 0 0 1px rgba(10, 10, 10, 0.28);
+}
+/* In the page's own rows of calls to action, side by side a gap apart */
+.actions:has(> .hero-nav__contact) { gap: 1.2rem; }
 @media (hover: hover) and (pointer: fine) {
   .hero-nav__contact:hover :is(.hero-nav__contact-label, .hero-nav__contact-square) { background-color: var(--contact-bg-hover); }
   .hero-nav__contact:hover .hero-nav__contact-arrow { transform: translateX(0.25rem); }
@@ -2559,7 +2576,7 @@ html.is--intro .home-reel__chrome { opacity: 0; visibility: hidden; transition: 
    cells tall less the line (a little under the ways to Tom's height, which
    it used to match), its width the drawing's own. */
 .hero-nav__logo {
-  position: absolute;
+  position: fixed;
   top: var(--hero-top);
   left: var(--hero-logo-left);
   display: block;
@@ -2581,7 +2598,7 @@ html.is--intro .home-reel__chrome { opacity: 0; visibility: hidden; transition: 
    has a little more presence at that size, still on the links' row,
    where its line fits. */
 .hero-nav__brand {
-  position: absolute;
+  position: fixed;
   top: var(--hero-top);
   left: var(--hero-name-left);
   display: flex;
@@ -2606,6 +2623,37 @@ html.is--intro .home-reel__chrome { opacity: 0; visibility: hidden; transition: 
   font-weight: calc(var(--weight-ui) + 25); --wght: calc(var(--weight-ui) + 25);
 }
 .hero-nav__brand:focus-visible { outline: 1px solid currentColor; outline-offset: 3px; }
+/* ---------- The header's fixed parts (SiteHead.astro) ----------
+   The mark, the name and Contact, held at the top of the screen on every
+   page (fixed, outside the page's container, above its bands and under the
+   floating bar, the drawers and the lightbox). The mark and the name in
+   white, blended by difference with whatever passes under them: dark over
+   a light band, light over a dark one, the picture's own opposite over a
+   photograph. Each is its own stacking context on the root, so it blends
+   with the page itself. While the home page's opening runs they wait, as
+   the hero's own navigation does, and come in with it; and as the
+   footer comes they go back up out of the screen. */
+.site-head__blend {
+  z-index: 160;
+  color: #ffffff;
+  mix-blend-mode: difference;
+}
+html.is--intro:not(:has(.home-reel.is--arrived)) :is(.site-head__blend, .site-head__contact) {
+  opacity: 0;
+  visibility: hidden;
+}
+/* As the footer comes (is--footer-ahead, footer.js), the three slide back
+   up out of the top of the screen, gone before the footer shows, and come
+   back down the same way as the page goes back up */
+.site-head__blend,
+.site-head__contact {
+  transition: transform 0.6s cubic-bezier(0.65, 0, 0.35, 1), opacity 0.6s ease, visibility 0s;
+}
+html.is--footer-ahead :is(.site-head__blend, .site-head__contact) {
+  visibility: hidden;
+  transform: translateY(calc(-100% - var(--hero-top) - 2px));
+  transition: transform 0.6s cubic-bezier(0.65, 0, 0.35, 1), opacity 0.6s ease, visibility 0s linear 0.6s;
+}
 /* The name set as one word, a wordmark: its copyright sign a little
    smaller than the name and raised to sit level with its ascenders' tops,
    close against the name's last letter */
@@ -2704,15 +2752,16 @@ html.is--intro .home-reel__chrome { opacity: 0; visibility: hidden; transition: 
   visibility: hidden;
   transition: opacity 0.25s var(--cta-ease), visibility 0s linear 0.25s;
 }
-/* A plain link, small, in the body face: the words underlined, a plain
-   arrow beside them. Under the pointer the arrow steps on a little and
-   the line runs out to the right and draws back in from the left. */
+/* A plain link, a size over the hero's small type, in the body face: the
+   words underlined, a plain arrow beside them. Under the pointer the arrow
+   steps on a little and the line runs out to the right and draws back in
+   from the left. */
 .home-list__cta {
   display: inline-flex;
   align-items: center;
   gap: 0.7em;
   font-family: var(--font-body);
-  font-size: max(1.2rem, 11px);
+  font-size: max(1.4rem, 13px);
   line-height: 1.3;
   letter-spacing: var(--track-body);
   text-transform: none;
@@ -3137,6 +3186,24 @@ html.is--intro .home-loader {
   letter-spacing: -0.025em;
   text-wrap: balance;
   font-weight: var(--weight-strong); --wght: var(--weight-strong);
+}
+/* Where the heading has a note (the Partners page's), under it, small and
+   grey */
+.logo-grid__note {
+  max-width: 40rem;
+  margin: 0;
+  font-size: 1.4rem;
+  line-height: 1.4;
+  color: rgba(244, 244, 244, 0.56);
+}
+/* On the Partners page the band stands alone: as much room under the row
+   as over it */
+.logo-wall.is--partner .logo-grid { padding-bottom: 12rem; }
+@media screen and (max-width: 991px) {
+  .logo-wall.is--partner .logo-grid { padding-bottom: 8rem; }
+}
+@media screen and (max-width: 767px) {
+  .logo-wall.is--partner .logo-grid { padding-bottom: 6.4rem; }
 }
 .logo-grid__row {
   --logo-tile: 22rem;
@@ -4212,8 +4279,8 @@ html.is--intro .home-loader {
    off-white (they stand on the dark everywhere else): here they take the
    bar's dark too,
    and Contact, off-white on the white, is ringed in it when focused */
-.site-nav:has(+ .theme-light) :is(.hero-nav__logo, .hero-nav__brand, .hero-nav__links) { color: inherit; }
-.site-nav:has(+ .theme-light) .hero-nav__contact { --hero-social-ring: #0a0a0a; }
+.site-nav:has(+ .theme-light) .hero-nav__links { color: inherit; }
+html:has(.site-nav + .theme-light) .site-head__contact { --hero-social-ring: #0a0a0a; }
 
 /* ---------- Nav height ---------- */
 /* Height of the fixed bar: 3.2rem top padding, 2.4rem bottom, plus the
@@ -7872,7 +7939,7 @@ html.is--fnav-open:not(.is--fnav-foot) .fnav__background {
    in the stack); shown (is--shown, floatingnav.js, the bar's own state) it
    rises out from behind the bar as the bar's parts come up, on the bar's
    curve and settling with it, and goes down with the bar, on its timing,
-   so the two are one movement; it goes back on its own while the menu is
+   so the two are one movement; it closes in to its middle while the menu is
    open or the page is changing.
    On the Influence page it grows into the band at the head of the book
    section (.book-band, below) as that comes up: influence.js sets its
@@ -7888,6 +7955,9 @@ html.is--fnav-open:not(.is--fnav-foot) .fnav__background {
   --promo-ground: var(--promo-blue);
 }
 .fnav-promo {
+  /* How fast the strip closes to its middle as the menu opens */
+  --promo-close: 0.26s;
+  --promo-close-ease: cubic-bezier(0.3, 0, 0.2, 1);
   position: fixed;
   left: 50%;
   bottom: calc(var(--fnav-bottom) + var(--fnav-bar-h) + var(--fnav-gap));
@@ -7914,17 +7984,22 @@ html.is--fnav-open:not(.is--fnav-foot) .fnav__background {
   opacity: 1;
   visibility: visible;
   transform: translate(-50%, 0);
-  transition: transform calc(var(--fnav-rise) - var(--fnav-rise-parts)) var(--fnav-rise-ease) var(--fnav-rise-parts), opacity 0.3s var(--fnav-rise-parts), visibility 0s var(--fnav-rise-parts), --promo-ground 0.45s var(--cta-ease);
+  clip-path: inset(0 0 0 0);
+  transition: transform calc(var(--fnav-rise) - var(--fnav-rise-parts)) var(--fnav-rise-ease) var(--fnav-rise-parts), opacity 0.3s var(--fnav-rise-parts), visibility 0s var(--fnav-rise-parts), clip-path var(--promo-close) var(--promo-close-ease) var(--fnav-rise-parts), --promo-ground 0.45s var(--cta-ease);
 }
-/* Back behind the bar while the menu or the contact form is open, or a
-   page transition runs: the same movement, the bar staying where it is */
+/* While the menu or the contact form is open, or a page transition runs:
+   the strip closes in from both ends to its middle where it stands, at
+   once and quickly (--promo-close, well inside the menu's own opening),
+   its words cut by the closing edges, gone before the menu is out; and
+   opens out from its middle again once the menu has gone back (the shown
+   state's delay) */
 html.is--fnav-open .fnav-promo.is--shown,
 html.is--fnav-contact .fnav-promo.is--shown,
 html.is--page-transition .fnav-promo.is--shown {
   opacity: 0;
   visibility: hidden;
-  transform: translate(-50%, calc(100% + var(--fnav-gap)));
-  transition: transform var(--fnav-drop) var(--fnav-drop-ease), opacity calc(var(--fnav-drop) * 0.6) ease-in calc(var(--fnav-drop) * 0.3), visibility 0s linear var(--fnav-drop), --promo-ground 0.45s var(--cta-ease);
+  clip-path: inset(0 50% 0 50%);
+  transition: clip-path var(--promo-close) var(--promo-close-ease), opacity calc(var(--promo-close) * 0.4) ease-in calc(var(--promo-close) * 0.6), visibility 0s linear var(--promo-close), --promo-ground 0.45s var(--cta-ease);
 }
 /* Handed over to the band in the page: gone at once, and kept gone for the
    rest of the page below it; back at once if the band hands back to it
@@ -8090,7 +8165,7 @@ html.is--page-transition .fnav-promo.is--shown {
   transition: transform var(--fnav-drop) var(--fnav-drop-ease), opacity calc(var(--fnav-drop) * 0.6) ease-in calc(var(--fnav-drop) * 0.3), visibility 0s linear var(--fnav-drop), --promo-ground 0.45s var(--cta-ease), color 0.45s var(--cta-ease);
 }
 .fnav-promo.is--contact.is--shown {
-  transition: transform calc(var(--fnav-rise) - var(--fnav-rise-parts)) var(--fnav-rise-ease) var(--fnav-rise-parts), opacity 0.3s var(--fnav-rise-parts), visibility 0s var(--fnav-rise-parts), --promo-ground 0.45s var(--cta-ease), color 0.45s var(--cta-ease);
+  transition: transform calc(var(--fnav-rise) - var(--fnav-rise-parts)) var(--fnav-rise-ease) var(--fnav-rise-parts), opacity 0.3s var(--fnav-rise-parts), visibility 0s var(--fnav-rise-parts), clip-path var(--promo-close) var(--promo-close-ease) var(--fnav-rise-parts), --promo-ground 0.45s var(--cta-ease), color 0.45s var(--cta-ease);
 }
 .fnav-promo.is--contact .fnav-promo__track { animation-duration: 12s; }
 .fnav-promo.is--contact .fnav-promo__item .fnav-promo__mark { background-color: #0a0a0a; }
@@ -9835,21 +9910,22 @@ html:has(.site-nav + .theme-light) .cursor-label__box {
    Design review mode (Shift + G, grid-overlay.js), on desktop; the notes'
    words in design-notes.ts. One fixed layer over everything on the page
    (above the bars, the drawers, the lightbox and the loader, the highest
-   at 600): its own ground a strong translucent white, which fades the
-   whole site well back behind it, hero, sections and footer alike, the
-   site itself untouched; and in it, the notes, each beside the element it
-   is about, solid and unfaded. Cards after the review's own reference, a
-   look no part of the site uses: bright cyan, well rounded, an "i" in a
-   ring on a black square at the head, then the note in black, large and
-   strong. Nothing in the layer takes a click, so the page under it works
-   as ever. Hidden, it is gone. */
+   at 600): its own ground a translucent black, which dims the whole site
+   well back behind it, hero, sections and footer alike, as though it were
+   set on a black master, the site itself untouched; and in it, the notes,
+   each beside the element it is about, solid and undimmed. Cards after
+   the review's own reference, a look no part of the site uses: bright
+   cyan, small, corners only a little rounded, an "i" in a ring on a black
+   square at the head, then the note in black, strong. Nothing in the
+   layer takes a click, so the page under it works as ever. Hidden, it is
+   gone. */
 .design-notes {
   position: fixed;
   inset: 0;
   z-index: 1000;
   overflow: hidden;
   pointer-events: none;
-  background-color: rgba(255, 255, 255, 0.7);
+  background-color: rgba(0, 0, 0, 0.62);
   visibility: hidden;
   opacity: 0;
   transition: opacity 0.35s ease, visibility 0s linear 0.35s;
@@ -9869,10 +9945,10 @@ html:has(.site-nav + .theme-light) .cursor-label__box {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 2rem;
-  width: 28rem;
-  padding: 1.6rem 2rem 2rem;
-  border-radius: 1.5rem;
+  gap: 1.1rem;
+  width: 21rem;
+  padding: 1.1rem 1.3rem 1.3rem;
+  border-radius: 0.8rem;
   background-color: #00ffff;
   color: #000000;
   font-family: var(--font-body);
@@ -9885,18 +9961,18 @@ html:has(.site-nav + .theme-light) .cursor-label__box {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 3.6rem;
-  height: 3.6rem;
-  border-radius: 0.8rem;
+  width: 2.6rem;
+  height: 2.6rem;
+  border-radius: 0.5rem;
   background-color: #000000;
   color: #00ffff;
 }
 .design-note__icon svg { width: 52%; height: 52%; }
 .design-note__text {
   margin: 0;
-  font-size: 1.6rem;
-  line-height: 1.25;
-  letter-spacing: -0.01em;
+  font-size: 1.3rem;
+  line-height: 1.3;
+  letter-spacing: -0.005em;
   font-weight: var(--weight-strong); --wght: var(--weight-strong);
 }
 
@@ -10188,13 +10264,103 @@ main[data-barba-namespace="influence"] .section-alt,
 .influence-map .world-map__field { stroke-width: 0.25px; vector-effect: non-scaling-stroke; }
 
 /* ---------- Partner page only ---------- */
-/* The mono (one static 300 cut) given a little body with a hairline stroke */
-main[data-barba-namespace="partner"] :is(.site-nav__link, .cta__label, .slide-card__index, .tagline, .logo-strip__note, .testimonial-chip__role, .results-card__index, .results-card__tag, .results-card__foot, .case-panel__tag, .case-panel__label, .step-number) {
+/* The mono (one static 300 cut) given a little body with a hairline stroke,
+   in the page's own sections (not the closing cards or the footer, which
+   are the same on every page) */
+main[data-barba-namespace="partner"] :is(.site-nav__link, .cta__label, .slide-card__index, .tagline, .logo-strip__note, .testimonial-chip__role, .results-card__index, .results-card__tag, .results-card__foot, .case-panel__tag, .case-panel__label, .step-number):not(.explore *, .footer-wrap *) {
   -webkit-text-stroke: 0.4px currentColor;
 }
-/* No column lines on this page */
+/* No column lines on this page, save the footer's, which are the site's
+   own everywhere */
 main[data-barba-namespace="partner"],
 main[data-barba-namespace="partner"] :is(.theme-light, .section, [class]) { --grid-line: transparent; }
+main[data-barba-namespace="partner"] .footer-ground { --grid-line: var(--grid-line-color); }
+/* No hairline between its sections either: on the one paper, its bands
+   run into one another, parted by their space alone */
+main[data-barba-namespace="partner"] section + section { border-top: 0; }
+
+/* ---------- What it delivered (partner.astro) ----------
+   The Shop hero's column of panels (.influence-strip, "The column of
+   panels") in the page's flow: on the left the section's name, its note
+   and its calls to action, held a little under the screen's top while the
+   column passes (sticky); on the right, from the third column, the panels
+   one under another, the one on the screen's middle grown large (the
+   script's focus line is the middle where the column is not placed over a
+   hero), in white on the page's paper, the near-black words as on the
+   Shop's. Under each figure, small at the panel's foot, where it was
+   measured. Room under the column, so the last can reach the middle. */
+.results-layout {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  column-gap: var(--grid-gap);
+  align-items: start;
+}
+.results-layout__head {
+  grid-column: 1 / span 2;
+  position: sticky;
+  top: max(12rem, 22svh);
+}
+.results-layout__head h2 { margin: 0; }
+.results-layout__head .lead { max-width: 40rem; margin: 2.4rem 0 0; }
+.results-layout__head .actions { margin-top: 3.2rem; }
+.influence-strip.is--results {
+  --strip-ground: #ffffff;
+  position: static;
+  z-index: auto;
+  margin: 0;
+  grid-column: 3 / span 2;
+  padding-bottom: 32svh;
+}
+.influence-strip__foot {
+  position: absolute;
+  left: var(--strip-pad);
+  bottom: var(--strip-pad);
+  margin: 0;
+  font-family: var(--font-body);
+  z-index: 2;
+  font-size: calc(1.05rem + 0.15rem * var(--t));
+  line-height: 1.3;
+  white-space: nowrap;
+  color: var(--strip-ink-soft);
+}
+@media screen and (max-width: 991px) {
+  .results-layout { grid-template-columns: 1fr; row-gap: 4.8rem; }
+  .results-layout__head { grid-column: 1; position: static; }
+  .influence-strip.is--results { grid-column: 1; padding-bottom: 24svh; }
+}
+
+/* ---------- The partners' stagger (partner.astro) ----------
+   After an editorial index: the partners' portraits, four columns on the
+   page's own, each a column of portrait cards (the site's case-study card,
+   .slide-card, 3:4) a gap apart, the columns set off from one another by a
+   share of a card's height (--lift: a percentage of the column's width
+   times the card's shape), the left one lowest, the second higher, the
+   third highest and the right one a touch below it, so the cards step up
+   to the right under the introduction and run on down the page in a
+   rhythm, every one still on its column's lines. Below the desktop grid,
+   two columns, the left set lower. */
+.partner-stagger {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  column-gap: var(--grid-gap);
+  align-items: start;
+}
+.partner-stagger__col {
+  --lift: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--grid-gap);
+  min-width: 0;
+  padding-top: calc(var(--lift) * 133.333%);
+}
+.partner-stagger__col:nth-child(1) { --lift: 0.55; }
+.partner-stagger__col:nth-child(2) { --lift: 0.3; }
+.partner-stagger__col:nth-child(4) { --lift: 0.12; }
+@media screen and (max-width: 991px) {
+  .partner-stagger { grid-template-columns: repeat(2, minmax(0, 1fr)); row-gap: var(--grid-gap); }
+  .partner-stagger__col:nth-child(odd) { --lift: 0.35; }
+  .partner-stagger__col:nth-child(even) { --lift: 0; }
+}
 
 
 /* The Architecture page's name set as the Shop, Influence and Partner heroes':
@@ -10345,9 +10511,9 @@ main[data-barba-namespace="partner"] { --paper: var(--partner-paper); }
 }
 
 /* ---------- Influence: the stepped hero ----------
-   influence.astro; influence.js, initInfluenceStage. A screen tall and a
-   spread more (--stage-spread: the scrolling over which the four spread,
-   while the screen is held; spread, they go straight on up with the page),
+   influence.astro; influence.js, initInfluenceStage. A screen tall and the
+   scroll its sequence takes more (--stage-open, --stage-run: while the
+   screen is held; done, it goes straight on up with the page),
    scrolling as any section does (nothing holds the page), on the plain
    black: the page's name large at the top left on the studio's name's
    edge, part of the page, scrolling away with it; and the stage's screen
@@ -10360,22 +10526,35 @@ main[data-barba-namespace="partner"] { --paper: var(--partner-paper); }
    two smaller, even ones (--stage-step), as shares of the screen's height
    in svh.
 
-   One number moves it all: --p, how far the stage's first screen has
-   scrolled towards the full spread (0 to 1, the script's one write a
-   frame, straight from the scroll). From it each panel's left edge, width
-   and top are drawn as a straight line between the composition (--x, --w
-   and its step) and the spread (--xf, --wf: four even columns, the
-   screen's full height), all four together, so the stair opens into the
-   row as one movement, and closes again the same way. Each panel is a box
-   that only shows what is inside it; its picture is a fixed size (the
-   screen's height, the wider of the panel's two widths, --pw), on its own
-   layer, centred on the panel and standing on its foot, so as the box grows
-   it shows more of the picture, which is never scaled, never stretched and
-   never drawn again. Nothing here is measured or repainted while it moves:
-   four boxes laid out in a screen of their own (contain), their pictures
-   moved with them. The photographs in their own colour, muted (a little
-   under their saturation and their light). Reduced motion: the
-   composition simply stands.
+   Two numbers open it, together, each eased in and out by the script so
+   it starts and ends at rest, never at speed. --v: all four grow up
+   together, their tops rising from the stair to the screen's top. --u:
+   every panel widens in the same measure from its width in the
+   composition (--w) to the whole screen's and stands beside the one
+   before it, so the first (the left one) takes over the screen and pushes
+   the other three off to the right, each waiting a screen beyond the
+   last; it sets off with the growth but barely, so the four grow mostly
+   up and all stay in view, and gathers pace in an ever steeper rise as
+   the growth settles. Each panel is a mask over a
+   photograph of a fixed size (the whole screen, and a little over for the
+   run's drift, .influence-stage__img), cropped to that once, standing on
+   the screen's foot, on the mask's left edge: the mask grows, and only
+   reveals more of a picture that never moves, never scales and is never
+   cropped again. So the photograph shows its left part in the
+   composition, its whole width when full-screen.
+
+   Then, still held, the strip runs through the gallery: --h (0 to 3), a
+   screen a picture, in step with the scroll, easing in from the opening's
+   rest and out to rest at the fourth, where the stage lets the page go
+   on; between, it moves at one even speed, held at no picture. The
+   pictures drift a little in their frames as they cross the screen.
+   Over each picture in turn, its name and its line
+   (.influence-stage__caption). All of it straight from the scroll, so it
+   plays back the same way. Nothing here is measured while it moves: four
+   boxes laid out in a screen of their own (contain), their pictures
+   moved with them. The photographs in their own colour, muted, and a
+   little darker as they fill the screen, under the words. Reduced motion:
+   the composition simply stands.
 
    Under the name, on its edge, the page's short description: the foot of
    the text's column (--stage-text-foot) level with the first step's top,
@@ -10383,10 +10562,7 @@ main[data-barba-namespace="partner"] { --paper: var(--partner-paper); }
    clear of it, no wider than that step; on a screen too short for that, it
    follows the name at a set gap instead, and the deep step grows deeper
    (so the second step starts a gap below the text's foot at its longest,
-   --stage-text-h). Each picture also starts lowered in its
-   frame by half its panel's top (--stage-lift), rising to its place as
-   the frame opens (a move, never a scale), so the large photograph shows
-   Tom's head in the composition. */
+   --stage-text-h). */
 .influence-stage {
   --stage-top: 26.3svh;
   --stage-title-size: 8rem;
@@ -10396,11 +10572,17 @@ main[data-barba-namespace="partner"] { --paper: var(--partner-paper); }
   --stage-step: 11.8svh;
   --stage-first: max(28.1svh, calc(var(--stage-text-h) + 3rem - var(--stage-top) - var(--stage-step)));
   --stage-text-foot: calc(var(--stage-top) + var(--stage-first));
-  --stage-lift: 0.5;
-  --stage-spread: 85svh;
+  /* The scroll the opening takes (--stage-open) and the run across the
+     four, a screen each (--stage-run); influence.js reads them as shares
+     of the stage's held scroll */
+  --stage-open: 160svh;
+  --stage-run: 210svh;
+  /* How far a picture drifts in its frame in the run, either way, as a
+     share of the screen */
+  --stage-drift: 0.11;
   position: relative;
-  height: 185vh;
-  height: calc(100svh + var(--stage-spread));
+  height: 470vh;
+  height: calc(100svh + var(--stage-open) + var(--stage-run));
   overflow: clip;
   background-color: #000000;
 }
@@ -10408,7 +10590,10 @@ main[data-barba-namespace="partner"] { --paper: var(--partner-paper); }
    clears (padding); the stage is laid out under the bar itself */
 main:not(:has(.home-hero)) .site-nav + .influence-stage:not(.page-header) { padding-top: 0; }
 .influence-stage__screen {
-  --p: 0;
+  --v: 0;
+  --u: 0;
+  --d: 0;
+  --h: 0;
   position: sticky;
   top: 0;
   height: 100vh;
@@ -10416,27 +10601,41 @@ main:not(:has(.home-hero)) .site-nav + .influence-stage:not(.page-header) { padd
   overflow: hidden;
   contain: layout paint;
 }
+/* A panel: its step's top on the stair (--y, risen by --v), its width (--wn, a share of
+   the screen) from the composition's to the whole screen's, and its left
+   edge beside the one before it: the composition's own (--x, the widths
+   before it), and then the screens before it (--i, its place from the
+   left, 0 to 3), less the run (--h) */
 .influence-stage__panel {
   --y: calc(var(--stage-top) + min(var(--step), 1) * var(--stage-first) + max(var(--step) - 1, 0) * var(--stage-step));
+  --wn: calc(var(--w) + (1 - var(--w)) * var(--u));
   position: absolute;
   bottom: 0;
-  left: calc((var(--x) + (var(--xf) - var(--x)) * var(--p)) * 100%);
-  width: calc((var(--w) + (var(--wf) - var(--w)) * var(--p)) * 100%);
-  top: calc(var(--y) * (1 - var(--p)));
+  left: calc((var(--x) + (var(--i) - var(--x)) * var(--u) - var(--h)) * 100%);
+  width: calc(var(--wn) * 100%);
+  top: calc(var(--y) * (1 - var(--v)));
   overflow: hidden;
 }
+/* The photograph: the whole screen and a little over (--stage-drift either
+   side), on the panel's foot and its left edge less the drift's room (so
+   the first picture's left edge is on the screen's and stays there as its
+   mask widens), its crop set once. Only the run moves it in its frame: a
+   little behind the frame as the frame crosses the screen (--h), never
+   leaving any of the frame uncovered. One transform, nothing measured. */
 .influence-stage__img {
+  --box: calc(1 + 2 * var(--stage-drift));
+  --o: calc(-1 * var(--stage-drift) - var(--stage-drift) * clamp(-1, var(--i) - var(--h), 1));
   position: absolute;
   bottom: 0;
-  left: 50%;
+  left: 0;
   display: block;
-  width: calc(var(--pw) * 100vw);
+  width: calc(var(--box) * 100vw);
   max-width: none;
   height: 100vh;
   height: 100svh;
   object-fit: cover;
   filter: saturate(0.7) brightness(0.8) contrast(1.04);
-  transform: translate(-50%, calc(var(--y) * var(--stage-lift) * (1 - var(--p))));
+  transform: translateX(calc(var(--o) * 100vw));
   will-change: transform;
 }
 .influence-stage__text {
@@ -10475,6 +10674,137 @@ main:not(:has(.home-hero)) .site-nav + .influence-stage:not(.page-header) { padd
   font-weight: var(--weight-strong); --wght: var(--weight-strong);
   pointer-events: none;
 }
+/* Over the whole opening, the pictures dim a little further, evenly and
+   so slowly it is hardly seen, from their own light at the start to their
+   full-screen depth, so the words over them read and the photographs keep
+   their colour and detail (one layer's opacity, from --d, influence.js) */
+.influence-stage__panel::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-color: #000000;
+  opacity: calc(0.55 * var(--d));
+  pointer-events: none;
+}
+/* The gallery's words: over each picture in turn, its name, two sizes
+   under the page's own, on the page's name's edge (--hero-name-left, as
+   the h1's) and a little below its top (--stage-text-top), and lower down, past the
+   middle of the screen, its line on the pages' column (--hero-links-left,
+   as the bar's five links), a size over the description's.
+   Each set is hidden until its picture comes on: the name fading in and
+   out whole, the line split into lines that rise quickly into their
+   masks, and leave by the top as the picture goes (influence.js). Over
+   the pictures, under the page's own name. */
+.influence-stage__captions {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  pointer-events: none;
+}
+.influence-stage__caption {
+  position: absolute;
+  inset: 0;
+  visibility: hidden;
+  color: #ffffff;
+}
+.influence-stage__caption.is--shown { visibility: visible; }
+/* The name and, under it on two of them, a quiet link: one block where the
+   page's name stands */
+.influence-stage__caption-head {
+  position: absolute;
+  left: var(--hero-name-left);
+  /* A little below the page's name's line */
+  top: calc(var(--stage-text-top) + 5rem);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+.influence-stage__caption-title {
+  /* Two sizes under the page's name, the long ones on two even lines */
+  max-width: min(12em, calc(100vw - var(--hero-name-left) - var(--site-inset)));
+  margin: 0 0 0 -0.02em;
+  font-size: calc(0.8 * var(--stage-title-size));
+  text-wrap: balance;
+  line-height: 0.95;
+  letter-spacing: -0.04em;
+  font-weight: var(--weight-strong); --wght: var(--weight-strong);
+}
+.influence-stage__caption-text {
+  position: absolute;
+  left: var(--hero-links-left);
+  top: 54svh;
+  width: min(420px, calc(100vw - var(--hero-links-left) - var(--site-inset)));
+  margin: 0;
+  font-family: var(--font-body);
+  font-size: 20px;
+  line-height: 1.24;
+  letter-spacing: var(--track-body);
+  text-wrap: pretty;
+  font-weight: var(--weight-body); --wght: var(--weight-body);
+  color: #f4f4f4;
+}
+/* The link: the home hero's Learn more (.home-list__cta: the words
+   underlined by a hairline, the arrow beside them, the line running out
+   and back under the pointer), a little larger, in the caption's white,
+   a gap under the name; the only part of the words that takes a click */
+.influence-stage__cta {
+  margin-top: 2.8rem;
+  font-size: max(1.45rem, 13px);
+  color: #ffffff;
+}
+.influence-stage__cta:focus-visible { outline-color: #ffffff; }
+/* Each line's mask a little outside its box, as the home hero's are, so
+   the descenders and close-set ends are never cut */
+.influence-stage__line-mask {
+  overflow: visible !important;
+  clip-path: inset(-0.14em -0.14em -0.26em);
+}
+.influence-stage__line { will-change: transform; }
+/* How far through the gallery: a fine line just over the floating bar,
+   its width and on its middle, where the strips over the bar stand, a
+   faint track and, filling it from the left, the run so far (--run, 0 to
+   1, influence.js, straight from the scroll). It fades in as the run
+   sets off and out as the stage lets the page go on (is--shown), and
+   steps aside with the bar's strips: while the bar is down, the menu or
+   the contact form is open, or a page transition runs */
+.influence-stage__progress {
+  position: fixed;
+  left: 50%;
+  bottom: calc(var(--fnav-bottom) + var(--fnav-bar-h) + var(--fnav-gap));
+  z-index: 96;
+  width: var(--fnav-bar-w);
+  height: 2px;
+  margin-left: var(--fnav-nudge);
+  overflow: hidden;
+  border-radius: 1px;
+  background-color: rgba(244, 244, 244, 0.2);
+  transform: translateX(-50%);
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity 0.5s ease, visibility 0s linear 0.5s;
+}
+.influence-stage__progress.is--shown {
+  opacity: 1;
+  visibility: visible;
+  transition: opacity 0.5s ease, visibility 0s;
+}
+html:has(.fnav:not(.is--shown)) .influence-stage__progress,
+html.is--fnav-open .influence-stage__progress,
+html.is--fnav-contact .influence-stage__progress,
+html.is--page-transition .influence-stage__progress {
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.2s, visibility 0s linear 0.2s;
+}
+.influence-stage__progress-fill {
+  display: block;
+  width: 100%;
+  height: 100%;
+  background-color: #f4f4f4;
+  transform: scaleX(var(--run, 0));
+  transform-origin: 0 50%;
+}
 @media screen and (max-width: 991px) {
   .influence-stage { --stage-title-size: 7.4rem; }
 }
@@ -10493,6 +10823,22 @@ main:not(:has(.home-hero)) .site-nav + .influence-stage:not(.page-header) { padd
   }
   .influence-stage__text { min-height: 0; }
   .influence-stage__lead { width: 300px; }
+  /* The gallery's words stacked on the page's name's edge, from its top,
+     the name over its line */
+  .influence-stage__caption {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    gap: 2.4rem;
+    padding: calc(var(--stage-text-top) + 5rem) var(--site-inset) 0 var(--hero-name-left);
+  }
+  .influence-stage__caption-head,
+  .influence-stage__caption-text { position: static; max-width: none; }
+  .influence-stage__caption-text { width: min(340px, 100%); font-size: 18px; }
+}
+/* Reduced motion: the composition stands, so no gallery to scroll through */
+@media (prefers-reduced-motion: reduce) {
+  .influence-stage { --stage-open: 0svh; --stage-run: 0svh; }
 }
 
 /* ---------- Statement block (StatementBlock.astro) ---------- */
@@ -10517,14 +10863,14 @@ main:not(:has(.home-hero)) .site-nav + .influence-stage:not(.page-header) { padd
   .statement-block__text { font-size: 3.2rem; text-indent: 16%; }
 }
 .logo-wall__statement.is--block { padding: 0; }
-/* Under the clients' logos, the statement a little further off than a
-   band's usual space, so the two read as separate parts of the band */
-.logo-wall__statement .statement-block { padding-top: 16rem; }
+/* Under the clients' logos, the statement well off a band's usual space
+   on both sides, more so under it, so it stands on its own in the band */
+.logo-wall__statement .statement-block { padding-top: 19rem; padding-bottom: 18rem; }
 @media screen and (max-width: 991px) {
-  .logo-wall__statement .statement-block { padding-top: 10.4rem; }
+  .logo-wall__statement .statement-block { padding-top: 12rem; padding-bottom: 12rem; }
 }
 @media screen and (max-width: 767px) {
-  .logo-wall__statement .statement-block { padding-top: 8.4rem; }
+  .logo-wall__statement .statement-block { padding-top: 9.6rem; padding-bottom: 9.6rem; }
 }
 /* Centred by its lines (StatementBlock.astro, `centred`): the block moved
    over as a whole, by what the script measures; the text inside it set as

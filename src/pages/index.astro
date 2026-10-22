@@ -5,6 +5,7 @@ import ContactPanel from '../components/ContactPanel.astro';
 import ServiceCards from '../components/ServiceCards.astro';
 import HomeHero from '../components/HomeHero.astro';
 import StatementBlock from '../components/StatementBlock.astro';
+import LogoRow from '../components/LogoRow.astro';
 import { homeHero, reelImage } from '../components/home-hero';
 import { urlFor } from '../sanity/image';
 import { CLIENT_LOGOS_QUERY, HOME_PAGE_QUERY } from '../sanity/queries';
@@ -35,12 +36,8 @@ if (!hero?.headline || !logoWall || !practice || !influence || !partners || !pro
 const heroData = await homeHero(Astro.site?.href ?? Astro.url.origin);
 const { reel } = heroData;
 
-// The logo row's collection: every client once, and the first ones again
-// until there are ten, so the collection is wider than any screen and the
-// loop (marquee.js clones it once) never shows its end
-const logoClients = clients.filter((client) => client.logo?.asset);
-const logoCount = logoClients.length ? Math.max(10, logoClients.length) : 0;
-const logoCells = Array.from({ length: logoCount }, (_, i) => ({ client: logoClients[i % logoClients.length], repeat: i >= logoClients.length }));
+// The logo row's clients (LogoRow.astro), each the Studio's white logo
+const logos = clients.filter((client) => client.logo?.asset).map((client) => ({ src: urlFor(client.logo!).ignoreImageParams().width(600).height(240).url(), alt: client.name ?? '' }));
 
 ---
 <BaseLayout title="Tomrowstudios" namespace="index" pageName="Home" navPromo="contact" pinScrollbar>
@@ -150,34 +147,11 @@ const logoCells = Array.from({ length: logoCount }, (_, i) => ({ client: logoCli
      statement, running straight into the closing cards. -->
 <section class="logo-wall" data-home-section="logoWall">
   <!-- The clients: a short heading, then one row of logos running sideways
-       on a loop across the page's full width, each the Studio's white logo
-       artwork on the band itself, no tile, bounded on both axes so a long
-       wordmark and a tall symbol carry a similar weight, over a ruler of
-       fine ticks that runs with them, a taller one under each logo
-       (style.css, "The clients' logos"). The row is Osmo's
-       marquee with scroll direction (marquee.js): one collection of tiles
-       (logoCells, the clients repeated until it is wider than any screen),
-       cloned once by the script so the loop has no seam, run left at a
-       steady pace, turned round while the page scrolls back up and sped
-       up a little by the scroll; paused only while off screen (it keeps
-       running under the pointer). Only the first clients are read out,
-       the repeats hidden
-       from screen readers. The document's label for this section is not
-       shown. -->
-  <div class="logo-grid">
-    <div class="logo-grid__head">
-      <h2 class="logo-grid__lead">Studios, brands and institutions<br>Tom has worked with</h2>
-    </div>
-    <div class="logo-grid__row marquee-advanced" data-marquee-scroll-direction-target data-marquee-direction="left" data-marquee-status="normal" data-marquee-speed="20" data-marquee-scroll-speed="6" data-marquee-duplicate="1">
-      <div data-marquee-scroll-target class="marquee-advanced__scroll">
-        <ul class="logo-grid__list marquee-advanced__collection" role="list" data-marquee-collection-target>
-          {logoCells.map(({ client, repeat }) => (
-          <li class="logo-grid__tile" aria-hidden={repeat ? 'true' : undefined}><img class="logo-grid__logo" src={urlFor(client.logo!).ignoreImageParams().width(600).height(240).url()} loading="lazy" decoding="async" alt={repeat ? '' : client.name ?? ''}></li>
-          ))}
-        </ul>
-      </div>
-    </div>
-  </div>
+       on a loop over its ruler (LogoRow.astro, shared with the Partners
+       page). The document's label for this section is not shown. -->
+  <LogoRow logos={logos}>
+    <h2 class="logo-grid__lead">Studios, brands and institutions<br>Tom has worked with</h2>
+  </LogoRow>
   <!-- Practice: the statement across the page in heavy display type, flush
        left; its words light up as it is scrolled through
        (text-highlight.js). The document's label for it is not shown. -->
@@ -188,7 +162,7 @@ const logoCells = Array.from({ length: logoCount }, (_, i) => ({ client: logoCli
 
 
 <!-- The closing call to action: the four service cards (ServiceCards.astro) -->
-<ServiceCards home={home} noGrid />
+<ServiceCards home={home} />
 
 
 </div>

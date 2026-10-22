@@ -1,0 +1,23 @@
+---
+/* The header's fixed parts, the same on every page and held at the top of
+   the screen while the page scrolls under them: the studio's mark in the
+   top left corner (BrandMark.astro, --hero-logo-left), the studio's name on
+   the home hero's pictures' left edge (--hero-name-left), and Contact at
+   the top right (ContactButton.astro), all on --hero-top, where the home
+   hero and every page's bar had them (style.css, "The header's fixed
+   parts"). The column of pages stays in the page (HeroNav.astro) and
+   scrolls away with it.
+
+   Outside the Barba container (BaseLayout.astro), so a page change and
+   the page's shrinking into the footer, both transforms of the page, leave
+   them where they are. The mark and the name are drawn in white with
+   mix-blend-mode: difference, so they turn dark over a light page and stay
+   light over a dark one, and keep their contrast over a picture. */
+import BrandMark from './BrandMark.astro';
+import ContactButton from './ContactButton.astro';
+---
+<!-- The mark and the name both lead home; the name is the one a keyboard
+     or a screen reader meets -->
+<a href="/" class="hero-nav__logo site-head__blend" tabindex="-1" aria-hidden="true"><BrandMark class="hero-nav__logo-mark" /></a>
+<a href="/" class="hero-nav__brand site-head__blend" aria-label="Tomrowstudios, home"><span aria-hidden="true">tomrowstudios<span class="hero-nav__copy">©</span></span></a>
+<ContactButton class="site-head__contact" />

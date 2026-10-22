@@ -38,8 +38,6 @@ import type { HOME_PAGE_QUERY_RESULT } from '../sanity/sanity.types';
 
 interface Props {
   home?: HOME_PAGE_QUERY_RESULT;
-  /** Without the page's column lines (the home page draws none) */
-  noGrid?: boolean;
 }
 
 const [home, shopItems, clients, projects] = await Promise.all([
@@ -48,7 +46,6 @@ const [home, shopItems, clients, projects] = await Promise.all([
   Astro.locals.sanity.fetch(CLIENT_LOGOS_QUERY),
   Astro.locals.sanity.fetch(PROJECT_INDEX_QUERY),
 ]);
-const { noGrid } = Astro.props;
 // The cards' pictures, chosen in explore.ts (the home hero takes its projects photograph from there too)
 const { shopPictures, logoUrls, orbitPlaces, projectCover } = explorePictures(home, shopItems, clients, projects);
 const cards = [
@@ -61,7 +58,10 @@ const cards = [
 // The atlas's region for the card (explore.ts)
 const mapBox = MAP_BOX_WIDE;
 ---
-<section class:list={['section', 'explore', { 'no-grid': noGrid }]}>
+<!-- The same section on every page that closes with it: on the black, no
+     column lines (as the home page first had it), so the footer's lines
+     are the ones that come next -->
+<section class="section explore no-grid">
   <div class="container">
     <p class="tagline label-pill explore__label">Explore</p>
     <div class="explore__grid">

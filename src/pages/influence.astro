@@ -6,6 +6,7 @@ import SiteFooter from '../components/SiteFooter.astro';
 import ContactPanel from '../components/ContactPanel.astro';
 import WorldMapLines from '../components/WorldMapLines.astro';
 import ServiceCards from '../components/ServiceCards.astro';
+import Arrow from '../components/Arrow.astro';
 import { INFLUENCE_PAGE_QUERY } from '../sanity/queries';
 import { PAGE_DEFAULTS } from '../sanity/page-defaults';
 
@@ -21,57 +22,100 @@ const D = PAGE_DEFAULTS.influencePage;
 // in the composition, as shares of the screen's width (the four side by
 // side span it); `step`: its place on the stair, its top that many steps
 // below the photograph's (--stage-top, --stage-step); `position`: the
-// picture's anchor in its frame. As the page scrolls, every panel goes to
-// the same width (EVEN, a quarter), side by side in the same order from
-// the left (`xf`), at the screen's full height. The home hero's own
+// picture's anchor in its frame. As the page scrolls, the left one takes
+// over the screen, pushing the others aside, and the four run by as a
+// gallery, a screen each, in the same order from the left (`i`). The home hero's own
 // pictures (public/assets/images/hero, home-hero.ts): Tom speaking (its
 // About), then its Architectural Projects, Partners & Collabs and, at the
-// left edge, Shop & Courses. `sizes`: how wide each picture is drawn; the steps' pictures
-// (3:4) fill the screen's height, wider than their quarter of the screen.
+// left edge, Shop & Courses. `sizes`: how wide each picture is drawn at its
+// largest, the whole screen (the gallery the row runs into, style.css).
 const home = (picture: string) => ({
   src: `/assets/images/hero/hero-${picture}-960.avif`,
   srcset: [480, 720, 960, 1200, 1500].map((width) => `/assets/images/hero/hero-${picture}-${width}.avif ${width}w`).join(', '),
-  sizes: 'max(25vw, 75vh)',
+  sizes: '100vw',
 });
 const panels = [
   {
     x: 0.573, w: 0.427, step: 0,
     src: '/assets/images/hero/hero-about-1500.avif',
     srcset: [960, 1200, 1500].map((width) => `/assets/images/hero/hero-about-${width}.avif ${width}w`).join(', '),
-    sizes: '43vw',
+    sizes: '100vw',
     position: '50% 28%',
   },
   { x: 0.334, w: 0.239, step: 1, ...home('projects'), position: '50% 50%' },
   { x: 0.121, w: 0.213, step: 2, ...home('partners'), position: '50% 40%' },
   { x: 0, w: 0.121, step: 3, ...home('shop'), position: '50% 50%' },
 ];
-const EVEN = 1 / panels.length;
-// Each panel's place in the even row: its order from the left
+// The gallery's words, one to a picture, left to right: the four parts of
+// Tom's architectural influence, each growing out of the one before (the
+// work, the content made from it, the audience the content built, and the
+// opportunities that visibility brings). `lines`: where a name breaks, if
+// it is set by hand rather than left to the measure. `cta`: a quiet link
+// under the name, to a page, or `contact`, opening the contact form out
+// of the floating bar as every Contact does (floatingnav.js)
+type Cta = { label: string; href: string; contact?: boolean };
+const CAPTIONS: { title: string; lines?: string[]; text: string; cta?: Cta }[] = [
+  { title: 'Architectural Work', lines: ['Architectural', 'Work'], cta: { label: 'View Work', href: '/architecture' }, text: 'Tom’s architectural education, projects and professional experience give the platform its subject matter and credibility.' },
+  { title: 'Architectural Content', lines: ['Architectural', 'Content'], text: 'Tom translates architecture into video, writing, social media and other formats that make the work easier to discover and engage with.' },
+  { title: 'Building an Audience', lines: ['Building', 'an Audience'], text: 'That content has built a substantial audience around architecture, connecting Tom with students, professionals, practices and the wider industry.' },
+  { title: 'Publishing, Speaking & Collaboration', cta: { label: 'Collaborate with Tom', href: '#contact', contact: true }, text: 'That visibility now extends into books, talks, events, education and collaborations with organisations across architecture and design.' },
+];
+// Each panel's place from the left (0 to 3): in the gallery, the screens
+// before it
 const order = panels.map(({ x }) => x).sort((a, b) => a - b);
-const stage = panels.map((panel) => ({ ...panel, xf: order.indexOf(panel.x) * EVEN, picture: Math.max(panel.w, EVEN) }));
+const stage = panels.map((panel) => ({ ...panel, i: order.indexOf(panel.x) }));
 ---
-<BaseLayout title="Influence — Tomrowstudios" namespace="influence" pageName="Influence" pageDoc="influencePage">
+<BaseLayout title="Influence — Tomrowstudios" namespace="influence" pageName="Influence" pageDoc="influencePage" navPromo="book">
 <!-- The page itself, which shrinks into the footer as the footer arrives
      (footer.js); no column lines on this page (is--gridless) -->
 <div class="page-surface is--gridless" data-page-surface>
 <SiteNav />
 
-<!-- The stepped hero: a screen tall and a spread more, scrolling with the
-     page. Its screen (sticky, held by the browser itself) shows the four
-     photographs, which grow with the scroll, over that spread, to four even
-     columns of the screen's full height, revealing more of each picture
-     (influence.js, initInfluenceStage), and go straight on up with the page
-     the moment they are spread; the
-     page's name over them, part of the page, scrolling away with it. No
-     strip over the bar here or further down (no navPromo). -->
-<section class="influence-stage" data-influence-stage aria-label={page?.hero?.heading ?? D.hero.heading}>
+<!-- The stepped hero: a screen tall and its sequence's scroll more,
+     scrolling with the page. Its screen (sticky, held by the browser
+     itself) shows the four photographs: with the scroll the left one
+     widens until it fills the screen, pushing the others aside, each only
+     revealing more of a photograph that holds still, and the four run by
+     as a gallery, a screen each, before the screen goes on up with the
+     page (influence.js, initInfluenceStage); the
+     page's name over them, part of the page, scrolling away with it. The
+     page asks for the book's strip over the floating bar (navPromo), as it
+     always has; none over the stage (data-nav-promo empty), so it comes up
+     once the gallery has run and let the page go on, after the gallery's
+     own line over the bar has gone. -->
+<section class="influence-stage" data-influence-stage data-nav-promo="" aria-label={page?.hero?.heading ?? D.hero.heading}>
   <div class="influence-stage__screen" data-stage-screen>
-    {stage.map(({ x, w, step, xf, picture, src, srcset, sizes, position }) => (
-    <div class="influence-stage__panel" style={`--x: ${x}; --w: ${w}; --step: ${step}; --xf: ${xf}; --wf: ${EVEN}; --pw: ${picture};`}>
+    {stage.map(({ x, w, step, i, src, srcset, sizes, position }) => (
+    <div class="influence-stage__panel" style={`--x: ${x}; --w: ${w}; --step: ${step}; --i: ${i};`}>
       <img class="influence-stage__img" src={src} srcset={srcset} sizes={sizes} alt="" decoding="async" style={`object-position: ${position};`}>
     </div>
     ))}
+    <!-- Each picture's words in the gallery the row runs into, left to
+         right as the pictures are: its name large on the page's name's
+         edge, under it on two of them a quiet link (the hero's Learn more,
+         style.css), its line on the pages' column, the lit one's brought
+         into place as its picture fills the screen (influence.js) -->
+    <div class="influence-stage__captions">
+      {CAPTIONS.map(({ title, lines, text, cta }, k) => (
+      <div class="influence-stage__caption" data-stage-caption={k}>
+        <div class="influence-stage__caption-head">
+          <h2 class="influence-stage__caption-title">{(lines ?? [title]).map((line, j) => <>{j > 0 && <br />}{line}</>)}</h2>
+          {cta && (
+          <a href={cta.href} class="home-list__cta influence-stage__cta" {...(cta.contact ? { 'data-fnav-contact-open': '', 'data-barba-prevent': 'self', 'aria-haspopup': 'dialog', 'aria-controls': 'fnav-contact' } : {})}>
+            <span class="home-list__cta-label">{cta.label}</span>
+            <Arrow class="home-list__cta-arrow" shape="straight" />
+          </a>
+          )}
+        </div>
+        <p class="influence-stage__caption-text">{text}</p>
+      </div>
+      ))}
+    </div>
   </div>
+  <!-- How far through the gallery: a fine line just over the floating bar,
+       as wide as it, filling with the run and there only while the run
+       is (influence.js, --run) -->
+  <div class="influence-stage__progress" data-stage-progress aria-hidden="true"><span class="influence-stage__progress-fill"></span></div>
   <!-- The page's name, and under it, well below, its short description -->
   <div class="influence-stage__text">
     <h1 class="influence-stage__title" data-page-field="hero.heading">{page?.hero?.heading ?? D.hero.heading}</h1>

@@ -68,8 +68,10 @@ function initDesignNotes() {
     if (current && current !== container) build();
     const vw = document.documentElement.clientWidth;
     placed.forEach((p) => {
+      // Shown only while its element is: laid out, and not hidden (a caption
+      // that is only there while its picture is, say)
       const r = p.target.getBoundingClientRect();
-      const visible = r.width > 0 && r.height > 0;
+      const visible = r.width > 0 && r.height > 0 && getComputedStyle(p.target).visibility !== "hidden";
       p.card.classList.toggle("is--off", !visible);
       if (!visible) return;
       const [ys, xs] = (p.note.at || "top-right").split("-");

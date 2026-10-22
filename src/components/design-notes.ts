@@ -14,6 +14,9 @@
      left or right (the card's edge on the target's), before or after (the
      card beside the target, clear of it)
    - `offset`: a nudge in pixels, [x, y]
+   Wording: short, one point a note. Speak of the site as it is ("the
+   architectural work shown here"); where Tom comes in, by name ("Tom’s
+   presence"), never him or his.
    To remove the whole system: delete this file, the notes' markup and
    script lines in BaseLayout.astro, grid-overlay.js and "Design notes" in
    style.css. */
@@ -39,20 +42,56 @@ export const DESIGN_NOTES: DesignNote[] = [
     target: '.home-reel__surface-inner',
     at: 'bottom-left',
     offset: [24, -24],
-    text: 'The background dynamically adjusts based on the dominant colours in each image. Ideally, the images we choose should have a limited palette of just a few primary colours to make this effect work effectively. We also need a new selection of images, potentially something more visually engaging.',
+    text: 'The background takes its colours from each image, so images with a few strong colours work best. New, more engaging images needed.',
   },
   {
     page: 'index',
     target: '.logo-grid__row',
     at: 'above-right',
     offset: [-24, -16],
-    text: 'We need to replace these with the correct logos.',
+    text: 'Placeholder logos: to be replaced with the correct ones.',
+  },
+
+  // ---- Influence: the gallery the four pictures open into, one note to a
+  // picture, under its name (Architectural Work, Architectural Content,
+  // Building an Audience; Publishing, Speaking & Collaboration): each shows
+  // only while its picture is the one full-screen and its words are up
+  // (the caption hidden otherwise), so it never rides the moving strip
+  {
+    page: 'influence',
+    target: '[data-stage-caption="0"] .influence-stage__caption-head',
+    at: 'below-left',
+    offset: [0, 32],
+    text: 'We need a visual that clearly shows Tom’s architectural work, or Tom actively working.',
   },
   {
-    page: 'index',
+    page: 'influence',
+    target: '[data-stage-caption="1"] .influence-stage__caption-head',
+    at: 'below-left',
+    offset: [0, 32],
+    text: 'We need Tom recording or creating content: ideally a video, or at least a still that clearly shows content being made.',
+  },
+  {
+    page: 'influence',
+    target: '[data-stage-caption="2"] .influence-stage__caption-head',
+    at: 'below-left',
+    offset: [0, 32],
+    text: 'We need something that shows the channel or platform growing, so it reads as an audience building.',
+  },
+  {
+    page: 'influence',
+    target: '[data-stage-caption="3"] .influence-stage__caption-head',
+    at: 'below-left',
+    offset: [0, 32],
+    text: 'We need a strong image of Tom speaking in public.',
+  },
+
+  // ---- Every page with the footer
+  {
+    page: '*',
     target: '.site-footer__signup',
     at: 'below-right',
     offset: [0, 16],
-    text: 'What email newsletter platform are you using?',
+    text: 'Which newsletter platform is being used?',
   },
 ];

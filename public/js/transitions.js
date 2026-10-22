@@ -553,10 +553,12 @@ function initLenis() {
   if (!hasLenis) return;
 
   // A deliberate pace: each wheel step carries the page a little less than
-  // the browser's own, and the page eases after it more slowly
+  // the browser's own, and the page eases after it more slowly, with a
+  // little weight (a lower lerp: it glides a touch longer, still answering
+  // the hand at once)
   lenis = new Lenis({
-    lerp: 0.1,
-    wheelMultiplier: 0.85,
+    lerp: 0.085,
+    wheelMultiplier: 0.8,
   });
 
   // The side panels need to pause page scrolling while they are open

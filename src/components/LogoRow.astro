@@ -1,0 +1,38 @@
+---
+/* The clients' logos as one row running sideways on a loop across the
+   page's full width, over a ruler of fine ticks that runs with them, a
+   taller one under each logo (style.css, "The clients' logos"): each logo
+   the white artwork on the band itself, no tile, bounded on both axes so a
+   long wordmark and a tall symbol carry a similar weight. The row is
+   Osmo's marquee with scroll direction (marquee.js): one collection of
+   tiles, cloned once by the script so the loop has no seam, run left at a
+   steady pace, turned round while the page scrolls back up and sped up a
+   little by the scroll; paused only while off screen. The collection is
+   every logo once, and the first ones again until there are ten, so it is
+   wider than any screen and the loop never shows its end; only the first
+   are read out, the repeats hidden from screen readers.
+
+   The home page's (index.astro, under its hero) and the Partners page's
+   (partner.astro), each on the dark band (.logo-wall). Its heading comes
+   from the page (the slot). */
+interface Props {
+  logos: { src: string; alt: string }[];
+}
+const { logos } = Astro.props;
+const count = logos.length ? Math.max(10, logos.length) : 0;
+const cells = Array.from({ length: count }, (_, i) => ({ ...logos[i % logos.length], repeat: i >= logos.length }));
+---
+<div class="logo-grid">
+  <div class="logo-grid__head">
+    <slot />
+  </div>
+  <div class="logo-grid__row marquee-advanced" data-marquee-scroll-direction-target data-marquee-direction="left" data-marquee-status="normal" data-marquee-speed="20" data-marquee-scroll-speed="6" data-marquee-duplicate="1">
+    <div data-marquee-scroll-target class="marquee-advanced__scroll">
+      <ul class="logo-grid__list marquee-advanced__collection" role="list" data-marquee-collection-target>
+        {cells.map(({ src, alt, repeat }) => (
+        <li class="logo-grid__tile" aria-hidden={repeat ? 'true' : undefined}><img class="logo-grid__logo" src={src} loading="lazy" decoding="async" alt={repeat ? '' : alt}></li>
+        ))}
+      </ul>
+    </div>
+  </div>
+</div>

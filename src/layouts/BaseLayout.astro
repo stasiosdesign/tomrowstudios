@@ -12,6 +12,7 @@
    navigation, so they must not be bundled into modules. */
 import '../styles/style.css';
 import FloatingNav from '../components/FloatingNav.astro';
+import SiteHead from '../components/SiteHead.astro';
 import ScrollBar from '../components/ScrollBar.astro';
 import ReelLightbox from '../components/ReelLightbox.astro';
 import { REEL_SRC } from '../components/reel';
@@ -115,6 +116,12 @@ const showReel = Boolean(REEL_SRC) || __DEPLOYMENT__ !== 'production';
 <div class="cursor-label" data-cursor-label-el aria-hidden="true">
   <span class="cursor-label__box"><span class="cursor-label__window"><span class="cursor-label__track"><span class="cursor-label__text"></span><span class="cursor-label__text"></span></span></span></span>
 </div>
+
+<!-- The header's fixed parts: the studio's mark, its name and Contact,
+     held at the top of the screen on every page (SiteHead.astro). Outside
+     the Barba container, so page changes and the page's transforms leave
+     them in place. -->
+<SiteHead />
 
 <!-- Click-to-zoom target (outside the Barba container so it persists) -->
 <div data-click-zoom-lightbox class="click-zoom__lightbox"></div>

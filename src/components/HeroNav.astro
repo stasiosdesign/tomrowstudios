@@ -1,25 +1,17 @@
 ---
-/* The hero's navigation, the same on every page: at the top of the screen,
-   the studio's mark in the top left corner, on the margin
-   (BrandMark.astro, --hero-logo-left); the studio's name on the home hero's
-   pictures' left edge (--hero-brand-left); the site's
-   pages in one column (the home hero's own column of links, on the line
-   the hero's fields start from, --hero-col), this page marked by a square
-   that is one of the grid's own tiles; and at the top right, Contact: as
-   tall as the ways to Tom that stood there (now in the footer,
-   SocialSquares.astro), its word in one box and the site's arrow in a
-   square beside it, in the Partners page's paper (black on that page),
-   which opens the contact form out of the floating bar as
-   every other way to contact Tom does (floatingnav.js). All of it stands
-   at --hero-top, as every element of the home hero does (style.css, "The
-   hero's navigation").
+/* The hero's navigation's column of pages, the same on every page: the
+   site's pages in one column at the top of the screen (the home hero's own
+   column of links, on the line the hero's fields start from, --hero-col),
+   this page marked by a square that is one of the grid's own tiles, at
+   --hero-top, as every element of the home hero is (style.css, "The
+   hero's navigation"). The studio's mark, its name and Contact are the
+   header's fixed parts, held at the top of the screen on every page
+   (SiteHead.astro); these scroll away with the page.
 
-   Placed by its container: the home hero's sticky layer (index.astro,
+   Placed by its container: the home hero's sticky layer (HomeHero.astro,
    where it is on the mosaic) and the bar at the top of every other page
    (SiteNav.astro, where it is on the bar's band, its type dark over a
    light page). */
-import BrandMark from './BrandMark.astro';
-import ContactButton from './ContactButton.astro';
 import { pages } from './site-links';
 
 interface Props {
@@ -28,12 +20,6 @@ interface Props {
 }
 const { current } = Astro.props;
 ---
-<!-- The mark and the name both lead home; the name is the one a keyboard
-     or a screen reader meets -->
-<a href="/" class="hero-nav__logo" tabindex="-1" aria-hidden="true"><BrandMark class="hero-nav__logo-mark" /></a>
-<a href="/" class="hero-nav__brand" aria-label="Tomrowstudios, home"><span aria-hidden="true">tomrowstudios<span class="hero-nav__copy">©</span></span></a>
 <nav class="hero-nav__links site-nav__links" aria-label="Pages" data-dim-group>
   {pages.map(({ href, label }) => <a href={href} data-split-hover="link" class="site-nav__link" aria-current={href === current ? 'page' : undefined}>{label}</a>)}
 </nav>
-<!-- Contact (ContactButton.astro) -->
-<ContactButton />

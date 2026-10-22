@@ -8,19 +8,19 @@
 // "Influence: the hero" and "The book band" in style.css.
 //
 // The stepped hero (initInfluenceStage): nothing holds the page. The stage
-// is a screen tall and a spread more (--stage-spread, style.css) and
-// scrolls as any section does; its screen is held to the screen by the
-// browser itself (sticky) while that spread scrolls by, and over exactly
-// that distance the four photographs spread from the stepped composition
-// into four even columns of the screen's full height, all together, each
-// box growing to show more of its picture, which keeps its size; the moment
-// they are spread, the stage goes on up with the page (no held stretch with
-// nothing moving, which read as a pause). All of it is drawn by the stylesheet from one number, --p (0 to 1),
-// which is all the script writes: straight from the scroll position, every
-// frame the page moves, with no easing or smoothing of its own, so the
-// stage is where the scroll puts it, either way and at any speed, the
-// site's smooth scrolling (Lenis) as on every page. The name is part of
-// the page and scrolls away with it.
+// is a screen tall and its sequence's scroll more (--stage-open,
+// --stage-run, style.css) and scrolls as any section does; its screen is
+// held to the screen by the browser itself (sticky) while that scrolls by,
+// and over exactly that distance the left photograph takes over the
+// screen, pushing the other three aside, and the four run by as a gallery,
+// a screen each, every box only showing more or less of a picture that
+// holds still; the moment the fourth is full-screen, the stage goes on up
+// with the page. All of it is drawn by the stylesheet from two numbers,
+// --u and --h, which are all the script writes: from the scroll position,
+// every frame the page moves, along fixed curves of the scroll (no timing
+// or smoothing of its own), so the stage is where the scroll puts it,
+// either way and at any speed, the site's smooth scrolling (Lenis) as on
+// every page. The name is part of the page and scrolls away with it.
 //
 // The hero (initInfluenceHero): each photograph's frame stays where it is
 // placed; the picture in it is moved up by its frame's speed (data-speed)
@@ -65,30 +65,168 @@ function initInfluenceStage(scope) {
   if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
   gsap.registerPlugin(ScrollTrigger);
 
-  // The one number the stylesheet draws the stage from (--p), written only
-  // when it changes
+  // The numbers the stylesheet draws the stage from, each written only
+  // when it changes: --v, the four growing up to the screen's full height
+  // together; --u, the widening, the left picture taking over the screen
+  // and pushing the others aside, which sets off with the growth but
+  // barely, and gathers pace as the growth comes to rest (widen); --d, the
+  // pictures dimming, from none to their full-screen depth over the whole
+  // opening, so slowly it is hardly seen (settle); --h, the run across the
+  // four, a screen a picture. Each follows the scroll directly, along a
+  // curve that starts and ends at rest (the growth and the run running at
+  // one even speed between, glide):
+  // the opening sets off from the page's stop and comes to rest full-screen,
+  // so the strip turns from being pushed right to running left with no
+  // jolt; the run sets off from there, crosses the pictures at one speed,
+  // held at none, and comes to rest on the fourth as the page goes on. The
+  // same scroll gives the same frame either way, nothing timed, nothing
+  // snapped
   const screen = stage.querySelector('[data-stage-screen]');
   if (!screen) return;
-  let shown = -1;
+  const PICTURES = screen.querySelectorAll('.influence-stage__panel').length || 4;
+  const clamp = (v) => Math.min(1, Math.max(0, v));
+  // Even speed between a start and an end each eased over `a` of the way
+  // (the speed rising and falling in straight lines, so it never jumps)
+  const glide = (t, a) => {
+    t = clamp(t);
+    const top = 1 / (1 - a);
+    if (t < a) return (0.5 * top * t * t) / a;
+    if (t > 1 - a) return 1 - (0.5 * top * (1 - t) * (1 - t)) / a;
+    return top * (t - a / 2);
+  };
+  // The growth up over the opening's first GROW_TO
+  const GROW_TO = 0.55;
+  // The widening over the whole opening: a half cosine over t to the
+  // WIDEN_CURVE, so it sets off at rest and slowly (a little while the
+  // four are growing up, as much as keeps the right one still in view
+  // when they reach the screen's full height), gathers pace in an ever
+  // steeper rise, and eases to rest full-screen
+  const WIDEN_CURVE = 2.2;
+  const widen = (t) => (1 - Math.cos(Math.PI * Math.pow(clamp(t), WIDEN_CURVE))) / 2;
+  // An even half cosine: at rest at both ends, never quick
+  const settle = (t) => (1 - Math.cos(Math.PI * clamp(t))) / 2;
+  const RUN_EASE = 0.18;
+  // The stretches' shares of the held scroll, from the stylesheet's own
+  // lengths (--stage-open, --stage-run, in svh), read on each refresh
+  let parts = { open: 1, run: 0 };
+  const readParts = () => {
+    const style = getComputedStyle(stage);
+    const length = (name) => Math.max(0, parseFloat(style.getPropertyValue(name)) || 0);
+    const open = length('--stage-open') || 1;
+    const run = length('--stage-run');
+    parts = { open: open / (open + run), run: run / (open + run) };
+  };
+  // ---- The gallery's words (influence.astro, .influence-stage__caption):
+  // the set over the picture nearest the screen's middle, once the first
+  // picture is well on its way to full-screen (CAPTION_FROM of the
+  // opening) and while the nearest is within CAPTION_SPAN of a screen of
+  // its place, so the words come as their picture comes on rather than
+  // once it has settled; between two, none. The name fades in and out
+  // whole; the line is split into lines, in masks, which rise into them
+  // one after another, quickly, and rise out of them going, so passing
+  // from one picture to the next the old words leave before the new come.
+  // Played when the scroll crosses those points, either way, never held
+  // or eased towards
+  const CAPTION_FROM = 0.6;
+  const CAPTION_SPAN = 0.4;
+  const captions = Array.from(screen.querySelectorAll('[data-stage-caption]'));
+  const split = typeof SplitText !== 'undefined';
+  if (split) gsap.registerPlugin(SplitText);
+  // Split again when the type's measure changes (autoSplit), each line
+  // put where its set stands (in place if lit, waiting below if not)
+  let lit = -1;
+  let sets = [];
+  sets = captions.map((el) => {
+    // The name with its link fades as one
+    const title = el.querySelector('.influence-stage__caption-head');
+    const text = el.querySelector('.influence-stage__caption-text');
+    const set = { el, title, lines: [] };
+    if (title) gsap.set(title, { autoAlpha: 0 });
+    if (split && text) {
+      SplitText.create(text, {
+        type: 'lines',
+        mask: 'lines',
+        linesClass: 'influence-stage__line',
+        autoSplit: true,
+        onSplit(self) {
+          set.lines = self.lines;
+          gsap.set(self.lines, { yPercent: sets[lit] === set ? 0 : 110 });
+        },
+      });
+    }
+    return set;
+  });
+  function caption(k, between) {
+    const next = between ? -1 : k;
+    if (next === lit) return;
+    const was = sets[lit];
+    lit = next;
+    if (was) {
+      const gone = () => { if (sets[lit] !== was) was.el.classList.remove('is--shown'); };
+      if (was.title) gsap.to(was.title, { autoAlpha: 0, duration: 0.3, ease: 'power1.in', overwrite: true });
+      if (was.lines.length) gsap.to(was.lines, { yPercent: -110, duration: 0.28, ease: 'power2.in', stagger: 0.015, overwrite: true, onComplete: gone });
+      else gsap.delayedCall(0.3, gone);
+    }
+    const now = sets[next];
+    if (!now) return;
+    now.el.classList.add('is--shown');
+    const delay = was ? 0.12 : 0;
+    if (now.title) gsap.to(now.title, { autoAlpha: 1, duration: 0.6, ease: 'power1.out', delay, overwrite: true });
+    if (now.lines.length) {
+      gsap.fromTo(now.lines, { yPercent: 110 }, { yPercent: 0, duration: 0.55, ease: 'expo.out', stagger: 0.035, delay, overwrite: true });
+    }
+  }
+
+  const shown = { v: -1, u: -1, d: -1, h: -1 };
+  const write = (name, value) => {
+    const v = Math.round(value * 10000) / 10000;
+    if (v === shown[name]) return;
+    shown[name] = v;
+    screen.style.setProperty(`--${name}`, v);
+  };
+  const progressLine = stage.querySelector('[data-stage-progress]');
+  let shownRun = -1;
   const draw = (progress) => {
-    const p = Math.round(progress * 10000) / 10000;
-    if (p === shown) return;
-    shown = p;
-    screen.style.setProperty('--p', p);
+    const { open, run } = parts;
+    const t = progress / open;
+    const v = glide(t / GROW_TO, 0.4);
+    const u = widen(t);
+    const h = run ? glide((progress - open) / run, RUN_EASE) * (PICTURES - 1) : 0;
+    write('v', v);
+    write('u', u);
+    write('d', settle(t));
+    write('h', h);
+    // The line over the bar: the run so far, and there only while the
+    // run is (from the first picture full-screen to the stage letting the
+    // page go on), so it is gone before the book's strip comes up, which
+    // waits for the stage to leave the middle of the screen (data-nav-promo
+    // empty on the stage, floatingnav.js)
+    if (progressLine) {
+      const run = h / (PICTURES - 1);
+      const r = Math.round(run * 10000) / 10000;
+      if (r !== shownRun) {
+        shownRun = r;
+        stage.style.setProperty('--run', r);
+      }
+      progressLine.classList.toggle('is--shown', u >= 0.995 && progress < 0.999);
+    }
+    caption(u < CAPTION_FROM ? -1 : Math.round(h), u < CAPTION_FROM || Math.abs(h - Math.round(h)) > CAPTION_SPAN);
   };
 
   // From the stage's top at the screen's top to the moment its screen stops
-  // being held (the stage's height less the screen's, --stage-spread in
-  // style.css, measured on each refresh): the four are spread just as the
-  // screen goes on up with the page, so there is no stretch of scrolling
-  // where nothing moves. A reading of the scroll, nothing more
+  // being held (the stage's height less the screen's: --stage-open and
+  // --stage-run in style.css, measured on each refresh):
+  // the fourth picture is full-screen just as the screen goes on up with
+  // the page, so there is no stretch of scrolling where nothing moves. A
+  // reading of the scroll, nothing more
+  readParts();
   ScrollTrigger.create({
     trigger: stage,
     start: 'top top',
     end: () => `+=${Math.max(1, stage.offsetHeight - screen.offsetHeight)}`,
     invalidateOnRefresh: true,
     onUpdate: (self) => draw(self.progress),
-    onRefresh: (self) => draw(self.progress),
+    onRefresh: (self) => { readParts(); draw(self.progress); },
   });
 }
 
@@ -238,9 +376,14 @@ function initBookBand(scope) {
 // once it has landed at its top, and sized now, while it is unseen; once
 // it has landed (the call without it) they are measured again where they
 // are, which changes nothing, and from then on follow the scroll.
-function initInfluenceStrip(scope, { arriving = false } = {}) {
-  const strip = (scope || document).querySelector('[data-influence-strip]');
-  if (!strip) return;
+//
+// Every such column on the page (data-influence-strip): the Shop hero's,
+// and the Partners page's results (partner.astro), which stand in the
+// page's flow, their focus line the screen's middle.
+function initInfluenceStrip(scope, options) {
+  (scope || document).querySelectorAll('[data-influence-strip]').forEach((strip) => initStripColumn(strip, options));
+}
+function initStripColumn(strip, { arriving = false } = {}) {
   if (strip.__strip) {
     if (!arriving) strip.__strip();
     return;

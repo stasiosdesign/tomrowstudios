@@ -199,6 +199,17 @@ function initFooterReveal(container){
     end: 'bottom top',
     toggleClass: { targets: main, className: 'is--footer-near' },
   });
+  // The header's fixed parts (SiteHead.astro) go back up out of the screen
+  // as the footer comes, gone before its first line shows (four tenths of
+  // a screen ahead of it), and come back down as the page goes back up
+  // (is--footer-ahead on the root, outside the page: style.css, "The
+  // header's fixed parts")
+  const ahead = ScrollTrigger.create({
+    trigger: footer,
+    start: 'top bottom+=40%',
+    end: 'bottom top',
+    toggleClass: { targets: document.documentElement, className: 'is--footer-ahead' },
+  });
 
   measure();
   render(trigger.progress * 100);
@@ -206,6 +217,8 @@ function initFooterReveal(container){
   onPageLeave(() => {
     trigger.kill();
     near.kill();
+    ahead.kill();
+    document.documentElement.classList.remove('is--footer-ahead');
     ScrollTrigger.removeEventListener('refreshInit', unscale);
     main.classList.remove('is--footer-scaling', 'is--footer-near');
   });

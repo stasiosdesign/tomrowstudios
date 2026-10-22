@@ -4,8 +4,9 @@ import SiteNav from '../components/SiteNav.astro';
 import SiteFooter from '../components/SiteFooter.astro';
 import ContactPanel from '../components/ContactPanel.astro';
 import Arrow from '../components/Arrow.astro';
-import Button from '../components/Button.astro';
+import ContactButton from '../components/ContactButton.astro';
 import ServiceCards from '../components/ServiceCards.astro';
+import LogoRow from '../components/LogoRow.astro';
 import CaseStudyPanel from '../components/CaseStudyPanel.astro';
 import { imageAttrs, urlFor, type SanityImage } from '../sanity/image';
 import { PARTNERS_PAGE_QUERY, PARTNERS_QUERY } from '../sanity/queries';
@@ -16,7 +17,7 @@ import type { PARTNERS_QUERY_RESULT } from '../sanity/sanity.types';
 
 // The page's words and portrait, from the Partners page document (or the
 // page's defaults), and the partners: the case-study slider, the panels it
-// opens (CaseStudyPanel.astro) and the logo marquee. The services, the testimonials, the results
+// opens (CaseStudyPanel.astro) and the logo row. The services, the testimonials, the results
 // and the form stay here. The form sends as the contact panel's does: to
 // the address in contact.ts, offering the site's email whenever it was not
 // sent (formvalidation.js)
@@ -31,14 +32,31 @@ type Shown = Partner & { coverImage: NonNullable<Partner['coverImage']> };
 const partners = allPartners.filter((partner): partner is Shown => Boolean(partner.coverImage?.asset));
 // A partner with a case study to open: one with a title
 const hasCaseStudy = (partner: Partner) => Boolean(partner.caseStudy?.title);
-// The logos for the marquee: the partners that have one. An even count keeps
-// the row alternating across the loop seam, so an odd list runs twice.
+// The logos for the logo row (LogoRow.astro): the partners that have one,
+// or, while none has, the two supplied marks
 type Logo = { name: string; logo: NonNullable<Partner['logo']> };
 const withLogo = partners.flatMap((partner): Logo[] => (partner.logo?.asset ? [{ name: partner.name ?? '', logo: partner.logo }] : []));
-const logos = withLogo.length % 2 ? [...withLogo, ...withLogo] : withLogo;
+const partnerLogos = withLogo.length
+  ? withLogo.map(({ name, logo }) => ({ src: urlFor(logo).ignoreImageParams().width(600).height(240).url(), alt: name }))
+  : [{ src: '/assets/logos/finch-logo.png', alt: 'Finch' }, { src: '/assets/logos/Gendo-Logo-White.png', alt: 'Gendo' }];
+// The hero's stagger (style.css, "The partners' stagger"): the partners
+// dealt into four columns, the first two to the right-hand pair (which
+// stand highest), the next to the left-hand pair, and round again, so the
+// first cards meet the eye under the introduction and the rest run on down
+const STAGGER_ORDER = [2, 3, 1, 0];
+const staggerColumns: { partner: Shown; i: number }[][] = [[], [], [], []];
+partners.forEach((partner, i) => staggerColumns[STAGGER_ORDER[i % 4]].push({ partner, i }));
 // An <img>'s src, size and alt: the photo set in the Studio, or the page's own file
 const img = (image: SanityImage | null | undefined, fallback: ImageDefault, width: number) =>
   image?.asset ? { ...imageAttrs(image, width), alt: image.alt ?? fallback.alt } : { src: fallback.path, width: fallback.width, height: fallback.height, alt: fallback.alt };
+// What the work returned (the results' panels): the figure, what it measures
+// and where
+const results = [
+  { figure: '+42%', label: 'Increase in campaign engagement', foot: 'Across launch work' },
+  { figure: '3.2&#215;', label: 'More qualified enquiries', foot: 'Inbound, year on year' },
+  { figure: '+68%', label: 'Growth in organic audience reach', foot: 'Unpaid channels' },
+  { figure: '+31%', label: 'Increase in conversion', foot: 'Landing to enquiry' },
+];
 // What Tom does: each service and the line that explains it
 const services = [
   { name: 'Content Strategy', text: 'Defining the ideas, messaging and content a brand needs to position itself clearly.' },
@@ -81,81 +99,43 @@ const services = [
       <div class="section-head__side">
         <p class="lead" data-page-field="intro.lead">{page?.intro?.lead ?? D.intro.lead}</p>
         <div class="actions">
-          <Button href="#contact" data-panel-open="contact" data-barba-prevent="self" data-page-field="intro.button" label={page?.intro?.button ?? D.intro.button} />
+          <ContactButton data-page-field="intro.button" label={page?.intro?.button ?? D.intro.button} />
         </div>
       </div>
     </div>
-    <div data-swiper-group class="swiper-group">
-      <div data-swiper-wrap class="swiper">
-        <div class="swiper-wrapper">
-          {partners.map((partner, i) => {
-            const index = String(i + 1).padStart(2, '0');
-            const picture = <img {...imageAttrs(partner.coverImage, 1200)} draggable="false" alt={partner.coverImage.alt ?? `Case study — ${partner.name}`} loading="lazy" decoding="async">;
-            const details = <><span class="slide-card__index">{index}</span><span class="slide-card__name">{partner.name}</span></>;
-            return (
-              <div class="swiper-slide">
-                {hasCaseStudy(partner) ? (
-                  <a class="slide-card" href={`#case-${partner.slug}`} data-case-open={`case-${partner.slug}`} data-barba-prevent="self" data-cursor-label="View Case Study">{picture}{details}</a>
-                ) : (
-                  <div class="slide-card">{picture}{details}</div>
-                )}
-              </div>
-            );
-          })}
-        </div>
+    <!-- The partners' portraits as an editorial stagger: four columns on
+         the page's own, each a column of portrait cards set a little lower
+         or higher than its neighbour (style.css, "The partners' stagger"),
+         the first cards to the right, high, and the rest running on down
+         the page; on a smaller screen two columns -->
+    <div class="partner-stagger">
+      {staggerColumns.map((column) => (
+      <div class="partner-stagger__col">
+        {column.map(({ partner, i }) => {
+          const index = String(i + 1).padStart(2, '0');
+          const picture = <img {...imageAttrs(partner.coverImage, 1200)} draggable="false" alt={partner.coverImage.alt ?? `Case study — ${partner.name}`} loading={i < 4 ? undefined : 'lazy'} decoding="async">;
+          const details = <><span class="slide-card__index">{index}</span><span class="slide-card__name">{partner.name}</span></>;
+          return hasCaseStudy(partner) ? (
+            <a class="slide-card" href={`#case-${partner.slug}`} data-case-open={`case-${partner.slug}`} data-barba-prevent="self" data-cursor-label="View Case Study">{picture}{details}</a>
+          ) : (
+            <div class="slide-card">{picture}{details}</div>
+          );
+        })}
       </div>
-      <div class="swiper-navigation">
-        <button data-swiper-prev class="swiper-navigation__button">
-          <Arrow class="swiper-navigation__button-arorw is--prev" />
-        </button>
-        <div class="swiper-pagination"></div>
-        <button data-swiper-next class="swiper-navigation__button">
-          <Arrow class="swiper-navigation__button-arorw" />
-        </button>
-      </div>
+      ))}
     </div>
   </div>
 </section>
 
-<!-- Logo strip -->
-<section class="section logo-strip">
-  <div class="section-title section-title-left logo-strip__head">
-    <p class="tagline label-pill" data-page-field="clients.label">{page?.clients?.label ?? D.clients.label}</p>
-    <h2 class="logo-strip-title" data-page-field="clients.heading">{page?.clients?.heading ?? D.clients.heading}</h2>
-    <p class="logo-strip__note" data-page-field="clients.note">{page?.clients?.note ?? D.clients.note}</p>
-  </div>
+<!-- The partners' logos: the home page's logo row (LogoRow.astro), the
+     logos running sideways on a loop over their ruler, on the same dark
+     band, under the section's heading and its note -->
+<section class="logo-wall is--partner">
+  <LogoRow logos={partnerLogos}>
+    <h2 class="logo-grid__lead" data-page-field="clients.heading">{page?.clients?.heading ?? D.clients.heading}</h2>
+    <p class="logo-grid__note" data-page-field="clients.note">{page?.clients?.note ?? D.clients.note}</p>
+  </LogoRow>
 </section>
-
-<section class="logo-marquee is--tight">
-  <div data-marquee-duplicate="2" data-marquee-scroll-direction-target data-marquee-direction="right" data-marquee-status="normal" data-marquee-speed="15" data-marquee-scroll-speed="10" class="marquee-advanced">
-    <div data-marquee-scroll-target class="marquee-advanced__scroll">
-      <div data-marquee-collection-target class="marquee-advanced__collection">
-        {logos.length > 0 ? logos.map((partner) => (
-          <div class="marquee-advanced__item-width"><img src={urlFor(partner.logo).ignoreImageParams().width(600).height(240).url()} loading="lazy" alt={partner.name}></div>
-        )) : (
-          <>
-            {/* Placeholder strip while no partner has a logo: the two supplied
-                marks alternating. An even count so the pair still alternates
-                across the loop seam. */}
-            <div class="marquee-advanced__item-width"><img src="/assets/logos/finch-logo.png" loading="lazy" alt="Finch"></div>
-            <div class="marquee-advanced__item-width"><img src="/assets/logos/Gendo-Logo-White.png" loading="lazy" alt="Gendo"></div>
-            <div class="marquee-advanced__item-width"><img src="/assets/logos/finch-logo.png" loading="lazy" alt="Finch"></div>
-            <div class="marquee-advanced__item-width"><img src="/assets/logos/Gendo-Logo-White.png" loading="lazy" alt="Gendo"></div>
-            <div class="marquee-advanced__item-width"><img src="/assets/logos/finch-logo.png" loading="lazy" alt="Finch"></div>
-            <div class="marquee-advanced__item-width"><img src="/assets/logos/Gendo-Logo-White.png" loading="lazy" alt="Gendo"></div>
-            <div class="marquee-advanced__item-width"><img src="/assets/logos/finch-logo.png" loading="lazy" alt="Finch"></div>
-            <div class="marquee-advanced__item-width"><img src="/assets/logos/Gendo-Logo-White.png" loading="lazy" alt="Gendo"></div>
-            <div class="marquee-advanced__item-width"><img src="/assets/logos/finch-logo.png" loading="lazy" alt="Finch"></div>
-            <div class="marquee-advanced__item-width"><img src="/assets/logos/Gendo-Logo-White.png" loading="lazy" alt="Gendo"></div>
-            <div class="marquee-advanced__item-width"><img src="/assets/logos/finch-logo.png" loading="lazy" alt="Finch"></div>
-            <div class="marquee-advanced__item-width"><img src="/assets/logos/Gendo-Logo-White.png" loading="lazy" alt="Gendo"></div>
-          </>
-        )}
-      </div>
-    </div>
-  </div>
-</section>
-
 
 <!-- Statement — the headline takes the top of the grid on its own, then a
      portrait in the first column against the copy in the last two. -->
@@ -169,7 +149,7 @@ const services = [
       <div class="statement__body">
         <p class="statement__lead" data-page-field="statement.lead">{page?.statement?.lead ?? D.statement.lead}</p>
         <div class="actions">
-          <Button href="/partners-archive" data-page-field="statement.button" label={page?.statement?.button ?? D.statement.button} />
+          <ContactButton href="/partners-archive" data-page-field="statement.button" label={page?.statement?.button ?? D.statement.button} />
         </div>
       </div>
     </div>
@@ -263,76 +243,32 @@ const services = [
   </div>
 </section>
 
-<!-- Results — what the work returned, not how it was made. The figures use the
-     site's own odometer, so they count up on scroll like the ones on Influence. -->
+<!-- Results — what the work returned, not how it was made: the Shop hero's
+     column of panels (InfluenceStory.astro, style.css "The column of
+     panels"), in white on this page's paper, one panel a result, the one
+     on the screen's middle grown large as the page scrolls by and the next
+     taking over (influence.js, initInfluenceStrip); each figure counts up
+     with the site's odometer as its panel comes in. Beside them, held
+     while they pass, the section's name, its note and its calls to action. -->
 <section class="section theme-light results-section">
-  <div class="container">
-    <div class="section-head">
-      <div class="section-head__main">
-        <p class="tagline label-pill" data-page-field="results.label">{page?.results?.label ?? D.results.label}</p>
-        <h2 data-page-field="results.heading">{page?.results?.heading ?? D.results.heading}</h2>
-      </div>
-      <div class="section-head__side">
-        <p class="lead" data-page-field="results.note">{page?.results?.note ?? D.results.note}</p>
-        <div class="actions">
-          <Button href="#contact" data-panel-open="contact" data-barba-prevent="self" label="Get Started" />
-          <Button href="/partners-archive" label="View Work" secondary />
-        </div>
+  <div class="container results-layout">
+    <div class="results-layout__head">
+      <p class="tagline label-pill" data-page-field="results.label">{page?.results?.label ?? D.results.label}</p>
+      <h2 data-page-field="results.heading">{page?.results?.heading ?? D.results.heading}</h2>
+      <p class="lead" data-page-field="results.note">{page?.results?.note ?? D.results.note}</p>
+      <div class="actions">
+        <ContactButton label="Get Started" />
+        <ContactButton href="/partners-archive" label="View Work" secondary />
       </div>
     </div>
-    <ul data-odometer-group data-odometer-stagger="0.1" class="results-grid">
-      <li class="results-card">
-        <div class="results-card__top">
-          <span class="results-card__index">R.01</span>
-          <span class="results-card__tag">Campaigns</span>
-        </div>
-        <div class="results-card__body">
-          <p data-odometer-element data-odometer-duration="2" class="results-card__value">+42%</p>
-          <p class="results-card__label">Increase in campaign engagement</p>
-        </div>
-        <div class="results-card__foot">
-          <span>Across launch work</span>
-        </div>
+    <ul class="influence-strip is--results" data-influence-strip>
+      {results.map(({ figure, label, foot }) => (
+      <li class="influence-strip__item" data-strip-item data-odometer-group>
+        <p class="influence-strip__label">{label}</p>
+        <p class="influence-strip__figure" data-odometer-element data-odometer-duration="1.6" set:html={figure}></p>
+        <p class="influence-strip__foot">{foot}</p>
       </li>
-      <li class="results-card">
-        <div class="results-card__top">
-          <span class="results-card__index">R.02</span>
-          <span class="results-card__tag">Enquiries</span>
-        </div>
-        <div class="results-card__body">
-          <p data-odometer-element data-odometer-duration="2" class="results-card__value">3.2&#215;</p>
-          <p class="results-card__label">More qualified enquiries</p>
-        </div>
-        <div class="results-card__foot">
-          <span>Inbound, year on year</span>
-        </div>
-      </li>
-      <li class="results-card">
-        <div class="results-card__top">
-          <span class="results-card__index">R.03</span>
-          <span class="results-card__tag">Audience</span>
-        </div>
-        <div class="results-card__body">
-          <p data-odometer-element data-odometer-duration="2" class="results-card__value">+68%</p>
-          <p class="results-card__label">Growth in organic audience reach</p>
-        </div>
-        <div class="results-card__foot">
-          <span>Unpaid channels</span>
-        </div>
-      </li>
-      <li class="results-card">
-        <div class="results-card__top">
-          <span class="results-card__index">R.04</span>
-          <span class="results-card__tag">Conversion</span>
-        </div>
-        <div class="results-card__body">
-          <p data-odometer-element data-odometer-duration="2" class="results-card__value">+31%</p>
-          <p class="results-card__label">Increase in conversion</p>
-        </div>
-        <div class="results-card__foot">
-          <span>Landing to enquiry</span>
-        </div>
-      </li>
+      ))}
     </ul>
   </div>
 </section>
@@ -432,7 +368,7 @@ const services = [
 
           <div class="form-field-group">
             <div class="form-field">
-              <div data-submit tabindex="0" role="button" data-cta data-split-hover="link" class="cta form-submit-btn"><span class="cta__line is--top" aria-hidden="true"></span><span class="cta__line is--left" aria-hidden="true"></span><span class="cta__line is--bottom" aria-hidden="true"></span><span class="cta__content"><span data-cta-label data-split-hover="target" class="cta__label">Send enquiry</span><Arrow class="cta__icon" /></span><input type="submit" data-wait="Please wait..." class="form-submit" value="Send enquiry"></div>
+              <div data-submit tabindex="0" role="button" data-split-hover="link" class="hero-nav__contact form-submit-btn"><span class="hero-nav__contact-label"><span data-cta-label data-split-hover="target">Send enquiry</span></span><span class="hero-nav__contact-square"><Arrow class="hero-nav__contact-arrow" shape="straight" /></span><input type="submit" data-wait="Please wait..." class="form-submit" value="Send enquiry"></div>
             </div>
           </div>
         </form>
