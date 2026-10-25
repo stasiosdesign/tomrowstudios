@@ -15,13 +15,18 @@ export const config: VercelConfig = {
   framework: 'astro',
   buildCommand: 'npm run build',
   outputDirectory: 'dist',
-  // Commits that change nothing the site is built from (only the Studio,
-  // GitHub's workflows or these notes; a CMS release records its version on
-  // both branches) don't rebuild it: the Hobby plan allows few deployments a
-  // day. Exit 0 skips the build; anything else builds, including when the
-  // last deployed commit can't be compared.
+  // Production is never skipped: it is static, so a live publish reaches it
+  // only through the rebuild its deploy hook asks for, a build of a commit
+  // that hasn't changed. (From 10 to 25 Oct 2026 the rule below applied to
+  // production too, skipped those rebuilds, and live publishes never reached
+  // the site.) Staging renders every request from Sanity, so content needs
+  // no build there, and commits that change nothing it is built from (only
+  // the Studio, GitHub's workflows or these notes; a CMS release records its
+  // version on both branches) don't rebuild it: the Hobby plan allows few
+  // deployments a day. Exit 0 skips the build; anything else builds,
+  // including when the last deployed commit can't be compared.
   ignoreCommand:
-    'git diff --quiet "${VERCEL_GIT_PREVIOUS_SHA:-HEAD^}" HEAD -- . ":(exclude)studio" ":(exclude).github" ":(exclude).claude" ":(exclude)CLAUDE.md" ":(exclude)README.md"',
+    'if [ "$VERCEL_ENV" = "production" ]; then exit 1; fi; git diff --quiet "${VERCEL_GIT_PREVIOUS_SHA:-HEAD^}" HEAD -- . ":(exclude)studio" ":(exclude).github" ":(exclude).claude" ":(exclude)CLAUDE.md" ":(exclude)README.md"',
   cleanUrls: true,
   trailingSlash: false,
   redirects: [

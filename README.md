@@ -290,7 +290,14 @@ A Sanity webhook, **Rebuild the site once per live action**, on the `production`
 dataset, calls a Vercel deploy hook that rebuilds `main`. Production is
 static, so a live publish genuinely needs that build: it shows about a
 minute later, and the control watches the site's build stamp (`/build.json`,
-written by every production build) and says when. Staging needs no rebuild.
+written by every production build) and says when: the stamp records when the
+build read its content (`contentFrom`, Sanity's own time as the build
+starts), so the control knows the build holds the publish, and a rebuild
+that doesn't come within minutes is shown as failed, with Try again. That
+rebuild is of a commit that hasn't changed, so production builds are never
+skipped (`vercel.ts`: its ignore rule is for staging alone; from 10 to 25
+Oct 2026 it skipped them, and live publishes never reached the site).
+Staging needs no rebuild.
 The route writes one marker document, `publish-log.site-build`, in every
 production transaction (a publish, an unpublish, a delete), and the webhook
 filters on it alone, `_id == "publish-log.site-build"`, so each live action

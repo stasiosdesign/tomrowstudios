@@ -50,19 +50,35 @@ const draftModeRoutes = () => ({
 });
 
 // Production only: a build stamp, dist/build.json, saying when the site was
-// built. The Studio's publishing bar reads it (with the CORS header vercel.ts
-// gives it) to tell an editor when a live publish has reached the site.
+// built and when its content was read: Sanity's own time as the build starts
+// (contentFrom), so everything published before it is in this build. The
+// Studio's publishing bar reads it (with the CORS header vercel.ts gives it)
+// to tell an editor when a live publish has reached the site, comparing it
+// with the publish's own time in Sanity. Without Sanity's answer, the stamp
+// has builtAt alone.
 /** @returns {import('astro').AstroIntegration} */
-const buildStamp = () => ({
-  name: 'tomrowstudios:build-stamp',
-  hooks: {
-    'astro:build:done': async ({ dir }) => {
-      const { writeFile } = await import('node:fs/promises');
-      const stamp = { builtAt: new Date().toISOString(), deployment };
-      await writeFile(new URL('build.json', dir), JSON.stringify(stamp));
+const buildStamp = () => {
+  /** @type {string | undefined} */
+  let contentFrom;
+  return {
+    name: 'tomrowstudios:build-stamp',
+    hooks: {
+      'astro:build:start': async () => {
+        const projectId = env.PUBLIC_SANITY_PROJECT_ID || '5cwu7mnl';
+        const dataset = env.PUBLIC_SANITY_DATASET || 'production';
+        try {
+          const response = await fetch(`https://${projectId}.api.sanity.io/v2025-02-19/data/query/${dataset}?query=now()`);
+          if (response.ok) contentFrom = (await response.json()).result;
+        } catch {}
+      },
+      'astro:build:done': async ({ dir }) => {
+        const { writeFile } = await import('node:fs/promises');
+        const stamp = { builtAt: new Date().toISOString(), ...(contentFrom ? { contentFrom } : {}), deployment };
+        await writeFile(new URL('build.json', dir), JSON.stringify(stamp));
+      },
     },
-  },
-});
+  };
+};
 
 // The home hero's pictures as its mosaic reads their colours on the server
 // (src/components/hero-palette.ts, from public/ on the disk: the 480px
