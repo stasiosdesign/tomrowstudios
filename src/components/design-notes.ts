@@ -1,34 +1,51 @@
-/* Design notes: a temporary review aid, shown with Shift + G
-   (public/js/grid-overlay.js) on desktop, never on production
-   (BaseLayout.astro leaves them out). Questions and remarks for walking
-   through the site with Tom, each set beside the element it is about, over
-   the site faded behind them.
+/* Design notes: the review's first comments, for walking through the site
+   with Tom. They open the review layer's threads (Shift + G; the layer is
+   the CMS package's, served by the Studio and set up for this site in
+   review-comments.ts), never on
+   production (BaseLayout.astro leaves it out): each an expanded comment,
+   its words in full on its card, set beside the element it is about, over the site faded behind
+   it, the designer its author. What is done to them in the layer (replies,
+   edits, completing) is kept in Sanity; the code stays the source
+   of their words and places, picked up on the next load unless a note was
+   edited there.
 
    One entry a note:
    - `page`: the page's Barba namespace (BaseLayout's `namespace`: index,
      influence, partner, shop, architecture…), or '*' for every page
    - `target`: a CSS selector for the element the note is about (the first
-     match on the page); a note whose target is missing or hidden is skipped
+     match on the page); a note whose target is missing or hidden is not
+     shown on the page (it stays in the panel)
    - `at`: where the card stands against the target, '<y>-<x>': y is top or
      bottom (inside the target's box), above or below (outside it); x is
      left or right (the card's edge on the target's), before or after (the
      card beside the target, clear of it)
    - `offset`: a nudge in pixels, [x, y]
+   - `display`: 'expanded' (the card, the default) or 'standard' (a pin)
+   - `request`: 'image' for a note that asks for an image at its spot: the
+     card is headed by `title` (default "Add image"), and its thread has a
+     field to upload the image into
+   - `date`: when it was written, if not NOTES_DATE
    Wording: notes from the designer to Tom, talking a decision through or
    asking for something: short, one point a note, polite and collaborative
    without being formal ("Could you please…", "Would it make sense to…",
    "It would be useful to…"), Tom as "you", never him or his.
-   To remove the whole system: delete this file, the notes' markup and
-   script lines in BaseLayout.astro, grid-overlay.js and "Design notes" in
-   style.css. */
+   To remove the whole system: delete this file, review-comments.ts,
+   review-pages.ts and the review lines in BaseLayout.astro. */
 
 export interface DesignNote {
   page: string;
   target: string;
   at?: `${'top' | 'bottom' | 'above' | 'below'}-${'left' | 'right' | 'before' | 'after'}`;
   offset?: [number, number];
+  display?: 'expanded' | 'standard';
+  request?: 'image';
+  title?: string;
+  date?: string;
   text: string;
 }
+
+/** When the notes were written (their last change in Git), the time their threads show */
+export const NOTES_DATE = '2026-10-22T14:58:18+01:00';
 
 export const DESIGN_NOTES: DesignNote[] = [
   {
@@ -44,6 +61,19 @@ export const DESIGN_NOTES: DesignNote[] = [
     at: 'bottom-left',
     offset: [24, -24],
     text: 'The background takes its colours from each image, so images with a few strong colours work best. Could you please share some more engaging images for this?',
+  },
+  // An image asked for: over the hero list's second picture (Partners &
+  // Collabs), in from its top right corner (clear of the note at the
+  // reel's foot on the left); its thread takes the upload
+  {
+    page: 'index',
+    target: '.home-list__item:nth-child(2) .home-list__shot',
+    at: 'top-right',
+    offset: [-16, 16],
+    request: 'image',
+    title: 'Add image',
+    date: '2026-10-25T12:55:00+00:00',
+    text: 'Could you please upload an image to use here? A portrait photo from one of your partnerships or collaborations would suit this spot best.',
   },
   {
     page: 'index',

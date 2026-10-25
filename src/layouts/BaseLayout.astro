@@ -2,7 +2,7 @@
 /* Site-wide page shell.
 
    Everything outside <main> survives a Barba navigation — the floating
-   navigation, the grid overlay, the lightbox target and the
+   navigation, the review layer, the lightbox target and the
    scripts — so it lives here once. Each page fills the Barba container;
    the page transition moves the containers themselves (transitions.js).
 
@@ -17,7 +17,8 @@ import ScrollBar from '../components/ScrollBar.astro';
 import ReelLightbox from '../components/ReelLightbox.astro';
 import { REEL_SRC } from '../components/reel';
 import DraftModeLabel from '../components/DraftModeLabel.astro';
-import { DESIGN_NOTES } from '../components/design-notes';
+import { DESIGN_NOTES, NOTES_DATE } from '../components/design-notes';
+import { reviewPages } from '../components/review-pages';
 
 interface Props {
   title: string;
@@ -51,12 +52,15 @@ const canonical = Astro.site && new URL(path, Astro.site).href;
 // Anything but production asks search engines to stay away (so does every
 // response header there: src/middleware.ts, vercel.ts)
 const noindex = __DEPLOYMENT__ !== 'production';
-// The design review mode (Shift + G) is a development aid:
+// The review layer (Shift + G, src/comments) is a development aid:
 // never on production
 const showDesignReview = __DEPLOYMENT__ !== 'production';
-// The notes travel in the page as JSON, every page's at once (a Barba
-// navigation keeps this layer), "<" escaped so none can close the script
-const designNotes = showDesignReview ? JSON.stringify(DESIGN_NOTES).replace(/</g, '\\u003c') : '';
+// The notes and the site's pages travel in the page as JSON, every page's
+// at once (a Barba navigation keeps the layer), "<" escaped so none can
+// close the script
+const reviewData = showDesignReview
+  ? JSON.stringify({ notes: DESIGN_NOTES, notesDate: NOTES_DATE, pages: reviewPages() }).replace(/</g, '\\u003c')
+  : '';
 // The reel's player goes where its card does: on production, once there is a reel (reel.ts)
 const showReel = Boolean(REEL_SRC) || __DEPLOYMENT__ !== 'production';
 ---
@@ -100,14 +104,12 @@ const showReel = Boolean(REEL_SRC) || __DEPLOYMENT__ !== 'production';
 </head>
 <body data-barba="wrapper">
 
-<!-- Design review mode (Shift + G), a review aid for development and
-     staging only (a production build leaves it out): the site faded behind
-     a translucent white and the design notes over it, each beside the part
-     of the page it is about (design-notes.ts, grid-overlay.js, "Design
-     notes" in style.css). Desktop only. Outside the Barba container so it
+<!-- The review layer's data (Shift + G), for development and staging only
+     (a production build leaves it out): the design notes and the site's
+     pages. The layer itself is added at the end of the page by its script
+     below (review-comments.ts), outside the Barba container, so it
      survives a navigation. -->
-{showDesignReview && <div class="design-notes" data-design-notes aria-hidden="true"></div>}
-{showDesignReview && <script type="application/json" id="design-notes-data" set:html={designNotes}></script>}
+{showDesignReview && <script type="application/json" id="review-data" set:html={reviewData}></script>}
 
 <!-- The cursor's label: what a click does, beside the arrow, over an
      element marked data-cursor-label (cursor.js, "Cursor label" in
@@ -182,8 +184,11 @@ const showReel = Boolean(REEL_SRC) || __DEPLOYMENT__ !== 'production';
 <script is:inline src="/js/cursor.js"></script>
 <!-- The reel's player (bunny-lightbox.js) is fetched by reel.js on first need -->
 <script is:inline src="/js/reel.js"></script>
-<!-- Temporary development grid overlay (development and staging only) -->
-{showDesignReview && <script is:inline src="/js/grid-overlay.js"></script>}
+<!-- The review layer: comments over the site, Shift + G (development and
+     staging only; production is built without it) -->
+<script>
+  if (__DEPLOYMENT__ !== 'production') import('../components/review-comments');
+</script>
 <!-- Staging and development only: inside the Studio's Visual editor (the page
      in a frame), load the click-to-edit layer and live drafts. The deployment
      is fixed at build time, so a production build leaves all of it out. -->
