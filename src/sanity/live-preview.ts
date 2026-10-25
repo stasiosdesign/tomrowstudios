@@ -284,6 +284,18 @@ window.addEventListener('message', (event) => {
   else target.scrollIntoView({ behavior: 'smooth', block: 'start' });
 });
 
+// Shift + G opens and closes the Studio's editing panel, also while the
+// keyboard is in the page: the Studio can't hear keys pressed in its frame,
+// so the page passes it on (TOGGLE_EDITOR_MESSAGE in
+// @stasiosdesign/sanity-cms/protocol). Not while typing in a field.
+window.addEventListener('keydown', (event) => {
+  if (!event.shiftKey || event.ctrlKey || event.metaKey || event.altKey || event.key.toLowerCase() !== 'g') return;
+  const el = event.target;
+  if (el instanceof HTMLElement && (el.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(el.tagName))) return;
+  event.preventDefault();
+  window.parent.postMessage({ type: 'sanity-cms/toggle-editor' }, '*');
+});
+
 // Barba swaps pages without a reload, bringing in the published words
 const { barba } = window as unknown as { barba?: { hooks: { after: (hook: () => void) => void } } };
 barba?.hooks.after(update);
