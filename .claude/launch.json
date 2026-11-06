@@ -3,19 +3,19 @@
   "configurations": [
     {
       "name": "astro-preview",
-      "runtimeExecutable": "C:/Users/Anast/AppData/Local/OpenAI/Codex/runtimes/cua_node/78fb63cda1a9e2b2/bin/node.exe",
+      "runtimeExecutable": "C:/Users/Anast/AppData/Local/Programs/nodejs-portable/node-v22.23.3-win-x64/node.exe",
       "runtimeArgs": ["node_modules/astro/bin/astro.mjs", "preview", "--host", "127.0.0.1", "--port", "8765"],
       "port": 8765
     },
     {
       "name": "astro-dev",
-      "runtimeExecutable": "C:/Users/Anast/AppData/Local/OpenAI/Codex/runtimes/cua_node/78fb63cda1a9e2b2/bin/node.exe",
+      "runtimeExecutable": "C:/Users/Anast/AppData/Local/Programs/nodejs-portable/node-v22.23.3-win-x64/node.exe",
       "runtimeArgs": ["node_modules/astro/bin/astro.mjs", "dev", "--host", "127.0.0.1", "--port", "8766"],
       "port": 8766
     },
     {
       "name": "sanity-studio",
-      "runtimeExecutable": "C:/Users/Anast/AppData/Local/OpenAI/Codex/runtimes/cua_node/78fb63cda1a9e2b2/bin/node.exe",
+      "runtimeExecutable": "C:/Users/Anast/AppData/Local/Programs/nodejs-portable/node-v22.23.3-win-x64/node.exe",
       "runtimeArgs": ["node_modules/sanity/bin/sanity", "dev"],
       "cwd": "studio",
       "port": 3333
