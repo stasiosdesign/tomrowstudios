@@ -66,9 +66,9 @@ The README explains the system; these are the working rules.
 
 The Studio is the shared CMS package `@stasiosdesign/sanity-cms` (private,
 GitHub Packages; source in the `sanity-cms` repository, checked out on the
-development machine at `3 - Claude/1 - HQ/shared-sanity-cms`, with its own
-CLAUDE.md) set up for this website. This repository lives in its client
-folder, `3 - Claude/Tomrowstudios/tomrowstudios-website`; shared changes are
+development computer at `1 - HQ/shared-sanity-cms` in the workspace folder,
+with its own CLAUDE.md) set up for this website. This repository lives in
+its client folder, `Tomrowstudios/tomrowstudios-website`; shared changes are
 never made from here. Before writing any Studio code, decide whether it's
 for every Studio or only this one, using the workspace `CLAUDE.md` ("Every
 Studio, or only this one? Claude decides"), and say the decision in one line.
