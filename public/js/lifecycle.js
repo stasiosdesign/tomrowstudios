@@ -92,7 +92,7 @@ const VENDOR = {
   hls: "https://cdn.jsdelivr.net/npm/hls.js@1.6.11/dist/hls.min.js",
   swiperJs: "https://cdn.jsdelivr.net/npm/swiper@12/swiper-bundle.min.js",
   swiperCss: "https://cdn.jsdelivr.net/npm/swiper@12/swiper-bundle.min.css",
-  draggable: "https://cdn.jsdelivr.net/npm/gsap@3.15/dist/Draggable.min.js",
-  inertia: "https://cdn.jsdelivr.net/npm/gsap@3.15/dist/InertiaPlugin.min.js",
+  draggable: "https://cdn.jsdelivr.net/npm/gsap@3.15.0/dist/Draggable.min.js",
+  inertia: "https://cdn.jsdelivr.net/npm/gsap@3.15.0/dist/InertiaPlugin.min.js",
   smooothy: "https://unpkg.com/smooothy@0.0.35",
 };
