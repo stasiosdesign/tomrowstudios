@@ -17,18 +17,18 @@ import ContactPanel from '../components/ContactPanel.astro';
 import Button from '../components/Button.astro';
 import ServiceCards from '../components/ServiceCards.astro';
 import ProductCard from '../components/ProductCard.astro';
-import { sanityClient } from '../sanity/client';
+import { contentClient } from '../sanity/content-client';
 import { imageAttrs, type SanityImage } from '../sanity/image';
 import { SHOP_ITEMS_QUERY, SHOP_ITEM_QUERY } from '../sanity/queries';
 
-export const getStaticPaths = __DEPLOYMENT__ === 'production'
+export const getStaticPaths = __DEPLOYMENT__ === 'production' || __DEPLOYMENT__ === 'review'
   ? ((async () => {
-      const items = await sanityClient.fetch(SHOP_ITEMS_QUERY);
+      const items = await contentClient.fetch(SHOP_ITEMS_QUERY);
       return items.map((item) => ({ params: { slug: item.slug as string } }));
     }) satisfies GetStaticPaths)
   : undefined;
 
-// (Typed here: Astro can't infer the params from a getStaticPaths only production has)
+// (Typed here: Astro can't infer the params from a getStaticPaths only static builds have)
 const { slug = '' } = Astro.params as { slug?: string };
 const { sanity } = Astro.locals;
 const [item, items] = await Promise.all([

@@ -15,7 +15,8 @@
     "studio": "npm --prefix studio run dev",
     "studio:deploy": "npm --prefix studio run deploy",
     "typegen": "npm --prefix studio run typegen",
-    "astro": "astro"
+    "astro": "astro",
+    "review:round": "node scripts/review-round.mjs"
   },
   "dependencies": {
     "@astrojs/sitemap": "^3.7.4",
@@ -28,6 +29,7 @@
     "astro": "^7.3.3",
     "astro-portabletext": "^1.0.1",
     "groq": "^6.16.0",
+    "groq-js": "2.0.0",
     "sharp": "^0.35.4"
   },
   "devDependencies": {

@@ -39,3 +39,7 @@ npm-debug.log*
 .DS_Store
 Thumbs.db
 desktop.ini
+
+# A review round's frozen content (scripts/review-round.mjs): committed on its
+# review/<round> branch only (the script adds it with -f), never on staging or main
+/review/

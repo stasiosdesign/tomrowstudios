@@ -13,18 +13,18 @@ import { PortableText } from 'astro-portabletext';
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import SiteNav from '../../components/SiteNav.astro';
 import ContactPanel from '../../components/ContactPanel.astro';
-import { sanityClient } from '../../sanity/client';
+import { contentClient } from '../../sanity/content-client';
 import { imageAttrs } from '../../sanity/image';
 import { PROJECT_INDEX_QUERY, PROJECT_PAGE_QUERY } from '../../sanity/queries';
 
-export const getStaticPaths = __DEPLOYMENT__ === 'production'
+export const getStaticPaths = __DEPLOYMENT__ === 'production' || __DEPLOYMENT__ === 'review'
   ? ((async () => {
-      const projects = await sanityClient.fetch(PROJECT_INDEX_QUERY);
+      const projects = await contentClient.fetch(PROJECT_INDEX_QUERY);
       return projects.map((project) => ({ params: { slug: project.slug as string } }));
     }) satisfies GetStaticPaths)
   : undefined;
 
-// (Typed here: Astro can't infer the params from a getStaticPaths only production has)
+// (Typed here: Astro can't infer the params from a getStaticPaths only static builds have)
 const { slug = '' } = Astro.params as { slug?: string };
 const { sanity } = Astro.locals;
 const [project, projects] = await Promise.all([

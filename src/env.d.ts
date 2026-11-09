@@ -1,5 +1,5 @@
-/** Which deployment this build is for, fixed at build time from Vercel's VERCEL_ENV (astro.config.mjs). */
-declare const __DEPLOYMENT__: 'production' | 'staging' | 'development';
+/** Which deployment this build is for, fixed at build time from Vercel's VERCEL_ENV and, for a review round, the branch (astro.config.mjs). */
+declare const __DEPLOYMENT__: 'production' | 'staging' | 'review' | 'development';
 
 declare namespace astroHTML.JSX {
   interface TextareaHTMLAttributes {

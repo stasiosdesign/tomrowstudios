@@ -61,6 +61,56 @@ local (npm run dev, npm run studio)  →  staging  →  review  →  main
    If the merge refuses, `main` has something staging lacks: `git merge main`
    on `staging`, push, review, then promote.
 
+## Site Review rounds
+
+Site Review (the Studio's comments on the website) lists the versions of the
+site shared for review, each a folder. Each is a **frozen copy**, kept on its
+own branch and never changed, so it always shows what was reviewed while the
+work carries on on staging (set up 9 Nov 2026, following ADDD's):
+
+| Folder | Branch | What it is |
+| --- | --- | --- |
+| Design V1 (1 Oct 2026) | `version-1` | The first design, kept for the record; no comments. Its 13 Oct deployment was built before review rounds existed, so its code is frozen but it renders the staging dataset's current content. |
+| Final Design | `review/final-design` | A review round: code and content frozen. Its comments were made on staging before rounds were frozen, so it keeps the id `final-design`. |
+
+A **review round** is:
+
+- **Its own branch**, `review/<round>`, cut from staging and never changed.
+  It sits beside `main` and `staging`; it is never merged or deleted.
+- **Its content frozen on the branch**: `review/snapshot.json`, the staging
+  dataset's published content when the round was cut (pages, collections,
+  clients, pictures' asset records; never drafts, comments or secrets). A
+  review build reads it instead of Sanity (`src/sanity/snapshot.ts`, with
+  Sanity's GROQ engine, `groq-js`), so editing the Studio afterwards never
+  reaches it. Pictures stay on Sanity's image CDN, where an asset stays after
+  it is replaced in the Studio; only deleting it from the media library
+  would take it from an old round.
+- **Built as a review round** (`astro.config.mjs`, "review", from the branch's
+  name): static like production, website comments on, the Visual editor's
+  editing off, never indexed, behind Vercel Authentication like staging (the
+  Studio opens it with the same bypass).
+- **Its folder in Site Review** (`studio/project.ts`, `review.versions`):
+  title, date, its address and branch, and an `id` its comments are kept
+  under, never changed.
+- **Its own address**, which also keeps it: on the Hobby plan Vercel deletes
+  deployments after 30 days unless a domain or alias is assigned to them.
+  Assign `tomrowstudios-<round>.vercel.app` to the branch (Vercel, project
+  `tomrowstudios`, Settings → Domains → Add, Git branch `review/<round>`). If
+  one were ever lost, the branch rebuilds it exactly.
+
+A new round, from an up-to-date `staging` with nothing uncommitted:
+
+1. `npm run review:round -- final-design-v2`: checks, snapshots, makes and
+   pushes the branch; Vercel builds it in a minute or two.
+2. Assign its address in Vercel, as above.
+3. Add its folder to `review.versions` in `studio/project.ts` (a new `id`),
+   commit, push `staging`, `npm run studio:deploy`.
+
+The Visual editor always shows staging, the latest version; a round is never
+edited. To build a round on your machine: `npm run review:round --
+<round> --snapshot-only` (writes `review/snapshot.json`, git-ignored), then
+`TOMROW_REVIEW=1 npm run build`.
+
 ## Running it locally
 
 Node 22 (what Vercel uses). The two apps install their own dependencies:

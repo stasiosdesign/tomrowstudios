@@ -188,16 +188,17 @@ const showReel = Boolean(REEL_SRC) || __DEPLOYMENT__ !== 'production';
 <script is:inline src="/js/cursor.js"></script>
 <!-- The reel's player (bunny-lightbox.js) is fetched by reel.js on first need -->
 <script is:inline src="/js/reel.js"></script>
-<!-- The review layer: comments over the site, Shift + G (development and
-     staging only; production is built without it) -->
+<!-- The review layer: comments over the site, Shift + G (development,
+     staging and review rounds; production is built without it) -->
 <script>
   if (__DEPLOYMENT__ !== 'production') import('../components/review-comments');
 </script>
 <!-- Staging and development only: inside the Studio's Visual editor (the page
      in a frame), load the click-to-edit layer and live drafts. The deployment
-     is fixed at build time, so a production build leaves all of it out. -->
+     is fixed at build time, so a production build, or a frozen review round,
+     leaves all of it out. -->
 <script>
-  if (__DEPLOYMENT__ !== 'production' && window.self !== window.top) import('../sanity/live-preview');
+  if ((__DEPLOYMENT__ === 'staging' || __DEPLOYMENT__ === 'development') && window.self !== window.top) import('../sanity/live-preview');
 </script>
 {Astro.locals.draftMode && <DraftModeLabel />}
 
