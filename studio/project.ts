@@ -47,26 +47,26 @@ export const project: CmsProjectConfig = {
   sites: {preview: PREVIEW_ORIGIN, live: LIVE_ORIGIN},
 
   // Site Review's folders, oldest first, each a frozen copy on a branch of
-  // its own (README, "Site Review rounds"). Design V1 is the `version-1`
-  // branch's Vercel deployment (5f5cba6), for the record: built before the
-  // review layer, it opens for viewing and takes no comments. Final Design
-  // is the review round `review/final-design`; it keeps the ID every
-  // Studio's first version has, so the comments made on staging stay with
-  // it.
+  // its own (README, "Site Review rounds"), at the address Vercel gives that
+  // branch. Design V1 (`review/design-v1`) is for the record: built before
+  // the review layer, it opens for viewing and takes no comments. Final
+  // Design V1 (`review/final-design-v1`) is a review round; it keeps the ID
+  // every Studio's first version has, so the comments made on staging stay
+  // with it.
   review: {
     versions: [
       {
         id: 'design-v1',
         title: 'Design V1',
         date: '2026-10-01',
-        url: 'https://tomrowstudios-i7ocggb57-stasiosdesign.vercel.app',
-        branch: 'version-1',
+        url: 'https://tomrowstudios-design-v1.vercel.app',
+        branch: 'review/design-v1',
       },
       {
         id: 'final-design',
-        title: 'Final Design',
-        url: 'https://tomrowstudios-qxl5wo995-stasiosdesign.vercel.app',
-        branch: 'review/final-design',
+        title: 'Final Design V1',
+        url: 'https://tomrowstudios-final-design-v1.vercel.app',
+        branch: 'review/final-design-v1',
       },
     ],
   },

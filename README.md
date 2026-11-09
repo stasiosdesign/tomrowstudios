@@ -12,15 +12,20 @@ like a Webflow site's live and staging domains.
 
 ## Addresses
 
-|            | URL                                                     | From                        |
-| ---------- | ------------------------------------------------------- | --------------------------- |
-| Production | https://tomrowstudios.vercel.app                        | `main`                      |
-| Staging    | https://tomrowstudios-staging.vercel.app | `staging`                |
-| Studio     | https://tomrowstudios.sanity.studio                     | `studio/`, deployed by hand |
+|                 | URL                                             | From                        |
+| --------------- | ----------------------------------------------- | --------------------------- |
+| Production      | https://tomrowstudios.vercel.app                | `main`                      |
+| Staging         | https://tomrowstudios-staging.vercel.app        | `staging`                   |
+| Design V1       | https://tomrowstudios-design-v1.vercel.app       | `review/design-v1`          |
+| Final Design V1 | https://tomrowstudios-final-design-v1.vercel.app | `review/final-design-v1`    |
+| Studio          | https://tomrowstudios.sanity.studio             | `studio/`, deployed by hand |
 
-Staging's URL is Vercel's alias for the `staging` branch: it always shows the
-branch's latest deployment. (Every deployment also has its own unique URL.)
-The Vercel project is `tomrowstudios`, in the `stasiosdesign` team.
+These four are the project's only domains, one for each of the repository's
+four branches, and keep their names alike (`tomrowstudios-<branch name>`).
+Each is Vercel's alias for its branch: it always shows the branch's latest
+deployment. (Every deployment also gets a long unique URL of its own; nothing
+uses those.) The Vercel project is `tomrowstudios`, in the `stasiosdesign`
+team.
 
 ## Production and staging
 
@@ -70,8 +75,8 @@ work carries on on staging (set up 9 Nov 2026, following ADDD's):
 
 | Folder | Branch | What it is |
 | --- | --- | --- |
-| Design V1 (1 Oct 2026) | `version-1` | The first design, kept for the record; no comments. Its 13 Oct deployment was built before review rounds existed, so its code is frozen but it renders the staging dataset's current content. |
-| Final Design | `review/final-design` | A review round: code and content frozen. Its comments were made on staging before rounds were frozen, so it keeps the id `final-design`. |
+| Design V1 (1 Oct 2026) | `review/design-v1` (was `version-1`) | The first design, kept for the record; no comments. It was built before review rounds existed, so its code is frozen (apart from the GSAP pin that lets it open) but it renders the staging dataset's current content. |
+| Final Design V1 | `review/final-design-v1` | A review round: code and content frozen. Its comments were made on staging before rounds were frozen, so it keeps the id `final-design`. |
 
 A **review round** is:
 
