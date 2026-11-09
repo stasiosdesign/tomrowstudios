@@ -75,7 +75,7 @@ work carries on on staging (set up 9 Nov 2026, following ADDD's):
 
 | Folder | Branch | What it is |
 | --- | --- | --- |
-| Design V1 (1 Oct 2026) | `review/design-v1` (was `version-1`) | The first design, kept for the record; no comments. It was built before review rounds existed, so its code is frozen (apart from the GSAP pin that lets it open) but it renders the staging dataset's current content. |
+| Design V1 (1 Oct 2026; not in Site Review) | `review/design-v1` (was `version-1`) | The first design, kept on its branch and address for the record; taken out of Site Review on 9 Nov 2026. It was built before review rounds existed, so its code is frozen (apart from the GSAP pin that lets it open) but it renders the staging dataset's current content. |
 | Final Design V1 | `review/final-design-v1` | A review round: code and content frozen. Its comments were made on staging before rounds were frozen, so it keeps the id `final-design`. |
 
 A **review round** is:

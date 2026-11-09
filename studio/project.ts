@@ -48,20 +48,12 @@ export const project: CmsProjectConfig = {
 
   // Site Review's folders, oldest first, each a frozen copy on a branch of
   // its own (README, "Site Review rounds"), at the address Vercel gives that
-  // branch. Design V1 (`review/design-v1`) is for the record: built before
-  // the review layer, it opens for viewing and takes no comments. Final
-  // Design V1 (`review/final-design-v1`) is a review round; it keeps the ID
-  // every Studio's first version has, so the comments made on staging stay
-  // with it.
+  // branch. Final Design V1 (`review/final-design-v1`) is a review round; it
+  // keeps the ID every Studio's first version has, so the comments made on
+  // staging stay with it. (Design V1, `review/design-v1`, is kept on its
+  // branch and address but isn't listed here.)
   review: {
     versions: [
-      {
-        id: 'design-v1',
-        title: 'Design V1',
-        date: '2026-10-01',
-        url: 'https://tomrowstudios-design-v1.vercel.app',
-        branch: 'review/design-v1',
-      },
       {
         id: 'final-design',
         title: 'Final Design V1',
