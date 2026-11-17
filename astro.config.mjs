@@ -139,6 +139,10 @@ export default defineConfig({
   // old /page.html addresses there; every internal link uses the clean form.
   build: {
     format: 'file',
+    // Pages are built 8 at a time, not one by one: each waits mostly on
+    // Sanity, so a live publish's rebuild spent ~5s building 19 pages one
+    // after another on Vercel (17 Nov 2026). Same files, a fraction of the time.
+    concurrency: 8,
   },
   trailingSlash: 'never',
 
